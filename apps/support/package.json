@@ -1,0 +1,36 @@
+{
+  "name": "wenay-support",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "start": "tsx backend/server.ts",
+    "start:node": "tsx backend/node.ts",
+    "dev": "vite frontend --host 127.0.0.1",
+    "build": "vite build frontend --outDir ../public",
+    "typecheck": "tsc --noEmit",
+    "test": "tsx backend/product-check.ts && tsx backend/conversation-check.ts && tsx backend/article-index-check.ts && tsx backend/domain-check.ts && tsx backend/organizer-check.ts && tsx backend/notifications-check.ts && tsx backend/resource-check.ts && tsx backend/check.ts && tsx backend/ai-resource-lifecycle-repro.ts --safe-state && tsx backend/oidc-check.ts && tsx backend/identity-check.ts"
+  },
+  "dependencies": {
+    "express": "5.2.1",
+    "openid-client": "6.8.8",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "socket.io": "4.8.3",
+    "socket.io-client": "4.8.3",
+    "swagger-ui-dist": "5.32.14",
+    "wenay-common2": "2.21.1",
+    "wenay-react2": "3.5.1"
+  },
+  "devDependencies": {
+    "@types/express": "5.0.6",
+    "@types/node": "26.1.2",
+    "@types/react": "19.2.18",
+    "@types/react-dom": "19.2.4",
+    "tsx": "4.23.1",
+    "typescript": "7.0.2",
+    "vite": "8.2.2"
+  },
+  "engines": {
+    "node": ">=22.12"
+  }
+}
