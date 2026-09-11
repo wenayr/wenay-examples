@@ -2,6 +2,10 @@ name: check
 
 on: [push, pull_request]
 
+concurrency:
+  group: check-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   check:
     runs-on: ubuntu-latest
@@ -11,6 +15,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: npm
+          cache-dependency-path: apps/*/package-lock.json
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
@@ -23,15 +29,16 @@ jobs:
             fi
           done
 
-      # hosting поднимает настоящие контейнеры, pizzeria — самый долгий набор.
-      # Оба проверяются локально; в CI они помечены пропущенными, а не пройденными.
+      # hosting поднимает настоящие контейнеры, поэтому в CI он помечен пропущенным,
+      # а не пройденным. Пиццерия проверяется целиком: её набор идёт около минуты
+      # локально и Docker не требует.
       - name: Проверить каталог
         env:
-          RUN_ALL_SKIP: hosting,pizzeria
+          RUN_ALL_SKIP: hosting
         run: npm run check:all
 
-      - name: Типы hosting и pizzeria
-        run: node scripts/run-all.mjs typecheck --only=hosting,pizzeria
+      - name: Типы hosting
+        run: node scripts/run-all.mjs typecheck --only=hosting
 
       - uses: actions/upload-artifact@v4
         if: always()
