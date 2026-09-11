@@ -15,6 +15,7 @@ node scripts/create-saas-example.mjs booking work/rental-desk --name rental-desk
 node scripts/create-saas-example.mjs forms work/feedback-desk --name feedback-desk
 node scripts/create-saas-example.mjs monitoring work/uptime-desk --name uptime-desk
 node scripts/create-saas-example.mjs approvals work/request-desk --name request-desk
+node scripts/create-saas-example.mjs content work/page-studio --name page-studio
 ```
 
 Назначение — отсутствующий или существующий **пустой** каталог. Путь можно указать абсолютный, например отдельный каталог в `WebstormProjects`. Параметр `--name` необязателен: по умолчанию используется имя конечного каталога в нижнем регистре.
@@ -41,7 +42,7 @@ npm start --prefix work/client-care
 
 Так проверяется любая копия: подставьте её каталог вместо `work/client-care`. Не запускать полные тестовые наборы и Docker параллельно на машине с ограниченным запасом памяти.
 
-Копия наследует порт своего донора: support 3810, documents 3811, metering 3812, crm 3813, booking 3814, forms 3815, monitoring 3816, approvals 3818. Если исходное приложение уже работает, задайте копии другой порт переменной `SERVICE_PORT` при запуске и в `frontend/vite.config.ts` для разработки. Переменные `.env` не читаются автоматически: передавайте окружение процессу либо явно используйте Node `--env-file`.
+Копия наследует порт своего донора: support 3810, documents 3811, metering 3812, crm 3813, booking 3814, forms 3815, monitoring 3816, content 3817, approvals 3818. Если исходное приложение уже работает, задайте копии другой порт переменной `SERVICE_PORT` при запуске и в `frontend/vite.config.ts` для разработки. Переменные `.env` не читаются автоматически: передавайте окружение процессу либо явно используйте Node `--env-file`.
 
 Прежние результаты проверок чистых копий (10 сентября 2026) — в [хронологии](changes/handoff-2026-09-10.md#проверки-чистых-копий).
 

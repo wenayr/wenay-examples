@@ -61,3 +61,4 @@ npm run build
 - [Паспорт примера](PASSPORT.md) · [устройство и контракт](API.md)
 - Приёмка и история: [CONTENT-HISTORY](../../doc/internal/acceptance/CONTENT-HISTORY.md), [интерфейс](../../doc/internal/acceptance/CONTENT-UI-ACCEPTANCE.md), [backend](../../doc/internal/acceptance/CONTENT-BACKEND-ACCEPTANCE.md)
 - Подключение базы знаний поддержки описано в [справочнике](API.md) и в [README поддержки](../support/README.md)
+- Своя копия: `node scripts/create-saas-example.mjs content work/page-studio --name page-studio`, дальше [рецепты](../../doc/SAAS-RECIPES.md). Межпроектная проверка `test:integration` в копию не входит

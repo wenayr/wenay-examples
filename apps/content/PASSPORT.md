@@ -7,7 +7,8 @@
 - **Порт:** 3817; версия примера: 0.1.0
 - **Внешние зависимости:** нет
 - **Топология:** authority владеет версиями и расписанием; узлы обслуживают проекции; поддержка читает публикации
-- **Проверки:** `npm test` — домен, ресурсы, помощник, сеть; `npm run test:integration` — чтение из поддержки
+- **Проверки:** `npm test` — домен, ресурсы, помощник, сеть; `npm run test:integration` — чтение из поддержки (только в исходном репозитории)
+- **Своя копия:** `node scripts/create-saas-example.mjs content <каталог>`
 - **Размещение:** —
 - **Отчёты:** [backend](../../doc/internal/acceptance/CONTENT-BACKEND-ACCEPTANCE.md), [интерфейс](../../doc/internal/acceptance/CONTENT-UI-ACCEPTANCE.md)
 

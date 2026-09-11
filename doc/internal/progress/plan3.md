@@ -18,3 +18,4 @@
 - R04 monitoring — 2026-09-11 — README 110 -> 69 строк, справочник в API.md, приёмка в MONITORING-HISTORY — 883daee
 - R04 content — 2026-09-11 — README 106 -> 63 строки, справочник в API.md, приёмка в CONTENT-HISTORY; R04 завершён, восемь README по 60-69 строк — 539d9d5
 - U01 — 2026-09-11 — task-domain, published-contract и identity пиццерии в каноне; sync-check держит 97 копий по 14 файлам
+- T01 — 2026-09-11 — манифесты scaffold перенесены в apps/*/scaffold.json, scaffold-check требует описать каждый отслеживаемый файл; удалены остатки копии в approvals — fe1991a

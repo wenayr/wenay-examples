@@ -192,6 +192,17 @@ async function check() {
         const formsClean = path.join(temporary, 'forms-clean')
         await createSaasExample({template: 'forms', repository: fixture, destination: formsClean})
         for (const file of await allFiles(formsClean)) assert(!(await readFile(file, 'utf8')).includes(marker))
+        const content = path.join(temporary, 'content-copy')
+        await createSaasExample({template: 'content', destination: content, name: 'content-copy'})
+        const contentPackage = JSON.parse(await readFile(path.join(content, 'package.json'), 'utf8'))
+        assert(!JSON.stringify(contentPackage.scripts).includes('test:integration'))
+        assert(!JSON.stringify(contentPackage.scripts).includes('integration-check'))
+        await assert.rejects(lstat(path.join(content, 'backend/integration-check.ts')), {code: 'ENOENT'})
+        for (const file of ['backend/public-http.ts', 'backend/files-resource.ts', 'backend/published-contract.ts', 'frontend/editor.tsx', 'frontend/article.tsx', 'frontend/media.tsx']) {
+            assert((await lstat(path.join(content, file))).isFile())
+        }
+        assert((await readFile(path.join(content, 'README.md'), 'utf8')).includes('3817'))
+
         const monitoring = path.join(temporary, 'monitoring-copy')
         await createSaasExample({template: 'monitoring', destination: monitoring, name: 'monitoring-copy'})
         const monitoringPackage = JSON.parse(await readFile(path.join(monitoring, 'package.json'), 'utf8'))
@@ -206,7 +217,7 @@ async function check() {
         const monitoringClean = path.join(temporary, 'monitoring-clean')
         await createSaasExample({template: 'monitoring', repository: fixture, destination: monitoringClean})
         for (const file of await allFiles(monitoringClean)) assert(!(await readFile(file, 'utf8')).includes(marker))
-        console.log('Scaffold checks passed: ' + described + ' apps with own manifests, exact lock/name, monitoring HTTP workers/AI/organizer, forms archive/grouping/public sources, booking DST/AI/runtime sources, metering repo-only integration omitted, no secrets/data/build/deps, no overwrite, collision guards, no symlink/junction following, approvals decision domain without forms commands, no cross-app or missing local imports')
+        console.log('Scaffold checks passed: ' + described + ' apps with own manifests, exact lock/name, monitoring HTTP workers/AI/organizer, forms archive/grouping/public sources, booking DST/AI/runtime sources, metering repo-only integration omitted, no secrets/data/build/deps, no overwrite, collision guards, no symlink/junction following, approvals decision domain without forms commands, content without cross-app integration check, no cross-app or missing local imports')
     } finally {
         await remove(temporary)
     }

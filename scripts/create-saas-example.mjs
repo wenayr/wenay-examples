@@ -100,8 +100,16 @@ function removeScript(packageJson, file) {
     }
 }
 
-function instructions(template, name, sourceReadme) {
-    const port = {support: 3810, documents: 3811, metering: 3812, crm: 3813, booking: 3814, forms: 3815, monitoring: 3816}[template]
+// Порт примера берётся из его же vite.config.ts, а не из списка в этом скрипте:
+// список молча устаревал при добавлении нового шаблона.
+function servicePort(files) {
+    const config = files.get('frontend/vite.config.ts')?.toString('utf8') ?? ''
+    const found = config.match(/127\.0\.0\.1:(\d{2,5})/)
+    if (!found) throw new Error('Не удалось определить порт примера из frontend/vite.config.ts')
+    return found[1]
+}
+
+function instructions(template, name, sourceReadme, port) {
     return `# ${name}
 
 Самостоятельная копия примера ${template}. Название npm-пакета изменено; сервисные идентификаторы, маршруты и предметная модель сохранены, чтобы пример работал без скрытого массового переименования.
@@ -186,7 +194,7 @@ export async function createSaasExample(deps) {
     lock.packages[''].name = packageName
     files.set('package.json', Buffer.from(JSON.stringify(packageJson, null, 2) + '\n'))
     files.set('package-lock.json', Buffer.from(JSON.stringify(lock, null, 2) + '\n'))
-    files.set('README.md', Buffer.from(instructions(template, packageName, files.get('README.md')?.toString('utf8'))))
+    files.set('README.md', Buffer.from(instructions(template, packageName, files.get('README.md')?.toString('utf8'), servicePort(files))))
     files.set('.gitignore', Buffer.from('node_modules/\npublic/\ndist/\ncoverage/\n.env\n.env.*\n!.env.example\n*-data/\ndata/\n*.log\n*.replay\n'))
     const codeRules = path.join(root, 'doc', 'CODE-RULES.md')
     await rejectLinks(codeRules)
