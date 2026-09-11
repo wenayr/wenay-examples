@@ -7,10 +7,18 @@ async function main() {
     let clock = Date.now()
     const runtime = createMonitoringRuntime({now: () => clock, minIntervalMs: 1000, takeoverMs: 500, presets: [{id: 'support', name: 'Support'}]})
     const leader = createServiceLeader({definition: runtime.definition, selfUrl: () => 'http://localhost'})
-    const owner = leader.corridor.fragment('owner'), oncall = leader.corridor.fragment('oncall'), probe = leader.corridor.fragment('probe-a'), backup = leader.corridor.fragment('probe-b'), observer = leader.corridor.fragment('observer')
+    const owner = leader.corridor.fragment('owner')
+    const oncall = leader.corridor.fragment('oncall')
+    const probe = leader.corridor.fragment('probe-a')
+    const backup = leader.corridor.fragment('probe-b')
+    const observer = leader.corridor.fragment('observer')
     const state = () => leader.line.control.store.snapshot(), orgId = 'northstar'
     try {
-        const input = {orgId, id: '', revision: 0, name: 'Support', presetId: 'support', preferred: 'probe-a', public: true, paused: false, intervalMs: 1000, timeoutMs: 200, downThreshold: 2, upThreshold: 2}
+        const input = {
+            orgId, id: '', revision: 0, name: 'Support', presetId: 'support', preferred: 'probe-a',
+            public: true, paused: false, intervalMs: 1000, timeoutMs: 200,
+            downThreshold: 2, upThreshold: 2
+        }
         await assert.rejects(observer.monitorSave('unauthorized', input), /forbidden/)
         await assert.rejects(owner.monitorSave('other-org', {...input, orgId: 'harbor'}), /доступа/)
         const {id} = await owner.monitorSave('create', input)
@@ -44,7 +52,11 @@ async function main() {
         const takenOver = await backup.probeClaim('takeover', ref())
         assert(takenOver.claim && takenOver.claim.attempt > interrupted.claim!.attempt)
         assert.equal(target().history.at(-1)!.outcome, 'unknown')
-        assert.equal((await probe.probeReport('late', {...ref(), attempt: interrupted.claim!.attempt, outcome: 'up', latencyMs: 1, code: 200, detail: ''})).accepted, false)
+        const late = await probe.probeReport('late', {
+            ...ref(), attempt: interrupted.claim!.attempt, outcome: 'up',
+            latencyMs: 1, code: 200, detail: ''
+        })
+        assert.equal(late.accepted, false)
         await backup.probeReport('restored-1', {...ref(), attempt: takenOver.claim.attempt, outcome: 'up', latencyMs: 2, code: 200, detail: ''})
         assert.equal(target().status, 'down')
         clock += 1001
@@ -69,4 +81,7 @@ async function main() {
         console.log('PASS monitoring domain: roles, whitelisted preset, atomic claim, threshold/dedup incident/task/notices, acknowledge, observer/public filtering, expired-worker takeover and late-result fence, recovery threshold, visibility removal and revoke')
     } finally {leader.control.close()}
 }
-main().catch(function failed(error) {console.error(error); process.exitCode = 1})
+main().catch(function failed(error) {
+    console.error(error)
+    process.exitCode = 1
+})

@@ -15,10 +15,29 @@ export function probeTargets(value?: string): ProbeTarget[] {
     const targets: unknown = JSON.parse(value)
     if (!Array.isArray(targets) || targets.length > 100) throw new Error('MONITOR_TARGETS_JSON: array up to 100 operator targets')
     const seen = new Set<string>()
+    // Цель описывает оператор: идентификатор, имя, адрес и IP проверяются по отдельности.
+    function describedTarget(target: ProbeTarget) {
+        if (!target || typeof target.id != 'string') return false
+        if (!/^[a-z0-9-]{1,60}$/.test(target.id) || seen.has(target.id)) return false
+        if (typeof target.name != 'string' || !target.name.trim() || target.name.length > 120) return false
+        if (typeof target.url != 'string' || target.url.length > 2000) return false
+        return typeof target.address == 'string' && isIP(target.address)
+    }
+
+    // Адрес — обычный http(s) без учётных данных; литеральный IP обязан совпасть с заявленным.
+    function reachableUrl(url: URL, address: string) {
+        if (!['http:', 'https:'].includes(url.protocol)) return false
+        if (url.username || url.password || url.hash) return false
+        const literal = url.hostname.replace(/^\[|\]$/g, '')
+        return !isIP(literal) || literal == address
+    }
+
     return targets.map((target: ProbeTarget) => {
-        if (!target || typeof target.id != 'string' || !/^[a-z0-9-]{1,60}$/.test(target.id) || seen.has(target.id) || typeof target.name != 'string' || !target.name.trim() || target.name.length > 120 || typeof target.url != 'string' || target.url.length > 2000 || typeof target.address != 'string' || !isIP(target.address)) throw new Error('Invalid operator target')
-        const url = new URL(target.url), literal = url.hostname.replace(/^\[|\]$/g, '')
-        if (!['http:', 'https:'].includes(url.protocol) || url.username || url.password || url.hash || isIP(literal) && literal != target.address) throw new Error('Target needs HTTP(S), no credentials/fragment and a matching literal address')
+        if (!describedTarget(target)) throw new Error('Invalid operator target')
+        const url = new URL(target.url)
+        if (!reachableUrl(url, target.address)) {
+            throw new Error('Target needs HTTP(S), no credentials/fragment and a matching literal address')
+        }
         seen.add(target.id)
         return {id: target.id, name: target.name.trim(), url: url.href, address: target.address}
     })
@@ -48,16 +67,31 @@ export function createHttpProbe(deps: {targets: readonly ProbeTarget[]}) {
                     else callback(null, target.address, family)
                 }, headers: {'accept': 'application/json,text/plain', 'user-agent': 'Wenay-Monitor/1', 'connection': 'close'}}, function response(message) {
                 const code = message.statusCode ?? 0
-                if (code >= 300 && code < 400) {finish('down', code, 'Перенаправление запрещено политикой проверки'); message.destroy(); return}
+                if (code >= 300 && code < 400) {
+                    finish('down', code, 'Перенаправление запрещено политикой проверки')
+                    message.destroy()
+                    return
+                }
                 let bytes = 0
                 message.on('data', function data(chunk: Buffer) {
                     bytes += chunk.byteLength
-                    if (bytes > 16384) {finish('down', code, 'Ответ превышает 16 КиБ'); message.destroy()}
+                    if (bytes > 16384) {
+                        finish('down', code, 'Ответ превышает 16 КиБ')
+                        message.destroy()
+                    }
                 })
-                message.once('end', () => finish(code >= 200 && code < 300 ? 'up' : 'down', code, code >= 200 && code < 300 ? 'Ответ получен' : 'HTTP ' + code))
+                message.once('end', function completed() {
+                    const ok = code >= 200 && code < 300
+                    const detail = ok ? 'Ответ получен' : 'HTTP ' + code
+                    finish(ok ? 'up' : 'down', code, detail)
+                })
                 message.once('error', () => finish('down', code, 'Чтение ответа прервано'))
             })
-            call.once('error', () => finish(input.signal.aborted ? 'unknown' : 'down', 0, signal.aborted ? 'Проверка прервана или истёк срок' : 'Соединение не установлено'))
+            call.once('error', function failed() {
+                const outcome = input.signal.aborted ? 'unknown' : 'down'
+                const detail = signal.aborted ? 'Проверка прервана или истёк срок' : 'Соединение не установлено'
+                finish(outcome, 0, detail)
+            })
             call.end()
         })
     }

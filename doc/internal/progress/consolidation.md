@@ -44,3 +44,5 @@
 - Q04 завершён: 10 главных экранов по 0 нарушений, таблица остатка — doc/reports/Q04-frontends.md.
 - Q05 старт: unbreakable в style-check не учитывал пробелы от вырезанных литералов — исправлено; catalog стал чистым (0 нарушений) и добавлен в apps. Остаток по каталогу: 3318.
 - Q05 metering: 130 нарушений -> 0 по всем 50 файлам; typecheck, build, npm test зелёные; приложение добавлено в style-check.json.apps.
+- Q05 monitoring: 158 нарушений -> 0 по всем 54 файлам; typecheck, build, npm test зелёные; приложение добавлено в apps.
+- Q05: organizer/task-domain.ts переписан один раз и скопирован в support, crm, pizzeria (файл дублируется без записи в sync-map.json — занесено в отчёт).

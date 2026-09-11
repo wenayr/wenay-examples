@@ -9,7 +9,10 @@ import {createMonitoringRuntime, type MonitoringDefinition} from './runtime'
 import {createProcess} from './process-resource'
 async function waitFor(label: string, check: () => boolean) {
     const end = Date.now() + 25000
-    while (!check()) {assert(Date.now() < end, 'Timeout: ' + label); await new Promise(resolve => setTimeout(resolve, 30))}
+    while (!check()) {
+        assert(Date.now() < end, 'Timeout: ' + label)
+        await new Promise(resolve => setTimeout(resolve, 30))
+    }
 }
 async function main() {
     const temporary = realpathSync(tmpdir()), directory = mkdtempSync(path.join(temporary, 'monitor-network-'))
@@ -17,23 +20,55 @@ async function main() {
     const fixture = createServer(function health(_request, response) {response.writeHead(failing ? 503 : 200).end('local fixture')})
     await new Promise<void>(resolve => fixture.listen(0, '127.0.0.1', resolve))
     const targetUrl = 'http://127.0.0.1:' + (fixture.address() as {port: number}).port + '/health'
-    const env = {SERVICE_PORT: '0', SERVICE_HOST: '127.0.0.1', SERVICE_DATA_DIR: directory, SERVICE_TOKEN_SECRET: randomBytes(32).toString('hex'), SERVICE_NODE_TOKEN: randomBytes(32).toString('hex'),
-        MONITOR_TARGETS_JSON: JSON.stringify([{id: 'fixture', name: 'Local test', url: targetUrl, address: '127.0.0.1'}]), MONITOR_EMBEDDED_PROBE: '0', MONITOR_MIN_INTERVAL_MS: '1000'}
+    const operatorTargets = [{id: 'fixture', name: 'Local test', url: targetUrl, address: '127.0.0.1'}]
+    const env = {
+        SERVICE_PORT: '0',
+        SERVICE_HOST: '127.0.0.1',
+        SERVICE_DATA_DIR: directory,
+        SERVICE_TOKEN_SECRET: randomBytes(32).toString('hex'),
+        SERVICE_NODE_TOKEN: randomBytes(32).toString('hex'),
+        MONITOR_TARGETS_JSON: JSON.stringify(operatorTargets),
+        MONITOR_EMBEDDED_PROBE: '0',
+        MONITOR_MIN_INTERVAL_MS: '1000'
+    }
     let host = createProcess({script: 'server.ts', env}), url = await host.ready
     const nodes: ReturnType<typeof createProcess>[] = [], probes: ReturnType<typeof createProcess>[] = [], clients: ServiceClient<MonitoringDefinition>[] = []
     async function client(account?: string) {
-        const session = createServiceClient<MonitoringDefinition>({definition: describeService(createMonitoringRuntime().definition), url, ...(account ? {auth: {credentials: {account, password: account + '-pass'}}} : {}), placement: {rng: () => 0}})
-        clients.push(session); await session.ready()
+        const credentials = account ? {auth: {credentials: {account, password: account + '-pass'}}} : {}
+        const session = createServiceClient<MonitoringDefinition>({
+            definition: describeService(createMonitoringRuntime().definition),
+            url,
+            ...credentials,
+            placement: {rng: () => 0}
+        })
+        clients.push(session)
+        await session.ready()
         if (account) await session.views.workspace.ready
         else await session.views.status.ready
         return session
     }
     try {
-        for (const id of ['monitor-a', 'monitor-b']) {const node = createProcess({script: 'node.ts', env: {...env, SERVICE_UPSTREAM: url, SERVICE_NODE_ID: id}}); nodes.push(node); await node.ready}
+        for (const id of ['monitor-a', 'monitor-b']) {
+            const node = createProcess({script: 'node.ts', env: {...env, SERVICE_UPSTREAM: url, SERVICE_NODE_ID: id}})
+            nodes.push(node)
+            await node.ready
+        }
         const owner = await client('owner'), observer = await client(), outsider = await client('outsider')
-        const input = {orgId: 'northstar', id: '', revision: 0, name: 'Local A', presetId: 'fixture', preferred: 'probe-a', public: true, paused: false, intervalMs: 1000, timeoutMs: 200, downThreshold: 1, upThreshold: 1}
+        const input = {
+            orgId: 'northstar', id: '', revision: 0, name: 'Local A', presetId: 'fixture',
+            preferred: 'probe-a', public: true, paused: false, intervalMs: 1000, timeoutMs: 200,
+            downThreshold: 1, upThreshold: 1
+        }
         const a = await owner.commands.monitorSave('a', input), b = await owner.commands.monitorSave('b', {...input, name: 'Local B', preferred: 'probe-b'})
-        for (const account of ['probe-a', 'probe-b']) {const probe = createProcess({script: 'probe-main.ts', env: {...env, SERVICE_UPSTREAM: url, PROBE_ACCOUNT: account, PROBE_PASSWORD: account + '-pass'}}); probes.push(probe); await probe.ready}
+        for (const account of ['probe-a', 'probe-b']) {
+            const probeEnv = {...env, SERVICE_UPSTREAM: url, PROBE_ACCOUNT: account}
+            const probe = createProcess({
+                script: 'probe-main.ts',
+                env: {...probeEnv, PROBE_PASSWORD: account + '-pass'}
+            })
+            probes.push(probe)
+            await probe.ready
+        }
         const target = (id: string) => owner.views.workspace.store.state.monitors?.find(item => item.id == id)
         await waitFor('both workers perform real checks', () => target(a.id)?.lastWorker == 'probe-a' && target(b.id)?.lastWorker == 'probe-b')
         assert.equal(target(a.id)!.status, 'up')
@@ -60,11 +95,25 @@ async function main() {
         for (const session of clients) session.close()
         for (const node of nodes) await node.control.stop()
         await host.control.stop()
-        host = createProcess({script: 'server.ts', env}); url = await host.ready
+        host = createProcess({script: 'server.ts', env})
+        url = await host.ready
         const restored = await client('owner')
         assert.equal(restored.views.workspace.store.state.incidents.length, 2)
-        const nextProbe = createProcess({script: 'probe-main.ts', env: {...env, SERVICE_UPSTREAM: url, PROBE_ACCOUNT: 'probe-b', PROBE_PASSWORD: 'probe-b-pass'}}); probes.push(nextProbe); await nextProbe.ready
-        await waitFor('schedule continues after restart', () => (restored.views.workspace.store.state.monitors.find(item => item.id == a.id)?.attempt ?? 0) > count)
+        const nextProbe = createProcess({
+            script: 'probe-main.ts',
+            env: {
+                ...env,
+                SERVICE_UPSTREAM: url,
+                PROBE_ACCOUNT: 'probe-b',
+                PROBE_PASSWORD: 'probe-b-pass'
+            }
+        })
+        probes.push(nextProbe)
+        await nextProbe.ready
+        await waitFor('schedule continues after restart', function progressed() {
+            const monitors = restored.views.workspace.store.state.monitors
+            return (monitors.find(item => item.id == a.id)?.attempt ?? 0) > count
+        })
         assert.equal(restored.views.workspace.store.state.incidents.length, 2)
         console.log('PASS monitoring network: authority +2 serving nodes +2 probe processes, real bounded HTTP, partitioned work and takeover, incident/task dedup and recovery, anonymous status isolation, node loss and durable schedule restart')
     } finally {
@@ -72,10 +121,14 @@ async function main() {
         for (const session of clients) session.close()
         for (const node of nodes) await node.control.stop()
         await host.control.stop()
-        fixture.closeAllConnections(); await new Promise<void>(resolve => fixture.close(() => resolve()))
+        fixture.closeAllConnections()
+        await new Promise<void>(resolve => fixture.close(() => resolve()))
         const resolved = path.resolve(directory)
         assert(resolved.startsWith(temporary + path.sep) && path.basename(resolved).startsWith('monitor-network-'))
         rmSync(resolved, {recursive: true, force: true})
     }
 }
-main().catch(function failed(error) {console.error(error); process.exitCode = 1})
+main().catch(function failed(error) {
+    console.error(error)
+    process.exitCode = 1
+})

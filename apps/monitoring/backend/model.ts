@@ -21,8 +21,26 @@ export type MonitoringState = {accounts: Record<string, Account>, organizations:
     audit: {id: string, orgId: string, account: string, action: string, target: string, at: number}[], workspaces?: Record<string, TaskState>}
 
 export function createMonitoringState(deps: {presets?: Preset[]} = {}): MonitoringState {
-    const names = {owner: 'Алексей · владелец', oncall: 'Даша · дежурная', observer: 'Наблюдатель', outsider: 'Другая команда', 'probe-a': 'Обработчик A', 'probe-b': 'Обработчик B'}
+    const names = {
+        owner: 'Алексей · владелец',
+        oncall: 'Даша · дежурная',
+        observer: 'Наблюдатель',
+        outsider: 'Другая команда',
+        'probe-a': 'Обработчик A',
+        'probe-b': 'Обработчик B'
+    }
     return {accounts: Object.fromEntries(Object.entries(names).map(([account, name]) => [account, {account, name, secret: hashSecret(account + '-pass')}])),
-        organizations: {northstar: {id: 'northstar', name: 'Northstar Studio', revision: 1, members: {owner: 'owner', oncall: 'oncall', observer: 'observer', 'probe-a': 'probe', 'probe-b': 'probe'}}, harbor: {id: 'harbor', name: 'Harbor Labs', revision: 1, members: {outsider: 'owner'}}},
+        organizations: {
+            northstar: {
+                id: 'northstar',
+                name: 'Northstar Studio',
+                revision: 1,
+                members: {
+                    owner: 'owner', oncall: 'oncall', observer: 'observer',
+                    'probe-a': 'probe', 'probe-b': 'probe'
+                }
+            },
+            harbor: {id: 'harbor', name: 'Harbor Labs', revision: 1, members: {outsider: 'owner'}}
+        },
         presets: deps.presets ?? [], monitors: {}, incidents: {}, notices: [], quiet: {}, audit: []}
 }

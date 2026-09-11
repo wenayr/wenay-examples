@@ -7,7 +7,8 @@
     "apps": [
         "approvals",
         "catalog",
-        "metering"
+        "metering",
+        "monitoring"
     ],
     "files": [
         "apps/booking/backend/domain.ts",
@@ -24,9 +25,6 @@
         "apps/forms/backend/service.ts",
         "apps/forms/frontend/main.tsx",
         "apps/hosting/backend/service.ts",
-        "apps/monitoring/backend/domain.ts",
-        "apps/monitoring/backend/service.ts",
-        "apps/monitoring/frontend/main.tsx",
         "apps/pizzeria/backend/service.ts",
         "apps/support/backend/domain.ts",
         "apps/support/frontend/main.tsx",

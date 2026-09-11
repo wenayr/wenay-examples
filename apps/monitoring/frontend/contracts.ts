@@ -7,4 +7,10 @@ export type Resources = ServiceClient<MonitoringDefinition>['resources']
 export type Organization = MonitoringWorkspace['organizations'][number]
 export type PublicStatus = ReturnType<typeof publicStatus>
 export const roles = {owner: 'Владелец', oncall: 'Дежурный', observer: 'Наблюдатель', probe: 'Обработчик'}
-export function date(at: number) {return at ? new Intl.DateTimeFormat('ru', {day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', second: '2-digit'}).format(at) : 'Ещё нет измерений'}
+const moment = new Intl.DateTimeFormat('ru', {
+    day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', second: '2-digit'
+})
+
+export function date(at: number) {
+    return at ? moment.format(at) : 'Ещё нет измерений'
+}
