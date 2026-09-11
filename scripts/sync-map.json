@@ -121,16 +121,16 @@
     {
         "canon": "shared/backend/identity.ts",
         "copies": [
-            "apps/support/backend/identity.ts",
-            "apps/metering/backend/identity.ts",
-            "apps/crm/backend/identity.ts",
+            "apps/approvals/backend/identity.ts",
             "apps/booking/backend/identity.ts",
-            "apps/forms/backend/identity.ts",
-            "apps/monitoring/backend/identity.ts",
             "apps/content/backend/identity.ts",
-            "apps/approvals/backend/identity.ts"
-        ],
-        "note": "documents присоединяется в задаче S03 после унификации проверки секрета"
+            "apps/crm/backend/identity.ts",
+            "apps/documents/backend/identity.ts",
+            "apps/forms/backend/identity.ts",
+            "apps/metering/backend/identity.ts",
+            "apps/monitoring/backend/identity.ts",
+            "apps/support/backend/identity.ts"
+        ]
     },
     {
         "canon": "shared/frontend/env.d.ts",

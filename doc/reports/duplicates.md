@@ -33,7 +33,7 @@
 
 | Файл | Варианты | Различие | Решение |
 | --- | --- | --- | --- |
-| `backend/identity.ts` | support metering crm booking forms monitoring content approvals (8) против documents (1) | Одна строка проверки секрета | унифицировать по строгому варианту (S03) |
+| `backend/identity.ts` | support metering crm booking forms monitoring content approvals (8) против documents (1) | Одна строка проверки секрета | **выполнено в S03**: documents приведён к строгому варианту и включён в канон |
 
 Строгий вариант проверяет структуру записи до сравнения:
 
