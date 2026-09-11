@@ -161,10 +161,24 @@ export function write() {
     return {rows, changed}
 }
 
+// В check:all скрипт запускается с --verify: он не должен ничего менять.
+// Если файл изменился, значит версии правили руками и забыли перегенерировать.
+function verify() {
+    const {changed} = write()
+    if (changed.length == 0) return 0
+    console.log('Устаревшие маркеры версий: ' + changed.join(', '))
+    console.log('Запустите npm run status и закоммитьте результат.')
+    return 1
+}
+
 if (process.argv[1] && import.meta.url.endsWith(path.basename(process.argv[1]))) {
-    const {rows, changed} = write()
-    console.log(table(rows))
-    console.log('')
-    console.log('doc/STATUS.md обновлён.')
-    if (changed.length > 0) console.log('Маркеры обновлены: ' + changed.join(', '))
+    if (process.argv.includes('--verify')) {
+        process.exitCode = verify()
+    } else {
+        const {rows, changed} = write()
+        console.log(table(rows))
+        console.log('')
+        console.log('doc/STATUS.md обновлён.')
+        if (changed.length > 0) console.log('Маркеры обновлены: ' + changed.join(', '))
+    }
 }

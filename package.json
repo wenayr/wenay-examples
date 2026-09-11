@@ -6,7 +6,7 @@
     "typecheck:all": "node scripts/run-all.mjs typecheck",
     "test:all": "node scripts/run-all.mjs test",
     "build:all": "node scripts/run-all.mjs build",
-    "check:all": "node scripts/run-all.mjs typecheck test build && node scripts/sync-check.mjs && node scripts/style-check.mjs && node scripts/links-check.mjs",
+    "check:all": "node scripts/run-all.mjs typecheck test build && node scripts/sync-check.mjs && node scripts/style-check.mjs && node scripts/links-check.mjs && node scripts/status.mjs --verify",
     "style:check": "node scripts/style-check.mjs",
     "sync:check": "node scripts/sync-check.mjs",
     "sync": "node scripts/sync.mjs --write",
