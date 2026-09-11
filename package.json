@@ -11,6 +11,6 @@
     "sync:check": "node scripts/sync-check.mjs",
     "sync": "node scripts/sync.mjs --write",
     "links:check": "node scripts/links-check.mjs",
-    "status": "node scripts/status.mjs"
+    "status": "node scripts/status.mjs && node scripts/catalog.mjs"
   }
 }

@@ -126,14 +126,18 @@ function updateMarkers(rows) {
     const changed = []
     const line = versionLine(rows)
     const files = [path.join(repository, 'README.md')]
-    for (const app of APPS) files.push(path.join(repository, 'apps', app, 'README.md'))
+    for (const app of APPS) {
+        files.push(path.join(repository, 'apps', app, 'README.md'))
+        files.push(path.join(repository, 'apps', app, 'PASSPORT.md'))
+    }
     for (const file of files) {
         if (!existsSync(file)) continue
         const before = readFileSync(file, 'utf8')
         const app = path.basename(path.dirname(file))
         const row = rows.find(item => item.app == app)
+        const passport = path.basename(file) == 'PASSPORT.md'
         const own = row && row.common2 != '—' ? 'Текущие зависимости: **common2 ' + row.common2 + ' / react2 ' + row.react2 + '**.' : line
-        let after = replaceMarked(before, 'status:versions', file.endsWith('README.md') && row ? own : line)
+        let after = passport ? before : replaceMarked(before, 'status:versions', row ? own : line)
         if (row) after = replaceMarked(after, 'status:imports', libraryImports(app).map(name => '`' + name + '`').join(', '))
         if (after == before) continue
         writeFileSync(file, after, 'utf8')
