@@ -8,8 +8,9 @@
     "dev": "vite frontend --host 127.0.0.1",
     "build": "vite build frontend --outDir ../public",
     "typecheck": "tsc --noEmit",
-    "test": "tsx backend/domain-check.ts && tsx backend/assistant-check.ts && tsx backend/check.ts",
-    "test:assistant": "tsx backend/assistant-check.ts"
+    "test": "tsx backend/domain-check.ts && tsx backend/assistant-check.ts && tsx backend/check.ts && tsx backend/backup-check.ts",
+    "test:assistant": "tsx backend/assistant-check.ts",
+    "test:backup": "tsx backend/backup-check.ts"
   },
   "dependencies": {
     "ag-grid-community": "36.1.0",

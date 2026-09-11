@@ -43,6 +43,7 @@
     ],
     "skip": {
         "backend/integration-check.ts": "поднимает соседний support исходного репозитория",
-        "PASSPORT.md": "паспорт каталога примеров: ссылается на STATUS и отчёты репозитория"
+        "PASSPORT.md": "паспорт каталога примеров: ссылается на STATUS и отчёты репозитория",
+        "backend/backup-check.ts": "запускает scripts/backup.mjs и restore.mjs из корня каталога примеров"
     }
 }
