@@ -159,7 +159,8 @@ const rules = [
 function unbreakable(line) {
     if (/^\s*import\s/.test(line)) return true
     const withoutLiterals = withoutText(line, {template: false, comment: false})
-    return withoutLiterals.trim().replace(/[(),;]/g, '').length < 40
+    // Пробелы на месте вырезанного литерала длину кода не увеличивают.
+    return withoutLiterals.replace(/\s+/g, '').replace(/[(),;]/g, '').length < 40
 }
 
 export function checkFile(file, maxLine) {
