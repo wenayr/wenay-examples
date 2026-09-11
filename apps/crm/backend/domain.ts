@@ -13,14 +13,20 @@ export function crmRoles(state: CrmState, account: string) {
 export function organizationAccess(state: CrmState, account: string, orgId: string, roles: readonly string[] = ROLES) {
     const org = Object.hasOwn(state.organizations, orgId) ? state.organizations[orgId] : undefined
     const role = org && Object.hasOwn(org.members, account) ? org.members[account] : undefined
-    if (!Object.hasOwn(state.accounts, account) || !org || !role || !roles.includes(role)) throw new Error('Нет доступа к организации')
+    const known = Object.hasOwn(state.accounts, account)
+    const allowed = !!role && roles.includes(role)
+    if (!known || !org || !allowed) throw new Error('Нет доступа к организации')
     return {org, role}
 }
 export function dealAccess(state: CrmState, account: string, orgId: string, id: string, options: {edit?: boolean, archived?: boolean} = {}) {
     const access = organizationAccess(state, account, orgId)
     const deal = Object.hasOwn(state.deals, id) ? state.deals[id] : undefined
-    if (!deal || deal.orgId != orgId || (deal.archived && !options.archived) || (access.role == 'customer' && deal.customerAccount != account)) throw new Error('Сделка недоступна')
-    if (options.edit && (access.role == 'customer' || (access.role == 'manager' && deal.assignee != account))) throw new Error('Редактировать может ответственный менеджер или руководитель')
+    const live = !!deal && deal.orgId == orgId && (!deal.archived || options.archived)
+    const mine = access.role != 'customer' || deal?.customerAccount == account
+    if (!live || !mine) throw new Error('Сделка недоступна')
+    const ownDeal = access.role != 'manager' || deal.assignee == account
+    const editor = access.role != 'customer' && ownDeal
+    if (options.edit && !editor) throw new Error('Редактировать может ответственный менеджер или руководитель')
     return {...access, deal}
 }
 function revision(value: {revision: number}, expected: number) {
@@ -47,16 +53,43 @@ function summary(deal: Deal) {
     const proposal = proposals.at(-1)
     return {...entry, proposalVersion: proposal?.version ?? 0, proposalDecision: decisions.find(value => value.version == proposal?.version)?.decision ?? null}
 }
+// Клиент видит сотрудников и себя, но не других клиентов организации.
+function visibleMembers(state: CrmState, org: {id: string, role: string}, account: string) {
+    return Object.entries(state.organizations[org.id].members).filter(function shown([id, role]) {
+        return org.role != 'customer' || id == account || role != 'customer'
+    })
+}
+
+function leads(organizations: {id: string, role: string}[], orgId: string) {
+    const org = organizations.find(item => item.id == orgId)
+    return !!org && leaders.includes(org.role as typeof leaders[number])
+}
+
+// Клиенту не показываем контактные данные сотрудников сделки.
+function contactFor(contact: Contact | null | undefined, role: string) {
+    if (!contact) return null
+    if (role == 'customer') return {...contact, email: '', phone: ''}
+    return {...contact}
+}
+
 export function crmWorkspace(state: CrmState, principal: tServicePrincipal | null) {
     const account = principal?.account ?? ''
-    const organizations = Object.values(state.organizations).flatMap(org => Object.hasOwn(org.members, account) && Object.hasOwn(state.accounts, account) ? [{id: org.id, name: org.name, revision: org.revision, role: org.members[account]}] : [])
+    const known = Object.hasOwn(state.accounts, account)
+    const member = Object.values(state.organizations).filter(org => known && Object.hasOwn(org.members, account))
+    const organizations = member.map(function shown(org) {
+        return {id: org.id, name: org.name, revision: org.revision, role: org.members[account]}
+    })
     const staffOrgs = new Set(organizations.filter(org => org.role != 'customer').map(org => org.id))
-    const visible = Object.values(state.deals).filter(deal => organizations.some(org => org.id == deal.orgId && (org.role != 'customer' || deal.customerAccount == account)))
+    const visible = Object.values(state.deals).filter(function shown(deal) {
+        const org = organizations.find(item => item.id == deal.orgId)
+        if (!org) return false
+        return org.role != 'customer' || deal.customerAccount == account
+    })
     const ids = new Set(visible.filter(deal => !deal.archived).map(deal => deal.id))
     return {
         me: Object.hasOwn(state.accounts, account) ? {account, name: state.accounts[account].name} : null,
         organizations,
-        people: organizations.flatMap(org => Object.entries(state.organizations[org.id].members).filter(([id, role]) => org.role != 'customer' || id == account || role != 'customer').map(([id, role]) => ({
+        people: organizations.flatMap(org => visibleMembers(state, org, account).map(([id, role]) => ({
             orgId: org.id, account: id, name: state.accounts[id]?.name ?? id, role
         }))),
         companies: Object.values(state.companies).filter(company => staffOrgs.has(company.orgId)).map(value => ({...value})),
@@ -65,7 +98,7 @@ export function crmWorkspace(state: CrmState, principal: tServicePrincipal | nul
         columns: organizations.map(org => ({
             orgId: org.id, stages: STAGES.map(key => ({key, items: (state.columns[org.id]?.[key] ?? []).filter(id => ids.has(id))}))
         })),
-        audit: state.audit.filter(entry => organizations.some(org => org.id == entry.orgId && leaders.includes(org.role as typeof leaders[number]))).map(entry => ({
+        audit: state.audit.filter(entry => leads(organizations, entry.orgId)).map(entry => ({
             ...entry
         }))
     }
@@ -78,7 +111,7 @@ export function crmDetail(state: CrmState, account: string, orgId: string, id: s
         interactions: deal.interactions.filter(entry => role != 'customer' || !entry.private).map(entry => ({...entry})),
         proposals: deal.proposals.map(entry => ({...entry})), decisions: deal.decisions.map(entry => ({...entry}))},
         company: company ? {...company} : null,
-        contact: contact ? (role == 'customer' ? {...contact, email: '', phone: ''} : {...contact}) : null}
+        contact: contactFor(contact, role)}
 }
 
 export function createCrmDomain(deps: {now?: () => number, accepted?: (ctx: Ctx, deal: Deal, version: number) => void} = {}) {
@@ -110,32 +143,46 @@ export function createCrmDomain(deps: {now?: () => number, accepted?: (ctx: Ctx,
             audit(ctx, id, 'organization.created', id)
             return {id, revision: 1}
         }}),
-        memberRole: schemaCommand({orgId: 'string', revision: 'number', account: 'string', role: {enum: ['none', ...ROLES]}}, {allow: ['owner'], limit: {perMinute: 30}, apply(ctx: Ctx, input) {
+        memberRole: schemaCommand({
+            orgId: 'string', revision: 'number', account: 'string', role: {enum: ['none', ...ROLES]}
+        }, {allow: ['owner'], limit: {perMinute: 30}, apply(ctx: Ctx, input) {
             const {org} = organizationAccess(ctx.state, ctx.account, input.orgId, ['owner'])
             revision(org, input.revision)
             if (!Object.hasOwn(ctx.state.accounts, input.account)) throw new Error('Аккаунт не найден')
             const old = Object.hasOwn(org.members, input.account) ? org.members[input.account] : undefined
-            if (old == 'owner' && input.role != 'owner' && Object.values(org.members).filter(value => value == 'owner').length <= 1) throw new Error('Нельзя удалить последнего владельца')
+            const owners = Object.values(org.members).filter(value => value == 'owner').length
+            const lastOwner = old == 'owner' && input.role != 'owner' && owners <= 1
+            if (lastOwner) throw new Error('Нельзя удалить последнего владельца')
             if (input.role == 'none') delete org.members[input.account]
             else org.members[input.account] = input.role
             org.revision++
             audit(ctx, org.id, 'member.' + input.role, input.account)
             return {id: org.id, revision: org.revision}
         }}),
-        companySave: schemaCommand({orgId: 'string', id: 'string', revision: 'number', name: 'string', domain: 'string'}, {allow: STAFF, apply(ctx: Ctx, input) {
+        companySave: schemaCommand({
+            orgId: 'string', id: 'string', revision: 'number', name: 'string', domain: 'string'
+        }, {allow: STAFF, apply(ctx: Ctx, input) {
             organizationAccess(ctx.state, ctx.account, input.orgId, STAFF)
             const name = text(input.name, 120), domain = text(input.domain, 120, false).toLowerCase()
             if (domain && !/^[a-z0-9][a-z0-9.-]*\.[a-z]{2,}$/.test(domain)) throw new Error('Укажите домен без протокола и пути')
             const previous = input.id ? linked(ctx.state.companies, input.id, input.orgId) : null
             if (previous) revision(previous, input.revision)
             else if (input.revision != 0 || Object.keys(ctx.state.companies).length >= 1000) throw new Error('До 1000 компаний; новая запись с revision 0')
-            if (domain && Object.values(ctx.state.companies).some(value => value.orgId == input.orgId && value.domain == domain && value.id != input.id)) throw new Error('Компания с таким доменом уже существует, в том числе в архиве')
+            function sameDomain(value: {orgId: string, domain: string, id: string}) {
+                return value.orgId == input.orgId && value.domain == domain && value.id != input.id
+            }
+            if (domain && Object.values(ctx.state.companies).some(sameDomain)) {
+                throw new Error('Компания с таким доменом уже существует, в том числе в архиве')
+            }
             const id = previous?.id ?? operation(ctx, 'company'), next = (previous?.revision ?? 0) + 1
             ctx.state.companies[id] = {id, orgId: input.orgId, name, domain, archived: false, revision: next}
             audit(ctx, input.orgId, 'company.saved', id)
             return {id, revision: next}
         }}),
-        contactSave: schemaCommand({orgId: 'string', id: 'string', revision: 'number', companyId: 'string', name: 'string', email: 'string', phone: 'string'}, {allow: STAFF, apply(ctx: Ctx, input) {
+        contactSave: schemaCommand({
+            orgId: 'string', id: 'string', revision: 'number', companyId: 'string',
+            name: 'string', email: 'string', phone: 'string'
+        }, {allow: STAFF, apply(ctx: Ctx, input) {
             organizationAccess(ctx.state, ctx.account, input.orgId, STAFF)
             const name = text(input.name, 120), email = text(input.email, 160).toLowerCase(), phone = text(input.phone, 50, false)
             if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error('Некорректный email контакта')
@@ -143,15 +190,27 @@ export function createCrmDomain(deps: {now?: () => number, accepted?: (ctx: Ctx,
             const previous = input.id ? linked(ctx.state.contacts, input.id, input.orgId) : null
             if (previous) {
                 revision(previous, input.revision)
-                if (previous.companyId != input.companyId && Object.values(ctx.state.deals).some(deal => deal.contactId == previous.id)) throw new Error('Контакт связан со сделками; смена компании запрещена')
+                const linked = Object.values(ctx.state.deals).some(deal => deal.contactId == previous.id)
+                if (previous.companyId != input.companyId && linked) {
+                    throw new Error('Контакт связан со сделками; смена компании запрещена')
+                }
             } else if (input.revision != 0 || Object.keys(ctx.state.contacts).length >= 2000) throw new Error('До 2000 контактов; новая запись с revision 0')
-            if (Object.values(ctx.state.contacts).some(value => value.orgId == input.orgId && value.email == email && value.id != input.id)) throw new Error('Контакт с таким email уже существует, в том числе в архиве')
+            function sameEmail(value: {orgId: string, email: string, id: string}) {
+                return value.orgId == input.orgId && value.email == email && value.id != input.id
+            }
+            if (Object.values(ctx.state.contacts).some(sameEmail)) {
+                throw new Error('Контакт с таким email уже существует, в том числе в архиве')
+            }
             const id = previous?.id ?? operation(ctx, 'contact'), next = (previous?.revision ?? 0) + 1
             ctx.state.contacts[id] = {id, orgId: input.orgId, companyId: input.companyId, name, email, phone, archived: false, revision: next}
             audit(ctx, input.orgId, 'contact.saved', id)
             return {id, revision: next}
         }}),
-        dealSave: schemaCommand({orgId: 'string', id: 'string', revision: 'number', title: 'string', description: 'string', companyId: 'string', contactId: 'string', assignee: 'string', customerAccount: 'string', amount: 'number'}, {allow: STAFF, apply(ctx: Ctx, input) {
+        dealSave: schemaCommand({
+            orgId: 'string', id: 'string', revision: 'number', title: 'string',
+            description: 'string', companyId: 'string', contactId: 'string',
+            assignee: 'string', customerAccount: 'string', amount: 'number'
+        }, {allow: STAFF, apply(ctx: Ctx, input) {
             const {role} = organizationAccess(ctx.state, ctx.account, input.orgId, STAFF)
             const title = text(input.title, 160), description = text(input.description, 3000, false)
             amount(input.amount)
@@ -163,12 +222,16 @@ export function createCrmDomain(deps: {now?: () => number, accepted?: (ctx: Ctx,
             if (input.customerAccount) organizationAccess(ctx.state, input.customerAccount, input.orgId, ['customer'])
             const previous = input.id ? editable(ctx, input).deal : null
             if (previous && (previous.stage == 'won' || previous.stage == 'lost')) throw new Error('Верните сделку в работу перед редактированием')
-            if (previous && previous.proposals.length && previous.customerAccount != input.customerAccount) throw new Error('Нельзя менять клиента после публикации предложения')
+            const published = !!previous && previous.proposals.length > 0
+            if (published && previous.customerAccount != input.customerAccount) {
+                throw new Error('Нельзя менять клиента после публикации предложения')
+            }
             if (!previous && (input.revision != 0 || Object.keys(ctx.state.deals).length >= 2000)) throw new Error('До 2000 сделок; новая запись с revision 0')
             const id = previous?.id ?? operation(ctx, 'deal'), at = now()
             if (previous) {
                 Object.assign(previous, {
-                    title, description, companyId: input.companyId, contactId: input.contactId, assignee: input.assignee, customerAccount: input.customerAccount, amount: input.amount
+                    title, description, companyId: input.companyId, contactId: input.contactId,
+                    assignee: input.assignee, customerAccount: input.customerAccount, amount: input.amount
                 })
                 return changed(ctx, previous, 'deal.saved')
             }
@@ -179,17 +242,32 @@ export function createCrmDomain(deps: {now?: () => number, accepted?: (ctx: Ctx,
             audit(ctx, input.orgId, 'deal.created', id)
             return {id, revision: 1}
         }}),
-        dealMove: schemaCommand({orgId: 'string', id: 'string', revision: 'number', stage: {enum: STAGES}, beforeId: 'string', reason: 'string'}, {allow: STAFF, apply(ctx: Ctx, input) {
+        dealMove: schemaCommand({
+            orgId: 'string', id: 'string', revision: 'number',
+            stage: {enum: STAGES}, beforeId: 'string', reason: 'string'
+        }, {allow: STAFF, apply(ctx: Ctx, input) {
             const {deal, role} = editable(ctx, input)
             const reason = text(input.reason, 500, false)
             const transitions: Record<tStage, readonly tStage[]> = {
-                incoming: ['incoming', 'qualified', 'lost'], qualified: ['incoming', 'qualified', 'proposal', 'lost'], proposal: ['qualified', 'proposal', 'won', 'lost'], won: ['won', 'qualified'], lost: ['lost', 'qualified']
+                incoming: ['incoming', 'qualified', 'lost'],
+                qualified: ['incoming', 'qualified', 'proposal', 'lost'],
+                proposal: ['qualified', 'proposal', 'won', 'lost'],
+                won: ['won', 'qualified'],
+                lost: ['lost', 'qualified']
             }
             if (!transitions[deal.stage].includes(input.stage)) throw new Error('Переход между этапами недоступен')
-            if ((deal.stage == 'won' || deal.stage == 'lost') && input.stage != deal.stage && (!leaders.includes(role as typeof leaders[number]) || !reason)) throw new Error('Вернуть закрытую сделку может руководитель с причиной')
+            const closed = deal.stage == 'won' || deal.stage == 'lost'
+            const reopening = closed && input.stage != deal.stage
+            const permitted = leaders.includes(role as typeof leaders[number]) && !!reason
+            if (reopening && !permitted) throw new Error('Вернуть закрытую сделку может руководитель с причиной')
             if (input.stage == 'lost' && !reason) throw new Error('Укажите причину отказа')
             if (input.stage == 'proposal' && !deal.proposals.length) throw new Error('Сначала опубликуйте предложение')
-            if (input.stage == 'won' && !deal.decisions.some(value => value.version == deal.proposals.at(-1)?.version && value.decision == 'accept')) throw new Error('Клиент должен принять актуальную версию предложения')
+            function accepted(value: {version: number, decision: string}) {
+                return value.version == deal.proposals.at(-1)?.version && value.decision == 'accept'
+            }
+            if (input.stage == 'won' && !deal.decisions.some(accepted)) {
+                throw new Error('Клиент должен принять актуальную версию предложения')
+            }
             const columns = ctx.state.columns[input.orgId]
             if (input.beforeId && (input.beforeId == deal.id || !columns[input.stage].includes(input.beforeId))) throw new Error('Порядок колонки изменился')
             if (reason && deal.interactions.length >= 200) throw new Error('До 200 взаимодействий в сделке')
@@ -202,7 +280,9 @@ export function createCrmDomain(deps: {now?: () => number, accepted?: (ctx: Ctx,
             }
             return changed(ctx, deal, 'deal.moved.' + input.stage)
         }}),
-        interactionAdd: schemaCommand({orgId: 'string', id: 'string', revision: 'number', body: 'string', private: 'boolean'}, {allow: ROLES, apply(ctx: Ctx, input) {
+        interactionAdd: schemaCommand({
+            orgId: 'string', id: 'string', revision: 'number', body: 'string', private: 'boolean'
+        }, {allow: ROLES, apply(ctx: Ctx, input) {
             const {deal, role} = dealAccess(ctx.state, ctx.account, input.orgId, input.id)
             revision(deal, input.revision)
             if (role != 'customer') dealAccess(ctx.state, ctx.account, input.orgId, input.id, {edit: true})
@@ -212,7 +292,10 @@ export function createCrmDomain(deps: {now?: () => number, accepted?: (ctx: Ctx,
             deal.interactions.push({id: operation(ctx, 'interaction'), author: ctx.account, body, private: input.private, at: now()})
             return changed(ctx, deal, input.private ? 'note.added' : 'message.added')
         }}),
-        proposalSave: schemaCommand({orgId: 'string', id: 'string', revision: 'number', title: 'string', body: 'string', amount: 'number'}, {allow: STAFF, apply(ctx: Ctx, input) {
+        proposalSave: schemaCommand({
+            orgId: 'string', id: 'string', revision: 'number',
+            title: 'string', body: 'string', amount: 'number'
+        }, {allow: STAFF, apply(ctx: Ctx, input) {
             const {deal} = editable(ctx, input)
             const title = text(input.title, 160), body = text(input.body, 10000)
             amount(input.amount)
@@ -222,7 +305,8 @@ export function createCrmDomain(deps: {now?: () => number, accepted?: (ctx: Ctx,
         }}),
         proposalPublish: schemaCommand({orgId: 'string', id: 'string', revision: 'number'}, {allow: STAFF, apply(ctx: Ctx, input) {
             const {deal} = editable(ctx, input)
-            if (!deal.draft || !deal.customerAccount || deal.stage == 'won' || deal.stage == 'lost') throw new Error('Нужны черновик, клиент и открытая сделка')
+            const open = deal.stage != 'won' && deal.stage != 'lost'
+            if (!deal.draft || !deal.customerAccount || !open) throw new Error('Нужны черновик, клиент и открытая сделка')
             organizationAccess(ctx.state, deal.customerAccount, input.orgId, ['customer'])
             if (deal.proposals.length >= 20) throw new Error('До 20 опубликованных версий предложения')
             const version = (deal.proposals.at(-1)?.version ?? 0) + 1
@@ -230,27 +314,51 @@ export function createCrmDomain(deps: {now?: () => number, accepted?: (ctx: Ctx,
             deal.draft = null
             return {...changed(ctx, deal, 'proposal.published'), version}
         }}),
-        proposalRespond: schemaCommand({orgId: 'string', id: 'string', revision: 'number', version: 'number', decision: {enum: ['accept', 'changes']}, body: 'string'}, {allow: ['customer'], apply(ctx: Ctx, input) {
+        proposalRespond: schemaCommand({
+            orgId: 'string', id: 'string', revision: 'number', version: 'number',
+            decision: {enum: ['accept', 'changes']}, body: 'string'
+        }, {allow: ['customer'], apply(ctx: Ctx, input) {
             const {deal, role} = dealAccess(ctx.state, ctx.account, input.orgId, input.id)
             revision(deal, input.revision)
             if (role != 'customer' || deal.customerAccount != ctx.account) throw new Error('Ответить может клиент этой сделки')
             if (deal.stage == 'won' || deal.stage == 'lost') throw new Error('Сделка закрыта')
-            if (!Number.isSafeInteger(input.version) || deal.proposals.at(-1)?.version != input.version) throw new Error('Предложение уже заменено новой версией')
+            const latest = deal.proposals.at(-1)?.version == input.version
+            if (!Number.isSafeInteger(input.version) || !latest) throw new Error('Предложение уже заменено новой версией')
             if (deal.decisions.some(value => value.version == input.version)) throw new Error('Ответ на эту версию уже зафиксирован')
             const body = text(input.body, 2000, input.decision == 'changes')
             if (input.decision == 'accept') deps.accepted?.(ctx, deal, input.version)
             deal.decisions.push({version: input.version, decision: input.decision, body, account: ctx.account, at: now()})
             return changed(ctx, deal, 'proposal.' + input.decision)
         }}),
-        archiveRecord: schemaCommand({orgId: 'string', kind: {enum: ['company', 'contact', 'deal']}, id: 'string', revision: 'number', archived: 'boolean'}, {allow: STAFF, apply(ctx: Ctx, input) {
+        archiveRecord: schemaCommand({
+            orgId: 'string', kind: {enum: ['company', 'contact', 'deal']},
+            id: 'string', revision: 'number', archived: 'boolean'
+        }, {allow: STAFF, apply(ctx: Ctx, input) {
             organizationAccess(ctx.state, ctx.account, input.orgId, input.kind == 'deal' ? STAFF : leaders)
-            const table = input.kind == 'deal' ? ctx.state.deals : input.kind == 'company' ? ctx.state.companies : ctx.state.contacts
+            type Archivable = {id: string, orgId: string, archived: boolean, revision: number}
+            let table = ctx.state.contacts as Record<string, Archivable>
+            if (input.kind == 'deal') table = ctx.state.deals
+            else if (input.kind == 'company') table = ctx.state.companies
             const entry = Object.hasOwn(table, input.id) ? table[input.id] : undefined
             if (!entry || entry.orgId != input.orgId) throw new Error('Запись недоступна')
             revision(entry, input.revision)
             if (input.kind == 'deal') dealAccess(ctx.state, ctx.account, input.orgId, input.id, {edit: true, archived: true})
-            if (input.archived && input.kind == 'company' && (Object.values(ctx.state.contacts).some(contact => contact.companyId == input.id && !contact.archived) || Object.values(ctx.state.deals).some(deal => deal.companyId == input.id && !deal.archived))) throw new Error('Сначала архивируйте связанные контакты и сделки')
-            if (input.archived && input.kind == 'contact' && Object.values(ctx.state.deals).some(deal => deal.contactId == input.id && !deal.archived)) throw new Error('Сначала архивируйте связанные сделки')
+            const liveContacts = Object.values(ctx.state.contacts).some(function inCompany(contact) {
+                return contact.companyId == input.id && !contact.archived
+            })
+            const liveDeals = Object.values(ctx.state.deals).some(function inCompany(deal) {
+                return deal.companyId == input.id && !deal.archived
+            })
+            const blocked = liveContacts || liveDeals
+            if (input.archived && input.kind == 'company' && blocked) {
+                throw new Error('Сначала архивируйте связанные контакты и сделки')
+            }
+            const liveForContact = Object.values(ctx.state.deals).some(function onContact(deal) {
+                return deal.contactId == input.id && !deal.archived
+            })
+            if (input.archived && input.kind == 'contact' && liveForContact) {
+                throw new Error('Сначала архивируйте связанные сделки')
+            }
             if (!input.archived) {
                 if (input.kind == 'contact') linked(ctx.state.companies, (entry as Contact).companyId, input.orgId)
                 if (input.kind == 'deal') {
@@ -263,9 +371,13 @@ export function createCrmDomain(deps: {now?: () => number, accepted?: (ctx: Ctx,
             audit(ctx, input.orgId, input.kind + (input.archived ? '.archived' : '.restored'), entry.id)
             return {id: entry.id, revision: entry.revision}
         }}),
-        batchAssign: schemaCommand({orgId: 'string', items: {array: {object: {id: 'string', revision: 'number'}}}, assignee: 'string'}, {allow: leaders, apply(ctx: Ctx, input) {
+        batchAssign: schemaCommand({
+            orgId: 'string', items: {array: {object: {id: 'string', revision: 'number'}}}, assignee: 'string'
+        }, {allow: leaders, apply(ctx: Ctx, input) {
             organizationAccess(ctx.state, ctx.account, input.orgId, leaders)
-            if (!input.items.length || input.items.length > 50 || new Set(input.items.map(item => item.id)).size != input.items.length) throw new Error('Выберите от 1 до 50 разных сделок')
+            const unique = new Set(input.items.map(item => item.id)).size == input.items.length
+            const sized = input.items.length >= 1 && input.items.length <= 50
+            if (!sized || !unique) throw new Error('Выберите от 1 до 50 разных сделок')
             assignee(ctx.state, input.orgId, input.assignee)
             const entries = input.items.map(item => editable(ctx, {...item, orgId: input.orgId}).deal)
             for (const deal of entries) {deal.assignee = input.assignee; changed(ctx, deal, 'deal.assigned')}

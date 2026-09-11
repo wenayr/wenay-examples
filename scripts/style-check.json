@@ -7,7 +7,10 @@
         "apps/content/backend/domain.ts",
         "apps/documents/backend/domain.ts",
         "apps/metering/backend/domain.ts",
-        "apps/support/backend/domain.ts"
+        "apps/support/backend/domain.ts",
+        "apps/booking/backend/domain.ts",
+        "apps/forms/backend/domain.ts",
+        "apps/crm/backend/domain.ts"
     ],
     "exclude": [
         "scripts/create-saas-example.mjs",

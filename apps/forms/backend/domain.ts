@@ -10,7 +10,9 @@ export function hash(value: string) {return createHash('sha256').update(value).d
 export function organizationAccess(state: FormsState, account: string, orgId: string, roles: readonly string[] = STAFF) {
     const org = Object.hasOwn(state.organizations, orgId) ? state.organizations[orgId] : undefined
     const role = org && Object.hasOwn(org.members, account) ? org.members[account] : undefined
-    if (!org || !role || !Object.hasOwn(state.accounts, account) || !roles.includes(role)) throw new Error('Нет доступа к организации')
+    const known = Object.hasOwn(state.accounts, account)
+    const allowed = !!role && roles.includes(role)
+    if (!org || !known || !allowed) throw new Error('Нет доступа к организации')
     return {org, role}
 }
 export function formAccess(state: FormsState, account: string, orgId: string, id: string, roles: readonly string[] = STAFF) {
@@ -22,11 +24,19 @@ export function formAccess(state: FormsState, account: string, orgId: string, id
 export function publicForm(state: FormsState, account: string) {
     const match = /^form:([^:]+):(\d+)$/.exec(account)
     const form = match && Object.hasOwn(state.forms, match[1]) ? state.forms[match[1]] : undefined
-    if (!form || !form.enabled || form.accessGeneration != Number(match![2]) || !form.publishedVersion) throw new Error('Публичная ссылка закрыта или обновлена')
+    const live = !!form && form.enabled && !!form.publishedVersion
+    if (!live || form.accessGeneration != Number(match![2])) throw new Error('Публичная ссылка закрыта или обновлена')
     return {form, version: form.versions.find(value => value.version == form.publishedVersion)!}
 }
 export function formsRoles(state: FormsState, account: string) {
-    if (account.startsWith('form:')) {try {publicForm(state, account); return ['respondent']} catch {return []}}
+    if (account.startsWith('form:')) {
+        try {
+            publicForm(state, account)
+            return ['respondent']
+        } catch {
+            return []
+        }
+    }
     if (!Object.hasOwn(state.accounts, account)) return []
     return [...new Set(['account', ...Object.values(state.organizations).flatMap(org => Object.hasOwn(org.members, account) ? [org.members[account]] : [])])]
 }
@@ -34,11 +44,30 @@ export function validateFields(fields: Field[]) {
     if (!Array.isArray(fields) || !fields.length || fields.length > 20) throw new Error('От 1 до 20 полей')
     const found = new Map<string, Field>()
     for (const field of fields) {
-        if (!field || !/^[a-zA-Z][a-zA-Z0-9_]{0,39}$/.test(field.id) || forbiddenKeys.has(field.id) || found.has(field.id)) throw new Error('Идентификаторы полей должны быть безопасными и уникальными')
-        if (!field.label.trim() || field.label.length > 160 || !FIELD_TYPES.includes(field.kind) || typeof field.required != 'boolean' || typeof field.whenField != 'string' || typeof field.whenEquals != 'string') throw new Error('Некорректное описание поля')
-        if (!Array.isArray(field.choices) || field.choices.length > 20 || field.choices.some(value => typeof value != 'string' || !value.trim() || value.length > 80) || new Set(field.choices).size != field.choices.length || field.kind == 'choice' && !field.choices.length) throw new Error('До 20 разных вариантов выбора')
-        if (!Number.isFinite(field.min) || !Number.isFinite(field.max) || field.min > field.max || Math.abs(field.min) > 1e9 || Math.abs(field.max) > 1e9) throw new Error('Некорректный диапазон поля')
-        if ((field.kind == 'text' || field.kind == 'longtext') && (!Number.isInteger(field.min) || !Number.isInteger(field.max) || field.min < 0 || field.max < 1 || field.max > (field.kind == 'text' ? 200 : 2000))) throw new Error('Текст до 200, длинный текст до 2000 символов')
+        const named = !!field && /^[a-zA-Z][a-zA-Z0-9_]{0,39}$/.test(field.id)
+        const free = named && !forbiddenKeys.has(field.id) && !found.has(field.id)
+        if (!free) throw new Error('Идентификаторы полей должны быть безопасными и уникальными')
+        const labelled = !!field.label.trim() && field.label.length <= 160 && FIELD_TYPES.includes(field.kind)
+        const typed = typeof field.required == 'boolean'
+        const conditioned = typeof field.whenField == 'string' && typeof field.whenEquals == 'string'
+        if (!labelled || !typed || !conditioned) throw new Error('Некорректное описание поля')
+        function badChoice(value: unknown) {
+            return typeof value != 'string' || !value.trim() || value.length > 80
+        }
+        const listed = Array.isArray(field.choices) && field.choices.length <= 20
+        const clean = listed && !field.choices.some(badChoice)
+        const unique = clean && new Set(field.choices).size == field.choices.length
+        const filled = field.kind != 'choice' || field.choices.length > 0
+        if (!unique || !filled) throw new Error('До 20 разных вариантов выбора')
+        const finite = Number.isFinite(field.min) && Number.isFinite(field.max)
+        const bounded = finite && Math.abs(field.min) <= 1e9 && Math.abs(field.max) <= 1e9
+        if (!bounded || field.min > field.max) throw new Error('Некорректный диапазон поля')
+        if (field.kind == 'text' || field.kind == 'longtext') {
+            const ceiling = field.kind == 'text' ? 200 : 2000
+            const whole = Number.isInteger(field.min) && Number.isInteger(field.max)
+            const sized = whole && field.min >= 0 && field.max >= 1 && field.max <= ceiling
+            if (!sized) throw new Error('Текст до 200, длинный текст до 2000 символов')
+        }
         found.set(field.id, field)
     }
     const visiting = new Set<string>(), done = new Set<string>()
@@ -49,7 +78,11 @@ export function validateFields(fields: Field[]) {
         const field = found.get(id)!
         if (field.whenField) {
             const parent = found.get(field.whenField)
-            if (!parent || !['choice', 'boolean'].includes(parent.kind) || !(parent.kind == 'boolean' ? ['true', 'false'] : parent.choices).includes(field.whenEquals)) throw new Error('Условие ссылается на существующий выбор или да/нет')
+            const branching = !!parent && ['choice', 'boolean'].includes(parent.kind)
+            const values = parent?.kind == 'boolean' ? ['true', 'false'] : parent?.choices ?? []
+            if (!branching || !values.includes(field.whenEquals)) {
+                throw new Error('Условие ссылается на существующий выбор или да/нет')
+            }
             visit(parent.id)
         }
         visiting.delete(id)
@@ -58,8 +91,21 @@ export function validateFields(fields: Field[]) {
     fields.forEach(field => visit(field.id))
     return fields.map(field => ({...field, label: field.label.trim(), choices: [...field.choices]}))
 }
+// Тип поля превращается в правило публичной схемы common2.
+function fieldRule(field: Field) {
+    if (field.kind == 'choice') {
+        const optional = field.required ? {} : {optional: true as const}
+        return {enum: field.choices, ...optional}
+    }
+    if (field.kind == 'number') return field.required ? 'number' : 'number?'
+    if (field.kind == 'boolean') return field.required ? 'boolean' : 'boolean?'
+    return field.required ? 'string' : 'string?'
+}
+
 export function validateAnswers(version: PublishedVersion, input: unknown): Answers {
-    if (!input || typeof input != 'object' || Array.isArray(input) || Object.keys(input).some(key => forbiddenKeys.has(key))) throw new Error('Ожидается объект ответов')
+    const shaped = !!input && typeof input == 'object' && !Array.isArray(input)
+    const safe = shaped && !Object.keys(input).some(key => forbiddenKeys.has(key))
+    if (!safe) throw new Error('Ожидается объект ответов')
     const values = input as Answers
     const fields = new Map(version.fields.map(field => [field.id, field]))
     const visibility = new Map<string, boolean>()
@@ -72,16 +118,21 @@ export function validateAnswers(version: PublishedVersion, input: unknown): Answ
     }
     const schema: tInputSchema = {}
     for (const field of version.fields.filter(visible)) {
-        schema[field.id] = field.kind == 'choice' ? {enum: field.choices, ...(!field.required ? {optional: true as const} : {})} :
-            field.kind == 'number' ? (field.required ? 'number' : 'number?') : field.kind == 'boolean' ? (field.required ? 'boolean' : 'boolean?') : (field.required ? 'string' : 'string?')
+        schema[field.id] = fieldRule(field)
     }
     buildInputValidate(schema)(input)
     const result: Answers = {}
     for (const field of version.fields.filter(visible)) {
         if (!Object.hasOwn(values, field.id) || values[field.id] === undefined) continue
         const value = values[field.id]
-        if ((field.kind == 'text' || field.kind == 'longtext') && (typeof value != 'string' || value.length < Math.max(field.min, field.required ? 1 : 0) || value.length > field.max || field.required && !value.trim())) throw new Error('Проверьте длину поля «' + field.label + '»')
-        if (field.kind == 'number' && (typeof value != 'number' || value < field.min || value > field.max)) throw new Error('Число за пределами диапазона')
+        if (field.kind == 'text' || field.kind == 'longtext') {
+            const least = Math.max(field.min, field.required ? 1 : 0)
+            const sized = typeof value == 'string' && value.length >= least && value.length <= field.max
+            const filled = !field.required || (typeof value == 'string' && !!value.trim())
+            if (!sized || !filled) throw new Error('Проверьте длину поля «' + field.label + '»')
+        }
+        const inRange = typeof value == 'number' && value >= field.min && value <= field.max
+        if (field.kind == 'number' && !inRange) throw new Error('Число за пределами диапазона')
         result[field.id] = value
     }
     if (Buffer.byteLength(JSON.stringify(result)) > 32768) throw new Error('Ответ до 32 KiB')
@@ -89,7 +140,11 @@ export function validateAnswers(version: PublishedVersion, input: unknown): Answ
 }
 export function formsWorkspace(state: FormsState, principal: tServicePrincipal | null) {
     const account = principal?.account ?? ''
-    const organizations = Object.values(state.organizations).flatMap(org => Object.hasOwn(org.members, account) && Object.hasOwn(state.accounts, account) ? [{id: org.id, name: org.name, revision: org.revision, role: org.members[account]}] : [])
+    const known = Object.hasOwn(state.accounts, account)
+    const member = Object.values(state.organizations).filter(org => known && Object.hasOwn(org.members, account))
+    const organizations = member.map(function shown(org) {
+        return {id: org.id, name: org.name, revision: org.revision, role: org.members[account]}
+    })
     const allowed = new Set(organizations.map(org => org.id))
     return {me: Object.hasOwn(state.accounts, account) ? {account, name: state.accounts[account].name} : null, organizations,
         forms: Object.values(state.forms).filter(form => allowed.has(form.orgId)).map(({tokenHash, fields, versions, ...form}) => ({
@@ -100,7 +155,9 @@ export function formsWorkspace(state: FormsState, principal: tServicePrincipal |
             const version = state.forms[entry.formId].versions.find(value => value.version == entry.version)!
             return {formId: entry.formId, version: entry.version, count: entry.count, fields: version.fields.map(field => {
                 const current = entry.fields[field.id] ?? {answered: 0, sum: 0, values: {}}
-                const labels = field.kind == 'boolean' ? ['true', 'false'] : field.kind == 'choice' ? field.choices : []
+                let labels: string[] = []
+                if (field.kind == 'boolean') labels = ['true', 'false']
+                else if (field.kind == 'choice') labels = field.choices
                 return {id: field.id, label: field.label, kind: field.kind, answered: current.answered, sum: current.sum,
                     average: field.kind == 'number' && current.answered ? current.sum / current.answered : null,
                     values: labels.map(value => ({value, count: current.values[hash(value)] ?? 0}))}
@@ -108,7 +165,11 @@ export function formsWorkspace(state: FormsState, principal: tServicePrincipal |
         })}
 }
 export type FormsWorkspace = ReturnType<typeof formsWorkspace>
-const fieldSchema = {id: 'string', label: 'string', kind: {enum: FIELD_TYPES}, required: 'boolean', choices: {array: 'string'}, min: 'number', max: 'number', whenField: 'string', whenEquals: 'string'} as const
+const fieldSchema = {
+    id: 'string', label: 'string', kind: {enum: FIELD_TYPES}, required: 'boolean',
+    choices: {array: 'string'}, min: 'number', max: 'number',
+    whenField: 'string', whenEquals: 'string'
+} as const
 export function createFormsDomain(deps: {now?: () => number} = {}) {
     const now = deps.now ?? Date.now
     function revision(form: Form, value: number) {if (form.revision != value) throw new Error('Форма изменилась. Откройте свежую версию')}
@@ -146,9 +207,14 @@ export function createFormsDomain(deps: {now?: () => number} = {}) {
         return true
     }
     return {commands: {
-        formSave: schemaCommand({orgId: 'string', id: 'string', revision: 'number', title: 'string', description: 'string', fields: {array: {object: fieldSchema}}, retentionDays: 'number'}, {allow: EDITORS, limit: {perMinute: 30}, apply(ctx: Ctx, input) {
+        formSave: schemaCommand({
+            orgId: 'string', id: 'string', revision: 'number', title: 'string',
+            description: 'string', fields: {array: {object: fieldSchema}}, retentionDays: 'number'
+        }, {allow: EDITORS, limit: {perMinute: 30}, apply(ctx: Ctx, input) {
             organizationAccess(ctx.state, ctx.account, input.orgId, EDITORS)
-            if (!input.title.trim() || input.title.length > 160 || input.description.length > 2000 || !Number.isInteger(input.retentionDays) || input.retentionDays < 1 || input.retentionDays > 365) throw new Error('Название до 160, описание до 2000, хранение от 1 до 365 дней')
+            const titled = !!input.title.trim() && input.title.length <= 160 && input.description.length <= 2000
+            const kept = Number.isInteger(input.retentionDays) && input.retentionDays >= 1 && input.retentionDays <= 365
+            if (!titled || !kept) throw new Error('Название до 160, описание до 2000, хранение от 1 до 365 дней')
             const fields = validateFields(input.fields)
             const previous = input.id ? formAccess(ctx.state, ctx.account, input.orgId, input.id, EDITORS).form : null
             if (previous) revision(previous, input.revision)
@@ -161,15 +227,21 @@ export function createFormsDomain(deps: {now?: () => number} = {}) {
                 previous.retentionDays = input.retentionDays
                 previous.revision++
             }
-            else ctx.state.forms[id] = {id, orgId: input.orgId, title: input.title.trim(), description: input.description.trim(), fields, retentionDays: input.retentionDays,
+            else ctx.state.forms[id] = {
+                id, orgId: input.orgId, title: input.title.trim(),
+                description: input.description.trim(), fields, retentionDays: input.retentionDays,
                 revision: 1, enabled: false, publishedVersion: 0, accessGeneration: 0, tokenHash: '', versions: [], answersRevision: 0, createdAt: now()}
             return {id, revision: ctx.state.forms[id].revision}
         }}),
-        formPublish: schemaCommand({orgId: 'string', id: 'string', revision: 'number', actor: 'string', tokenHash: 'string', publication: 'string'}, {allow: ['system'], apply(ctx: Ctx, input) {
+        formPublish: schemaCommand({
+            orgId: 'string', id: 'string', revision: 'number',
+            actor: 'string', tokenHash: 'string', publication: 'string'
+        }, {allow: ['system'], apply(ctx: Ctx, input) {
             internal(ctx)
             const {form} = formAccess(ctx.state, input.actor, input.orgId, input.id, EDITORS)
             revision(form, input.revision)
-            if (!/^[a-f0-9]{64}$/.test(input.tokenHash) || !/^[a-f0-9]{64}$/.test(input.publication) || form.versions.length >= 20) throw new Error('До 20 версий; корректный внутренний запрос публикации')
+            const hashed = /^[a-f0-9]{64}$/.test(input.tokenHash) && /^[a-f0-9]{64}$/.test(input.publication)
+            if (!hashed || form.versions.length >= 20) throw new Error('До 20 версий; корректный внутренний запрос публикации')
             const fields = validateFields(form.fields), version = form.versions.length + 1
             form.versions.push({version, title: form.title, description: form.description, fields, publishedAt: now()})
             form.publishedVersion = version
@@ -190,10 +262,13 @@ export function createFormsDomain(deps: {now?: () => number} = {}) {
             form.revision++
             return {id: form.id, revision: form.revision}
         }}),
-        answerSubmit: schemaCommand({formId: 'string', version: 'number', nonce: 'string', answersJson: 'string'}, {allow: ['respondent'], limit: {perMinute: 30}, apply(ctx: Ctx, input) {
+        answerSubmit: schemaCommand({
+            formId: 'string', version: 'number', nonce: 'string', answersJson: 'string'
+        }, {allow: ['respondent'], limit: {perMinute: 30}, apply(ctx: Ctx, input) {
             const {form, version} = publicForm(ctx.state, ctx.account)
             if (input.formId != form.id || input.version != version.version) throw new Error('Публикация изменилась. Перезагрузите форму')
-            if (!/^[\w:-]{8,120}$/.test(input.nonce) || Buffer.byteLength(input.answersJson) > 32768) throw new Error('Некорректный nonce или ответ больше 32 KiB')
+            const keyed = /^[\w:-]{8,120}$/.test(input.nonce)
+            if (!keyed || Buffer.byteLength(input.answersJson) > 32768) throw new Error('Некорректный nonce или ответ больше 32 KiB')
             const answers = validateAnswers(version, JSON.parse(input.answersJson))
             const id = hash(JSON.stringify([form.id, form.accessGeneration, input.nonce]))
             const signature = hash(JSON.stringify([input.version, Object.entries(answers).sort(([a], [b]) => a.localeCompare(b))]))
@@ -218,10 +293,14 @@ export function createFormsDomain(deps: {now?: () => number} = {}) {
             if (!entry || entry.formId != input.formId) throw new Error('Ответ недоступен')
             return {deleted: remove(ctx.state, input.id)}
         }}),
-        answerCorrect: schemaCommand({orgId: 'string', formId: 'string', id: 'string', answersRevision: 'number', answersJson: 'string'}, {allow: ['owner'], apply(ctx: Ctx, input) {
+        answerCorrect: schemaCommand({
+            orgId: 'string', formId: 'string', id: 'string',
+            answersRevision: 'number', answersJson: 'string'
+        }, {allow: ['owner'], apply(ctx: Ctx, input) {
             const {form} = formAccess(ctx.state, ctx.account, input.orgId, input.formId, ['owner'])
             const entry = Object.hasOwn(ctx.state.submissions, input.id) ? ctx.state.submissions[input.id] : undefined
-            if (!entry || entry.formId != form.id || entry.expiresAt <= now() || form.answersRevision != input.answersRevision) throw new Error('Ответ удалён, просрочен или изменился')
+            const live = !!entry && entry.formId == form.id && entry.expiresAt > now()
+            if (!live || form.answersRevision != input.answersRevision) throw new Error('Ответ удалён, просрочен или изменился')
             if (Buffer.byteLength(input.answersJson) > 32768) throw new Error('Ответ до 32 KiB')
             const version = form.versions.find(value => value.version == entry.version)!
             const answers = validateAnswers(version, JSON.parse(input.answersJson))
@@ -240,10 +319,15 @@ export function createFormsDomain(deps: {now?: () => number} = {}) {
                 return {deleted}
             }
         }),
-        memberRole: schemaCommand({orgId: 'string', revision: 'number', account: 'string', role: {enum: ['none', ...STAFF]}}, {allow: ['owner'], limit: {perMinute: 30}, apply(ctx: Ctx, input) {
+        memberRole: schemaCommand({
+            orgId: 'string', revision: 'number', account: 'string', role: {enum: ['none', ...STAFF]}
+        }, {allow: ['owner'], limit: {perMinute: 30}, apply(ctx: Ctx, input) {
             const {org} = organizationAccess(ctx.state, ctx.account, input.orgId, ['owner'])
-            if (org.revision != input.revision || !Object.hasOwn(ctx.state.accounts, input.account)) throw new Error('Организация изменилась или аккаунт недоступен')
-            if (org.members[input.account] == 'owner' && input.role != 'owner' && Object.values(org.members).filter(value => value == 'owner').length == 1) throw new Error('Нельзя удалить последнего владельца')
+            const known = Object.hasOwn(ctx.state.accounts, input.account)
+            if (org.revision != input.revision || !known) throw new Error('Организация изменилась или аккаунт недоступен')
+            const owners = Object.values(org.members).filter(value => value == 'owner').length
+            const lastOwner = org.members[input.account] == 'owner' && input.role != 'owner' && owners == 1
+            if (lastOwner) throw new Error('Нельзя удалить последнего владельца')
             if (input.role == 'none') delete org.members[input.account]
             else org.members[input.account] = input.role
             org.revision++
