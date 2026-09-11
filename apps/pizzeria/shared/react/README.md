@@ -1,6 +1,9 @@
 # Общие React-привязки сервиса
 
-Оба приложения используют common2 2.18.1 и react2 3.3.0 из npm. [Результаты миграции](../../../../doc/reports/library-runtime-adoption.md).
+<!-- status:versions -->
+<!-- /status:versions -->
+
+Оба приложения используют common2 и react2 из npm. [Результаты миграции](../../../../doc/reports/library-runtime-adoption.md).
 
 | Элемент примера | Библиотечный механизм | Что остаётся приложению |
 | --- | --- | --- |

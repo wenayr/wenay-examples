@@ -1,5 +1,9 @@
 # Content Studio · редакция и публикации
 
+<!-- status:versions -->
+Текущие зависимости: **common2 2.21.1 / react2 3.5.1**.
+<!-- /status:versions -->
+
 Самостоятельная небольшая студия на exact `wenay-common2 2.21.1` / `wenay-react2 3.5.1`. Пять типов блоков: heading/text/image/quote/button, без произвольного HTML, скриптов и универсального no-code. Authority владеет изменениями, snapshots, расписанием и файлами; serving nodes обслуживают ролевые проекции и библиотечные соединения.
 
 ## Запуск и роли

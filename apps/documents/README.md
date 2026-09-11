@@ -1,5 +1,9 @@
 # Document Studio
 
+<!-- status:versions -->
+Текущие зависимости: **common2 2.21.1 / react2 3.5.1**.
+<!-- /status:versions -->
+
 Самостоятельный пример: загрузить CSV, UTF-8 TXT или текстовый PDF, извлечь строки, проверить рядом с источником, исправить ячейки, утвердить и выгрузить CSV/JSON. Для запуска не нужны поддержка, пиццерия, Docker или платный ИИ.
 
 ## Запуск
@@ -90,11 +94,6 @@ node --import tsx backend/domain-check.ts
 
 10.09.2026 повторно прошли полный `npm test` с настоящим Python из локального runtime, проверка типов и production-сборка после изменения общего replay-hook и выделения `csv-table.ts` для второго потребителя CRM. Заново собранные Docker-образы прошли `first → second → rollback first` с Node/Python CSV, текстовым PDF, утверждёнными экспортами, исходными байтами и сохранённой сессией через gateway.
 
-| Образ | Проверенный digest |
-| --- | --- |
-| `wenay-examples.local/documents:first` | `sha256:85630ffc434aa48a9334ed84e968f3ecaad6fa49da6ad8341a7db7d57e07d549` |
-| `wenay-examples.local/documents:second` | `sha256:000600e5b6aa3cc3e512cbbad3941f792755f2e5bcaa42049e85919c6d96b2e3` |
-
 При повторной проверке наблюдаемая память после Node CSV — 58.39 МиБ, Python CSV — 59.68 МиБ, PDF — 60.23 МиБ; предел контейнера 256 МиБ. Эти выборки не измеряют пик.
 
 ## Дополнения D02/D05/D06/D07
@@ -158,3 +157,4 @@ const status = await call('status', {orgId: 'northstar', id: file.id})
 ```
 
 Маршруты не кешируют данные (`no-store`) и существуют только на authority origin. Serving nodes возвращают404 для этой дополнительной HTTP-поверхности; библиотечный SC1 processor resource остаётся доступен через обычную топологию. `product-check.ts` входит в `npm test`: реальный login/HTTP extraction, OpenAPI surface, spoofed args, base64/size, tenant privacy, upload/run repeats, revision и live revoke. `test:advanced` отдельно требует DOCUMENT_PYTHON и сохраняется в standalone копии. Новые исходники явно внесены в scaffold manifest.
+Прежние абзацы о версиях и принятых пакетах: [история](../../doc/changes/documents-history.md).
