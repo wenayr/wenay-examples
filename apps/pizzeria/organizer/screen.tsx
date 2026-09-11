@@ -11,7 +11,10 @@ export type ScreenResources = {open(name: 'screen'): ServiceResourceController<S
 
 export function ScreenPanel({resources}: {resources: ScreenResources}) {
     const [enabled, setEnabled] = useState(false)
-    return <section className="work-screen"><button aria-expanded={enabled} onClick={function toggle() {setEnabled(!enabled)}}>{enabled ? 'Закрыть показ экрана' : 'Экран · подключиться'}</button>
+    return <section className="work-screen">
+        <button aria-expanded={enabled} onClick={function toggle() {setEnabled(!enabled)}}>
+            {enabled ? 'Закрыть показ экрана' : 'Экран · подключиться'}
+        </button>
         {enabled && <ScreenSession resources={resources}/>}</section>
 }
 
@@ -33,7 +36,10 @@ function ScreenSession({resources}: {resources: ScreenResources}) {
     }})
     const view = useClientStore(mirror.ready ? mirror.client : null)
     const state = view.state
-    useEffect(function lifetime() {live.current = true; return function close() {live.current = false}}, [])
+    useEffect(function lifetime() {
+        live.current = true
+        return function close() {live.current = false}
+    }, [])
     useEffect(function disconnected() {setStream(null)}, [remote])
     useEffect(function ownStream() {return function releaseStream() {stream?.getTracks().forEach(track => track.stop())}}, [stream])
     async function select() {
@@ -43,10 +49,16 @@ function ScreenSession({resources}: {resources: ScreenResources}) {
         setError('')
         try {
             const selected = await navigator.mediaDevices.getDisplayMedia({video: {width: {max: 1280}, height: {max: 720}, frameRate: {max: 5}}, audio: false})
-            if (!live.current || owned.client?.current()?.remote != remote) {selected.getTracks().forEach(track => track.stop()); return}
+            if (!live.current || owned.client?.current()?.remote != remote) {
+                selected.getTracks().forEach(track => track.stop())
+                return
+            }
             setStream(selected)
         } catch {if (live.current) setError('Экран не выбран или браузер запретил захват')}
-        finally {selecting.current = false; if (live.current) setChoosing(false)}
+        finally {
+            selecting.current = false
+            if (live.current) setChoosing(false)
+        }
     }
     useEffect(function receive() {
         if (!remote || !state?.owner || !canvas.current) return
@@ -58,15 +70,45 @@ function ScreenSession({resources}: {resources: ScreenResources}) {
         return player.off
     }, [remote, state?.owner, state?.epoch])
     return <div><p>Два участника, один экран, без звука и записи. Показ ограничен 5 кадрами в секунду.</p>
-        <button disabled={!remote || !!stream || !!state?.owner || choosing || !!unavailable} onClick={select}>{choosing ? 'Выберите окно или вкладку в браузере…' : 'Выбрать экран'}</button>
+        <button
+            disabled={!remote || !!stream || !!state?.owner || choosing || !!unavailable}
+            onClick={select}
+        >
+            {choosing ? 'Выберите окно или вкладку в браузере…' : 'Выбрать экран'}
+        </button>
         {unavailable && <p role="status">{unavailable}</p>}
-        {stream && remote && <Broadcast key={owned.client?.current()?.generation} stream={stream} remote={remote} stop={() => setStream(null)} fail={setError}/>}
-        {state?.owner ? <><p>Экран показывает {state.account}</p><canvas ref={canvas} style={{width: '100%', maxHeight: '55vh', objectFit: 'contain', background: '#111'}}/></> : <p>Ждём начала показа</p>}
-        {(error || owned.error || status.state?.phase == 'failed') && <p role="status">{error || 'Не удалось подключиться: в комнате могут уже находиться двое'}</p>}
+        {stream && remote && <Broadcast
+            key={owned.client?.current()?.generation}
+            stream={stream}
+            remote={remote}
+            stop={() => setStream(null)}
+            fail={setError}
+        />}
+        {state?.owner ? <>
+            <p>Экран показывает {state.account}</p>
+            <canvas
+                ref={canvas}
+                style={{width: '100%', maxHeight: '55vh', objectFit: 'contain', background: '#111'}}
+            />
+        </> : <p>Ждём начала показа</p>}
+        {(error || owned.error || status.state?.phase == 'failed') && (
+            <p role="status">
+                {error || 'Не удалось подключиться: в комнате могут уже находиться двое'}
+            </p>
+        )}
     </div>
 }
 
-function Broadcast({stream, remote, stop, fail}: {stream: MediaStream, remote: NonNullable<ReturnType<ServiceResourceController<ScreenFacade>['current']>>['remote'], stop: () => void, fail: (error: string) => void}) {
+type ScreenRemote = NonNullable<ReturnType<ServiceResourceController<ScreenFacade>['current']>>['remote']
+
+type BroadcastProps = {
+    stream: MediaStream,
+    remote: ScreenRemote,
+    stop: () => void,
+    fail: (error: string) => void
+}
+
+function Broadcast({stream, remote, stop, fail}: BroadcastProps) {
     const options = useMemo(() => ({stream, fps: 5, width: 1280, height: 720, codec: 'jpeg' as const, quality: 0.6, worker: false}), [stream])
     const media = useMediaSource('video', options)
     useEffect(function broadcast() {
@@ -76,16 +118,30 @@ function Broadcast({stream, remote, stop, fail}: {stream: MediaStream, remote: N
         const off = media.listen.on(async function send(bytes) {
             if (!active || pending || !epoch) return
             pending = true
-            try {await remote.control.frame(epoch, bytes)} catch {if (active) {fail('Показ остановлен: подключение или права изменились'); stop()}}
+            try {
+                await remote.control.frame(epoch, bytes)
+            } catch {
+                if (!active) return
+                fail('Показ остановлен: подключение или права изменились')
+                stop()
+            }
             finally {pending = false}
         })
         async function start() {
             try {
                 epoch = await remote.control.begin()
-                if (!active) {await remote.control.end(); return}
+                if (!active) {
+                    await remote.control.end()
+                    return
+                }
                 if (await media.start() != 'live') throw new Error('Источник экрана недоступен')
             }
-            catch {if (active) {fail('Не удалось начать показ'); stop()}}
+            catch {
+                if (active) {
+                    fail('Не удалось начать показ')
+                    stop()
+                }
+            }
         }
         const ended = () => stop()
         stream.getTracks().forEach(track => track.addEventListener('ended', ended))
@@ -94,7 +150,10 @@ function Broadcast({stream, remote, stop, fail}: {stream: MediaStream, remote: N
             active = false
             off()
             media.stop()
-            stream.getTracks().forEach(track => {track.removeEventListener('ended', ended); track.stop()})
+            stream.getTracks().forEach(track => {
+                track.removeEventListener('ended', ended)
+                track.stop()
+            })
             void remote.control.end().catch(() => {})
         }
     }, [remote, stream])

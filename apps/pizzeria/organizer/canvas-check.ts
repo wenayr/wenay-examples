@@ -58,7 +58,11 @@ async function main() {
         ])
         assert.equal(races.filter(result => result.status == 'fulfilled').length, 1)
         assert.match(String((races.find(result => result.status == 'rejected') as PromiseRejectedResult).reason), /уже изменена/)
-        await waitFor('same canonical position', () => owner.views.work.store.state.canvas?.notes[note.id]?.revision == 2 && worker.views.work.store.state.canvas?.notes[note.id]?.revision == 2)
+        await waitFor('same canonical position', function agreed() {
+            const first = owner.views.work.store.state.canvas?.notes[note.id]?.revision
+            const second = worker.views.work.store.state.canvas?.notes[note.id]?.revision
+            return first == 2 && second == 2
+        })
         assert.deepEqual(owner.views.work.store.snapshot().canvas, worker.views.work.store.snapshot().canvas)
         await Promise.all([
             owner.commands.canvasMove('different-a', {id: note.id, revision: 2, x: 150, y: 150}),
@@ -78,13 +82,19 @@ async function main() {
         await waitFor('foreign note preview', () => mirror.state.participants.some(person => person.drag?.id == note.id))
         const canonical = host.leader.line.control.store.snapshot().organizer
         let updates = 0, bytes = 0
-        const off = mirror.on(function received() {updates++; bytes += Buffer.byteLength(JSON.stringify(mirror.snapshot()))})
+        const off = mirror.on(function received() {
+            updates++
+            bytes += Buffer.byteLength(JSON.stringify(mirror.snapshot()))
+        })
         const start = Date.now()
         let admitted = 0
         let lastX = drag.x
         for (let i = 0; i < 250; i++) {
             if (i % 25 == 0) await new Promise(resolve => setTimeout(resolve, 95))
-            if (await remote.control.update({surface: 'canvas', selected: note.id, cursor: null, drag: {...drag, x: 300 + i}})) {admitted++; lastX = 300 + i}
+            if (await remote.control.update({surface: 'canvas', selected: note.id, cursor: null, drag: {...drag, x: 300 + i}})) {
+                admitted++
+                lastX = 300 + i
+            }
         }
         await waitFor('last admitted frame delivered', () => mirror.state.participants.some(person => person.drag?.id == note.id && person.drag.x == lastX))
         const elapsed = Date.now() - start
@@ -99,7 +109,11 @@ async function main() {
         assert.equal(host.leader.line.control.store.state.organizer.canvas!.links[link.id], undefined)
         await assert.rejects(worker.commands.canvasMove('deleted-move', {id: other.id, revision: 2, x: 0, y: 0}), /удалена/)
         const view = service.definition.views.work.project(host.leader.line.control.store.state, {account: 'owner', roles: ['owner']})
-        assert.equal(projectActivity({activity: {surface: 'canvas', selected: other.id, cursor: null, drag: {...drag, id: other.id}}, source: view, viewer: view}).drag, null)
+        assert.equal(projectActivity({
+            activity: {surface: 'canvas', selected: other.id, cursor: null, drag: {...drag, id: other.id}},
+            source: view,
+            viewer: view
+        }).drag, null)
         assert.throws(() => cleanActivity({selected: '', cursor: null, drag: {...drag, x: NaN}}), /Invalid/)
         assert.equal(streamErrors.length, 0)
         console.log('PASS S2 canvas: migrated v1 archive, two RPC writers, shared editor roles, same/different object races, receipt retry, stale edit, bounds, links and delete during preview')
@@ -133,4 +147,7 @@ async function main() {
     } finally {await pizza.control.close()}
 }
 
-main().catch(function failed(error) {console.error(error); process.exitCode = 1})
+main().catch(function failed(error) {
+    console.error(error)
+    process.exitCode = 1
+})

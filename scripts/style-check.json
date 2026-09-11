@@ -1,28 +1,5 @@
 {
     "maxLine": 160,
-    "paths": [
-        "scripts",
-        "shared"
-    ],
-    "apps": [
-        "approvals",
-        "catalog",
-        "metering",
-        "monitoring",
-        "documents",
-        "booking",
-        "forms",
-        "content",
-        "support",
-        "hosting",
-        "crm"
-    ],
-    "files": [
-        "apps/pizzeria/backend/service.ts",
-        "scripts/backup.mjs",
-        "scripts/restore.mjs",
-        "apps/pizzeria/frontend/main.tsx"
-    ],
     "exclude": [
         "scripts/create-saas-example.mjs",
         "scripts/scaffold-check.mjs"

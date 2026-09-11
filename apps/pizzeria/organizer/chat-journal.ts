@@ -8,7 +8,10 @@ export function createChatJournal(deps: {directory?: string}) {
     const file = deps.directory ? path.join(deps.directory, 'conversation.jsonl') : null
     function apply({event, receipt}: Parameters<ConversationPersistencePort['commit']>[0]) {
         const store = initial.store
-        if (event.type == 'conversation.created') {store.conversations[event.conversation.id] = event.conversation; store.channels[event.channel.id] = event.channel}
+        if (event.type == 'conversation.created') {
+            store.conversations[event.conversation.id] = event.conversation
+            store.channels[event.channel.id] = event.channel
+        }
         else if (event.type == 'channel.created') store.channels[event.channel.id] = event.channel
         else if (event.type == 'message.posted') store.messages[event.message.id] = event.message
         else store.facts[event.fact.id] = event.fact
@@ -32,7 +35,8 @@ export function createChatJournal(deps: {directory?: string}) {
             let offset = 0
             while (offset < bytes.length) offset += writeSync(fd, bytes, offset)
             fsyncSync(fd)
-        } catch (error) {failed = true; throw error}
+        } catch (error) {failed = true
+        throw error}
         finally {closeSync(fd)}
     }}
     return {initial, persistence}

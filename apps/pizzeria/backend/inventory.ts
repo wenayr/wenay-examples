@@ -4,7 +4,15 @@ export type Ingredient = {id: string, title: string, unit: 'g' | 'ml' | 'pcs'}
 export type RecipeLine = {ingredientId: string, quantity: number}
 export type Batch = {id: string, ingredientId: string, quantity: number, expiresAt: number, receivedAt: number}
 export type Allocation = {batchId: string, quantity: number}
-export type StockMovement = {batchId: string, quantity: number, kind: 'received' | 'consumed' | 'spoiled', at: number, by: string, reason: string, orderId?: string}
+export type StockMovement = {
+    batchId: string,
+    quantity: number,
+    kind: 'received' | 'consumed' | 'spoiled',
+    at: number,
+    by: string,
+    reason: string,
+    orderId?: string
+}
 export type Inventory = {ingredients: Record<string, Ingredient>, batches: Record<string, Batch>, movements: StockMovement[]}
 
 export function positiveQuantity(quantity: number) {
@@ -19,16 +27,23 @@ export function validId(id: string) {
 
 export function seedInventory(): Inventory {
     const ingredients: Inventory['ingredients'] = {
-        dough: {id: 'dough', title: 'Тесто', unit: 'g'},
-        tomato: {id: 'tomato', title: 'Томатный соус', unit: 'g'},
-        cheese: {id: 'cheese', title: 'Моцарелла', unit: 'g'},
-        salami: {id: 'salami', title: 'Салями', unit: 'g'},
+        dough: {id: 'dough', title: 'Тесто', unit: 'g'}, 
+        tomato: {id: 'tomato', title: 'Томатный соус', unit: 'g'}, 
+        cheese: {id: 'cheese', title: 'Моцарелла', unit: 'g'}, 
+        salami: {id: 'salami', title: 'Салями', unit: 'g'}, 
     }
     const now = Date.now()
     const batches = Object.fromEntries(Object.keys(ingredients).map(id => [id + '-demo', {
-        id: id + '-demo', ingredientId: id, quantity: 10000, receivedAt: now, expiresAt: now + 7 * 86400000,
+        id: id + '-demo', ingredientId: id, quantity: 10000, receivedAt: now, expiresAt: now + 7 * 86400000, 
     }]))
-    return {ingredients, batches, movements: Object.values(batches).map(b => ({batchId: b.id, quantity: b.quantity, kind: 'received', at: now, by: 'system', reason: 'Демонстрационное поступление'}))}
+    return {ingredients, batches, movements: Object.values(batches).map(b => ({
+        batchId: b.id,
+        quantity: b.quantity,
+        kind: 'received',
+        at: now,
+        by: 'system',
+        reason: 'Демонстрационное поступление'
+    }))}
 }
 
 // ============================================================
@@ -37,7 +52,11 @@ export function seedInventory(): Inventory {
 
 // Rebuild reservations in order of acceptance. A spoiled/expired batch can never
 // remain usable just because it was previously reserved. No state is mutated.
-export function stockPlan(state: Pick<PizzeriaState, 'ingredients' | 'batches'> & {orders: Record<string, Pick<Order, 'id' | 'ts' | 'state' | 'requirements'>>}, now = Date.now()) {
+type PlanState = Pick<PizzeriaState, 'ingredients' | 'batches'> & {
+    orders: Record<string, Pick<Order, 'id' | 'ts' | 'state' | 'requirements'>>
+}
+
+export function stockPlan(state: PlanState, now = Date.now()) {
     const free: Record<string, number> = Object.fromEntries(Object.values(state.batches).map(b => [b.id, b.expiresAt > now ? b.quantity : 0]))
     const allocations: Record<string, Allocation[]> = {}
     const issues: Record<string, string> = {}
@@ -54,7 +73,12 @@ export function stockPlan(state: Pick<PizzeriaState, 'ingredients' | 'batches'> 
     return {free, allocations, issues}
 }
 
-export function allocate(requirements: RecipeLine[] | undefined, free: Record<string, number>, batches: Batch[], state: Pick<PizzeriaState, 'ingredients'>): Allocation[] | string {
+export function allocate(
+    requirements: RecipeLine[] | undefined,
+    free: Record<string, number>,
+    batches: Batch[],
+    state: Pick<PizzeriaState, 'ingredients'>
+): Allocation[] | string {
     if (!requirements?.length) return 'У заказа нет сохранённой рецептуры: требуется отмена и повторное оформление'
     const allocations: Allocation[] = []
     for (const need of requirements) {

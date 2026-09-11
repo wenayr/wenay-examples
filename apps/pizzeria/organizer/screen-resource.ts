@@ -15,7 +15,11 @@ export function createScreenRoom(deps: {allow: readonly string[]}) {
     let lastFrame = 0
     let lastActivity = 0
     let timer: ReturnType<typeof setInterval> | undefined
-    function stop() {state.state.owner = ''; state.state.account = ''; state.state.epoch++}
+    function stop() {
+        state.state.owner = ''
+        state.state.account = ''
+        state.state.epoch++
+    }
     const resource = {allow: deps.allow, placement: 'authority' as const,
         open(ctx: ServiceResourceContext) {
             if (members.size >= 2) throw new Error('В показе экрана уже участвуют двое')
@@ -32,13 +36,19 @@ export function createScreenRoom(deps: {allow: readonly string[]}) {
                 lastFrame = 0
                 return state.state.epoch
             }
-            function end() {active(); if (state.state.owner == ctx.resourceId) stop()}
+            function end() {
+                active()
+                if (state.state.owner == ctx.resourceId) stop()
+            }
             function frame(epoch: number, bytes: Uint8Array) {
                 active()
                 if (state.state.owner != ctx.resourceId || epoch != state.state.epoch) throw new Error('Показ уже завершён')
                 if (!(bytes instanceof Uint8Array) || bytes.byteLength > 180_000) throw new Error('Кадр слишком большой')
                 const decoded = decodeMediaFrame(bytes)
-                if (decoded.kind != 'video-frame' || decoded.codec != 'jpeg' || !decoded.width || !decoded.height || decoded.width > 1280 || decoded.height > 720) throw new Error('Неподдерживаемый кадр')
+                const jpeg = decoded.kind == 'video-frame' && decoded.codec == 'jpeg'
+                const sized = !!decoded.width && !!decoded.height
+                const bounded = (decoded.width ?? 0) <= 1280 && (decoded.height ?? 0) <= 720
+                if (!jpeg || !sized || !bounded) throw new Error('Неподдерживаемый кадр')
                 const now = Date.now()
                 lastActivity = now
                 if (now - lastFrame < 180) return false
@@ -47,13 +57,22 @@ export function createScreenRoom(deps: {allow: readonly string[]}) {
                 return true
             }
             return {facade: {control: {begin, end, frame}, view: replay.api.replay, frames: relay.lines('room').screen},
-                close() {closed = true; members.delete(ctx.resourceId); if (state.state.owner == ctx.resourceId) stop()}}
+                close() {
+                    closed = true
+                    members.delete(ctx.resourceId)
+                    if (state.state.owner == ctx.resourceId) stop()
+                }}
         },
     }
     function mount() {
         timer = setInterval(function expire() {if (state.state.owner && Date.now() - lastActivity > 12_000) stop()}, 1000)
         timer.unref()
-        return function close() {clearInterval(timer); relay.close(); replay.close(); members.clear()}
+        return function close() {
+            clearInterval(timer)
+            relay.close()
+            replay.close()
+            members.clear()
+        }
     }
     return {resource, mount}
 }

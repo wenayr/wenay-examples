@@ -68,7 +68,17 @@ async function main() {
         await waitFor('ordinary view on serving node', () => owner.health.state.nodeId == 'sc1-node')
         assert.notEqual(first.store.state.self, second.store.state.self)
         assert.equal(elsewhere.store.state.participants.length, 1)
-        const draft = {id: '', revision: 0, title: 'Visible task', description: '', assignee: 'worker', due: '', priority: 'normal' as const, sourceId: '', checklist: []}
+        const draft = {
+            id: '',
+            revision: 0,
+            title: 'Visible task',
+            description: '',
+            assignee: 'worker',
+            due: '',
+            priority: 'normal' as const,
+            sourceId: '',
+            checklist: []
+        }
         const shared = await owner.commands.workSaveTask('collab-shared', draft)
         const secret = await owner.commands.workSaveTask('collab-private', {...draft, title: 'Private task', assignee: 'manager'})
         const preview = {kind: 'task' as const, id: shared.id, revision: shared.revision, col: 'todo', before: secret.id, x: 0.4, y: 0.7}
@@ -82,7 +92,11 @@ async function main() {
         await waitFor('simultaneous grabs remain advisory', () => second.store.state.participants.filter(person => person.drag?.id == shared.id).length == 2)
         await publish(member.current, {selected: '', cursor: null, drag: null})
         await publish(first.current, {selected: shared.id, cursor: {task: shared.id, x: 0.25, y: 0.75}})
-        await waitFor('visible selection and relative cursor', () => member.store.state.participants.some(person => person.selected == shared.id && person.cursor?.x == 0.25))
+        await waitFor('visible selection and relative cursor', function shown() {
+            return member.store.state.participants.some(function marked(person) {
+                return person.selected == shared.id && person.cursor?.x == 0.25
+            })
+        })
         await publish(first.current, {selected: secret.id, cursor: {task: secret.id, x: 0.8, y: 0.3}})
         await waitFor('private selection for owner', () => second.store.state.participants.some(person => person.selected == secret.id))
         assert(!JSON.stringify(member.store.snapshot()).includes(secret.id))
@@ -90,7 +104,11 @@ async function main() {
         assert.equal(first.store.state.participants.find(person => person.id == member.store.state.self)?.selected, '')
         await publish(first.current, {selected: shared.id, cursor: {task: shared.id, x: 0.5, y: 0.5}})
         await owner.commands.workSaveTask('collab-reassign', {...draft, id: shared.id, revision: shared.revision, assignee: 'manager'})
-        await waitFor('assignment cut clears cursor without role change', () => member.store.state.participants.every(person => person.selected != shared.id && person.cursor?.task != shared.id))
+        await waitFor('assignment cut clears cursor without role change', function cleared() {
+            return member.store.state.participants.every(function released(person) {
+                return person.selected != shared.id && person.cursor?.task != shared.id
+            })
+        })
         const retained = member.current.remote
         assert.equal(streamErrors.length, 0)
         host.leader.line.control.store.state.accounts.worker.roles = []
@@ -102,7 +120,10 @@ async function main() {
         await waitFor('remaining subscription still delivers', () => second.store.state.participants.some(person => person.selected == secret.id))
         assert.deepEqual(member.store.snapshot(), revokedSnapshot)
         host.leader.line.control.store.state.accounts.worker.roles = ['member']
-        await waitFor('regranted fresh generation', () => member.resource.status.state.phase == 'ready' && member.resource.status.state.generation > member.current.generation)
+        await waitFor('regranted fresh generation', function reopened() {
+            const status = member.resource.status.state
+            return status.phase == 'ready' && status.generation > member.current.generation
+        })
         await assert.rejects(retained.view.keyframe())
         await first.resource.close()
         await waitFor('closing one tab preserves sibling', () => second.store.state.participants.length == 2)
@@ -127,7 +148,10 @@ async function main() {
         await waitFor('offline clears current', () => second.resource.current() == null)
         env.SERVICE_PORT = port
         host = await start({...service.definition, initial: snapshot})
-        await waitFor('transport reconnect recreates resource', () => second.resource.status.state.phase == 'ready' && second.resource.status.state.generation > old.generation)
+        await waitFor('transport reconnect recreates resource', function reconnected() {
+            const status = second.resource.status.state
+            return status.phase == 'ready' && status.generation > old.generation
+        })
         await assert.rejects(old.remote.control.update({selected: secret.id, cursor: null}))
         await assert.rejects(old.remote.view.keyframe())
         const fresh = second.resource.current()!
@@ -150,8 +174,16 @@ async function main() {
     const pizza = createPizzeriaService()
     const pizzaHost = await createServiceLeaderHost({definition: pizza.definition, env: {SERVICE_PORT: '0'}, rest: false,
         mount: ({leader}) => pizza.mount(leader.line.control.store)})
-    const customer = createServiceClient({definition: describeService(pizza.definition), url: pizzaHost.url, auth: {token: pizzaHost.leader.identity.login('alice').token}})
-    const cook = createServiceClient({definition: describeService(pizza.definition), url: pizzaHost.url, auth: {token: pizzaHost.leader.identity.login('chef').token}})
+    const customer = createServiceClient({
+        definition: describeService(pizza.definition),
+        url: pizzaHost.url,
+        auth: {token: pizzaHost.leader.identity.login('alice').token}
+    })
+    const cook = createServiceClient({
+        definition: describeService(pizza.definition),
+        url: pizzaHost.url,
+        auth: {token: pizzaHost.leader.identity.login('chef').token}
+    })
     const forbidden = customer.resources.open('board')
     const allowed = cook.resources.open('board')
     try {
@@ -168,4 +200,7 @@ async function main() {
     }
 }
 
-main().catch(function failed(error) {console.error(error); process.exitCode = 1})
+main().catch(function failed(error) {
+    console.error(error)
+    process.exitCode = 1
+})

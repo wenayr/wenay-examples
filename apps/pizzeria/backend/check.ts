@@ -33,9 +33,9 @@ async function main() {
     }
     async function post(pathname: string, args: unknown[], bearer?: string) {
         const answer = await fetch(api + pathname, {
-            method: 'POST',
-            headers: {'content-type': 'application/json', ...(bearer ? {authorization: 'Bearer ' + bearer} : {})},
-            body: JSON.stringify({args}),
+            method: 'POST', 
+            headers: {'content-type': 'application/json', ...(bearer ? {authorization: 'Bearer ' + bearer} : {})}, 
+            body: JSON.stringify({args}), 
         })
         return {status: answer.status, body: await answer.json() as any}
     }
@@ -100,7 +100,7 @@ async function main() {
         const stock = createStoreFollower<{ingredients: Record<string, any>}>({remote: cook.write!.func.pizzeria.views.inventory})
         await stock.ready
         const manager = await login('manager', DEMO_LOGINS.manager)
-        assert((await post('/commands/addIngredient', ['ingredient-node', {id:'basil',title:'Базилик',unit:'g'}], manager)).body.ok)
+        assert((await post('/commands/addIngredient', ['ingredient-node', {id: 'basil', title: 'Базилик', unit: 'g'}], manager)).body.ok)
         await waitFor('stock replay on the node', () => stock.store.state.ingredients.basil?.title == 'Базилик')
         stock.close()
         const kitchen = createStoreFollower<{orders: Record<string, any>}>({remote: cook.write!.func.pizzeria.views.kitchen})
@@ -138,15 +138,19 @@ async function main() {
         const protectedStock = createStoreFollower<{ingredients?: Record<string, any>}>({remote: managerSession.write!.func.pizzeria.views.inventory})
         await protectedStock.ready
         assert(protectedStock.store.state.ingredients?.basil)
-        assert((await post('/commands/setRoles', ['remove-manager', {account:'manager',roles:['customer']}], owner)).body.ok)
-        await waitFor('revoked private projection clears',()=>protectedStock.store.state.ingredients==undefined)
+        assert((await post('/commands/setRoles', ['remove-manager', {account: 'manager', roles: ['customer']}], owner)).body.ok)
+        await waitFor('revoked private projection clears', () => protectedStock.store.state.ingredients==undefined)
         const currentManager = await managerSession.write!.func.pizzeria.me()
-        assert(!currentManager.commands.includes('receiveStock'),'existing principal reports fresh permissions')
-        assert((await post('/commands/addIngredient',['after-revoke',{id:'private',title:'Private',unit:'g'}],owner)).body.ok)
-        assert.equal(protectedStock.store.state.ingredients,undefined,'revoked session receives no new private values')
-        assert.equal((await post('/commands/receiveStock',['forged-after-revoke',{ingredientId:'basil',quantity:1,expiresAt:new Date(Date.now()+60000).toISOString()}],manager)).body.ok,false)
+        assert(!currentManager.commands.includes('receiveStock'), 'existing principal reports fresh permissions')
+        assert((await post('/commands/addIngredient', ['after-revoke', {id: 'private', title: 'Private', unit: 'g'}], owner)).body.ok)
+        assert.equal(protectedStock.store.state.ingredients, undefined, 'revoked session receives no new private values')
+        assert.equal((await post('/commands/receiveStock', ['forged-after-revoke', {
+            ingredientId: 'basil',
+            quantity: 1,
+            expiresAt: new Date(Date.now()+60000).toISOString()
+        }], manager)).body.ok, false)
         protectedStock.close()
-        assert((await post('/commands/setRoles',['restore-manager',{account:'manager',roles:['manager']}],owner)).body.ok)
+        assert((await post('/commands/setRoles', ['restore-manager', {account: 'manager', roles: ['manager']}], owner)).body.ok)
         console.log('PASS the order flow across four roles; roles are state')
         console.log('pizzeria check: ALL GREEN')
     } finally {

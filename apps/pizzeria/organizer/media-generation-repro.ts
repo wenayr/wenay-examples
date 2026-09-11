@@ -28,6 +28,11 @@ async function main() {
         if (process.argv.includes('--expect-fixed')) assert.equal(frames.length, 0, 'old recorder chunk leaked into a new source generation')
         else assert.deepEqual(frames, [[17]], 'M1 reproduction changed: re-audit the published API')
         console.log(process.argv.includes('--expect-fixed') ? 'PASS M1 regression' : 'REPRODUCED M1: delayed old recorder chunk emitted after stop/start; browser IO fixture, no microphone')
-    } finally {source.stop(); off(); globalThis.MediaRecorder = original}
+    } finally {source.stop()
+    off()
+    globalThis.MediaRecorder = original}
 }
-main().catch(function failed(error) {console.error(error); process.exitCode = 1})
+main().catch(function failed(error) {
+    console.error(error)
+    process.exitCode = 1
+})

@@ -8,13 +8,24 @@ async function main() {
     const service = createOrganizerService()
     const host = await createServiceLeaderHost({definition: service.definition, env: {SERVICE_PORT: '0'}, rest: false,
         mount: ({leader}) => service.mount(leader.line.control.store)})
-    const owner = createServiceClient({definition: describeService(service.definition), url: host.url, auth: {token: host.leader.identity.login('owner').token}})
-    const worker = createServiceClient({definition: describeService(service.definition), url: host.url, auth: {token: host.leader.identity.login('worker').token}})
+    const owner = createServiceClient({
+        definition: describeService(service.definition),
+        url: host.url,
+        auth: {token: host.leader.identity.login('owner').token}
+    })
+    const worker = createServiceClient({
+        definition: describeService(service.definition),
+        url: host.url,
+        auth: {token: host.leader.identity.login('worker').token}
+    })
     const a = owner.resources.open('screen')
     const b = worker.resources.open('screen')
     async function wait(check: () => boolean) {
         const start = Date.now()
-        while (!check()) {assert(Date.now() - start < 5000, 'screen wait timed out'); await new Promise(resolve => setTimeout(resolve, 20))}
+        while (!check()) {
+            assert(Date.now() - start < 5000, 'screen wait timed out')
+            await new Promise(resolve => setTimeout(resolve, 20))
+        }
     }
     try {
         await wait(() => a.status.state.phase == 'ready' && b.status.state.phase == 'ready')
@@ -42,6 +53,13 @@ async function main() {
         assert(regained > next)
         subscription.off()
         console.log('PASS screen real RPC: binary relay, exclusive source, generations, stop, revoke and retained facade denial; payload fixture is not a browser capture test')
-    } finally {await a.close(); await b.close(); owner.close(); worker.close(); await host.close()}
+    } finally {await a.close()
+    await b.close()
+    owner.close()
+    worker.close()
+    await host.close()}
 }
-main().catch(function failed(error) {console.error(error); process.exitCode = 1})
+main().catch(function failed(error) {
+    console.error(error)
+    process.exitCode = 1
+})

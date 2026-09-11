@@ -22,19 +22,33 @@ async function main() {
     assert.throws(() => validateVoice(corrupt))
     let release: ((value: {text: string}) => void) | undefined
     const host = createAssistant({allowed: () => allowed, read: async () => voice, messages: () => ['Первое сообщение', 'Второе сообщение'],
-        save: async () => {saves++}, provider: {transcribe({signal}) {return new Promise(resolve => {release = resolve; signal.addEventListener('abort', () => {aborted = true})})}},
+        save: async () => {saves++},
+        provider: {
+            transcribe({signal}) {
+                return new Promise(function hold(resolve) {
+                    release = resolve
+                    signal.addEventListener('abort', () => {aborted = true})
+                })
+            }
+        },
     })
     const session = host.connection('worker')
     try {
         const run = session.fragment.createRun({requestId: 'cancel', kind: 'transcribe', resourceIds: ['room'], input: {room: 'room', file: 'voice'}})
         for (let i = 0; i < 20 && !release; i++) await new Promise(resolve => setTimeout(resolve, 5))
         assert(release)
-        assert.equal(session.fragment.createRun({requestId: 'cancel', kind: 'transcribe', resourceIds: ['room'], input: {room: 'room', file: 'voice'}}).id, run.id)
+        assert.equal(session.fragment.createRun({
+            requestId: 'cancel',
+            kind: 'transcribe',
+            resourceIds: ['room'],
+            input: {room: 'room', file: 'voice'}
+        }).id, run.id)
         assert.throws(() => session.fragment.createRun({requestId: 'second', kind: 'demo-tasks', resourceIds: ['room'], input: {room: 'room', text: 'Работа'}}))
         session.fragment.cancelRun(run.id)
         release!({text: 'Поздний ответ не создаёт результат'})
         await new Promise(resolve => setTimeout(resolve, 20))
-        assert(aborted); assert.equal(saves, 0)
+        assert(aborted)
+        assert.equal(saves, 0)
         release = undefined
         aborted = false
         session.fragment.createRun({requestId: 'revoke', kind: 'transcribe', resourceIds: ['room'], input: {room: 'room', file: 'voice'}})
@@ -49,6 +63,10 @@ async function main() {
         assert.equal(saves, 0)
         assert.throws(() => session.fragment.createRun({requestId: 'forbidden', kind: 'demo-summary', resourceIds: ['room'], input: {room: 'room'}}))
         console.log('PASS assistant: WAV boundary, duplicate run, concurrency, cancel and revoke abort provider, late output not saved; no paid calls')
-    } finally {session.close(); host.close()}
+    } finally {session.close()
+    host.close()}
 }
-main().catch(function failed(error) {console.error(error); process.exitCode = 1})
+main().catch(function failed(error) {
+    console.error(error)
+    process.exitCode = 1
+})

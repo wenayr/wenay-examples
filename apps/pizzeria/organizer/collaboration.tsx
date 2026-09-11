@@ -41,7 +41,10 @@ export function useBoardPresence(deps: {resources?: BoardResources, enabled: boo
         let pending = false
         let last = 0
         async function flush() {
-            if (!active || pending || (!dirty.current && (document.hidden || Date.now() - last < 2000))) return
+            // Скрытую вкладку и частые тики пропускаем, но накопленную правку отправляем всегда.
+            const quiet = document.hidden || Date.now() - last < 2000
+            const skip = !dirty.current && quiet
+            if (!active || pending || skip) return
             pending = true
             dirty.current = false
             last = Date.now()
@@ -60,7 +63,11 @@ export function useBoardPresence(deps: {resources?: BoardResources, enabled: boo
         const timer = setInterval(flush, BOARD_INTERVAL + 10)
         document.addEventListener('visibilitychange', hidden)
         void flush()
-        return function stop() {active = false; clearInterval(timer); document.removeEventListener('visibilitychange', hidden)}
+        return function stop() {
+            active = false
+            clearInterval(timer)
+            document.removeEventListener('visibilitychange', hidden)
+        }
     }, [remote, deps.surface])
 
     const participants = remote && view.ready ? view.state?.participants ?? [] : []
@@ -79,12 +86,29 @@ export function useBoardPresence(deps: {resources?: BoardResources, enabled: boo
 
 export function BoardPeople({presence, show}: {presence: ReturnType<typeof useBoardPresence>, show: () => void}) {
     const {others, follow, setFollow} = presence
-    const phase = {opening: 'Подключаем участников…', ready: 'На доске', offline: 'Восстанавливаем связь…', denied: 'Нет доступа к совместной работе', failed: 'Совместная работа недоступна', closed: 'Совместная работа отключена'}
-    return <div className="work-presence" aria-label="Участники доски"><span>{phase[presence.phase]}{presence.phase == 'ready' && ` · ${others.length + 1}`}</span>
+    const phase = {
+        opening: 'Подключаем участников…',
+        ready: 'На доске',
+        offline: 'Восстанавливаем связь…',
+        denied: 'Нет доступа к совместной работе',
+        failed: 'Совместная работа недоступна',
+        closed: 'Совместная работа отключена'
+    }
+    return <div className="work-presence" aria-label="Участники доски">
+        <span>
+            {phase[presence.phase]}{presence.phase == 'ready' && ` · ${others.length + 1}`}
+        </span>
         {others.map((person, index) => <button key={person.id} type="button" aria-pressed={follow == person.id}
             title={person.selected ? 'Следить за выбранной карточкой' : 'Участник пока не выбрал доступную вам карточку'}
-            onClick={function followPerson() {show(); setFollow(follow == person.id ? '' : person.id)}}>
-            <i style={{background: personColor(person.id)}}/>{person.name}{others.filter(other => other.account == person.account).length > 1 ? ` · вкладка ${index + 1}` : ''}
+            onClick={function followPerson() {
+                show()
+                setFollow(follow == person.id ? '' : person.id)
+            }}>
+            <i style={{background: personColor(person.id)}}/>
+            {person.name}
+            {others.filter(other => other.account == person.account).length > 1
+                ? ` · вкладка ${index + 1}`
+                : ''}
         </button>)}
         {follow && <button type="button" onClick={function stopFollow() {setFollow('')}}>Прекратить слежение</button>}
         {follow && <small>{presence.selected ? 'Показываем выбранную карточку. Ваше действие завершит слежение.' : 'Ждём выбора доступной вам карточки'}</small>}
@@ -101,7 +125,13 @@ export function personColor(id: string) {
 export function BoardMarks({id, participants}: {id: string, participants: BoardParticipant[]}) {
     const selected = participants.filter(person => person.selected == id)
     return <>
-        {!!selected.length && <div className="work-watchers">{selected.map(person => <span key={person.id} style={{color: personColor(person.id)}}>{person.name} смотрит</span>)}</div>}
+        {!!selected.length && <div className="work-watchers">
+            {selected.map(person => (
+                <span key={person.id} style={{color: personColor(person.id)}}>
+                    {person.name} смотрит
+                </span>
+            ))}
+        </div>}
         {participants.filter(person => person.cursor?.task == id).map(person => <span className="work-peer-cursor" aria-hidden="true" key={person.id}
             style={{left: `${person.cursor!.x * 100}%`, top: `${person.cursor!.y * 100}%`, color: personColor(person.id)}}>➤<b>{person.name}</b></span>)}
     </>

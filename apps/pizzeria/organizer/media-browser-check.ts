@@ -11,8 +11,13 @@ async function main() {
     const directory = await mkdtemp(path.join(os.tmpdir(), 'wenay-media-browser-'))
     const service = createOrganizerService()
     try {
-        await build({configFile: false, root: path.resolve('organizer'), build: {modulePreload: false, outDir: directory, rollupOptions: {input: path.resolve('organizer/media-browser-check.html')}}})
-    } catch (error) {await rm(directory, {recursive: true, force: true}); throw error}
+        await build({
+            configFile: false,
+            root: path.resolve('organizer'),
+            build: {modulePreload: false, outDir: directory, rollupOptions: {input: path.resolve('organizer/media-browser-check.html')}}
+        })
+    } catch (error) {await rm(directory, {recursive: true, force: true})
+    throw error}
     const host = await createServiceLeaderHost({definition: service.definition, env: {SERVICE_PORT: '0'}, mount({app, leader}) {
         app.get('/api/client', (_req, res) => res.json(describeService(service.definition)))
         app.get('/', (_req, res) => res.redirect('/media-browser-check.html'))
@@ -29,4 +34,7 @@ async function main() {
     process.once('SIGTERM', close)
     console.log('MEDIA_BROWSER_CHECK=' + host.url)
 }
-main().catch(function failed(error) {console.error(error); process.exitCode = 1})
+main().catch(function failed(error) {
+    console.error(error)
+    process.exitCode = 1
+})

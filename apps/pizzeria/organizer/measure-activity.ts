@@ -6,7 +6,11 @@ import {notePosition} from './canvas-model'
 async function main() {
     const url = process.argv[2]
     if (!url || !/^http:\/\/(localhost|127\.0\.0\.1):\d+\/?$/.test(url)) throw new Error('Provide the localhost URL of the organizer demo')
-    const client = createServiceClient({definition: describeService(organizerDefinition), url, auth: {credentials: {account: 'worker', password: 'worker-pass'}}})
+    const client = createServiceClient({
+        definition: describeService(organizerDefinition),
+        url,
+        auth: {credentials: {account: 'worker', password: 'worker-pass'}}
+    })
     const resource = client.resources.open('board')
     try {
         await client.ready()
@@ -23,10 +27,19 @@ async function main() {
         const started = Date.now()
         for (let i = 0; i < 400; i++) {
             const point = notePosition({...note, x: note.x + 160 + 150 * Math.sin(i / 30), y: note.y + 160 + 100 * Math.cos(i / 30)})
-            if (await remote.control.update({surface: 'canvas', selected: note.id, cursor: null, drag: {kind: 'note', id: note.id, revision: note.revision, ...point}})) accepted++
+            if (await remote.control.update({
+                surface: 'canvas',
+                selected: note.id,
+                cursor: null,
+                drag: {kind: 'note', id: note.id, revision: note.revision, ...point}
+            })) accepted++
             await new Promise(resolve => setTimeout(resolve, 10))
         }
         console.log(JSON.stringify({sent: 400, accepted, elapsedMs: Date.now() - started}))
-    } finally {await resource.close(); client.close()}
+    } finally {await resource.close()
+    client.close()}
 }
-main().catch(function failed(error) {console.error(error); process.exitCode = 1})
+main().catch(function failed(error) {
+    console.error(error)
+    process.exitCode = 1
+})

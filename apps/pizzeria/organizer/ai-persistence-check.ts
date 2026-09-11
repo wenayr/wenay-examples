@@ -39,7 +39,10 @@ async function main() {
     let host = open()
     async function wait(check: () => boolean) {
         const deadline = Date.now() + 5000
-        while (!check()) {assert(Date.now() < deadline, 'AI recovery wait timed out'); await new Promise(resolve => setTimeout(resolve, 10))}
+        while (!check()) {
+            assert(Date.now() < deadline, 'AI recovery wait timed out')
+            await new Promise(resolve => setTimeout(resolve, 10))
+        }
     }
     try {
         let session = host.connection('worker')
@@ -73,13 +76,22 @@ async function main() {
         failed.close()
 
         const childDirectory = path.join(directory, 'terminated')
-        const processChild = spawn(process.execPath, ['--import', 'tsx', path.resolve('organizer/ai-persistence-check.ts'), '--child', childDirectory], {windowsHide: true, stdio: ['ignore', 'ignore', 'pipe', 'ipc']})
+        const processChild = spawn(process.execPath, ['--import', 'tsx', path.resolve('organizer/ai-persistence-check.ts'), '--child', childDirectory], {
+            windowsHide: true,
+            stdio: ['ignore', 'ignore', 'pipe', 'ipc']
+        })
         const exited = new Promise<void>(resolve => processChild.once('exit', () => resolve()))
         try {
             await new Promise<void>((resolve, reject) => {
                 const timeout = setTimeout(() => reject(new Error('Child effect timed out')), 10000)
-                processChild.once('message', function ready(value) {clearTimeout(timeout); value == 'effect-written' ? resolve() : reject(new Error('Unexpected child message'))})
-                processChild.once('error', function failed(error) {clearTimeout(timeout); reject(error)})
+                processChild.once('message', function ready(value) {
+                    clearTimeout(timeout)
+                    value == 'effect-written' ? resolve() : reject(new Error('Unexpected child message'))
+                })
+                processChild.once('error', function failed(error) {
+                    clearTimeout(timeout)
+                    reject(error)
+                })
             })
             processChild.kill('SIGKILL')
             await exited
@@ -93,7 +105,8 @@ async function main() {
                 restored.recovery.settle(saved.id, {state: 'completed', output: {result: 'effect reconciled'}})
                 assert.equal(restored.connection('worker').fragment.createRun(request).result, 'effect reconciled')
             } finally {restored.close()}
-        } finally {if (processChild.exitCode == null && processChild.signalCode == null) processChild.kill('SIGKILL'); await exited}
+        } finally {if (processChild.exitCode == null && processChild.signalCode == null) processChild.kill('SIGKILL')
+        await exited}
         console.log('PASS A1: durable receipt/input/approval, torn append, explicit recovery, current permissions, write-before-effect, terminated child and reconciled result; no paid calls')
     } finally {
         host.close()
@@ -102,4 +115,7 @@ async function main() {
     }
 }
 const childIndex = process.argv.indexOf('--child')
-void (childIndex >= 0 ? child(process.argv[childIndex + 1]) : main()).catch(function failed(error) {console.error(error); process.exitCode = 1})
+void (childIndex >= 0 ? child(process.argv[childIndex + 1]) : main()).catch(function failed(error) {
+    console.error(error)
+    process.exitCode = 1
+})

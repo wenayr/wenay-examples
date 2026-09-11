@@ -42,20 +42,23 @@ export async function startStand({port = 0, nodes = 2, verbose = false, signal =
                 return pattern.exec(fact.tail)?.[1]
             },
             shutdown(child) {
-                if (child.connected) child.send({type:'shutdown'}, function sent(error) {if (error) child.kill('SIGKILL')})
+                if (child.connected) child.send({type: 'shutdown'}, function sent(error) {if (error) child.kill('SIGKILL')})
                 else child.kill('SIGKILL')
             },
         })
         children.push(resource)
         resource.events.failure.on(function unexpectedExit() {
-            if (!closing) { process.exitCode = 1; void close() }
+            if (!closing) {
+                process.exitCode = 1
+                void close()
+            }
         })
         return resource
     }
     function close() {
         if (closing) return closing
         signal?.removeEventListener('abort', aborted)
-        closing = Promise.all(children.map(child=>child.close())).then(()=>undefined)
+        closing = Promise.all(children.map(child => child.close())).then(() => undefined)
         return closing
     }
     try {
@@ -64,7 +67,11 @@ export async function startStand({port = 0, nodes = 2, verbose = false, signal =
         const url = await leader.ready
         const nodeUrls = []
         for (let i = 0; i < nodes; i++) {
-            const node = boot('node-pizzeria.ts', {SERVICE_NODE_ID: 'pizzeria-node-' + i, SERVICE_UPSTREAM: url, SERVICE_PORT: '0'}, /serving at (http:\/\/localhost:\d+)/)
+            const node = boot('node-pizzeria.ts', {
+                SERVICE_NODE_ID: 'pizzeria-node-' + i,
+                SERVICE_UPSTREAM: url,
+                SERVICE_PORT: '0'
+            }, /serving at (http:\/\/localhost:\d+)/)
             nodeUrls.push(await node.ready)
         }
         return {url, nodeUrls, close}
@@ -79,7 +86,12 @@ if (process.argv[1] && path.resolve(process.argv[1]) == fileURLToPath(import.met
     function shutdown() { stop.abort() }
     process.once('SIGINT', shutdown)
     process.once('SIGTERM', shutdown)
-    const stand = await startStand({port: Number(process.env.SERVICE_PORT ?? 3500), nodes: Number(process.env.PIZZERIA_NODES ?? 2), verbose: true, signal: stop.signal})
+    const stand = await startStand({
+        port: Number(process.env.SERVICE_PORT ?? 3500),
+        nodes: Number(process.env.PIZZERIA_NODES ?? 2),
+        verbose: true,
+        signal: stop.signal
+    })
     console.log('Panel: ' + stand.url + '/panel')
     console.log('Swagger: ' + stand.url + '/docs')
     console.log('Reader endpoints: ' + [stand.url, ...stand.nodeUrls].join(', '))

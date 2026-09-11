@@ -13,13 +13,26 @@ export function createCanvasCommands<S extends WorkHost>(deps: {allow: readonly 
         return item
     }
     function dimensions(width: number, height: number) {
-        if (!Number.isInteger(width) || !Number.isInteger(height) || width < 180 || width > 420 || height < 120 || height > 400) throw new Error('Размер заметки: ширина 180–420, высота 120–400')
+        const wide = Number.isInteger(width) && width >= 180 && width <= 420
+        const tall = Number.isInteger(height) && height >= 120 && height <= 400
+        if (!wide || !tall) throw new Error('Размер заметки: ширина 180–420, высота 120–400')
     }
     function position(x: number, y: number, width: number, height: number) {
-        if (!Number.isInteger(x) || !Number.isInteger(y) || x < 0 || y < 0 || x + width > CANVAS_SIZE.width || y + height > CANVAS_SIZE.height) throw new Error('Заметка должна оставаться внутри доски')
+        const placed = Number.isInteger(x) && Number.isInteger(y) && x >= 0 && y >= 0
+        const inside = x + width <= CANVAS_SIZE.width && y + height <= CANVAS_SIZE.height
+        if (!placed || !inside) throw new Error('Заметка должна оставаться внутри доски')
     }
     return {
-        canvasSave: schemaCommand({id: 'string', revision: 'number', text: 'string', color: {enum: NOTE_COLORS}, width: 'number', height: 'number', x: 'number', y: 'number'}, {
+        canvasSave: schemaCommand({
+            id: 'string',
+            revision: 'number',
+            text: 'string',
+            color: {enum: NOTE_COLORS},
+            width: 'number',
+            height: 'number',
+            x: 'number',
+            y: 'number'
+        }, {
             allow: deps.allow,
             apply(ctx: ServiceCommandCtx<S>, input) {
                 if (!input.text.trim() || input.text.length > 2000) throw new Error('Текст заметки: от 1 до 2000 символов')
@@ -57,7 +70,10 @@ export function createCanvasCommands<S extends WorkHost>(deps: {allow: readonly 
         canvasConnect: schemaCommand({from: 'string', to: 'string'}, {
             allow: deps.allow, apply(ctx: ServiceCommandCtx<S>, input) {
                 const board = canvas(ctx)
-                if (input.from == input.to || !Object.hasOwn(board.notes, input.from) || !Object.hasOwn(board.notes, input.to)) throw new Error('Выберите две существующие разные заметки')
+                const both = Object.hasOwn(board.notes, input.from) && Object.hasOwn(board.notes, input.to)
+                if (input.from == input.to || !both) {
+                    throw new Error('Выберите две существующие разные заметки')
+                }
                 const id = 'link-' + createHash('sha256').update(input.from + '\0' + input.to).digest('hex')
                 if (!board.links[id] && Object.keys(board.links).length >= 300) throw new Error('На этой доске можно создать до 300 связей')
                 board.links[id] = {id, from: input.from, to: input.to}

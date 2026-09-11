@@ -27,12 +27,18 @@ async function main() {
         },
     })
     async function preflight(from: string) {
-        return fetch(host.url+'/api/media/photos', {method: 'OPTIONS', headers: {origin: from, 'access-control-request-method': 'POST', 'access-control-request-headers': 'authorization,content-type'}})
+        return fetch(host.url+'/api/media/photos', {
+            method: 'OPTIONS',
+            headers: {origin: from, 'access-control-request-method': 'POST', 'access-control-request-headers': 'authorization,content-type'}
+        })
     }
     function websocket(from: string) {
         return new Promise<boolean>(function connected(resolve) {
             const socket = io(host.url, {transports: ['websocket'], reconnection: false, timeout: 2000, extraHeaders: {origin: from}})
-            function finish(ok: boolean) {socket.disconnect(); resolve(ok)}
+            function finish(ok: boolean) {
+                socket.disconnect()
+                resolve(ok)
+            }
             socket.once('connect', function allowed() {finish(true)})
             socket.once('connect_error', function denied() {finish(false)})
         })
@@ -52,7 +58,11 @@ async function main() {
         assert.equal(oldPhoto.headers.get('access-control-allow-origin'), origin)
         assert.deepEqual(Buffer.from(await oldPhoto.arrayBuffer()), photo, 'pre-migration photos keep their URLs and bytes')
         async function upload(token: string, bytes: Buffer) {
-            return fetch(host.url+'/api/media/photos', {method: 'POST', headers: {authorization: 'Bearer '+token, 'content-type': 'image/png'}, body: new Uint8Array(bytes)})
+            return fetch(host.url+'/api/media/photos', {
+                method: 'POST',
+                headers: {authorization: 'Bearer '+token, 'content-type': 'image/png'},
+                body: new Uint8Array(bytes)
+            })
         }
         assert.equal((await upload('customer', photo)).status, 403)
         assert.equal((await upload('editor', Buffer.from('<svg/>'))).status, 400)
@@ -70,4 +80,7 @@ async function main() {
     }
 }
 
-main().catch(function failed(error) {console.error(error); process.exitCode = 1})
+main().catch(function failed(error) {
+    console.error(error)
+    process.exitCode = 1
+})
