@@ -158,3 +158,9 @@ const status = await call('status', {orgId: 'northstar', id: file.id})
 
 Маршруты не кешируют данные (`no-store`) и существуют только на authority origin. Serving nodes возвращают404 для этой дополнительной HTTP-поверхности; библиотечный SC1 processor resource остаётся доступен через обычную топологию. `product-check.ts` входит в `npm test`: реальный login/HTTP extraction, OpenAPI surface, spoofed args, base64/size, tenant privacy, upload/run repeats, revision и live revoke. `test:advanced` отдельно требует DOCUMENT_PYTHON и сохраняется в standalone копии. Новые исходники явно внесены в scaffold manifest.
 Прежние абзацы о версиях и принятых пакетах: [история](../../doc/changes/documents-history.md).
+
+## Почему обработка на createAiRunHost
+
+Длительная обработка построена на `createAiRunHost`, а не на специализированном `createFileJobHost`: решающим оказалось восстановление после перезапуска. Прерванный запуск разбирается явно через `recovery` — дошедший до проверки документ засчитывается, остальные получают разрешение на новую попытку. В контракте файлового хоста такой поверхности нет, и её пришлось бы написать самим.
+
+Разбор с условиями пересмотра: [сравнение с createFileJobHost](../../doc/reports/file-job-host-comparison.md).
