@@ -24,3 +24,4 @@
 - P01 — 2026-09-11 — content упакован: Dockerfile, .dockerignore, content-live-check и test:content; живой прогон first/second/rollback прошёл, 56.4-57.1 МиБ — 5b96839
 - P02 — 2026-09-11 — doc/DEPLOYMENT.md: три профиля по факту кода, профиль Б проверен вручную на support (3910 + 3911/3912) — 697ef1d
 - P03 — 2026-09-11 — живые проверки копии для metering и forms, включены в npm test; в STATUS колонка «Копия» — a16f8b7
+- P04 — 2026-09-11 — общая проверка копии для crm, booking, monitoring, content, approvals; колонка «Копия» заполнена у десяти приложений — 3f4c635

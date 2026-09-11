@@ -1,4 +1,4 @@
-import {existsSync, readFileSync, readdirSync, writeFileSync} from 'node:fs'
+import {existsSync, readFileSync, readdirSync, statSync, writeFileSync} from 'node:fs'
 import path from 'node:path'
 import {fileURLToPath} from 'node:url'
 import {APPS, SCRIPTS, manifest} from './run-all.mjs'
@@ -55,6 +55,30 @@ export function libraryImports(app) {
     return [...found].sort()
 }
 
+
+// Размер собранного интерфейса: только файлы, на которые ссылается index.html.
+// В public/ накапливаются прежние сборки (Vite не чистит каталог за пределами root),
+// поэтому сумма всего каталога измеряла бы историю, а не текущую сборку.
+function readBundle(app) {
+    const roots = [path.join(repository, 'apps', app, 'public')]
+    if (app == 'pizzeria') roots.push(path.join(repository, 'apps', app, 'organizer-public'))
+    let total = 0
+    let largest = 0
+    for (const root of roots) {
+        const page = path.join(root, 'index.html')
+        if (!existsSync(page)) continue
+        const html = readFileSync(page, 'utf8')
+        for (const match of html.matchAll(/(?:src|href)="\/?([\w./-]+\.(?:js|css))"/g)) {
+            const asset = path.join(root, match[1].split('/').join(path.sep))
+            if (!existsSync(asset)) continue
+            const size = statSync(asset).size
+            total += size
+            largest = Math.max(largest, size)
+        }
+    }
+    return {total, largest}
+}
+
 export function collect() {
     const rows = []
     for (const app of APPS) {
@@ -74,6 +98,8 @@ export function collect() {
         const backup = existsSync(path.join(repository, 'apps', app, 'backend', 'backup-check.ts'))
         const times = SCRIPTS.map(script => readLog(app, script)).filter(Boolean)
         const checked = times.map(log => log.at).sort().pop()
+        const test = readLog(app, 'test')
+        const bundle = readBundle(app)
         rows.push({
             app,
             port: readPort(app),
@@ -82,6 +108,8 @@ export function collect() {
             data: readDataDirectory(app),
             requires: requires.length > 0 ? requires.join(', ') : 'нет',
             backup: backup ? MARKS.ok : MARKS.missing,
+            seconds: test ? Math.round(test.seconds) : 0,
+            bundle,
             results,
             checked: checked ? checked.slice(0, 16).replace('T', ' ') : 'не запускалось'
         })
@@ -102,14 +130,17 @@ function versionLine(rows) {
 
 function table(rows) {
     const lines = [
-        '| Приложение | Порт | common2 | react2 | typecheck | test | build | Копия | Внешние | Проверено |',
-        '| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |'
+        '| Приложение | Порт | common2 | react2 | typecheck | test | build | Копия | Тест, с | Сборка, КБ | Внешние | Проверено |',
+        '| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |'
     ]
     for (const row of rows) {
         lines.push('| ' + [
             row.app, row.port, row.common2, row.react2,
             row.results.typecheck, row.results.test, row.results.build,
-            row.backup, row.requires, row.checked
+            row.backup,
+            row.seconds > 0 ? String(row.seconds) : MARKS.missing,
+            row.bundle.total > 0 ? String(Math.round(row.bundle.total / 1024)) : MARKS.missing,
+            row.requires, row.checked
         ].join(' | ') + ' |')
     }
     return lines.join('\n')
@@ -155,6 +186,16 @@ function updateMarkers(rows, apply) {
 
 const statusFile = path.join(repository, 'doc', 'STATUS.md')
 
+// Предупреждение Vite про чанк больше 500 КБ штатное: код-сплиттинг сознательно не настроен.
+// Строка называет текущий максимум, чтобы рост был виден в diff, а не на глаз.
+function bundleNote(rows) {
+    const largest = rows.map(row => row.bundle.largest).sort((a, b) => b - a)[0] ?? 0
+    if (largest == 0) return 'Сборок нет: столбец размера заполнится после `npm run build:all`.'
+    const value = Math.round(largest / 1024)
+    const warning = value > 500 ? ' Предупреждение Vite о чанке больше 500 КБ штатное: код-сплиттинг не настроен.' : ''
+    return 'Самый большой файл сборки сейчас ' + value + ' КБ.' + warning
+}
+
 function render(rows, stamp) {
     const head = [
         '# Состояние каталога',
@@ -165,6 +206,8 @@ function render(rows, stamp) {
         '',
         '`✓` прошло, `✗` упало, `—` скрипта нет, `?` не запускалось. Результат берётся из последнего прогона `npm run check:all`.',
         'Колонка «Копия» — есть ли у приложения живая проверка холодной копии и восстановления (`npm run test:backup`).',
+        'Колонки «Тест, с» и «Сборка, КБ» — длительность последнего `npm test` и размер js и css текущей сборки, на которые ссылается `index.html`, без сжатия.',
+        bundleNote(rows),
         '',
         ''
     ].join('\n')
