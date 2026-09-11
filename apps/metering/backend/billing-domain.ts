@@ -12,11 +12,19 @@ function capacity(state: MeteringState, input: {orgId: string, eventId: string, 
         const id = createHash('sha256').update(JSON.stringify([endpoint.id, input.eventId, input.type])).digest('hex')
         return state.deliveries?.[id] ? [] : [{endpoint, id}]
     })
-    if (Object.keys(state.deliveries ?? {}).length + planned.length > 1000) throw new Error('Очередь доставки достигла 1000 записей')
+    const queued = Object.keys(state.deliveries ?? {}).length
+    if (queued + planned.length > 1000) throw new Error('Очередь доставки достигла 1000 записей')
     return planned
 }
 
-function enqueue(state: MeteringState, input: {orgId: string, eventId: string, type: WebhookDelivery['type'], data: Record<string, string | number>}, at: number) {
+type EnqueueInput = {
+    orgId: string,
+    eventId: string,
+    type: WebhookDelivery['type'],
+    data: Record<string, string | number>
+}
+
+function enqueue(state: MeteringState, input: EnqueueInput, at: number) {
     const planned = capacity(state, input)
     state.deliveries ??= {}
     for (const {endpoint, id} of planned) {
@@ -36,56 +44,116 @@ export function withUsageDeliveries(commands: ReturnType<typeof createMeteringDo
         usageRecord: {...commands.usageRecord, apply(ctx: Ctx, input: Parameters<typeof commands.usageRecord.apply>[1]) {
             before(ctx, input.eventId)
             const result = commands.usageRecord.apply(ctx, input)
-            if (result.fresh) enqueue(ctx.state, {orgId: result.orgId, eventId: result.id, type: 'usage.committed', data: {eventId: result.eventId, metric: input.metric, units: result.units, period: result.period}}, ctx.state.events[result.id].updatedAt)
+            if (result.fresh) {
+                const data = {
+                    eventId: result.eventId,
+                    metric: input.metric,
+                    units: result.units,
+                    period: result.period
+                }
+                const notice = {orgId: result.orgId, eventId: result.id, type: 'usage.committed' as const, data}
+                enqueue(ctx.state, notice, ctx.state.events[result.id].updatedAt)
+            }
             return result
         }},
         usageSettle: {...commands.usageSettle, apply(ctx: Ctx, input: Parameters<typeof commands.usageSettle.apply>[1]) {
             before(ctx, input.eventId)
             const result = commands.usageSettle.apply(ctx, input)
-            if (result.fresh) enqueue(ctx.state, {orgId: result.orgId, eventId: result.id, type: 'usage.committed', data: {eventId: result.eventId, metric: ctx.state.events[result.id].metric, units: result.units, period: result.period}}, ctx.state.events[result.id].updatedAt)
+            if (result.fresh) {
+                const data = {
+                    eventId: result.eventId,
+                    metric: ctx.state.events[result.id].metric,
+                    units: result.units,
+                    period: result.period
+                }
+                const notice = {orgId: result.orgId, eventId: result.id, type: 'usage.committed' as const, data}
+                enqueue(ctx.state, notice, ctx.state.events[result.id].updatedAt)
+            }
             return result
         }}
     }
 }
 
 export function billingWorkspace(state: MeteringState, principal: tServicePrincipal | null) {
-    const organizations = new Set(Object.values(state.organizations).filter(org => Object.hasOwn(org.members, principal?.account ?? '')).map(org => org.id))
+    const account = principal?.account ?? ''
+    const own = Object.values(state.organizations).filter(org => Object.hasOwn(org.members, account))
+    const organizations = new Set(own.map(org => org.id))
+    const mine = (value: {orgId: string}) => organizations.has(value.orgId)
+
+    const subscriptions = Object.values(state.subscriptions ?? {}).filter(mine)
+    const webhooks = Object.values(state.webhooks ?? {}).filter(mine)
+    const deliveries = Object.values(state.deliveries ?? {}).filter(mine)
+
     return {
-        subscriptions: Object.values(state.subscriptions ?? {}).filter(value => organizations.has(value.orgId)).map(value => ({...value})),
-        webhooks: Object.values(state.webhooks ?? {}).filter(value => organizations.has(value.orgId)).map(({secret, ...value}) => ({...value})),
-        deliveries: Object.values(state.deliveries ?? {}).filter(value => organizations.has(value.orgId)).map(({payload, ...value}) => ({...value, attempts: value.attempts.map(attempt => ({...attempt}))}))
+        subscriptions: subscriptions.map(value => ({...value})),
+        // Секрет подписи и тело доставки в представление не попадают.
+        webhooks: webhooks.map(({secret, ...value}) => ({...value})),
+        deliveries: deliveries.map(function withoutPayload({payload, ...value}) {
+            return {...value, attempts: value.attempts.map(attempt => ({...attempt}))}
+        })
     }
+}
+
+// Источник обязан прислать монотонные версии: применяемая не раньше подтверждённой.
+function confirmedVersion(input: {id: string, version: number, notifiedVersion: number}) {
+    if (!/^[a-f0-9]{64}$/.test(input.id)) return false
+    if (!Number.isSafeInteger(input.version) || input.version < 1) return false
+    if (!Number.isSafeInteger(input.notifiedVersion) || input.notifiedVersion < 1) return false
+    return input.version >= input.notifiedVersion
 }
 
 export function createBillingDomain(deps: {now?: () => number, retryMs?: number} = {}) {
     const now = deps.now ?? Date.now
     return {commands: {
-        providerApply: schemaCommand({id: 'string', orgId: 'string', notifiedVersion: 'number', version: 'number', plan: {enum: ['starter', 'team']}, status: {enum: ['active', 'cancelled']}}, {
+        providerApply: schemaCommand({
+            id: 'string', orgId: 'string', notifiedVersion: 'number', version: 'number',
+            plan: {enum: ['starter', 'team']}, status: {enum: ['active', 'cancelled']}
+        }, {
             allow: ['system'], apply(ctx: Ctx, input) {
                 internal(ctx)
-                const org = Object.hasOwn(ctx.state.organizations, input.orgId) ? ctx.state.organizations[input.orgId] : undefined
-                if (!org || !/^[a-f0-9]{64}$/.test(input.id) || !Number.isSafeInteger(input.version) || input.version < 1 || !Number.isSafeInteger(input.notifiedVersion) || input.notifiedVersion < 1 || input.version < input.notifiedVersion) throw new Error('Источник ещё не подтвердил версию события')
+                const known = Object.hasOwn(ctx.state.organizations, input.orgId)
+                const org = known ? ctx.state.organizations[input.orgId] : undefined
+                if (!org || !confirmedVersion(input)) {
+                    throw new Error('Источник ещё не подтвердил версию события')
+                }
                 const events = ctx.state.providerEvents ?? {}
                 const old = events[input.id]
                 if (old) {
-                    if (old.orgId != input.orgId || old.notifiedVersion != input.notifiedVersion) throw new Error('Идентификатор provider event уже использован')
+                    const same = old.orgId == input.orgId && old.notifiedVersion == input.notifiedVersion
+                    if (!same) throw new Error('Идентификатор provider event уже использован')
                     return {version: old.appliedVersion, duplicate: true}
                 }
                 if (Object.keys(events).length >= 1000) throw new Error('До 1000 событий тестового провайдера')
                 const current = ctx.state.subscriptions?.[input.orgId]
-                if (current && input.version == current.version && (current.plan != input.plan || current.status != input.status)) throw new Error('Источник изменил содержимое уже известной версии')
+                const sameVersion = current && input.version == current.version
+                const changed = current && (current.plan != input.plan || current.status != input.status)
+                if (sameVersion && changed) throw new Error('Источник изменил содержимое уже известной версии')
                 const at = now()
                 const version = Math.max(current?.version ?? 0, input.version)
                 if (!current || input.version > current.version) {
-                    capacity(ctx.state, {orgId: input.orgId, eventId: 'subscription:' + input.orgId + ':' + version, type: 'subscription.updated'})
+                    const eventId = 'subscription:' + input.orgId + ':' + version
+                    capacity(ctx.state, {orgId: input.orgId, eventId, type: 'subscription.updated'})
                     ctx.state.subscriptions ??= {}
-                    ctx.state.subscriptions[input.orgId] = {orgId: input.orgId, version: input.version, plan: input.plan, status: input.status, updatedAt: at}
+                    ctx.state.subscriptions[input.orgId] = {
+                        orgId: input.orgId,
+                        version: input.version,
+                        plan: input.plan,
+                        status: input.status,
+                        updatedAt: at
+                    }
                     org.monthlyUnits = TEST_PLANS[input.plan].monthlyUnits
                     org.concurrent = TEST_PLANS[input.plan].concurrent
-                    enqueue(ctx.state, {orgId: input.orgId, eventId: 'subscription:' + input.orgId + ':' + version, type: 'subscription.updated', data: {version, plan: input.plan, status: input.status}}, at)
+                    const data = {version, plan: input.plan, status: input.status}
+                    enqueue(ctx.state, {orgId: input.orgId, eventId, type: 'subscription.updated', data}, at)
                 }
                 ctx.state.providerEvents ??= {}
-                ctx.state.providerEvents[input.id] = {id: input.id, orgId: input.orgId, notifiedVersion: input.notifiedVersion, appliedVersion: version, at}
+                ctx.state.providerEvents[input.id] = {
+                    id: input.id,
+                    orgId: input.orgId,
+                    notifiedVersion: input.notifiedVersion,
+                    appliedVersion: version,
+                    at
+                }
                 return {version, duplicate: false}
             }
         }),
@@ -127,7 +195,9 @@ export function createBillingDomain(deps: {now?: () => number, retryMs?: number}
             allow: ['system'], apply(ctx: Ctx, input) {
                 internal(ctx)
                 const delivery = ctx.state.deliveries?.[input.id]
-                if (!delivery || delivery.status != 'pending' || delivery.nextAt > now() || !ctx.state.webhooks?.[delivery.endpointId]?.enabled) throw new Error('Доставка ещё не готова')
+                const enabled = delivery && ctx.state.webhooks?.[delivery.endpointId]?.enabled
+                const ready = delivery && delivery.status == 'pending' && delivery.nextAt <= now()
+                if (!ready || !enabled) throw new Error('Доставка ещё не готова')
                 if (delivery.batchAttempt >= 5 || delivery.attempts.length >= 20) throw new Error('Исчерпаны попытки доставки')
                 delivery.status = 'sending'
                 delivery.batchAttempt++

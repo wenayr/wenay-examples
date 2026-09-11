@@ -6,7 +6,8 @@
     ],
     "apps": [
         "approvals",
-        "catalog"
+        "catalog",
+        "metering"
     ],
     "files": [
         "apps/booking/backend/domain.ts",
@@ -23,7 +24,6 @@
         "apps/forms/backend/service.ts",
         "apps/forms/frontend/main.tsx",
         "apps/hosting/backend/service.ts",
-        "apps/metering/backend/domain.ts",
         "apps/monitoring/backend/domain.ts",
         "apps/monitoring/backend/service.ts",
         "apps/monitoring/frontend/main.tsx",
@@ -32,7 +32,6 @@
         "apps/support/frontend/main.tsx",
         "scripts/backup.mjs",
         "scripts/restore.mjs",
-        "apps/metering/frontend/main.tsx",
         "apps/crm/frontend/main.tsx",
         "apps/hosting/frontend/main.tsx",
         "apps/pizzeria/frontend/main.tsx"

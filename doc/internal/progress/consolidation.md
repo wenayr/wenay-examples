@@ -43,3 +43,4 @@
 - Q04 pizzeria: main.tsx 52 нарушения -> 0; typecheck, build, npm test зелёные; файл добавлен в style-check.json.
 - Q04 завершён: 10 главных экранов по 0 нарушений, таблица остатка — doc/reports/Q04-frontends.md.
 - Q05 старт: unbreakable в style-check не учитывал пробелы от вырезанных литералов — исправлено; catalog стал чистым (0 нарушений) и добавлен в apps. Остаток по каталогу: 3318.
+- Q05 metering: 130 нарушений -> 0 по всем 50 файлам; typecheck, build, npm test зелёные; приложение добавлено в style-check.json.apps.

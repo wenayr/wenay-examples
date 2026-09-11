@@ -35,8 +35,15 @@ async function main() {
     const received = new Map<string, number>()
     const applied = new Set<string>()
     const receiver = createServer(async function receive(request, response) {
-        if (request.url == '/redirected') {redirectHits++; response.writeHead(200).end(); return}
-        if (request.url == '/redirect') {response.writeHead(302, {location: '/redirected'}).end(); return}
+        if (request.url == '/redirected') {
+            redirectHits++
+            response.writeHead(200).end()
+            return
+        }
+        if (request.url == '/redirect') {
+            response.writeHead(302, {location: '/redirected'}).end()
+            return
+        }
         const chunks: Buffer[] = []
         for await (const chunk of request) chunks.push(Buffer.from(chunk))
         const bytes = Buffer.concat(chunks)
@@ -65,12 +72,22 @@ async function main() {
     mountProviderEvents({app, receive: runtime.provider.receive})
     const incoming = createServer(app), incomingUrl = await listen(incoming)
     const snapshot = () => leader.line.control.store.snapshot()
-    const context = (account: string) => ({principal: {account, roles: ['owner']}, sessionId: account, resourceId: 'billing-test', signal: new AbortController().signal})
+    const context = (account: string) => ({
+        principal: {account, roles: ['owner']},
+        sessionId: account,
+        resourceId: 'billing-test',
+        signal: new AbortController().signal
+    })
     const owner = leader.corridor.fragment('owner')
     const billing = runtime.definition.resources.billing.open(context('owner'))
     async function notify(id: string, version: number, extra: {orgId?: string, timestamp?: number} = {}) {
         const body = Buffer.from(JSON.stringify({id, orgId: 'northstar', version, timestamp: Date.now(), ...extra}))
-        const response = await fetch(incomingUrl + '/api/provider/events', {method: 'POST', headers: {'content-type': 'application/json', 'x-provider-signature': 'sha256=' + createHmac('sha256', providerSecret).update(body).digest('hex')}, body})
+        const digest = createHmac('sha256', providerSecret).update(body).digest('hex')
+        const response = await fetch(incomingUrl + '/api/provider/events', {
+            method: 'POST',
+            headers: {'content-type': 'application/json', 'x-provider-signature': 'sha256=' + digest},
+            body
+        })
         const result = await response.json() as {ok: boolean, error: string, value: {version: number, duplicate: boolean}}
         if (!response.ok) {
             if (result.error.includes('не подтвердил')) assert.equal(response.status, 503, 'source lag must invite provider retry')
@@ -79,16 +96,27 @@ async function main() {
         return result.value
     }
     try {
-        await assert.rejects(billing.facade.control.createEndpoint({requestId: 'denied-origin', orgId: 'northstar', url: 'http://example.invalid/'}), /разрешённых/)
-        await assert.rejects(billing.facade.control.createEndpoint({requestId: 'denied-credentials', orgId: 'northstar', url: origin.replace('://', '://name:pass@')}), /разрешённых/)
-        await assert.rejects(runtime.definition.resources.billing.open(context('auditor')).facade.control.createEndpoint({requestId: 'denied-owner', orgId: 'northstar', url: origin}), /доступа/)
+        const foreign = {requestId: 'denied-origin', orgId: 'northstar', url: 'http://example.invalid/'}
+        await assert.rejects(billing.facade.control.createEndpoint(foreign), /разрешённых/)
+
+        const url = origin.replace('://', '://name:pass@')
+        const credentials = {requestId: 'denied-credentials', orgId: 'northstar', url}
+        await assert.rejects(billing.facade.control.createEndpoint(credentials), /разрешённых/)
+
+        const auditor = runtime.definition.resources.billing.open(context('auditor'))
+        const request = {requestId: 'denied-owner', orgId: 'northstar', url: origin}
+        await assert.rejects(auditor.facade.control.createEndpoint(request), /доступа/)
         await assert.rejects(billing.facade.control.createEndpoint({requestId: 'denied-tenant', orgId: 'harbor', url: origin}), /доступа/)
         const endpointInput = {requestId: 'endpoint', orgId: 'northstar', url: origin}
         const endpoint = await billing.facade.control.createEndpoint(endpointInput)
         assert(endpoint.secret)
         signingSecret = endpoint.secret
         assert.equal((await billing.facade.control.createEndpoint(endpointInput)).secret, null)
-        await assert.rejects(owner.providerApply('forged-event', {id: 'a'.repeat(64), orgId: 'northstar', notifiedVersion: 1, version: 1, plan: 'team', status: 'active'}), /forbidden/)
+        const forged = {
+            id: 'a'.repeat(64), orgId: 'northstar', notifiedVersion: 1,
+            version: 1, plan: 'team', status: 'active'
+        } as const
+        await assert.rejects(owner.providerApply('forged-event', forged), /forbidden/)
         await assert.rejects(runtime.provider.receive(Buffer.from('{}'), 'sha256=' + '0'.repeat(64)), /подпись/)
         await assert.rejects(notify('old', 1, {timestamp: Date.now() - 600000}), /просроченное/)
         await assert.rejects(notify('unknown', 1, {orgId: '__proto__'}), /недоступна/)
@@ -111,7 +139,14 @@ async function main() {
         await notify('stale-source', 2)
         assert.equal(snapshot().subscriptions!.northstar.version, 4)
         assert.equal(snapshot().organizations.northstar.monthlyUnits, 1000)
-        const key = await runtime.definition.resources.keys.open(context('owner')).facade.control.issue({requestId: 'usage-key', orgId: 'northstar', label: 'Webhook test', scopes: ['usage:write'], days: 1})
+        const keys = runtime.definition.resources.keys.open(context('owner'))
+        const key = await keys.facade.control.issue({
+            requestId: 'usage-key',
+            orgId: 'northstar',
+            label: 'Webhook test',
+            scopes: ['usage:write'],
+            days: 1
+        })
         const api = leader.corridor.fragment(key.account)
         const event = {eventId: 'test:record', metric: 'search' as const, units: 1, reference: 'example'}
         responseCode = 400
@@ -167,7 +202,9 @@ async function main() {
             const quota = JSON.stringify(capped.line.control.store.snapshot().periods)
             await assert.rejects(capped.corridor.fragment(key.account).usageRecord('full-new', {...event, eventId: 'full-new'}), /1000 записей/)
             assert.equal(JSON.stringify(capped.line.control.store.snapshot().periods), quota, 'outbox full rejects before charging quota')
-            assert.equal((await capped.corridor.fragment(key.account).usageRecord('full-duplicate', event)).fresh, false, 'existing semantic duplicate is safe even when outbox is full')
+            const repeated = await capped.corridor.fragment(key.account).usageRecord('full-duplicate', event)
+            const note = 'existing semantic duplicate is safe even when outbox is full'
+            assert.equal(repeated.fresh, false, note)
         } finally {capped.control.close()}
         console.log('PASS webhooks: signed hints, authoritative reconciliation, duplicates/reordering/source lag, cancellation, tenant/secret isolation, atomic outbox, receiver dedup, exponential retries, permanent failure/manual retry cap, allowlist and redirects')
     } finally {
@@ -180,8 +217,15 @@ async function main() {
     // Restore an interrupted send without an active old worker. The recipient already applied it.
     const seedService = createMeteringService()
     const seedLeader = createServiceLeader({definition: seedService.definition, selfUrl: () => 'http://localhost'})
-    await seedLeader.corridor.system.webhookRegister('seed-endpoint', {id: 'a'.repeat(64), orgId: 'northstar', actor: 'owner', url: origin, secret: signingSecret})
-    await seedLeader.corridor.system.providerApply('seed-provider', {id: 'b'.repeat(64), orgId: 'northstar', notifiedVersion: 1, version: 1, plan: 'starter', status: 'active'})
+    const endpoint = {
+        id: 'a'.repeat(64), orgId: 'northstar', actor: 'owner', url: origin, secret: signingSecret
+    }
+    await seedLeader.corridor.system.webhookRegister('seed-endpoint', endpoint)
+    const subscription = {
+        id: 'b'.repeat(64), orgId: 'northstar', notifiedVersion: 1,
+        version: 1, plan: 'starter', status: 'active'
+    } as const
+    await seedLeader.corridor.system.providerApply('seed-provider', subscription)
     const interrupted = Object.values(seedLeader.line.control.store.snapshot().deliveries!)[0]
     await seedLeader.corridor.system.deliveryBegin('seed-begin', {id: interrupted.id})
     const saved = seedLeader.line.control.store.snapshot()
@@ -205,4 +249,7 @@ async function main() {
     }
 }
 
-main().catch(function failed(error) {console.error(error); process.exitCode = 1})
+main().catch(function failed(error) {
+    console.error(error)
+    process.exitCode = 1
+})

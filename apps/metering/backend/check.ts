@@ -9,7 +9,10 @@ import {createProcess} from './process-resource'
 
 async function until(label: string, predicate: () => boolean) {
     const end = Date.now() + 16000
-    while (!predicate()) {assert(Date.now() < end, label); await new Promise(resolve => setTimeout(resolve, 25))}
+    while (!predicate()) {
+        assert(Date.now() < end, label)
+        await new Promise(resolve => setTimeout(resolve, 25))
+    }
 }
 
 async function main() {
@@ -37,7 +40,13 @@ async function main() {
         const issue = owner.resources.open('keys')
         resources.push(issue)
         await until('key resource', () => !!issue.current())
-        const key = await issue.current()!.remote.control.issue({requestId: 'network-key', orgId: 'northstar', label: 'Network client', scopes: ['usage:read', 'usage:write'], days: 1})
+        const key = await issue.current()!.remote.control.issue({
+            requestId: 'network-key',
+            orgId: 'northstar',
+            label: 'Network client',
+            scopes: ['usage:read', 'usage:write'],
+            days: 1
+        })
         assert(key.secret)
         const writerA = await client(key.account, key.secret), writerB = await client(key.account, key.secret)
         await owner.commands.budgetConfigure('budget', {orgId: 'northstar', monthlyUnits: 3, concurrent: 1})
@@ -90,4 +99,7 @@ async function main() {
         rmSync(directory, {recursive: true, force: true})
     }
 }
-main().catch(function failed(error) {console.error(error); process.exitCode = 1})
+main().catch(function failed(error) {
+    console.error(error)
+    process.exitCode = 1
+})

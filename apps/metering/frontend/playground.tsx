@@ -14,7 +14,15 @@ const operations = [
     {id: 'unknown', title: 'Исход неизвестен', description: 'Сохранить резерв до выяснения результата операции.'}
 ] as const
 
-export function Playground({orgId, credentials, consumed, disabled, openKeys}: {orgId: string, credentials: KeyCredentials | null, consumed: () => void, disabled: boolean, openKeys: () => void}) {
+type PlaygroundProps = {
+    orgId: string,
+    credentials: KeyCredentials | null,
+    consumed: () => void,
+    disabled: boolean,
+    openKeys: () => void
+}
+
+export function Playground({orgId, credentials, consumed, disabled, openKeys}: PlaygroundProps) {
     const [account, setAccount] = useState(credentials ? 'key:' + credentials.id : '')
     const [secret, setSecret] = useState(credentials?.secret ?? '')
     const [auth, setAuth] = useState<{token: string, account: string} | null>(null)
@@ -72,7 +80,11 @@ export function Playground({orgId, credentials, consumed, disabled, openKeys}: {
         const generation = lifetime.current
         await action.action(async function authenticateKey() {
             if (!account.startsWith('key:')) throw new Error('Введите аккаунт API-ключа в формате key:…')
-            const response = await fetch('/api/metering/login', {method: 'POST', headers: {'content-type': 'application/json'}, body: JSON.stringify({args: [{account, password: secret}]})})
+            const response = await fetch('/api/metering/login', {
+                method: 'POST',
+                headers: {'content-type': 'application/json'},
+                body: JSON.stringify({args: [{account, password: secret}]})
+            })
             const value = await response.json()
             if (!response.ok || !value.ok) throw new Error(value.error?.message ?? 'Ключ не принят')
             if (generation != lifetime.current) return
@@ -99,17 +111,210 @@ export function Playground({orgId, credentials, consumed, disabled, openKeys}: {
         const reason = String(form.get('reason') ?? '')
         const generation = lifetime.current
         setResult('')
+        async function runOperation() {
+            if (operation == 'record') {
+                return commands.execute('usageRecord', {eventId, metric, units, reference})
+            }
+            if (operation == 'reserve') {
+                return commands.execute('usageReserve', {eventId, metric, units, reference})
+            }
+            if (operation == 'settle') return commands.execute('usageSettle', {eventId, units})
+            if (operation == 'release') return commands.execute('usageRelease', {eventId, reason})
+            return commands.execute('usageUncertain', {eventId, reason})
+        }
         try {
-            const response = operation == 'record' ? await commands.execute('usageRecord', {eventId, metric, units, reference})
-                : operation == 'reserve' ? await commands.execute('usageReserve', {eventId, metric, units, reference})
-                : operation == 'settle' ? await commands.execute('usageSettle', {eventId, units})
-                : operation == 'release' ? await commands.execute('usageRelease', {eventId, reason})
-                : await commands.execute('usageUncertain', {eventId, reason})
+            const response = await runOperation()
             if (generation == lifetime.current) setResult(JSON.stringify(response, null, 2))
         } catch {}
     }
 
-    return <><div className="page-heading"><div><p className="eyebrow">ПРОВЕРИТЬ НА ПРАКТИКЕ</p><h1>API-клиент</h1><p>Настоящий запрос от отдельного ключа. Тестовые единицы, без денег.</p></div><button onClick={openKeys}>К ключам доступа ↗</button></div><div className="notice">Этот клиент входит отдельно от кабинета владельца. Организация и права определяются самим API-ключом на сервере.</div><div className="client-layout"><section className="panel client-connection"><div className="panel-heading"><div><h2>Подключение ключа</h2><p>Секрет используется только для этого входа.</p></div></div>{!auth ? <form onSubmit={login}><label>Аккаунт ключа<input value={account} onChange={event => setAccount(event.target.value)} placeholder="key:…" autoComplete="off" spellCheck={false} required/></label><label>Секрет<input value={secret} onChange={event => setSecret(event.target.value)} type="password" autoComplete="off" required/></label><button className="primary" disabled={busy}>{action.busy ? 'Подключаем…' : 'Подключить API-ключ'}</button></form> : <><div className={'client-status' + (connected ? ' ready' : '')}><span>●</span><strong>{connected ? 'Клиент подключён' : 'Подключение…'}</strong></div><code className="connected-account">{auth.account}</code><p className="muted">{connected ? !verified ? 'Проверяем права ключа…' : verified.orgId != orgId ? 'Ключ принадлежит другой организации. Выберите соответствующую организацию в кабинете.' : canWrite ? 'Доступна запись операций.' : 'У ключа нет права usage:write.' : 'Ожидаем подтверждение сессии сервера.'}</p><div className="button-row">{client && !connected && <button disabled={busy} onClick={reconnect}>Переподключить</button>}<button disabled={commands.busy} onClick={disconnect}>Отключить ключ</button></div></>}
-        {!!(action.error || owned.error) && <p role="alert" className="inline-error">{action.error || 'Не удалось подключить API-клиент'}</p>}<div className="client-tip"><h3>Попробуйте последовательно</h3><ol><li>Создать резерв на 20 единиц.</li><li>С тем же ID подтвердить расход 12.</li><li>Повторить подтверждение: расход не удвоится.</li></ol><p>Для новой операции нужен новый ID. Повтор с другим содержимым отклоняется.</p></div></section><section className="panel request-panel"><div className="panel-heading"><div><h2>Выполнить операцию</h2><p>Операции появятся в журнале организации ключа.</p></div><span className="soft-badge">RPC · common2</span></div><form onSubmit={execute}><label>Действие<select value={operation} onChange={event => setOperation(event.target.value)}>{operations.map(item => <option key={item.id} value={item.id}>{item.title}</option>)}</select><small>{operations.find(item => item.id == operation)?.description}</small></label><label>ID события<div className="event-input"><input value={eventId} onChange={event => setEventId(event.target.value)} maxLength={120} pattern="[A-Za-z0-9_:.-]+" spellCheck={false} required/><button type="button" onClick={() => setEventId('demo-' + crypto.randomUUID())}>Новый ID</button></div></label>{['record', 'reserve'].includes(operation) && <><label>Продукт<select name="metric">{Object.entries(metrics).map(([id, label]) => <option key={id} value={id}>{label}</option>)}</select></label><label>Основание<input name="reference" maxLength={180} placeholder="Например, документ DOC-104" defaultValue="Проверка API-клиента"/></label></>}{['record', 'reserve', 'settle'].includes(operation) ? <label>Единиц<input name="units" type="number" min={operation == 'settle' ? 0 : 1} max={10000} defaultValue={10} required/></label> : <label>Причина<input name="reason" maxLength={300} placeholder="Почему изменяется исход операции" required/></label>}<button className="primary" disabled={busy || !connected || !canWrite}>{commands.busy ? 'Выполняем…' : 'Выполнить запрос →'}</button></form>{commands.error && <p className="inline-error" role="alert">{commands.error}</p>}{result && <div className="response-panel"><h3>Ответ сервиса</h3><pre role="status">{result}</pre></div>}</section></div><section className="panel usage-snapshot"><div className="panel-heading"><div><h2>Проверка чтения расхода</h2><p>Снимок текущего периода от API-ключа, до 25 последних операций.</p></div><button disabled={busy || probe.busy || !usage || !verified?.scopes.includes('usage:read')} onClick={readUsage}>Прочитать usage:read</button></div>{probe.error && <p className="inline-error" role="alert">{probe.error}</p>}{snapshot?.remote == usage && snapshot && <details><summary>Снимок на {new Date(snapshot.at).toLocaleTimeString('ru-RU')}</summary><pre>{snapshot.text}</pre></details>}</section><p className="footnote">Токен API-клиента и секрет живут только в памяти страницы. Возврат к другому разделу закрывает подключение. Кабинет владельца не получает команд учёта от своего имени.</p></>
+    let connectionHint = 'Ожидаем подтверждение сессии сервера.'
+    if (connected && !verified) connectionHint = 'Проверяем права ключа…'
+    else if (connected && verified!.orgId != orgId) {
+        connectionHint = 'Ключ принадлежит другой организации.'
+            + ' Выберите соответствующую организацию в кабинете.'
+    } else if (connected && canWrite) connectionHint = 'Доступна запись операций.'
+    else if (connected) connectionHint = 'У ключа нет права usage:write.'
+
+    const loginForm = <form onSubmit={login}>
+        <label>Аккаунт ключа
+            <input
+                value={account}
+                onChange={event => setAccount(event.target.value)}
+                placeholder="key:…"
+                autoComplete="off"
+                spellCheck={false}
+                required
+            />
+        </label>
+        <label>Секрет
+            <input
+                value={secret}
+                onChange={event => setSecret(event.target.value)}
+                type="password"
+                autoComplete="off"
+                required
+            />
+        </label>
+        <button className="primary" disabled={busy}>
+            {action.busy ? 'Подключаем…' : 'Подключить API-ключ'}
+        </button>
+    </form>
+
+    const session = <>
+        <div className={'client-status' + (connected ? ' ready' : '')}>
+            <span>●</span>
+            <strong>{connected ? 'Клиент подключён' : 'Подключение…'}</strong>
+        </div>
+        <code className="connected-account">{auth?.account}</code>
+        <p className="muted">{connectionHint}</p>
+        <div className="button-row">
+            {client && !connected && <button disabled={busy} onClick={reconnect}>Переподключить</button>}
+            <button disabled={commands.busy} onClick={disconnect}>Отключить ключ</button>
+        </div>
+    </>
+
+    const tip = <div className="client-tip">
+        <h3>Попробуйте последовательно</h3>
+        <ol>
+            <li>Создать резерв на 20 единиц.</li>
+            <li>С тем же ID подтвердить расход 12.</li>
+            <li>Повторить подтверждение: расход не удвоится.</li>
+        </ol>
+        <p>Для новой операции нужен новый ID. Повтор с другим содержимым отклоняется.</p>
+    </div>
+
+    const usageFields = <>
+        <label>Продукт
+            <select name="metric">
+                {Object.entries(metrics).map(([id, label]) => <option key={id} value={id}>{label}</option>)}
+            </select>
+        </label>
+        <label>Основание
+            <input
+                name="reference"
+                maxLength={180}
+                placeholder="Например, документ DOC-104"
+                defaultValue="Проверка API-клиента"
+            />
+        </label>
+    </>
+
+    const unitsField = <label>Единиц
+        <input
+            name="units"
+            type="number"
+            min={operation == 'settle' ? 0 : 1}
+            max={10000}
+            defaultValue={10}
+            required
+        />
+    </label>
+
+    const reasonField = <label>Причина
+        <input name="reason" maxLength={300} placeholder="Почему изменяется исход операции" required/>
+    </label>
+
+    const withUnits = ['record', 'reserve', 'settle'].includes(operation)
+
+    const requestForm = <form onSubmit={execute}>
+        <label>Действие
+            <select value={operation} onChange={event => setOperation(event.target.value)}>
+                {operations.map(item => <option key={item.id} value={item.id}>{item.title}</option>)}
+            </select>
+            <small>{operations.find(item => item.id == operation)?.description}</small>
+        </label>
+        <label>ID события
+            <div className="event-input">
+                <input
+                    value={eventId}
+                    onChange={event => setEventId(event.target.value)}
+                    maxLength={120}
+                    pattern="[A-Za-z0-9_:.-]+"
+                    spellCheck={false}
+                    required
+                />
+                <button type="button" onClick={() => setEventId('demo-' + crypto.randomUUID())}>
+                    Новый ID
+                </button>
+            </div>
+        </label>
+        {['record', 'reserve'].includes(operation) && usageFields}
+        {withUnits ? unitsField : reasonField}
+        <button className="primary" disabled={busy || !connected || !canWrite}>
+            {commands.busy ? 'Выполняем…' : 'Выполнить запрос →'}
+        </button>
+    </form>
+
+    const canRead = !!verified?.scopes.includes('usage:read')
+
+    return <>
+        <div className="page-heading">
+            <div>
+                <p className="eyebrow">ПРОВЕРИТЬ НА ПРАКТИКЕ</p>
+                <h1>API-клиент</h1>
+                <p>Настоящий запрос от отдельного ключа. Тестовые единицы, без денег.</p>
+            </div>
+            <button onClick={openKeys}>К ключам доступа ↗</button>
+        </div>
+        <div className="notice">
+            Этот клиент входит отдельно от кабинета владельца.
+            Организация и права определяются самим API-ключом на сервере.
+        </div>
+        <div className="client-layout">
+            <section className="panel client-connection">
+                <div className="panel-heading">
+                    <div>
+                        <h2>Подключение ключа</h2>
+                        <p>Секрет используется только для этого входа.</p>
+                    </div>
+                </div>
+                {!auth ? loginForm : session}
+                {!!(action.error || owned.error) && (
+                    <p role="alert" className="inline-error">
+                        {action.error || 'Не удалось подключить API-клиент'}
+                    </p>
+                )}
+                {tip}
+            </section>
+            <section className="panel request-panel">
+                <div className="panel-heading">
+                    <div>
+                        <h2>Выполнить операцию</h2>
+                        <p>Операции появятся в журнале организации ключа.</p>
+                    </div>
+                    <span className="soft-badge">RPC · common2</span>
+                </div>
+                {requestForm}
+                {commands.error && <p className="inline-error" role="alert">{commands.error}</p>}
+                {result && <div className="response-panel">
+                    <h3>Ответ сервиса</h3>
+                    <pre role="status">{result}</pre>
+                </div>}
+            </section>
+        </div>
+        <section className="panel usage-snapshot">
+            <div className="panel-heading">
+                <div>
+                    <h2>Проверка чтения расхода</h2>
+                    <p>Снимок текущего периода от API-ключа, до 25 последних операций.</p>
+                </div>
+                <button disabled={busy || probe.busy || !usage || !canRead} onClick={readUsage}>
+                    Прочитать usage: read
+                </button>
+            </div>
+            {probe.error && <p className="inline-error" role="alert">{probe.error}</p>}
+            {snapshot?.remote == usage && snapshot && <details>
+                <summary>Снимок на {new Date(snapshot.at).toLocaleTimeString('ru-RU')}</summary>
+                <pre>{snapshot.text}</pre>
+            </details>}
+        </section>
+        <p className="footnote">
+            Токен API-клиента и секрет живут только в памяти страницы.
+            Возврат к другому разделу закрывает подключение.
+            Кабинет владельца не получает команд учёта от своего имени.
+        </p>
+    </>
+
 }
 

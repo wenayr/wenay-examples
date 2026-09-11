@@ -3,7 +3,10 @@ import type {BillingState} from './billing-model'
 
 export const SCOPES = ['usage:read', 'usage:write'] as const
 export type tScope = typeof SCOPES[number]
-export type ApiKey = {id: string, orgId: string, label: string, hash: string, scopes: tScope[], createdBy: string, createdAt: number, expiresAt: number, revokedAt: number}
+export type ApiKey = {
+    id: string, orgId: string, label: string, hash: string, scopes: tScope[],
+    createdBy: string, createdAt: number, expiresAt: number, revokedAt: number
+}
 export type UsageEvent = {
     id: string, eventId: string, orgId: string, keyId: string, metric: 'search' | 'document', reference: string,
     period: string, units: number, reservedUnits: number, signature: string,
@@ -18,10 +21,18 @@ export type MeteringState = BillingState & {
 }
 
 export const DEMO_LOGINS = {owner: 'owner-pass', auditor: 'auditor-pass', outsider: 'outsider-pass'} as const
+
+const DEMO_NAMES: Record<string, string> = {
+    owner: 'Алексей · владелец',
+    auditor: 'Мария · аудит',
+    outsider: 'Никита · другая команда'
+}
+
 export function createMeteringState(): MeteringState {
     return {
-        accounts: Object.fromEntries(Object.keys(DEMO_LOGINS).map(account => [account, {account,
-            name: ({owner: 'Алексей · владелец', auditor: 'Мария · аудит', outsider: 'Никита · другая команда'} as Record<string, string>)[account], secret: hashSecret(account + '-pass')} ])),
+        accounts: Object.fromEntries(Object.keys(DEMO_LOGINS).map(function demoAccount(account) {
+            return [account, {account, name: DEMO_NAMES[account], secret: hashSecret(account + '-pass')}]
+        })),
         organizations: {
             northstar: {id: 'northstar', name: 'Northstar Studio', members: {owner: 'owner', auditor: 'auditor'}, monthlyUnits: 1000, concurrent: 2},
             harbor: {id: 'harbor', name: 'Harbor Labs', members: {outsider: 'owner'}, monthlyUnits: 100, concurrent: 1}
