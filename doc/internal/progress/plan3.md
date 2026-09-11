@@ -5,3 +5,4 @@
 
 - Подготовка — 2026-09-11 — план 3 записан и связан с ROADMAP — 0dd2760
 - Попутно — 2026-09-11 — `status.mjs --verify` переписывал STATUS.md при каждом прогоне check:all; verify сделан read-only — 0857f62
+- R01 — 2026-09-11 — ROADMAP и NEXT-CHAT приведены к факту, заведён журнал, удалён дублирующий apps/approvals/AGENTS.md — e9e9ea9
