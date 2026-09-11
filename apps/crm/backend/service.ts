@@ -12,7 +12,9 @@ export function createCrmService(deps: {now?: () => number} = {}) {
     return {definition: {
         name: 'crm', storeId: 'crm-store', originId: 'crm-origin', version: 1, limits: {perMinute: 120},
         initial: createCrmState(),
-        access: {rolesOf: crmRoles, login: {input: {account: 'string', password: 'string'}, resolve(state: CrmState, input: {account: string, password: string}) {
+        access: {rolesOf: crmRoles, login: {
+            input: {account: 'string', password: 'string'},
+            resolve(state: CrmState, input: {account: string, password: string}) {
             const account = Object.hasOwn(state.accounts, input.account) ? state.accounts[input.account] : undefined
             return verifySecret(account?.secret, input.password) ? input.account : null
         }}},

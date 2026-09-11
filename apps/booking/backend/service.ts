@@ -8,7 +8,9 @@ export function createBookingService(deps: {now?: () => number, holdMs?: number}
     return {definition: {
         name: 'booking', storeId: 'booking-store', originId: 'booking-origin', version: 1, limits: {perMinute: 120},
         initial: createBookingState(),
-        access: {rolesOf: bookingRoles, login: {input: {account: 'string', password: 'string'}, resolve(state: BookingState, input: {account: string, password: string}) {
+        access: {rolesOf: bookingRoles, login: {
+            input: {account: 'string', password: 'string'},
+            resolve(state: BookingState, input: {account: string, password: string}) {
             const account = Object.hasOwn(state.accounts, input.account) ? state.accounts[input.account] : undefined
             return verifySecret(account?.secret, input.password) ? input.account : null
         }}},

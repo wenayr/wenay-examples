@@ -7,11 +7,17 @@ import {verifySecret} from './identity'
 export function createFormsService(deps: {now?: () => number} = {}) {
     const domain = createFormsDomain(deps)
     return {definition: {name: 'forms', storeId: 'forms-store', originId: 'forms-origin', version: 1, limits: {perMinute: 120}, initial: createFormsState(),
-        access: {rolesOf: formsRoles, login: {input: {account: 'string', password: 'string'}, resolve(state: FormsState, input: {account: string, password: string}) {
+        access: {rolesOf: formsRoles, login: {
+            input: {account: 'string', password: 'string'},
+            resolve(state: FormsState, input: {account: string, password: string}) {
             if (input.account == 'respondent') {
                 if (!/^[\w-]{43}$/.test(input.password)) return null
                 const digest = Buffer.from(hash(input.password), 'hex')
-                const form = Object.values(state.forms).find(form => form.enabled && form.tokenHash.length == 64 && timingSafeEqual(digest, Buffer.from(form.tokenHash, 'hex')))
+                function published(form: {enabled: boolean, tokenHash: string}) {
+                    if (!form.enabled || form.tokenHash.length != 64) return false
+                    return timingSafeEqual(digest, Buffer.from(form.tokenHash, 'hex'))
+                }
+                const form = Object.values(state.forms).find(published)
                 return form ? 'form:' + form.id + ':' + form.accessGeneration : null
             }
             const account = Object.hasOwn(state.accounts, input.account) ? state.accounts[input.account] : undefined

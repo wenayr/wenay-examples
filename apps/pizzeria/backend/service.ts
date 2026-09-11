@@ -23,7 +23,7 @@ import type {ServiceCommandCtx, tServiceDefinition, tServicePrincipal} from 'wen
 import {hashSecret, verifySecret, type tSecret} from './identity'
 import {dishDetails, publicDish, validateDishDetails, type DishDetails, type DishCard} from '../shared/dish'
 import {createOrganizer} from '../organizer/domain'
-import {emptyWork,type WorkState} from '../organizer/model'
+import {emptyWork, type WorkState} from '../organizer/model'
 import {withWorkAutomation} from './work-automation'
 import {createBoardRoom} from '../organizer/collaboration-resource'
 import {emptyCanvas} from '../organizer/canvas-model'
@@ -45,7 +45,7 @@ export type Order = {
     phone: string
     items: string[]
     total: number
-    lines?: (Pick<DishCard,'id'|'title'|'price'> & Partial<DishDetails>)[]
+    lines?: (Pick<DishCard, 'id'|'title'|'price'> & Partial<DishDetails>)[]
     requirements?: RecipeLine[]
     allocations?: Allocation[]
     state: tOrderState
@@ -94,18 +94,28 @@ const day = (ts: number) => new Date(ts).toISOString().slice(0, 10)
 // the definition
 // ============================================================
 
-const work = createOrganizer<PizzeriaState>({staffRoles:['cook','courier','manager','owner'],
-    roleOptions:[{id:'cook',title:'Повар'},{id:'courier',title:'Курьер'},{id:'manager',title:'Менеджер'},{id:'owner',title:'Владелец'},{id:'customer',title:'Клиент'}],
-    sources:function orderSources(state) {const labels={placed:'Принят',cooking:'Готовится',ready:'Готов',delivering:'В пути',delivered:'Доставлен',cancelled:'Отменён'};return Object.values(state.orders).map(order=>({id:order.id,label:'Заказ #'+order.id.slice(-6)+' · '+labels[order.state]}))},
-    workload:{allow:['cook','manager','owner'],project:kitchenWorkload},
+const work = createOrganizer<PizzeriaState>({staffRoles:['cook', 'courier', 'manager', 'owner'],
+    roleOptions:[{id:'cook', title:'Повар'}, {id:'courier', title:'Курьер'}, {id:'manager', title:'Менеджер'}, {id:'owner', title:'Владелец'}, {
+        id:'customer', title:'Клиент'
+    }],
+    sources:function orderSources(state) {
+        const labels={placed:'Принят', cooking:'Готовится', ready:'Готов', delivering:'В пути', delivered:'Доставлен', cancelled:'Отменён'}
+        return Object.values(state.orders).map(order=>({id:order.id, label:'Заказ #'+order.id.slice(-6)+' · '+labels[order.state]}))
+    },
+    workload:{allow:['cook', 'manager', 'owner'], project:kitchenWorkload},
 })
 
 const pizzeriaDefinition = {
     name: 'pizzeria',
     version: 5,
     migrate(state: PizzeriaState, fromVersion = 1) {
-        return {...state, organizer:{...(state.organizer ?? emptyWork()),canvas:state.organizer?.canvas ?? emptyCanvas()}, ...(fromVersion<2 ? {ingredients:{},batches:{},movements:[]} : {}),
-            menu: Object.fromEntries(Object.entries(state.menu).map(([id, item]) => [id, {...item, ...dishDetails(item), ...(fromVersion<2 ? {recipe:[],available:false} : {})}]))}
+        const organizer = {...(state.organizer ?? emptyWork()), canvas: state.organizer?.canvas ?? emptyCanvas()}
+        const inventory = fromVersion < 2 ? {ingredients: {}, batches: {}, movements: []} : {}
+        return {...state, organizer, ...inventory,
+            menu: Object.fromEntries(Object.entries(state.menu).map(function upgrade([id, item]) {
+                const defaults = fromVersion < 2 ? {recipe: [], available: false} : {}
+                return [id, {...item, ...dishDetails(item), ...defaults}]
+            }))}
     },
     storeId: 'pizzeria-store',
     originId: 'pizzeria-origin',
@@ -119,9 +129,28 @@ const pizzeriaDefinition = {
             alice: account('alice', '+1-555-0110', ['customer'], DEMO_LOGINS.alice),
         },
         menu: {
-            margherita: {id: 'margherita', title: 'Margherita', description:'Тонкое тесто, томатный соус и нежная моцарелла. Выпекаем после вашего заказа.', portion:'30 см', photos:['default:margherita'], price: 9, available: true, recipe: [{ingredientId:'dough',quantity:250},{ingredientId:'tomato',quantity:80},{ingredientId:'cheese',quantity:100}]},
-            diavola: {id: 'diavola', title: 'Diavola', description:'Пицца с пряной салями, томатным соусом и расплавленной моцареллой.', portion:'30 см', photos:['default:pepperoni'], price: 12, available: true, recipe: [{ingredientId:'dough',quantity:250},{ingredientId:'tomato',quantity:80},{ingredientId:'cheese',quantity:100},{ingredientId:'salami',quantity:60}]},
-            calzone: {id: 'calzone', title: 'Calzone', price: 11, available: false, recipe: [{ingredientId:'dough',quantity:250},{ingredientId:'cheese',quantity:150}]},
+            margherita: {
+                id: 'margherita', title: 'Margherita',
+                description: 'Тонкое тесто, томатный соус и нежная моцарелла. Выпекаем после вашего заказа.',
+                portion: '30 см', photos: ['default:margherita'], price: 9, available: true,
+                recipe: [{ingredientId: 'dough', quantity: 250}, {ingredientId: 'tomato', quantity: 80}, {
+                    ingredientId:'cheese', quantity:100
+                }]
+            },
+            diavola: {
+                id: 'diavola', title: 'Diavola',
+                description: 'Пицца с пряной салями, томатным соусом и расплавленной моцареллой.',
+                portion: '30 см', photos: ['default:pepperoni'], price: 12, available: true,
+                recipe: [{ingredientId: 'dough', quantity: 250}, {ingredientId: 'tomato', quantity: 80},
+                    {ingredientId: 'cheese', quantity: 100}, {
+                    ingredientId:'salami', quantity:60
+                }]
+            },
+            calzone: {
+                id: 'calzone', title: 'Calzone', price: 11, available: false, recipe: [{ingredientId:'dough', quantity:250}, {
+                    ingredientId:'cheese', quantity:150
+                }]
+            },
         },
         orders: {},
         organizer: emptyWork(),
@@ -142,7 +171,7 @@ const pizzeriaDefinition = {
     // ============== commands: who may do what is `allow`, enforced twice ==============
     commands: {
         ...work.commands,
-        workRefresh:schemaCommand({}, {allow:['system'],apply() {return {ok:true}}}),
+        workRefresh:schemaCommand({}, {allow:['system'], apply() {return {ok:true}}}),
         signup: schemaCommand({account: 'string', name: 'string', phone: 'string', password: 'string'}, {
             allow: ['system'],
             validate(input) {
@@ -172,14 +201,14 @@ const pizzeriaDefinition = {
                     const item = ctx.state.menu[itemId]
                     if (!item || !item.available) throw new Error(`${itemId} is not on the menu`)
                     if (!item.recipe.length) throw new Error('У блюда не настроена рецептура')
-                    lines.push({...publicDish(item,ctx.state.ingredients),photos:[...dishDetails(item).photos]})
+                    lines.push({...publicDish(item, ctx.state.ingredients), photos:[...dishDetails(item).photos]})
                     for (const part of item.recipe) needs[part.ingredientId] = (needs[part.ingredientId] ?? 0) + part.quantity
                     total += item.price
                 }
                 const requirements = Object.entries(needs).map(([ingredientId, quantity]) => ({ingredientId, quantity}))
                 for (const need of requirements) positiveQuantity(need.quantity)
                 const plan = stockPlan(ctx.state)
-                const reservation = allocate(requirements, plan.free, Object.values(ctx.state.batches).sort((a,b) => a.expiresAt-b.expiresAt), ctx.state)
+                const reservation = allocate(requirements, plan.free, Object.values(ctx.state.batches).sort((a, b) => a.expiresAt-b.expiresAt), ctx.state)
                 if (typeof reservation == 'string') throw new Error(reservation)
                 const id = 'o-' + createHash('sha256').update(Command.commandReceiptKey(ctx.account, ctx.requestId)).digest('hex')
                 if (Object.hasOwn(ctx.state.orders, id)) throw new Error('order request already used')
@@ -241,26 +270,44 @@ const pizzeriaDefinition = {
                 return {id: order.id, state: order.state, total: order.total}
             },
         }),
-        setMenuItem: schemaCommand({id: 'string', title: 'string', price: 'number', available: 'boolean', recipe: {array: {object: {ingredientId: 'string', quantity: 'number'}}}, description:'string?', composition:'string?', portion:'string?', photos:{array:'string',optional:true}}, {
+        setMenuItem: schemaCommand({
+            id: 'string', title: 'string', price: 'number', available: 'boolean',
+            recipe: {array: {object: {ingredientId: 'string', quantity: 'number'}}},
+            description: 'string?', composition: 'string?', portion: 'string?',
+            photos: {array: 'string', optional: true}
+        }, {
             allow: ['manager', 'owner'],
             validate(input) {
                 validId(input.id)
                 validateDishDetails(input)
                 if (!input.title.trim() || input.title.length > 100) throw new Error('Название: от 1 до 100 символов')
-                if (input.price < 0 || input.price > 100000 || Math.abs(input.price * 100 - Math.round(input.price * 100)) > 0.000001) throw new Error('Цена: от 0 до 100000, максимум два знака после запятой')
+                const rounded = Math.abs(input.price * 100 - Math.round(input.price * 100)) <= 0.000001
+                const priced = input.price >= 0 && input.price <= 100000 && rounded
+                if (!priced) throw new Error('Цена: от 0 до 100000, максимум два знака после запятой')
                 if (!input.recipe.length || input.recipe.length > 50) throw new Error('В рецепте нужно от 1 до 50 ингредиентов')
                 if (new Set(input.recipe.map(p => p.ingredientId)).size != input.recipe.length) throw new Error('Ингредиенты рецепта не должны повторяться')
                 for (const part of input.recipe) positiveQuantity(part.quantity)
             },
             apply(ctx: ServiceCommandCtx<PizzeriaState>, input) {
-                for (const part of input.recipe) if (!Object.hasOwn(ctx.state.ingredients, part.ingredientId)) throw new Error('Неизвестный ингредиент: ' + part.ingredientId)
-                const details = dishDetails({...ctx.state.menu[input.id],...input})
-                ctx.state.menu[input.id] = {id: input.id, title: input.title.trim(), price: input.price, available: input.available, recipe: input.recipe.map(p => ({...p})),
-                    ...details, description:details.description.trim(), composition:details.composition.trim(), portion:details.portion.trim(), photos:[...details.photos]}
+                for (const part of input.recipe) {
+                    if (Object.hasOwn(ctx.state.ingredients, part.ingredientId)) continue
+                    throw new Error('Неизвестный ингредиент: ' + part.ingredientId)
+                }
+                const details = dishDetails({...ctx.state.menu[input.id], ...input})
+                ctx.state.menu[input.id] = {
+                    id: input.id, title: input.title.trim(), price: input.price,
+                    available: input.available, recipe: input.recipe.map(p => ({
+                    ...p
+                })),
+                    ...details,
+                    description: details.description.trim(),
+                    composition: details.composition.trim(),
+                    portion: details.portion.trim(),
+                    photos: [...details.photos]}
                 return {...ctx.state.menu[input.id]}
             },
         }),
-        addIngredient: schemaCommand({id:'string', title:'string', unit:{enum:['g','ml','pcs']}}, {
+        addIngredient: schemaCommand({id:'string', title:'string', unit:{enum:['g', 'ml', 'pcs']}}, {
             allow: ['manager', 'owner'],
             validate(input) {
                 validId(input.id)
@@ -276,7 +323,10 @@ const pizzeriaDefinition = {
             allow: ['manager', 'owner'],
             validate(input) {
                 positiveQuantity(input.quantity)
-                if (!Number.isFinite(Date.parse(input.expiresAt)) || Date.parse(input.expiresAt) <= Date.now()) throw new Error('Срок годности должен быть в будущем')
+                const expires = Date.parse(input.expiresAt)
+                if (!Number.isFinite(expires) || expires <= Date.now()) {
+                    throw new Error('Срок годности должен быть в будущем')
+                }
             },
             apply(ctx: ServiceCommandCtx<PizzeriaState>, input) {
                 if (!Object.hasOwn(ctx.state.ingredients, input.ingredientId)) throw new Error('Неизвестный ингредиент')
@@ -322,8 +372,13 @@ const pizzeriaDefinition = {
     views: {
         ...work.views,
         inventory: {
-            allow: ['cook', 'manager', 'owner'], shared: true, keys: ['ingredients','batches','movements','orders'],
-            project: (state: PizzeriaState) => ({ingredients: state.ingredients, batches: state.batches, movements: state.movements, waiting: Object.values(state.orders).filter(o => o.state == 'placed').map(o => ({id:o.id, ts:o.ts, requirements:o.requirements}))}),
+            allow: ['cook', 'manager', 'owner'], shared: true, keys: ['ingredients', 'batches', 'movements', 'orders'],
+            project: (state: PizzeriaState) => ({
+                ingredients: state.ingredients, batches: state.batches, movements: state.movements,
+                waiting: Object.values(state.orders).filter(o => o.state == 'placed').map(o => ({
+                    id:o.id, ts:o.ts, requirements:o.requirements
+                }))
+            }),
         },
         catalog: {
             allow: ['manager', 'owner'], shared: true, keys: ['menu'],
@@ -331,9 +386,9 @@ const pizzeriaDefinition = {
         },
         /** Anyone: the available menu. */
         menu: {
-            allow: 'public', keys: ['menu','ingredients'],
+            allow: 'public', keys: ['menu', 'ingredients'],
             project: (state: PizzeriaState) => ({
-                items: Object.values(state.menu).filter(item => item.available).map(item => publicDish(item,state.ingredients)),
+                items: Object.values(state.menu).filter(item => item.available).map(item => publicDish(item, state.ingredients)),
             }),
         },
         /** A customer: MY orders — one line per session, filtered by the principal. */
@@ -352,7 +407,11 @@ const pizzeriaDefinition = {
                 const orders: Record<string, {id: string, items: string[], state: tOrderState, cook?: string, ts: number}> = {}
                 for (const order of Object.values(state.orders)) {
                     if (order.state != 'placed' && order.state != 'cooking' && order.state != 'ready') continue
-                    orders[order.id] = {id: order.id, items: order.lines?.map(line => line.title) ?? order.items, state: order.state, ...(order.cook ? {cook: order.cook} : {}), ts: order.ts}
+                    orders[order.id] = {
+                        id: order.id,
+                        items: order.lines?.map(line => line.title) ?? order.items,
+                        state: order.state, ...(order.cook ? {cook: order.cook} : {}), ts: order.ts
+                    }
                 }
                 return {orders}
             },
@@ -364,7 +423,9 @@ const pizzeriaDefinition = {
                 const orders: Record<string, {id: string, address: string, phone: string, state: tOrderState, courier?: string}> = {}
                 for (const order of Object.values(state.orders)) {
                     if (order.state != 'ready' && order.state != 'delivering') continue
-                    orders[order.id] = {id: order.id, address: order.address, phone: order.phone, state: order.state, ...(order.courier ? {courier: order.courier} : {})}
+                    orders[order.id] = {
+                        id: order.id, address: order.address, phone: order.phone, state: order.state, ...(order.courier ? {courier: order.courier} : {})
+                    }
                 }
                 return {orders}
             },
@@ -404,12 +465,22 @@ export function createPizzeriaService(deps: {directory?: string, provider?: Assi
     const room = createBoardRoom({allow: work.views.work.allow})
     const screen = createScreenRoom({allow: work.views.work.allow})
     const chat = createChatRoom({allow: work.views.work.allow, directory: deps.directory, provider: deps.provider})
-    return {definition: {...pizzeriaDefinition, commands: withWorkAutomation(pizzeriaDefinition.commands), resources: {board: room.resource, screen: screen.resource, chat: chat.resource}},
+    return {definition: {
+        ...pizzeriaDefinition, commands: withWorkAutomation(pizzeriaDefinition.commands), resources: {
+            board: room.resource, screen: screen.resource, chat: chat.resource
+        }
+    },
         mount(store: Parameters<typeof room.mount<PizzeriaState>>[0]['store']) {
             const closeBoard = room.mount({store, project: work.views.work.project})
             const closeScreen = screen.mount()
-            const closeChat = chat.mount({store, project: work.views.work.project, principal: (state, account) => ({account, roles: state.accounts[account]?.roles ?? []})})
-            return function close() {closeChat(); closeScreen(); closeBoard()}
+            const closeChat = chat.mount({
+                store, project: work.views.work.project, principal: (state, account) => ({account, roles: state.accounts[account]?.roles ?? []})
+            })
+            return function close() {
+                closeChat()
+                closeScreen()
+                closeBoard()
+            }
         }}
 }
 export const serviceDefinition = createPizzeriaService().definition

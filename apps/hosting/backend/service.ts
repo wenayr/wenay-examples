@@ -11,8 +11,16 @@ type tTargetKind = typeof targetKinds[number]
 type tOperationStatus = 'queued' | 'running' | 'succeeded' | 'failed' | 'cancelled'
 export type AccountConfig = {account: string, password: string, role: tRole, projects: string[]}
 type Release = {id: string, project: string, version: string, artifact: string, createdBy: string, workload?: Workload}
-type Environment = {id: string, project: string, kind: tTargetKind, agent: string, revision: number, desired: string, active: string, pending: string, endpoint?: string, route?: string, activeOperation?: string}
-type Operation = {id: string, environment: string, project: string, release: string, previous: string, action: 'deploy' | 'rollback', status: tOperationStatus, revision: number, agent: string, requestedBy: string, detail: string, cleaned?: boolean}
+type Environment = {
+    id: string, project: string, kind: tTargetKind, agent: string, revision: number,
+    desired: string, active: string, pending: string,
+    endpoint?: string, route?: string, activeOperation?: string
+}
+type Operation = {
+    id: string, environment: string, project: string, release: string, previous: string,
+    action: 'deploy' | 'rollback', status: tOperationStatus, revision: number,
+    agent: string, requestedBy: string, detail: string, cleaned?: boolean
+}
 export type HostingState = {
     accounts: Record<string, {role: tRole, projects: string[]}>
     projects: Record<string, {id: string, title: string}>
@@ -25,7 +33,10 @@ export type HostingState = {
 type Context = ServiceCommandCtx<HostingState>
 
 function identifier(value: string) {
-    if (!/^[a-z][a-z0-9-]{0,62}$/.test(value) || Object.hasOwn(Object.prototype, value)) throw new Error('expected a non-reserved lowercase identifier, 1..63 characters')
+    const named = /^[a-z][a-z0-9-]{0,62}$/.test(value)
+    if (!named || Object.hasOwn(Object.prototype, value)) {
+        throw new Error('expected a non-reserved lowercase identifier, 1..63 characters')
+    }
 }
 
 function hasProject(state: HostingState, account: string, project: string) {
@@ -48,7 +59,13 @@ export function createHostingDefinition(deps: {accounts: AccountConfig[]}) {
     const secrets = new Map<string, {salt: Buffer, hash: Buffer}>()
     for (const account of deps.accounts) {
         identifier(account.account)
-        if (secrets.has(account.account) || !roles.includes(account.role) || typeof account.password != 'string' || account.password.length < 16 || account.password.length > 1024 || account.password.startsWith('REPLACE-WITH-')) throw new Error('invalid or duplicate account configuration; replace example passwords with unique secrets of 16..1024 characters')
+        const fresh = !secrets.has(account.account) && roles.includes(account.role)
+        const typed = typeof account.password == 'string'
+        const sized = typed && account.password.length >= 16 && account.password.length <= 1024
+        const real = typed && !account.password.startsWith('REPLACE-WITH-')
+        if (!fresh || !sized || !real) {
+            throw new Error('invalid or duplicate account configuration; replace example passwords with unique secrets of 16..1024 characters')
+        }
         for (const project of account.projects) identifier(project)
         const salt = randomBytes(16)
         secrets.set(account.account, {salt, hash: scryptSync(account.password, salt, 32)})
@@ -65,10 +82,22 @@ export function createHostingDefinition(deps: {accounts: AccountConfig[]}) {
         const release = ctx.state.releases[input.release]
         if (!release || release.project != environment.project) throw new Error('release unavailable')
         const active = ctx.state.releases[environment.active]
-        if (active && active.workload?.dataVersion != release.workload?.dataVersion) throw new Error('storage contract changed: use a separate environment and an explicit migration/restore')
-        if (action == 'rollback' && !Object.values(ctx.state.operations).some(item=>item.environment == environment.id && item.release == release.id && item.status == 'succeeded')) throw new Error('rollback requires a previously successful release in this environment')
+        if (active && active.workload?.dataVersion != release.workload?.dataVersion) {
+            throw new Error('storage contract changed: use a separate environment and an explicit migration/restore')
+        }
+        function succeededHere(item: Operation) {
+            if (item.environment != environment.id || item.release != release.id) return false
+            return item.status == 'succeeded'
+        }
+        if (action == 'rollback' && !Object.values(ctx.state.operations).some(succeededHere)) {
+            throw new Error('rollback requires a previously successful release in this environment')
+        }
         const id = operationId(ctx)
-        const operation: Operation = {id, environment: environment.id, project: environment.project, release: release.id, previous: environment.active, action, status: 'queued', revision: 0, agent: environment.agent, requestedBy: ctx.account, detail: ''}
+        const operation: Operation = {
+            id, environment: environment.id, project: environment.project, release: release.id,
+            previous: environment.active, action, status: 'queued', revision: 0,
+            agent: environment.agent, requestedBy: ctx.account, detail: ''
+        }
         ctx.state.operations[id] = operation
         environment.desired = release.id
         environment.pending = id
@@ -108,9 +137,14 @@ export function createHostingDefinition(deps: {accounts: AccountConfig[]}) {
                 validate(input) {localEndpoint(input.endpoint)},
                 apply(ctx: Context, input) {
                     const environment = ctx.state.environments[input.environment]
-                    if (!environment || environment.kind != 'docker' || environment.agent != ctx.account || !hasProject(ctx.state, ctx.account, environment.project)) throw new Error('environment unavailable')
+                    const own = !!environment && environment.agent == ctx.account
+                    const permitted = own && hasProject(ctx.state, ctx.account, environment.project)
+                    if (!permitted || environment.kind != 'docker') throw new Error('environment unavailable')
                     if (environment.route && environment.route != input.endpoint) throw new Error('stable route is immutable')
-                    if (Object.values(ctx.state.environments).some(item=>item.id != environment.id && item.route == input.endpoint)) throw new Error('route already assigned')
+                    function takenRoute(item: Environment) {
+                        return item.id != environment.id && item.route == input.endpoint
+                    }
+                    if (Object.values(ctx.state.environments).some(takenRoute)) throw new Error('route already assigned')
                     environment.route = input.endpoint
                     return {endpoint: input.endpoint}
                 },
@@ -119,9 +153,17 @@ export function createHostingDefinition(deps: {accounts: AccountConfig[]}) {
                 allow: ['agent'],
                 apply(ctx: Context, input) {
                     const operation = ctx.state.operations[input.operation]
-                    if (!operation || operation.agent != ctx.account || !hasProject(ctx.state, ctx.account, operation.project)) throw new Error('operation unavailable')
+                    const own = !!operation && operation.agent == ctx.account
+                    if (!own || !hasProject(ctx.state, ctx.account, operation.project)) {
+                        throw new Error('operation unavailable')
+                    }
                     const environment = ctx.state.environments[operation.environment]
-                    if (environment.kind != 'docker' || !environment.activeOperation || environment.activeOperation == operation.id || environment.pending == operation.id || !['succeeded', 'failed'].includes(operation.status)) throw new Error('operation is not eligible for cleanup')
+                    const busy = environment.activeOperation == operation.id || environment.pending == operation.id
+                    const replaced = !!environment.activeOperation && !busy
+                    const finished = ['succeeded', 'failed'].includes(operation.status)
+                    if (environment.kind != 'docker' || !replaced || !finished) {
+                        throw new Error('operation is not eligible for cleanup')
+                    }
                     operation.cleaned = true
                     return {operation: operation.id, cleaned: true}
                 },
@@ -147,38 +189,62 @@ export function createHostingDefinition(deps: {accounts: AccountConfig[]}) {
                 apply(ctx: Context, input) {
                     requireProject(ctx, input.project)
                     if (ctx.state.environments[input.id]) throw new Error('environment already exists')
-                    if (ctx.state.accounts[input.agent]?.role != 'agent' || !hasProject(ctx.state, input.agent, input.project)) throw new Error('agent unavailable for project')
+                    const agent = ctx.state.accounts[input.agent]?.role == 'agent'
+                    if (!agent || !hasProject(ctx.state, input.agent, input.project)) {
+                        throw new Error('agent unavailable for project')
+                    }
                     const environment: Environment = {...input, kind: input.kind as tTargetKind, revision: 0, desired: '', active: '', pending: ''}
                     ctx.state.environments[input.id] = environment
                     return {...environment}
                 },
             }),
-            publishRelease: schemaCommand({id: 'string', project: 'string', version: 'string', artifact: 'string', port: 'number?', healthPath: 'string?', memoryMiB: 'number?', cpus: 'number?', dataVersion: 'string?'}, {
+            publishRelease: schemaCommand({
+                id: 'string', project: 'string', version: 'string', artifact: 'string',
+                port: 'number?', healthPath: 'string?', memoryMiB: 'number?',
+                cpus: 'number?', dataVersion: 'string?'
+            }, {
                 allow: ['admin', 'owner', 'operator'],
                 validate(input) {
                     identifier(input.id)
                     if (!/^[a-zA-Z0-9][a-zA-Z0-9._-]{0,63}$/.test(input.version)) throw new Error('invalid version')
-                    if (!/^[a-z0-9][a-z0-9./:_-]{0,240}@sha256:[a-f0-9]{64}$/.test(input.artifact)) throw new Error('release requires an OCI reference pinned by SHA-256 digest')
+                    if (!/^[a-z0-9][a-z0-9./:_-]{0,240}@sha256:[a-f0-9]{64}$/.test(input.artifact)) {
+                        throw new Error('release requires an OCI reference pinned by SHA-256 digest')
+                    }
                     workload({port: input.port, healthPath: input.healthPath, memoryMiB: input.memoryMiB, cpus: input.cpus, dataVersion: input.dataVersion})
                 },
                 apply(ctx: Context, input) {
                     requireProject(ctx, input.project)
-                    if (ctx.state.releases[input.id] || Object.values(ctx.state.releases).some(item=>item.project == input.project && item.version == input.version)) throw new Error('release is immutable; publish a new version')
+                    function sameVersion(item: Release) {
+                        return item.project == input.project && item.version == input.version
+                    }
+                    const known = !!ctx.state.releases[input.id]
+                    if (known || Object.values(ctx.state.releases).some(sameVersion)) {
+                        throw new Error('release is immutable; publish a new version')
+                    }
                     const release: Release = {id: input.id, project: input.project, version: input.version, artifact: input.artifact, createdBy: ctx.account,
-                        workload: workload({port: input.port, healthPath: input.healthPath, memoryMiB: input.memoryMiB, cpus: input.cpus, dataVersion: input.dataVersion})}
+                        workload: workload({
+                            port: input.port, healthPath: input.healthPath, memoryMiB: input.memoryMiB,
+                            cpus: input.cpus, dataVersion: input.dataVersion
+                        })}
                     ctx.state.releases[input.id] = release
                     return {...release}
                 },
             }),
-            deploy: schemaCommand(deploymentInput, {allow: ['admin', 'owner', 'operator'], apply(ctx: Context, input) {return requestDeployment(ctx, input, 'deploy')}}),
-            rollback: schemaCommand(deploymentInput, {allow: ['admin', 'owner', 'operator'], apply(ctx: Context, input) {return requestDeployment(ctx, input, 'rollback')}}),
+            deploy: schemaCommand(deploymentInput, {
+                allow: ['admin', 'owner', 'operator'], apply(ctx: Context, input) {return requestDeployment(ctx, input, 'deploy')}
+            }),
+            rollback: schemaCommand(deploymentInput, {
+                allow: ['admin', 'owner', 'operator'], apply(ctx: Context, input) {return requestDeployment(ctx, input, 'rollback')}
+            }),
             cancelQueued: schemaCommand({operation: 'string', revision: 'number'}, {
                 allow: ['admin', 'owner', 'operator'],
                 apply(ctx: Context, input) {
                     const operation = ctx.state.operations[input.operation]
                     if (!operation) throw new Error('operation unavailable')
                     requireProject(ctx, operation.project)
-                    if (operation.revision != input.revision || operation.status != 'queued') throw new Error('only the current queued operation can be cancelled')
+                    if (operation.revision != input.revision || operation.status != 'queued') {
+                        throw new Error('only the current queued operation can be cancelled')
+                    }
                     const environment = ctx.state.environments[operation.environment]
                     operation.status = 'cancelled'
                     operation.revision++
@@ -198,7 +264,10 @@ export function createHostingDefinition(deps: {accounts: AccountConfig[]}) {
                     return {...operation}
                 },
             }),
-            finishOperation: schemaCommand({operation: 'string', revision: 'number', success: 'boolean', observedArtifact: 'string', detail: 'string', endpoint: 'string?'}, {
+            finishOperation: schemaCommand({
+                operation: 'string', revision: 'number', success: 'boolean',
+                observedArtifact: 'string', detail: 'string', endpoint: 'string?'
+            }, {
                 allow: ['agent'],
                 validate(input) {
                     if (input.detail.length > 500) throw new Error('detail exceeds 500 characters')
@@ -207,12 +276,21 @@ export function createHostingDefinition(deps: {accounts: AccountConfig[]}) {
                 apply(ctx: Context, input) {
                     const {operation, environment} = agentOperation(ctx, input)
                     if (operation.status != 'running') throw new Error('operation is not running')
-                    if (input.success && input.observedArtifact != ctx.state.releases[operation.release].artifact) throw new Error('observed artifact does not match requested release')
-                    if (!input.success && input.endpoint && input.observedArtifact != ctx.state.releases[operation.previous]?.artifact) throw new Error('restored artifact does not match previous release')
+                    if (input.success && input.observedArtifact != ctx.state.releases[operation.release].artifact) {
+                        throw new Error('observed artifact does not match requested release')
+                    }
+                    const restored = input.observedArtifact == ctx.state.releases[operation.previous]?.artifact
+                    if (!input.success && input.endpoint && !restored) {
+                        throw new Error('restored artifact does not match previous release')
+                    }
                     operation.status = input.success ? 'succeeded' : 'failed'
                     operation.detail = input.detail
                     operation.revision++
-                    if (input.success) {environment.active = operation.release; environment.activeOperation = operation.id; environment.endpoint = input.endpoint ?? ''}
+                    if (input.success) {
+                        environment.active = operation.release
+                        environment.activeOperation = operation.id
+                        environment.endpoint = input.endpoint ?? ''
+                    }
                     else if (input.endpoint) environment.endpoint = input.endpoint
                     environment.pending = ''
                     environment.revision++
@@ -240,9 +318,20 @@ export function createHostingDefinition(deps: {accounts: AccountConfig[]}) {
                 project(state: HostingState, principal: tServicePrincipal | null) {
                     const account = principal?.account ?? ''
                     const environments = Object.values(state.environments).filter(item=>item.agent == account && hasProject(state, account, item.project))
-                    const operations = Object.values(state.operations).filter(item=>item.agent == account && hasProject(state, account, item.project) && ['queued', 'running'].includes(item.status))
-                    const retained = Object.values(state.operations).filter(item=>environments.some(environment=>environment.id == item.environment) && ['succeeded', 'failed'].includes(item.status) && !item.cleaned)
-                    return {environments, operations, retained, releases: Object.values(state.releases).filter(item=>[...operations, ...retained].some(operation=>operation.release == item.id))}
+                    const operations = Object.values(state.operations).filter(function pending(item) {
+                        if (item.agent != account || !hasProject(state, account, item.project)) return false
+                        return ['queued', 'running'].includes(item.status)
+                    })
+                    const retained = Object.values(state.operations).filter(function leftover(item) {
+                        if (!environments.some(environment => environment.id == item.environment)) return false
+                        return ['succeeded', 'failed'].includes(item.status) && !item.cleaned
+                    })
+                    return {
+                        environments, operations, retained,
+                        releases: Object.values(state.releases).filter(function used(item) {
+                            return [...operations, ...retained].some(operation => operation.release == item.id)
+                        })
+                    }
                 },
             },
         },
