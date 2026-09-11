@@ -1,3 +1,5 @@
+// Канон: shared/react/replay-view.ts. Копии в приложениях синхронизируются scripts/sync.mjs;
+// правьте здесь или поднимите правку из приложения: sync.mjs --from=<приложение>.
 import {useStoreReplayMirror, useClientStore} from 'wenay-react2/react'
 import {useMemo} from 'react'
 import type {StoreReplayRemote} from 'wenay-common2/observe'

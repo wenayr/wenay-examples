@@ -1,3 +1,5 @@
+// Канон: shared/backend/ai-checkpoint.ts. Копии в приложениях синхронизируются scripts/sync.mjs;
+// правьте здесь или поднимите правку из приложения: sync.mjs --from=<приложение>.
 import {mkdirSync, openSync, fsyncSync, closeSync} from 'node:fs'
 import path from 'node:path'
 import {serialize, deserialize} from 'node:v8'

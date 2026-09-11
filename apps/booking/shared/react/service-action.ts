@@ -1,3 +1,5 @@
+// Канон: shared/react/service-action.ts. Копии в приложениях синхронизируются scripts/sync.mjs;
+// правьте здесь или поднимите правку из приложения: sync.mjs --from=<приложение>.
 import {useAsyncAction} from 'wenay-react2/react'
 
 // Product forms consume success/failure; the library owns pending, errors and concurrency.

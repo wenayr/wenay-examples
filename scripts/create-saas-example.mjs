@@ -4,6 +4,9 @@ import path from 'node:path'
 import {fileURLToPath, pathToFileURL} from 'node:url'
 
 const repository = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
+// Эти файлы совпадают с каноном shared/ репозитория (scripts/sync-map.json).
+// Копия получает их из каталога приложения, поэтому scaffold остаётся автономным,
+// а расхождение между приложениями ловит scripts/sync-check.mjs.
 const shared = ['command-action.ts', 'replay-view.ts', 'service-action.ts', 'service-session.ts', 'service-view.tsx'].map(file => 'shared/react/' + file)
 const commonBackend = ['ai-checkpoint.ts', 'domain.ts', 'domain-check.ts', 'identity.ts', 'metered-execution.ts', 'metering-contract.ts', 'model.ts', 'node.ts', 'process-resource.ts', 'runtime.ts', 'server.ts', 'service.ts']
 const manifests = {

@@ -1,3 +1,5 @@
+// Канон: shared/react/command-action.ts. Копии в приложениях синхронизируются scripts/sync.mjs;
+// правьте здесь или поднимите правку из приложения: sync.mjs --from=<приложение>.
 import {useServiceCommands,type ServiceCommandCall,type ServiceCommandMap} from 'wenay-react2/react'
 
 export type tCommandCall<C extends ServiceCommandMap> = ServiceCommandCall<C>

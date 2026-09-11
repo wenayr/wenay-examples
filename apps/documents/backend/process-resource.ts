@@ -1,3 +1,5 @@
+// Канон: shared/backend/process-resource.ts. Копии в приложениях синхронизируются scripts/sync.mjs;
+// правьте здесь или поднимите правку из приложения: sync.mjs --from=<приложение>.
 import path from 'node:path'
 import {createProcessResource} from 'wenay-common2/server/process'
 

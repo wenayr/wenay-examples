@@ -1,3 +1,5 @@
+// Канон: shared/backend/identity.ts. Копии в приложениях синхронизируются scripts/sync.mjs;
+// правьте здесь или поднимите правку из приложения: sync.mjs --from=<приложение>.
 import {randomBytes, scryptSync, timingSafeEqual} from 'node:crypto'
 
 export type tSecret = {salt: string, hash: string}

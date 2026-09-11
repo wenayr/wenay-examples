@@ -1,3 +1,5 @@
+// Канон: shared/backend/metered-execution.ts. Копии в приложениях синхронизируются scripts/sync.mjs;
+// правьте здесь или поднимите правку из приложения: sync.mjs --from=<приложение>.
 import {randomUUID} from 'node:crypto'
 import {createServiceClient, type ServiceClient, type ServiceClientDefinition} from 'wenay-common2/service/client'
 import type {MeteringUsageDefinition} from './metering-contract'

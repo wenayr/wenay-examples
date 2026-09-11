@@ -1,3 +1,5 @@
+// Канон: shared/backend/metering-contract.ts. Копии в приложениях синхронизируются scripts/sync.mjs;
+// правьте здесь или поднимите правку из приложения: sync.mjs --from=<приложение>.
 import type {InferInput, ServiceCommandCtx, ServiceResourceContext, tServiceDefinition} from 'wenay-common2/service'
 
 export type UsageReceipt = {

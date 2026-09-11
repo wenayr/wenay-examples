@@ -1,3 +1,5 @@
+// Канон: shared/react/service-session.ts. Копии в приложениях синхронизируются scripts/sync.mjs;
+// правьте здесь или поднимите правку из приложения: sync.mjs --from=<приложение>.
 import {useMemo,useState} from 'react'
 import {useClientStore,useOwnedClient} from 'wenay-react2/react'
 import {createServiceClient,type ServiceClientDefinition} from 'wenay-common2/service/client'

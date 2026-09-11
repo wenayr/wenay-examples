@@ -1,0 +1,150 @@
+[
+    {
+        "canon": "shared/react/command-action.ts",
+        "copies": [
+            "apps/pizzeria/shared/react/command-action.ts",
+            "apps/support/shared/react/command-action.ts",
+            "apps/documents/shared/react/command-action.ts",
+            "apps/metering/shared/react/command-action.ts",
+            "apps/crm/shared/react/command-action.ts",
+            "apps/booking/shared/react/command-action.ts",
+            "apps/forms/shared/react/command-action.ts",
+            "apps/monitoring/shared/react/command-action.ts",
+            "apps/content/shared/react/command-action.ts",
+            "apps/approvals/shared/react/command-action.ts"
+        ]
+    },
+    {
+        "canon": "shared/react/service-action.ts",
+        "copies": [
+            "apps/pizzeria/shared/react/service-action.ts",
+            "apps/support/shared/react/service-action.ts",
+            "apps/documents/shared/react/service-action.ts",
+            "apps/metering/shared/react/service-action.ts",
+            "apps/crm/shared/react/service-action.ts",
+            "apps/booking/shared/react/service-action.ts",
+            "apps/forms/shared/react/service-action.ts",
+            "apps/monitoring/shared/react/service-action.ts",
+            "apps/content/shared/react/service-action.ts",
+            "apps/approvals/shared/react/service-action.ts"
+        ]
+    },
+    {
+        "canon": "shared/react/service-session.ts",
+        "copies": [
+            "apps/pizzeria/shared/react/service-session.ts",
+            "apps/support/shared/react/service-session.ts",
+            "apps/documents/shared/react/service-session.ts",
+            "apps/metering/shared/react/service-session.ts",
+            "apps/crm/shared/react/service-session.ts",
+            "apps/booking/shared/react/service-session.ts",
+            "apps/forms/shared/react/service-session.ts",
+            "apps/monitoring/shared/react/service-session.ts",
+            "apps/content/shared/react/service-session.ts",
+            "apps/approvals/shared/react/service-session.ts"
+        ]
+    },
+    {
+        "canon": "shared/react/service-view.tsx",
+        "copies": [
+            "apps/pizzeria/shared/react/service-view.tsx",
+            "apps/support/shared/react/service-view.tsx",
+            "apps/documents/shared/react/service-view.tsx",
+            "apps/metering/shared/react/service-view.tsx",
+            "apps/crm/shared/react/service-view.tsx",
+            "apps/booking/shared/react/service-view.tsx",
+            "apps/forms/shared/react/service-view.tsx",
+            "apps/monitoring/shared/react/service-view.tsx",
+            "apps/content/shared/react/service-view.tsx",
+            "apps/approvals/shared/react/service-view.tsx"
+        ]
+    },
+    {
+        "canon": "shared/react/replay-view.ts",
+        "copies": [
+            "apps/support/shared/react/replay-view.ts",
+            "apps/documents/shared/react/replay-view.ts",
+            "apps/metering/shared/react/replay-view.ts",
+            "apps/crm/shared/react/replay-view.ts",
+            "apps/booking/shared/react/replay-view.ts",
+            "apps/forms/shared/react/replay-view.ts",
+            "apps/monitoring/shared/react/replay-view.ts",
+            "apps/content/shared/react/replay-view.ts",
+            "apps/approvals/shared/react/replay-view.ts"
+        ]
+    },
+    {
+        "canon": "shared/backend/process-resource.ts",
+        "copies": [
+            "apps/pizzeria/backend/process-resource.ts",
+            "apps/support/backend/process-resource.ts",
+            "apps/documents/backend/process-resource.ts",
+            "apps/metering/backend/process-resource.ts",
+            "apps/crm/backend/process-resource.ts",
+            "apps/booking/backend/process-resource.ts",
+            "apps/forms/backend/process-resource.ts",
+            "apps/monitoring/backend/process-resource.ts",
+            "apps/content/backend/process-resource.ts",
+            "apps/approvals/backend/process-resource.ts"
+        ]
+    },
+    {
+        "canon": "shared/backend/ai-checkpoint.ts",
+        "copies": [
+            "apps/support/backend/ai-checkpoint.ts",
+            "apps/documents/backend/ai-checkpoint.ts",
+            "apps/crm/backend/ai-checkpoint.ts",
+            "apps/booking/backend/ai-checkpoint.ts",
+            "apps/forms/backend/ai-checkpoint.ts",
+            "apps/monitoring/backend/ai-checkpoint.ts",
+            "apps/content/backend/ai-checkpoint.ts"
+        ]
+    },
+    {
+        "canon": "shared/backend/metered-execution.ts",
+        "copies": [
+            "apps/support/backend/metered-execution.ts",
+            "apps/documents/backend/metered-execution.ts",
+            "apps/crm/backend/metered-execution.ts",
+            "apps/monitoring/backend/metered-execution.ts"
+        ]
+    },
+    {
+        "canon": "shared/backend/metering-contract.ts",
+        "copies": [
+            "apps/support/backend/metering-contract.ts",
+            "apps/documents/backend/metering-contract.ts",
+            "apps/crm/backend/metering-contract.ts",
+            "apps/monitoring/backend/metering-contract.ts"
+        ]
+    },
+    {
+        "canon": "shared/backend/identity.ts",
+        "copies": [
+            "apps/support/backend/identity.ts",
+            "apps/metering/backend/identity.ts",
+            "apps/crm/backend/identity.ts",
+            "apps/booking/backend/identity.ts",
+            "apps/forms/backend/identity.ts",
+            "apps/monitoring/backend/identity.ts",
+            "apps/content/backend/identity.ts",
+            "apps/approvals/backend/identity.ts"
+        ],
+        "note": "documents присоединяется в задаче S03 после унификации проверки секрета"
+    },
+    {
+        "canon": "shared/frontend/env.d.ts",
+        "copies": [
+            "apps/pizzeria/frontend/env.d.ts",
+            "apps/support/frontend/env.d.ts",
+            "apps/documents/frontend/env.d.ts",
+            "apps/metering/frontend/env.d.ts",
+            "apps/crm/frontend/env.d.ts",
+            "apps/booking/frontend/env.d.ts",
+            "apps/forms/frontend/env.d.ts",
+            "apps/monitoring/frontend/env.d.ts",
+            "apps/content/frontend/env.d.ts",
+            "apps/approvals/frontend/env.d.ts"
+        ]
+    }
+]
