@@ -61,7 +61,7 @@ const manifests = {
         'frontend/main.tsx', 'frontend/playground.tsx', 'frontend/style.css', 'frontend/vite.config.ts', 'frontend/webhooks.tsx'
     ])
 }
-const optionalFiles = ['README.md', '.env.example', 'Dockerfile', '.dockerignore', 'OIDC.md']
+const optionalFiles = ['README.md', 'API.md', '.env.example', 'Dockerfile', '.dockerignore', 'OIDC.md']
 const requiredFiles = ['package.json', 'package-lock.json', 'tsconfig.json']
 
 function inside(parent, child) {
@@ -121,6 +121,16 @@ function validateSource(files, sourceRoot, manifest) {
     }
     for (const [name, version] of Object.entries(dependencies)) {
         if (!/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/.test(version)) throw new Error('Для воспроизводимой копии нужна точная npm-версия: ' + name)
+    }
+}
+
+function removeScript(manifest, name, file) {
+    const scripts = manifest.scripts ?? {}
+    delete scripts[name]
+    for (const [key, command] of Object.entries(scripts)) {
+        const parts = command.split(' && ').filter(step => !step.includes(file))
+        if (parts.length == 0) delete scripts[key]
+        else scripts[key] = parts.join(' && ')
     }
 }
 
@@ -190,6 +200,9 @@ export async function createSaasExample(deps) {
     }
     const packageJson = JSON.parse(files.get('package.json').toString('utf8'))
     if (template == 'metering') delete packageJson.scripts['test:integration']
+    // backup-check запускает scripts/backup.mjs и restore.mjs из корня каталога примеров,
+    // а в самостоятельной копии их нет: проверка холодной копии остаётся в исходном репозитории.
+    removeScript(packageJson, 'test:backup', 'backend/backup-check.ts')
     const lock = JSON.parse(files.get('package-lock.json').toString('utf8'))
     if (!lock.packages?.[''] || lock.lockfileVersion < 2) throw new Error('Нужен современный package-lock.json с корневым пакетом')
     for (const [entry, value] of Object.entries(lock.packages)) {
