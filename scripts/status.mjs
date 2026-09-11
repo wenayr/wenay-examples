@@ -136,8 +136,11 @@ function updateMarkers(rows) {
         const app = path.basename(path.dirname(file))
         const row = rows.find(item => item.app == app)
         const passport = path.basename(file) == 'PASSPORT.md'
-        const own = row && row.common2 != '—' ? 'Текущие зависимости: **common2 ' + row.common2 + ' / react2 ' + row.react2 + '**.' : line
-        let after = passport ? before : replaceMarked(before, 'status:versions', row ? own : line)
+        const known = row && row.common2 != '—'
+        const own = known ? 'Текущие зависимости: **common2 ' + row.common2 + ' / react2 ' + row.react2 + '**.' : line
+        // В паспорте строки версий нет: там только список импортов библиотек.
+        let after = before
+        if (!passport) after = replaceMarked(before, 'status:versions', row ? own : line)
         if (row) after = replaceMarked(after, 'status:imports', libraryImports(app).map(name => '`' + name + '`').join(', '))
         if (after == before) continue
         writeFileSync(file, after, 'utf8')
