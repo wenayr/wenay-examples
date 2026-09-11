@@ -17,7 +17,12 @@ async function main() {
     const close = runtime.mount({store: leader.line.control.store, execute: leader.corridor.system})
     const state = () => leader.line.control.store.snapshot()
     function resource(account: string) {
-        return runtime.definition.resources.imports.open({principal: {account, roles: crmRoles(state(), account)}, sessionId: account, resourceId: 'imports', signal: new AbortController().signal})
+        return runtime.definition.resources.imports.open({
+            principal: {account, roles: crmRoles(state(), account)},
+            sessionId: account,
+            resourceId: 'imports',
+            signal: new AbortController().signal
+        })
     }
     const manager = resource('manager'), owner = leader.corridor.fragment('owner'), outside = resource('outsider')
     const commands = leader.corridor.fragment('manager')
@@ -29,7 +34,12 @@ async function main() {
     }
     try {
         await assert.rejects(upload('bad.csv', 'name,name\nA,B'), /уникальными/)
-        await assert.rejects(outside.facade.control.upload({orgId, companyId, name: 'forbidden.csv', bytes: Buffer.from('name,email\nTest,test@example.com')}), /доступа/)
+        await assert.rejects(outside.facade.control.upload({
+            orgId,
+            companyId,
+            name: 'forbidden.csv',
+            bytes: Buffer.from('name,email\nTest,test@example.com')
+        }), /доступа/)
         const source = 'full_name,mail,phone\nFirst,new@example.com,123\nAgain,new@example.com,456\nBad,not-email,0\nExisting,ilya@aurora.example,0'
         const created = await upload('contacts.csv', source)
         assert.deepEqual(await upload('contacts.csv', source), created)
@@ -66,6 +76,12 @@ async function main() {
         assert.equal(importView(state(), {account: 'manager', roles: ['owner']}).imports.length, 0)
         await assert.rejects(manager.facade.control.detail({orgId, id: revoked.id, revision: job(revoked.id).revision}), /доступа/)
         console.log('PASS CRM imports: shared CSV parser, mapping, private preview, duplicate/invalid rows, semantic retries, partial cancellation/resume without duplicate contacts and fresh membership revocation')
-    } finally {manager.close(); outside.close(); close(); leader.control.close()}
+    } finally {manager.close()
+    outside.close()
+    close()
+    leader.control.close()}
 }
-main().catch(function failed(error) {console.error(error); process.exitCode = 1})
+main().catch(function failed(error) {
+    console.error(error)
+    process.exitCode = 1
+})

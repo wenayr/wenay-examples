@@ -40,11 +40,34 @@ export function createCrmState(): CrmState {
         'company-harbor': {id: 'company-harbor', orgId: 'harbor', name: 'Harbor Client', domain: 'harbor.example', archived: false, revision: 1}
     }
     const contacts: CrmState['contacts'] = {
-        'contact-ilya': {id: 'contact-ilya', orgId: 'northstar', companyId: 'company-aurora', name: 'Илья · Aurora', email: 'ilya@aurora.example', phone: '', archived: false, revision: 1},
-        'contact-harbor': {id: 'contact-harbor', orgId: 'harbor', companyId: 'company-harbor', name: 'Harbor Contact', email: 'client@harbor.example', phone: '', archived: false, revision: 1}
+        'contact-ilya': {
+            id: 'contact-ilya',
+            orgId: 'northstar',
+            companyId: 'company-aurora',
+            name: 'Илья · Aurora',
+            email: 'ilya@aurora.example',
+            phone: '',
+            archived: false,
+            revision: 1
+        },
+        'contact-harbor': {
+            id: 'contact-harbor',
+            orgId: 'harbor',
+            companyId: 'company-harbor',
+            name: 'Harbor Contact',
+            email: 'client@harbor.example',
+            phone: '',
+            archived: false,
+            revision: 1
+        }
     }
     function deal(id: string, orgId: string, title: string, assignee: string, customerAccount: string): Deal {
-        return {id, orgId, title, description: 'Подготовить предложение и согласовать следующий шаг.', companyId: orgId == 'northstar' ? 'company-aurora' : 'company-harbor',
+        return {
+            id,
+            orgId,
+            title,
+            description: 'Подготовить предложение и согласовать следующий шаг.',
+            companyId: orgId == 'northstar' ? 'company-aurora' : 'company-harbor',
             contactId: orgId == 'northstar' ? 'contact-ilya' : 'contact-harbor', assignee, customerAccount, amount: 150000,
             stage: 'incoming', archived: false, revision: 1, createdAt: at, updatedAt: at, createdBy: assignee,
             interactions: [{id: id + '-welcome', author: assignee, body: 'Обсудим цели проекта и подготовим предложение.', private: false, at},
@@ -53,11 +76,20 @@ export function createCrmState(): CrmState {
     }
     return {
         accounts: Object.fromEntries(Object.keys(DEMO_LOGINS).map(account => [account, {account,
-            name: ({owner: 'Алексей · владелец', lead: 'Мария · руководитель', manager: 'Даша · менеджер', customer: 'Илья · клиент', outsider: 'Никита · Harbor'} as Record<string, string>)[account], secret: hashSecret(account + '-pass')}])),
+            name: ({
+                owner: 'Алексей · владелец',
+                lead: 'Мария · руководитель',
+                manager: 'Даша · менеджер',
+                customer: 'Илья · клиент',
+                outsider: 'Никита · Harbor'
+            } as Record<string, string>)[account], secret: hashSecret(account + '-pass')}])),
         organizations, companies, contacts,
         deals: {'deal-aurora': deal('deal-aurora', 'northstar', 'Новый сайт для Aurora Coffee', 'manager', 'customer'),
             'deal-expansion': deal('deal-expansion', 'northstar', 'Развитие программы лояльности', 'lead', ''),
             'deal-harbor': deal('deal-harbor', 'harbor', 'Закрытая сделка Harbor', 'outsider', '')},
-        columns: {northstar: {...emptyColumns(), incoming: ['deal-aurora', 'deal-expansion']}, harbor: {...emptyColumns(), incoming: ['deal-harbor']}}, audit: []
+        columns: {
+            northstar: {...emptyColumns(), incoming: ['deal-aurora', 'deal-expansion']},
+            harbor: {...emptyColumns(), incoming: ['deal-harbor']}
+        }, audit: []
     }
 }

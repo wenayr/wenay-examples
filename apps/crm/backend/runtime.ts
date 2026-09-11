@@ -8,6 +8,23 @@ import {createCrmAssistant, type SummaryProvider} from './assistant-resource'
 import type {UsageGate} from './metered-execution'
 import path from 'node:path'
 
+type SearchInput = {
+    query: string,
+    offset: number,
+    limit: number,
+    stage: string,
+    archived: boolean
+}
+
+// Страница поиска задаётся клиентом: проверяем текст, окно и фильтр по отдельности.
+function validSearch(input: SearchInput) {
+    if (typeof input.query != 'string' || input.query.length > 100) return false
+    if (!Number.isInteger(input.offset) || input.offset < 0 || input.offset > 2000) return false
+    if (!Number.isInteger(input.limit) || input.limit < 1 || input.limit > 100) return false
+    if (!['all', ...STAGES].includes(input.stage)) return false
+    return typeof input.archived == 'boolean'
+}
+
 export function createCrmRuntime(deps: {now?: () => number, directory?: string, provider?: SummaryProvider, timeoutMs?: number, usage?: UsageGate} = {}) {
     const service = createCrmService(deps)
     const imports = createCrmImports(deps)
@@ -23,9 +40,19 @@ export function createCrmRuntime(deps: {now?: () => number, directory?: string, 
         function detail(input: {orgId: string, id: string}) {return crmDetail(state(input.orgId), ctx.principal.account, input.orgId, input.id)}
         function search(input: {orgId: string, query: string, stage: tStage | 'all', offset: number, limit: number, archived: boolean}) {
             const current = state(input.orgId)
-            if (typeof input.query != 'string' || input.query.length > 100 || !Number.isInteger(input.offset) || input.offset < 0 || input.offset > 2000 || !Number.isInteger(input.limit) || input.limit < 1 || input.limit > 100 || !['all', ...STAGES].includes(input.stage) || typeof input.archived != 'boolean') throw new Error('Поиск: запрос до 100 символов, от 1 до 100 строк на странице')
+            if (!validSearch(input)) {
+                throw new Error('Поиск: запрос до 100 символов, от 1 до 100 строк на странице')
+            }
             const query = input.query.trim().toLowerCase()
-            const found = crmWorkspace(current, ctx.principal).deals.filter(deal => deal.orgId == input.orgId && deal.archived == input.archived && (input.stage == 'all' || deal.stage == input.stage) && (!query || (deal.title + ' ' + deal.description).toLowerCase().includes(query))).sort((a, b) => b.updatedAt - a.updatedAt || a.id.localeCompare(b.id))
+            const visible = crmWorkspace(current, ctx.principal).deals.filter(function matching(deal) {
+                if (deal.orgId != input.orgId || deal.archived != input.archived) return false
+                if (input.stage != 'all' && deal.stage != input.stage) return false
+                if (!query) return true
+                return (deal.title + ' ' + deal.description).toLowerCase().includes(query)
+            })
+            const found = visible.sort(function order(a, b) {
+                return b.updatedAt - a.updatedAt || a.id.localeCompare(b.id)
+            })
             const items = found.slice(input.offset, input.offset + input.limit)
             return {items, total: found.length, next: input.offset + items.length < found.length ? input.offset + items.length : null}
         }
@@ -39,16 +66,27 @@ export function createCrmRuntime(deps: {now?: () => number, directory?: string, 
                 const safe = typeof value == 'string' && /^[=+\-@\t\r\n]/.test(raw) ? "'" + raw : raw
                 return '"' + safe.replace(/"/g, '""') + '"'
             }
-            const rows: (string | number)[][] = [['id', 'title', 'stage', 'amountMinor', 'assignee', 'archived'], ...entries.map(deal => [deal.id, deal.title, deal.stage, deal.amount, deal.assignee, deal.archived ? 'yes' : 'no'])]
+            const header = ['id', 'title', 'stage', 'amountMinor', 'assignee', 'archived']
+            const rows: (string | number)[][] = [header, ...entries.map(function line(deal) {
+                const archived = deal.archived ? 'yes' : 'no'
+                return [deal.id, deal.title, deal.stage, deal.amount, deal.assignee, archived]
+            })]
             return {name: 'crm-deals.csv', mime: 'text/csv', text: rows.map(row => row.map(cell).join(',')).join('\r\n')}
         }
         return {facade: {control: {detail, search, export: exportData}}, close() {}}
     }}
-    return {definition: {...service.definition, resources: {crm, imports: imports.resource, assistant: assistant.resource}}, mount(deps: {store: Store<CrmState>, execute: ImportExecutor}) {
+    return {definition: {
+        ...service.definition,
+        resources: {crm, imports: imports.resource, assistant: assistant.resource}
+    }, mount(deps: {store: Store<CrmState>, execute: ImportExecutor}) {
         store = deps.store
         const closeImports = imports.mount(deps)
         const closeAssistant = assistant.mount(deps.store)
-        return function close() {closeAssistant(); closeImports(); store = null}
+        return function close() {
+            closeAssistant()
+            closeImports()
+            store = null
+        }
     }}
 }
 export type CrmDefinition = ReturnType<typeof createCrmRuntime>['definition']

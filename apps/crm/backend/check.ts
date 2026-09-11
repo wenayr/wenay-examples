@@ -23,22 +23,29 @@ async function main() {
     const nodes: ReturnType<typeof createProcess>[] = [], clients: ServiceClient<CrmDefinition>[] = []
     const handles: {close(): Promise<void>}[] = []
     async function login(account: string) {
-        const answer = await fetch(url + '/api/crm/login', {method: 'POST', headers: {'content-type': 'application/json'}, body: JSON.stringify({args: [{account, password: account + '-pass'}]})}).then(response => response.json())
+        const answer = await fetch(url + '/api/crm/login', {
+            method: 'POST',
+            headers: {'content-type': 'application/json'},
+            body: JSON.stringify({args: [{account, password: account + '-pass'}]})
+        }).then(response => response.json())
         assert(answer.ok, JSON.stringify(answer))
         const client = createServiceClient<CrmDefinition>({definition: descriptor, url, auth: {token: answer.value.token}, placement: {rng: () => 0}})
         clients.push(client)
-        await client.ready(); await client.views.workspace.ready
+        await client.ready()
+        await client.views.workspace.ready
         return client
     }
     async function crm(client: ServiceClient<CrmDefinition>) {
-        const handle = client.resources.open('crm'); handles.push(handle)
+        const handle = client.resources.open('crm')
+        handles.push(handle)
         await waitFor('crm ready', () => handle.status.state.phase == 'ready')
         return handle
     }
     try {
         for (const id of ['crm-a', 'crm-b']) {
             const node = createProcess({script: 'node.ts', env: {...env, SERVICE_NODE_ID: id, SERVICE_UPSTREAM: url}})
-            nodes.push(node); await node.ready
+            nodes.push(node)
+            await node.ready
         }
         const manager = await login('manager'), customer = await login('customer'), owner = await login('owner'), outsider = await login('outsider')
         const managerResource = await crm(manager), customerResource = await crm(customer), outsideResource = await crm(outsider)
@@ -54,20 +61,45 @@ async function main() {
         ])
         assert.equal(race.filter(result => result.status == 'fulfilled').length, 1)
         assert(!(await customerResource.current()!.remote.control.detail({orgId, id})).deal.interactions.some(item => item.body.startsWith('Internal')))
-        await manager.commands.proposalSave('draft', {orgId, id, revision: (await detail()).deal.revision, title: 'Пилот', body: 'Две недели с согласованием.', amount: 190000})
+        await manager.commands.proposalSave('draft', {
+            orgId,
+            id,
+            revision: (await detail()).deal.revision,
+            title: 'Пилот',
+            body: 'Две недели с согласованием.',
+            amount: 190000
+        })
         assert.equal((await customerResource.current()!.remote.control.detail({orgId, id})).deal.draft, null)
         const published = await manager.commands.proposalPublish('publish', {orgId, id, revision: (await detail()).deal.revision})
         const approval = {orgId, id, revision: (await detail()).deal.revision, version: published.version, decision: 'accept' as const, body: ''}
         const accepted = await customer.commands.proposalRespond('accept', approval)
         await manager.views.taskBoards.ready
-        await waitFor('accepted proposal creates live task', () => manager.views.taskBoards.store.state.boards.some(board => board.tasks.some(task => task.source?.kind == 'deal')))
+        await waitFor('accepted proposal creates live task', function linked() {
+            const boards = manager.views.taskBoards.store.state.boards
+            return boards.some(board => board.tasks.some(task => task.source?.kind == 'deal'))
+        })
         assert.deepEqual(await customer.commands.proposalRespond('accept', approval), accepted)
-        const imported = manager.resources.open('imports'); handles.push(imported)
+        const imported = manager.resources.open('imports')
+        handles.push(imported)
         await waitFor('imports ready', () => imported.status.state.phase == 'ready')
-        const upload = await imported.current()!.remote.control.upload({orgId, companyId: 'company-aurora', name: 'network.csv', bytes: Buffer.from('name,email\nNetwork,network@example.com')})
-        await imported.current()!.remote.ai.createRun({requestId: 'network-import', kind: 'import', resourceIds: [upload.id], input: {orgId, importId: upload.id, revision: upload.revision}})
+        const upload = await imported.current()!.remote.control.upload({
+            orgId,
+            companyId: 'company-aurora',
+            name: 'network.csv',
+            bytes: Buffer.from('name,email\nNetwork,network@example.com')
+        })
+        await imported.current()!.remote.ai.createRun({
+            requestId: 'network-import',
+            kind: 'import',
+            resourceIds: [upload.id],
+            input: {orgId, importId: upload.id, revision: upload.revision}
+        })
         await manager.views.imports.ready
-        await waitFor('import completed over RPC', () => manager.views.imports.store.state.imports.some(item => item.id == upload.id && item.status == 'completed'))
+        await waitFor('import completed over RPC', function completed() {
+            return manager.views.imports.store.state.imports.some(function done(item) {
+                return item.id == upload.id && item.status == 'completed'
+            })
+        })
         const importRevision = manager.views.imports.store.state.imports.find(item => item.id == upload.id)!.revision
         const endpoint = customer.view.endpoint()!
         assert(endpoint.nodeId != 'leader')
@@ -84,12 +116,14 @@ async function main() {
         for (const client of clients) client.close()
         for (const node of nodes) await node.control.stop()
         await host.control.stop()
-        host = createProcess({script: 'server.ts', env}); url = await host.ready
+        host = createProcess({script: 'server.ts', env})
+        url = await host.ready
         const restored = await login('manager'), restoredCrm = await crm(restored)
         assert.equal((await restoredCrm.current()!.remote.control.detail({orgId, id})).deal.decisions[0].decision, 'accept')
         await restored.views.taskBoards.ready
         assert.equal(restored.views.taskBoards.store.state.boards.flatMap(board => board.tasks).filter(task => task.source?.kind == 'deal').length, 1)
-        const restoredImports = restored.resources.open('imports'); handles.push(restoredImports)
+        const restoredImports = restored.resources.open('imports')
+        handles.push(restoredImports)
         await waitFor('restored import ready', () => restoredImports.status.state.phase == 'ready')
         const saved = await restoredImports.current()!.remote.control.detail({orgId, id: upload.id, revision: importRevision})
         assert.equal(saved.rows[0].status, 'imported')
@@ -105,4 +139,7 @@ async function main() {
         rmSync(resolved, {recursive: true, force: true})
     }
 }
-main().catch(function failed(error) {console.error(error); process.exitCode = 1})
+main().catch(function failed(error) {
+    console.error(error)
+    process.exitCode = 1
+})

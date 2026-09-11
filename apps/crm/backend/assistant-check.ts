@@ -11,18 +11,31 @@ import {createCrmAssistant, type SummaryProvider, type SummaryFact} from './assi
 
 async function waitFor(check: () => boolean) {
     const deadline = Date.now() + 3000
-    while (!check()) {assert(Date.now() < deadline, 'Condition timeout'); await delay(10)}
+    while (!check()) {
+        assert(Date.now() < deadline, 'Condition timeout')
+        await delay(10)
+    }
 }
 
 async function main() {
     const temporary = realpathSync(tmpdir()), directory = mkdtempSync(path.join(temporary, 'crm-assistant-check-'))
     const leader = createServiceLeader({definition: createCrmService().definition, selfUrl: () => 'http://localhost'})
-    const pending: {facts: SummaryFact[], signal: AbortSignal, finish: (value: {text: string, nextAction: string}) => void, reject: (error: Error) => void}[] = []
+    const pending: {
+        facts: SummaryFact[],
+        signal: AbortSignal,
+        finish: (value: {text: string, nextAction: string}) => void,
+        reject: (error: Error) => void
+    }[] = []
     const provider: SummaryProvider = {summarize(input) {return new Promise((finish, reject) => pending.push({...input, finish, reject}))}}
     const owner = leader.corridor.fragment('owner')
     const snapshot = () => leader.line.control.store.snapshot()
     const revision = () => snapshot().deals['deal-aurora'].revision
-    const context = (account: string) => ({principal: {account, roles: ['owner']}, sessionId: account, resourceId: 'assistant', signal: new AbortController().signal})
+    const context = (account: string) => ({
+        principal: {account, roles: ['owner']},
+        sessionId: account,
+        resourceId: 'assistant',
+        signal: new AbortController().signal
+    })
     function start(customProvider: SummaryProvider | undefined = provider) {
         const assistant = createCrmAssistant({directory, provider: customProvider, timeoutMs: 300})
         const close = assistant.mount(leader.line.control.store)
@@ -43,7 +56,21 @@ async function main() {
     }
     try {
         let meteredProviderCalls = 0
-        const gated = createCrmAssistant({timeoutMs: 30, usage: {async run() {await delay(90); throw new Error('No quota acknowledgement')}}, provider: {async summarize() {meteredProviderCalls++; return {text: 'Never', nextAction: 'Never'}}}})
+        const gated = createCrmAssistant({
+            timeoutMs: 30,
+            usage: {
+                async run() {
+                    await delay(90)
+                    throw new Error('No quota acknowledgement')
+                }
+            },
+            provider: {
+                async summarize() {
+                    meteredProviderCalls++
+                    return {text: 'Never', nextAction: 'Never'}
+                }
+            }
+        })
         const closeGated = gated.mount(leader.line.control.store)
         const gatedConnection = gated.resource.open(context('owner'))
         const gatedView = createStore<AiRunStore>({runs: {}, inputs: {}, approvals: {}})
@@ -53,7 +80,9 @@ async function main() {
             const attempt = gatedConnection.facade.ai.createRun(request('quota-before-provider'))
             await waitFor(() => gatedView.state.runs[attempt.id]?.state == 'failed')
             assert.equal(meteredProviderCalls, 0, 'timeout while reserving quota must not start provider or reject an unattached abort promise')
-        } finally {gatedReplay(); gatedConnection.close(); closeGated()}
+        } finally {gatedReplay()
+        gatedConnection.close()
+        closeGated()}
         const manager = await open('manager'), customer = await open('customer'), outsider = await open('outsider')
         assert.throws(() => customer.ai.createRun(request('customer')), /forbidden/)
         assert.throws(() => outsider.ai.createRun(request('other-tenant')), /forbidden/)
@@ -119,9 +148,14 @@ async function main() {
         running.close()
         await delay(20)
         leader.control.close()
-        if (path.dirname(path.resolve(directory)) != temporary || !path.basename(directory).startsWith('crm-assistant-check-')) throw new Error('Unsafe cleanup path')
+        const parent = path.dirname(path.resolve(directory))
+        const named = path.basename(directory).startsWith('crm-assistant-check-')
+        if (parent != temporary || !named) throw new Error('Unsafe cleanup path')
         rmSync(directory, {recursive: true, force: true})
     }
 }
 
-main().catch(function failed(error) {console.error(error); process.exitCode = 1})
+main().catch(function failed(error) {
+    console.error(error)
+    process.exitCode = 1
+})
