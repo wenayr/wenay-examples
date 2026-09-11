@@ -1,0 +1,14 @@
+.support-tasks {min-width:0}
+.task-workload {display:flex;flex-wrap:wrap;gap:12px;margin:16px 0 24px}
+.task-workload span {padding:10px 14px;background:#fff;border:1px solid #e1e5e1;border-radius:12px}
+.task-workload strong {margin-left:12px;color:#315d49}
+.task-lanes {display:grid;grid-template-columns:repeat(3,minmax(220px,1fr));gap:18px;overflow:auto;align-items:start}
+.task-lanes h2 {font-size:16px}.task-lanes h2 small {margin-left:8px;color:#768378}
+.task-lane {min-height:180px;padding:10px;background:#edf1ed;border-radius:14px;display:flex;flex-direction:column;gap:12px}
+.task-card {position:relative;padding:18px;background:#fff;border:1px solid #dce4dc;border-radius:12px;box-shadow:0 3px 8px #24432606;overflow-wrap:anywhere}
+.task-card.high {border-top:3px solid #d3a044}.task-card h3 {padding-right:20px;margin-top:0;font-size:16px}
+.support-tasks .task-card label {display:flex;flex-direction:row;justify-content:flex-start;gap:8px;align-items:center;margin:10px 0}.task-card label select {max-width:100%;min-width:0}
+.task-card label input[type=checkbox] {width:auto}.task-card p {font-size:13px;line-height:1.55}
+.task-grip {position:absolute;right:8px;top:8px;touch-action:none;cursor:grab}
+.support-tasks fieldset {border:0;display:grid;gap:12px;max-width:680px}.support-tasks fieldset label {display:grid;gap:5px}
+@media(max-width:700px) {.task-lanes {grid-template-columns:1fr;overflow:visible}.task-lane {min-height:100px}}
