@@ -1,7 +1,7 @@
 {
     "maxLine": 160,
     "paths": ["scripts", "shared"],
-    "apps": ["approvals"],
+    "apps": ["approvals", "monitoring"],
     "exclude": [
         "scripts/create-saas-example.mjs",
         "scripts/scaffold-check.mjs"
