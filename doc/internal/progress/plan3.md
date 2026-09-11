@@ -12,3 +12,4 @@
 - R04 support — 2026-09-11 — README 137 -> 65 строк, справочник в API.md, приёмка в SUPPORT-HISTORY — 5074fe1
 - R04 documents — 2026-09-11 — README 166 -> 64 строки, справочник в API.md, приёмка в DOCUMENTS-HISTORY — e062ba4
 - R04 metering — 2026-09-11 — README 166 -> 63 строки, справочник в API.md, приёмка в METERING-HISTORY — 2d72671
+- R04 crm — 2026-09-11 — README 107 -> 60 строк, справочник в API.md, приёмка в CRM-HISTORY — b25baee
