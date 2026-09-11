@@ -20,7 +20,7 @@ export async function waitForHosted(label: string, predicate: () => boolean | Pr
 
 // Acceptance-only fixture shared by two independent products, not a deployment SDK.
 export async function checkHostedApplication(deps: {
-    name: 'booking' | 'crm' | 'forms' | 'monitoring' | 'approvals',
+    name: 'booking' | 'crm' | 'forms' | 'monitoring' | 'approvals' | 'content',
     verify: (context: {url: string, release: string, iteration: number}) => Promise<void>,
     close: () => Promise<void>
 }) {

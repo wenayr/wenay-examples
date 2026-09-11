@@ -37,7 +37,9 @@
     "optional": [
         "README.md",
         "API.md",
-        ".env.example"
+        ".env.example",
+        "Dockerfile",
+        ".dockerignore"
     ],
     "skip": {
         "backend/integration-check.ts": "поднимает соседний support исходного репозитория",
