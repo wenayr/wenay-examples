@@ -22,7 +22,9 @@
         "apps/monitoring/backend/domain.ts",
         "apps/monitoring/backend/service.ts",
         "apps/pizzeria/backend/service.ts",
-        "apps/support/backend/domain.ts"
+        "apps/support/backend/domain.ts",
+        "scripts/backup.mjs",
+        "scripts/restore.mjs"
     ],
     "exclude": [
         "scripts/create-saas-example.mjs",

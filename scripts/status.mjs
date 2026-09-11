@@ -70,7 +70,9 @@ export function collect() {
             results[script] = log.code == 0 ? MARKS.ok : MARKS.fail
         }
         const requires = pkg?.wenayExamples?.requires ?? []
-            const times = SCRIPTS.map(script => readLog(app, script)).filter(Boolean)
+        // Живая проверка копии и восстановления есть не у всех приложений.
+        const backup = existsSync(path.join(repository, 'apps', app, 'backend', 'backup-check.ts'))
+        const times = SCRIPTS.map(script => readLog(app, script)).filter(Boolean)
         const checked = times.map(log => log.at).sort().pop()
         rows.push({
             app,
@@ -79,6 +81,7 @@ export function collect() {
             react2: pkg?.dependencies?.['wenay-react2'] ?? '—',
             data: readDataDirectory(app),
             requires: requires.length > 0 ? requires.join(', ') : 'нет',
+            backup: backup ? MARKS.ok : MARKS.missing,
             results,
             checked: checked ? checked.slice(0, 16).replace('T', ' ') : 'не запускалось'
         })
@@ -99,14 +102,14 @@ function versionLine(rows) {
 
 function table(rows) {
     const lines = [
-        '| Приложение | Порт | common2 | react2 | typecheck | test | build | Внешние | Проверено |',
-        '| --- | --- | --- | --- | --- | --- | --- | --- | --- |'
+        '| Приложение | Порт | common2 | react2 | typecheck | test | build | Копия | Внешние | Проверено |',
+        '| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |'
     ]
     for (const row of rows) {
         lines.push('| ' + [
             row.app, row.port, row.common2, row.react2,
             row.results.typecheck, row.results.test, row.results.build,
-            row.requires, row.checked
+            row.backup, row.requires, row.checked
         ].join(' | ') + ' |')
     }
     return lines.join('\n')
@@ -159,6 +162,7 @@ export function write() {
         versionLine(rows),
         '',
         '`✓` прошло, `✗` упало, `—` скрипта нет, `?` не запускалось. Результат берётся из последнего прогона `npm run check:all`.',
+        'Колонка «Копия» — есть ли у приложения живая проверка холодной копии и восстановления (`npm run test:backup`).',
         '',
         ''
     ].join('\n')

@@ -8,7 +8,8 @@
     "dev": "vite frontend --host 127.0.0.1",
     "build": "vite build frontend --outDir ../public",
     "typecheck": "tsc --noEmit",
-    "test": "tsx backend/product-check.ts && tsx backend/conversation-check.ts && tsx backend/article-index-check.ts && tsx backend/domain-check.ts && tsx backend/organizer-check.ts && tsx backend/notifications-check.ts && tsx backend/resource-check.ts && tsx backend/check.ts && tsx backend/ai-resource-lifecycle-repro.ts --safe-state && tsx backend/oidc-check.ts && tsx backend/identity-check.ts"
+    "test": "tsx backend/product-check.ts && tsx backend/conversation-check.ts && tsx backend/article-index-check.ts && tsx backend/domain-check.ts && tsx backend/organizer-check.ts && tsx backend/notifications-check.ts && tsx backend/resource-check.ts && tsx backend/check.ts && tsx backend/ai-resource-lifecycle-repro.ts --safe-state && tsx backend/oidc-check.ts && tsx backend/identity-check.ts && tsx backend/backup-check.ts",
+    "test:backup": "tsx backend/backup-check.ts"
   },
   "dependencies": {
     "express": "5.2.1",
