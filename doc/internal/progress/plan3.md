@@ -21,3 +21,4 @@
 - T01 — 2026-09-11 — манифесты scaffold перенесены в apps/*/scaffold.json, scaffold-check требует описать каждый отслеживаемый файл; удалены остатки копии в approvals — fe1991a
 - T02 — 2026-09-11 — шаблон scaffold для content, чистая копия прошла ci/typecheck/test/build; порт README копии берётся из vite.config — 81827d3
 - T03 — 2026-09-11 — унаследованные проверки помечены, --port и --title, SCAFFOLD.md в копии; чистая копия approvals на порту 4990 прошла ci/typecheck/test/build — e500afc
+- P01 — 2026-09-11 — content упакован: Dockerfile, .dockerignore, content-live-check и test:content; живой прогон first/second/rollback прошёл, 56.4-57.1 МиБ — 5b96839
