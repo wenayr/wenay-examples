@@ -14,3 +14,4 @@
 - R04 metering — 2026-09-11 — README 166 -> 63 строки, справочник в API.md, приёмка в METERING-HISTORY — 2d72671
 - R04 crm — 2026-09-11 — README 107 -> 60 строк, справочник в API.md, приёмка в CRM-HISTORY — b25baee
 - R04 booking — 2026-09-11 — README 117 -> 60 строк, справочник в API.md, приёмка в BOOKING-HISTORY — 54aab39
+- R04 forms — 2026-09-11 — README 137 -> 62 строки, справочник в API.md, приёмка в FORMS-HISTORY — 75592ff
