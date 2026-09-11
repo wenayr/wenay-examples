@@ -26,7 +26,7 @@
 | S3 – S8 | Экран, мессенджер, голос, размещение своих приложений | [complete-strategy](changes/complete-strategy.md) |
 | Хостинг 0.1 – 0.4 | Управляющий API, Docker, LXD, gateway, постоянные тома, обновление и откат | [hosting-0.4.0](changes/hosting-0.4.0.md) |
 | G1 – G5 плана 1 | Поддержка, документы, учёт, CRM, бронирование, формы, мониторинг, публикации | [контрольная точка](internal/SAAS-CHECKPOINT-2026-09-10.md) |
-| G6 плана 1 (K08) | Контрольный SaaS из чистой копии, измерен и принят | [K08](reports/K08-approvals.md) |
+| G6 плана 1 (K08) | Контрольный SaaS из чистой копии, измерен и принят | [K08](reports/K08-approvals.md), повтор замера [K09](reports/K09-rental.md) |
 | План 2 — консолидация | История в git, одна команда проверки всего каталога, канон общего кода, правила плотности без исключений, разделение документации | [отчёт](reports/CONSOLIDATION-REPORT.md), [задание](CONSOLIDATION-TASKS.md), [журнал](internal/progress/consolidation.md) |
 | Принятые пакеты библиотек | common2 2.18.2 – 2.21.0, react2 3.4.0 | [changes](changes) |
 

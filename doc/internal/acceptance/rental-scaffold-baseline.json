@@ -1,0 +1,176 @@
+{
+    "created": "2026-09-11",
+    "template": "booking",
+    "name": "rental-desk",
+    "port": 3914,
+    "files": [
+        {
+            "path": ".dockerignore",
+            "bytes": 108
+        },
+        {
+            "path": ".env.example",
+            "bytes": 300
+        },
+        {
+            "path": ".gitignore",
+            "bytes": 93
+        },
+        {
+            "path": "AGENTS.md",
+            "bytes": 328
+        },
+        {
+            "path": "API.md",
+            "bytes": 15376
+        },
+        {
+            "path": "backend/ai-checkpoint.ts",
+            "bytes": 1512
+        },
+        {
+            "path": "backend/assistant-check.ts",
+            "bytes": 10395
+        },
+        {
+            "path": "backend/assistant-resource.ts",
+            "bytes": 15488
+        },
+        {
+            "path": "backend/check.ts",
+            "bytes": 8417
+        },
+        {
+            "path": "backend/domain-check.ts",
+            "bytes": 13248
+        },
+        {
+            "path": "backend/domain.ts",
+            "bytes": 25192
+        },
+        {
+            "path": "backend/identity.ts",
+            "bytes": 1627
+        },
+        {
+            "path": "backend/model.ts",
+            "bytes": 4225
+        },
+        {
+            "path": "backend/node.ts",
+            "bytes": 801
+        },
+        {
+            "path": "backend/process-resource.ts",
+            "bytes": 1869
+        },
+        {
+            "path": "backend/runtime.ts",
+            "bytes": 3485
+        },
+        {
+            "path": "backend/schedule.ts",
+            "bytes": 8534
+        },
+        {
+            "path": "backend/server.ts",
+            "bytes": 1463
+        },
+        {
+            "path": "backend/service.ts",
+            "bytes": 1091
+        },
+        {
+            "path": "doc/CODE-RULES.md",
+            "bytes": 17069
+        },
+        {
+            "path": "Dockerfile",
+            "bytes": 518
+        },
+        {
+            "path": "frontend/assistant.tsx",
+            "bytes": 5832
+        },
+        {
+            "path": "frontend/calendar.tsx",
+            "bytes": 15827
+        },
+        {
+            "path": "frontend/contracts.ts",
+            "bytes": 1505
+        },
+        {
+            "path": "frontend/env.d.ts",
+            "bytes": 302
+        },
+        {
+            "path": "frontend/index.html",
+            "bytes": 320
+        },
+        {
+            "path": "frontend/main.tsx",
+            "bytes": 10532
+        },
+        {
+            "path": "frontend/reservations.tsx",
+            "bytes": 11391
+        },
+        {
+            "path": "frontend/settings.tsx",
+            "bytes": 17334
+        },
+        {
+            "path": "frontend/style.css",
+            "bytes": 16932
+        },
+        {
+            "path": "frontend/vite.config.ts",
+            "bytes": 246
+        },
+        {
+            "path": "package-lock.json",
+            "bytes": 115393
+        },
+        {
+            "path": "package.json",
+            "bytes": 1075
+        },
+        {
+            "path": "README.md",
+            "bytes": 10535
+        },
+        {
+            "path": "scaffold.json",
+            "bytes": 1448
+        },
+        {
+            "path": "SCAFFOLD.md",
+            "bytes": 1730
+        },
+        {
+            "path": "shared/react/command-action.ts",
+            "bytes": 1276
+        },
+        {
+            "path": "shared/react/replay-view.ts",
+            "bytes": 1005
+        },
+        {
+            "path": "shared/react/service-action.ts",
+            "bytes": 1083
+        },
+        {
+            "path": "shared/react/service-session.ts",
+            "bytes": 3212
+        },
+        {
+            "path": "shared/react/service-view.tsx",
+            "bytes": 1185
+        },
+        {
+            "path": "tsconfig.json",
+            "bytes": 493
+        }
+    ]
+}
