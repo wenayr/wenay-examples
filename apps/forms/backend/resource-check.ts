@@ -69,6 +69,10 @@ async function main() {
         const listing = await resource(analyst, 'answers')
         assert.equal((await listing.control.list({orgId, formId: id, version: 1, offset: 0, limit: 1})).items[0].answers.details, '=PRIVATE_SURVEY_TEXT')
         const exports = await resource(analyst, 'exports')
+        // Обход common2: AI-RESOURCE-LIFECYCLE. Публичное state-only зеркало с onError
+        // вместо специализированного AI-клиента: тот при отзыве SC1 во время replay
+        // даёт необработанное исключение.
+        // Удалить после исправления, см. doc/library-tasks/WORKAROUNDS.md
         const mirror = createStore<AiRunStore>({runs: {}, inputs: {}, approvals: {}})
         const sync = syncStoreReplay(mirror, exports.ai.state, {onError() {mirror.replace({runs: {}, inputs: {}, approvals: {}})}})
         closes.push(sync)

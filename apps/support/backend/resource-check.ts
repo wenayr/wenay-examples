@@ -49,6 +49,10 @@ async function main() {
         return session
     }
     function mirror<T extends object>(remote: StoreReplayRemote<T>, initial: () => T) {
+        // Обход common2: AI-RESOURCE-LIFECYCLE. Публичное state-only зеркало с onError
+        // вместо специализированного AI-клиента: тот при отзыве SC1 во время replay
+        // даёт необработанное исключение.
+        // Удалить после исправления, см. doc/library-tasks/WORKAROUNDS.md
         const store = createStore(initial())
         const sync = syncStoreReplay(store, remote, {onError(error) {replayErrors.push(error); store.replace(initial())}})
         mirrors.push(sync)

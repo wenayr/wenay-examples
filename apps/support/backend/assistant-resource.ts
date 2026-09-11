@@ -12,6 +12,10 @@ import {createArticleIndex} from './article-index'
 export type Draft = {owner: string, orgId: string, ticketId: string, ticketRevision: number, text: string, sources: {id: string, title: string, revision: number}[], demo: boolean}
 export type DraftProvider = {draft(input: {question: string, sources: {id: string, title: string, body: string}[], signal: AbortSignal}): Promise<{text: string}>}
 
+// Обход common2: AI-POLICY-INVALIDATION. Приватный результат читается отдельно
+// с текущим ACL и версией источника, потому что уже открытый AI-фрагмент
+// может отдать данные после внешней смены policy.
+// Удалить после исправления, см. doc/library-tasks/WORKAROUNDS.md
 // Private outputs are fetched through a current ACL check, never embedded in AI replay history.
 export function createSupportAssistant(deps: {directory?: string, provider?: DraftProvider, timeoutMs?: number, usage?: UsageGate}) {
     const index = createArticleIndex()
