@@ -1,0 +1,9 @@
+{
+    "maxLine": 160,
+    "paths": ["scripts", "shared"],
+    "apps": [],
+    "exclude": [
+        "scripts/create-saas-example.mjs",
+        "scripts/scaffold-check.mjs"
+    ]
+}

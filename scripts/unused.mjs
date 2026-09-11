@@ -13,7 +13,10 @@ function appFiles(app) {
         if (!existsSync(directory)) return
         for (const entry of readdirSync(directory, {withFileTypes: true})) {
             const full = path.join(directory, entry.name)
-            if (entry.isDirectory()) {walk(full); continue}
+            if (entry.isDirectory()) {
+                walk(full)
+                continue
+            }
             if (sourceExtensions.includes(path.extname(entry.name))) found.push(full)
         }
     }
@@ -134,7 +137,10 @@ if (process.argv[1] && import.meta.url.endsWith(path.basename(process.argv[1])))
         if (!manifest(app)) continue
         const files = unusedFiles(app)
         const dependencies = unusedDependencies(app)
-        if (files.length == 0 && dependencies.length == 0) {console.log(app + ': чисто'); continue}
+        if (files.length == 0 && dependencies.length == 0) {
+            console.log(app + ': чисто')
+            continue
+        }
         console.log(app + ':')
         for (const file of files) console.log('  файл вне графа: ' + file)
         for (const name of dependencies) console.log('  зависимость без импорта: ' + name)

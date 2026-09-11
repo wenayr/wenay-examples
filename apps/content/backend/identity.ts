@@ -10,7 +10,9 @@ export function hashSecret(password: string): tSecret {
 }
 
 export function verifySecret(secret: tSecret | undefined, password: string) {
-    if (!secret?.hash || !secret.salt || typeof password != 'string' || password.length > 256) return false
+    const usable = !!secret?.hash && !!secret.salt
+    const acceptable = typeof password == 'string' && password.length <= 256
+    if (!usable || !acceptable) return false
     const given = scryptSync(password, secret.salt, 32)
     const expected = Buffer.from(secret.hash, 'base64url')
     return given.length == expected.length && timingSafeEqual(given, expected)

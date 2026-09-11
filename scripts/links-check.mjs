@@ -9,7 +9,10 @@ function markdownFiles(directory, found = []) {
     for (const entry of readdirSync(directory, {withFileTypes: true})) {
         if (skipped.has(entry.name) || /-data$/.test(entry.name)) continue
         const full = path.join(directory, entry.name)
-        if (entry.isDirectory()) {markdownFiles(full, found); continue}
+        if (entry.isDirectory()) {
+            markdownFiles(full, found)
+            continue
+        }
         if (entry.name.endsWith('.md')) found.push(full)
     }
     return found

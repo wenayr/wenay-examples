@@ -42,7 +42,10 @@ export function libraryImports(app) {
         if (!existsSync(directory)) return
         for (const entry of readdirSync(directory, {withFileTypes: true})) {
             const full = path.join(directory, entry.name)
-            if (entry.isDirectory()) {walk(full); continue}
+            if (entry.isDirectory()) {
+                walk(full)
+                continue
+            }
             if (!/\.(ts|tsx)$/.test(entry.name)) continue
             const text = readFileSync(full, 'utf8')
             for (const match of text.matchAll(/from '(wenay-(?:common2|react2)[^']*)'/g)) found.add(match[1])
@@ -60,11 +63,15 @@ export function collect() {
         for (const script of SCRIPTS) {
             const log = readLog(app, script)
             const declared = pkg?.scripts?.[script]
-            if (!log) {results[script] = declared ? '?' : MARKS.missing; continue}
+            if (!log) {
+                results[script] = declared ? '?' : MARKS.missing
+                continue
+            }
             results[script] = log.code == 0 ? MARKS.ok : MARKS.fail
         }
         const requires = pkg?.wenayExamples?.requires ?? []
-        const checked = SCRIPTS.map(script => readLog(app, script)).filter(Boolean).map(log => log.at).sort().pop()
+            const times = SCRIPTS.map(script => readLog(app, script)).filter(Boolean)
+        const checked = times.map(log => log.at).sort().pop()
         rows.push({
             app,
             port: readPort(app),

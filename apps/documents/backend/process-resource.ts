@@ -16,7 +16,11 @@ export function createProcess(deps: {script: string, env: NodeJS.ProcessEnv}) {
         ready(fact) {
             if (fact.type != 'message') return
             const value = fact.value
-            if (value && typeof value == 'object' && 'type' in value && value.type == 'ready' && 'url' in value && typeof value.url == 'string') return value.url
+            // Раздельные проверки сохраняют сужение типа: value.url должен остаться string.
+            if (!value || typeof value != 'object') return
+            if (!('type' in value) || value.type != 'ready') return
+            if (!('url' in value) || typeof value.url != 'string') return
+            return value.url
         },
         shutdown(process) {
             if (crash || !process.connected) process.kill('SIGKILL')

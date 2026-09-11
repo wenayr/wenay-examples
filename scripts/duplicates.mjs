@@ -18,7 +18,10 @@ function collectFiles(app) {
         for (const entry of readdirSync(directory, {withFileTypes: true})) {
             const full = path.join(directory, entry.name)
             const relative = prefix + entry.name
-            if (entry.isDirectory()) {walk(full, relative + '/'); continue}
+            if (entry.isDirectory()) {
+                walk(full, relative + '/')
+                continue
+            }
             if (!/\.(ts|tsx|mjs)$/.test(entry.name)) continue
             found.set(relative, full)
         }
@@ -51,7 +54,10 @@ export function groups() {
 
 // Грубая мера расхождения: строки, встречающиеся не во всех вариантах.
 function differingLines(copies) {
-    const sets = copies.map(copy => new Set(copy.lines.map(line => line.trim()).filter(Boolean)))
+    function meaningful(copy) {
+        return new Set(copy.lines.map(line => line.trim()).filter(Boolean))
+    }
+    const sets = copies.map(meaningful)
     const union = new Set(sets.flatMap(set => [...set]))
     let differing = 0
     for (const line of union) {
@@ -70,7 +76,9 @@ if (process.argv[1] && import.meta.url.endsWith(path.basename(process.argv[1])))
     const sections = {'идентичны': [], 'случайное': [], 'по делу': []}
     for (const group of groups()) {
         const kind = classify(group)
-        const key = kind.startsWith('идентичны') ? 'идентичны' : kind.startsWith('случайное') ? 'случайное' : 'по делу'
+        let key = 'по делу'
+        if (kind.startsWith('идентичны')) key = 'идентичны'
+        else if (kind.startsWith('случайное')) key = 'случайное'
         const variants = [...group.hashes].map(([hash, apps]) => hash + ': ' + apps.join(' ')).join(' | ')
         sections[key].push({path: group.path, count: group.copies.length, kind, variants})
     }
