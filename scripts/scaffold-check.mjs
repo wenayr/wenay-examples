@@ -122,6 +122,22 @@ async function check() {
         await assert.rejects(createSaasExample({template: 'support', repository: fixture, destination: path.join(temporary, 'linked-source')}), /Ссылки/)
         assert.equal(await readFile(path.join(copy, 'frontend', 'main.tsx'), 'utf8'), original)
 
+        const named = path.join(temporary, 'named-copy')
+        const namedResult = await createSaasExample({template: 'approvals', destination: named, name: 'named-copy', port: 4990, title: 'Проба копии'})
+        assert.equal(namedResult.port, '4990')
+        assert((await readFile(path.join(named, 'frontend/index.html'), 'utf8')).includes('<title>Проба копии</title>'))
+        assert((await readFile(path.join(named, 'backend/server.ts'), 'utf8')).includes('4990'))
+        assert((await readFile(path.join(named, 'frontend/vite.config.ts'), 'utf8')).includes('4990'))
+        for (const file of await allFiles(named)) assert(!(await readFile(file, 'utf8')).includes('3818'), 'донорский порт остался в ' + file)
+        assert((await readFile(path.join(named, 'README.md'), 'utf8')).startsWith('# Проба копии'))
+        const note = await readFile(path.join(named, 'SCAFFOLD.md'), 'utf8')
+        assert(note.includes('approvals') && note.includes('4990') && note.includes('backend/check.ts'))
+        assert(namedResult.inherited.length >= 2)
+        for (const file of namedResult.inherited) {
+            assert((await readFile(path.join(named, file), 'utf8')).startsWith('// Проверка унаследована от шаблона approvals'))
+        }
+        await assert.rejects(createSaasExample({template: 'approvals', destination: path.join(temporary, 'bad-port'), port: 80}), /Порт копии/)
+
         await assert.rejects(createSaasExample({template: 'unknown', destination: path.join(temporary, 'bad')}), /Выберите один из шаблонов/)
         await assert.rejects(createSaasExample({template: 'support', destination: path.join(temporary, 'bad'), name: '../escape'}), /Имя npm/)
         const documents = path.join(temporary, 'documents-copy')
@@ -130,7 +146,7 @@ async function check() {
         const crmPackage = JSON.parse(await readFile(path.join(crm, 'package.json'), 'utf8'))
         assert.equal(crmPackage.name, 'crm-copy')
         for (const file of ['backend/imports.ts', 'backend/import-check.ts', 'backend/assistant-resource.ts', 'backend/check.ts', 'organizer/task-domain.ts', 'frontend/imports.tsx', 'frontend/assistant.tsx']) assert((await lstat(path.join(crm, file))).isFile())
-        assert((await readFile(path.join(crm, 'README.md'), 'utf8')).includes('3813'))
+        assert((await readFile(path.join(crm, 'README.md'), 'utf8')).includes('3913'))
         const approvals = path.join(temporary, 'approvals-copy')
         await createSaasExample({template: 'approvals', destination: approvals, name: 'approvals-copy'})
         const approvalFiles = ['backend/domain.ts', 'backend/domain-check.ts', 'backend/check.ts', 'backend/questions.ts', 'frontend/questions.tsx', 'frontend/main.tsx']
@@ -138,7 +154,7 @@ async function check() {
         const approvalSource = await readFile(path.join(approvals, 'backend', 'domain.ts'), 'utf8')
         assert(approvalSource.includes('requestDecide'), 'копия согласований содержит решение по версии')
         assert(!approvalSource.includes('formSave'), 'в копии согласований не осталось команд forms')
-        assert((await readFile(path.join(approvals, 'README.md'), 'utf8')).includes('3818'))
+        assert((await readFile(path.join(approvals, 'README.md'), 'utf8')).includes('3918'))
         const docs = await createSaasExample({template: 'documents', destination: documents, name: 'documents-copy'})
         assert(docs.files >= 20)
         assert((await readFile(path.join(documents, 'backend', 'processor.py'), 'utf8')).includes('csv'))
@@ -171,7 +187,7 @@ async function check() {
         assert.equal(bookingPackage.name, bookingLock.name)
         assert.equal(bookingPackage.dependencies['@js-temporal/polyfill'], '0.5.1')
         for (const file of ['backend/schedule.ts', 'backend/assistant-resource.ts', 'backend/assistant-check.ts', 'backend/check.ts', 'frontend/assistant.tsx', 'Dockerfile', '.dockerignore']) assert((await lstat(path.join(booking, file))).isFile())
-        assert((await readFile(path.join(booking, 'README.md'), 'utf8')).includes('3814'))
+        assert((await readFile(path.join(booking, 'README.md'), 'utf8')).includes('3914'))
         const bookingFixture = path.join(fixture, 'apps/booking')
         await cp(booking, bookingFixture, {recursive: true, force: false, errorOnExist: true})
         for (const name of ['.env', 'booking-data/private.json', 'booking-data/jobs/results.replay', 'backend/secret.ts', 'public/index.html']) await put(path.join(bookingFixture, name), marker)
@@ -185,7 +201,7 @@ async function check() {
         assert.equal(formsPackage.name, formsLock.packages[''].name)
         assert.equal(formsPackage.name, formsLock.name)
         for (const file of ['backend/archive.ts', 'backend/grouping-resource.ts', 'backend/grouping-check.ts', 'backend/resource-check.ts', 'backend/check.ts', 'frontend/grouping.tsx', 'frontend/respondent.tsx', 'Dockerfile', '.dockerignore']) assert((await lstat(path.join(forms, file))).isFile())
-        assert((await readFile(path.join(forms, 'README.md'), 'utf8')).includes('3815'))
+        assert((await readFile(path.join(forms, 'README.md'), 'utf8')).includes('3915'))
         const formsFixture = path.join(fixture, 'apps/forms')
         await cp(forms, formsFixture, {recursive: true, force: false, errorOnExist: true})
         for (const name of ['.env', 'forms-data/forms.jsonl', 'forms-data/exports/grouping/groups.replay', 'backend/secret.ts', 'public/index.html']) await put(path.join(formsFixture, name), marker)
@@ -201,7 +217,7 @@ async function check() {
         for (const file of ['backend/public-http.ts', 'backend/files-resource.ts', 'backend/published-contract.ts', 'frontend/editor.tsx', 'frontend/article.tsx', 'frontend/media.tsx']) {
             assert((await lstat(path.join(content, file))).isFile())
         }
-        assert((await readFile(path.join(content, 'README.md'), 'utf8')).includes('3817'))
+        assert((await readFile(path.join(content, 'README.md'), 'utf8')).includes('3917'))
 
         const monitoring = path.join(temporary, 'monitoring-copy')
         await createSaasExample({template: 'monitoring', destination: monitoring, name: 'monitoring-copy'})
@@ -210,14 +226,14 @@ async function check() {
         assert.equal(monitoringPackage.name, monitoringLock.packages[''].name)
         assert.equal(monitoringPackage.name, monitoringLock.name)
         for (const file of ['backend/http-probe.ts', 'backend/probe-worker.ts', 'backend/probe-check.ts', 'backend/assistant-check.ts', 'backend/ui-fixture.ts', 'backend/check.ts', 'frontend/tasks.tsx', 'organizer/task-domain.ts', 'Dockerfile']) assert((await lstat(path.join(monitoring, file))).isFile())
-        assert((await readFile(path.join(monitoring, 'README.md'), 'utf8')).includes('3816'))
+        assert((await readFile(path.join(monitoring, 'README.md'), 'utf8')).includes('3916'))
         const monitoringFixture = path.join(fixture, 'apps/monitoring')
         await cp(monitoring, monitoringFixture, {recursive: true, force: false, errorOnExist: true})
         for (const name of ['.env', 'monitoring-data/monitoring.jsonl', 'monitoring-data/assistant/results.replay', 'preview/report.json', 'backend/secret.ts', 'public/index.html']) await put(path.join(monitoringFixture, name), marker)
         const monitoringClean = path.join(temporary, 'monitoring-clean')
         await createSaasExample({template: 'monitoring', repository: fixture, destination: monitoringClean})
         for (const file of await allFiles(monitoringClean)) assert(!(await readFile(file, 'utf8')).includes(marker))
-        console.log('Scaffold checks passed: ' + described + ' apps with own manifests, exact lock/name, monitoring HTTP workers/AI/organizer, forms archive/grouping/public sources, booking DST/AI/runtime sources, metering repo-only integration omitted, no secrets/data/build/deps, no overwrite, collision guards, no symlink/junction following, approvals decision domain without forms commands, content without cross-app integration check, no cross-app or missing local imports')
+        console.log('Scaffold checks passed: ' + described + ' apps with own manifests, exact lock/name, monitoring HTTP workers/AI/organizer, forms archive/grouping/public sources, booking DST/AI/runtime sources, metering repo-only integration omitted, no secrets/data/build/deps, no overwrite, collision guards, no symlink/junction following, approvals decision domain without forms commands, content without cross-app integration check, own port/title and marked inherited checks, no cross-app or missing local imports')
     } finally {
         await remove(temporary)
     }

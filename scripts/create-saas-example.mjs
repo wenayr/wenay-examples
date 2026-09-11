@@ -109,10 +109,70 @@ function servicePort(files) {
     return found[1]
 }
 
-function instructions(template, name, sourceReadme, port) {
-    return `# ${name}
+// Копия получает свой порт: два примера из одного донора иначе спорят за один адрес.
+// Порт донора встречается в server.ts, vite.config.ts и .env.example — заменяется всюду.
+function replacePort(files, from, to) {
+    if (from == to) return []
+    const changed = []
+    for (const [name, content] of files) {
+        if (!/\.(?:ts|tsx|mjs|html|example)$|^\.env\.example$/.test(name)) continue
+        const text = content.toString('utf8')
+        const next = text.split(from).join(to)
+        if (next == text) continue
+        files.set(name, Buffer.from(next))
+        changed.push(name)
+    }
+    return changed
+}
 
-Самостоятельная копия примера ${template}. Название npm-пакета изменено; сервисные идентификаторы, маршруты и предметная модель сохранены, чтобы пример работал без скрытого массового переименования.
+// Унаследованная проверка компилируется и проходит, но описывает предметную область донора.
+// Пометка в первой строке не даёт принять её за собственную проверку копии.
+function markInherited(files, template) {
+    const note = '// Проверка унаследована от шаблона ' + template
+        + ': перепишите её под свою предметную область и удалите эту строку.\n'
+    const marked = []
+    for (const [name, content] of files) {
+        if (!/(?:^|[/-])(?:check|repro)\.ts$/.test(name)) continue
+        files.set(name, Buffer.from(note + content.toString('utf8')))
+        marked.push(name)
+    }
+    return marked
+}
+
+function scaffoldNote(template, name, port, title, inherited, versions) {
+    const list = inherited.map(file => '- `' + file + '`').join('\n')
+    return `# Как появилась эта копия
+
+Копия примера **${template}** из каталога wenay-examples, создана ${new Date().toISOString().slice(0, 10)}.
+Пакет \`${name}\`, заголовок страницы «${title}», сервис слушает порт ${port}.
+
+Библиотеки закреплены точными версиями: ${versions}.
+
+## Унаследованные проверки
+
+Эти файлы пришли от донора вместе с исходниками. Они запускаются и проходят, но проверяют
+предметную область ${template}, а не вашу. Первая строка каждого помечена; переписывайте
+их под свои правила и снимайте пометку.
+
+${list || '- нет'}
+
+## Что менять первым
+
+1. Предметная модель и команды: \`backend/model.ts\`, \`backend/domain.ts\`.
+2. Проверки из списка выше — вместе с моделью, а не после неё.
+3. Интерфейс: \`frontend/main.tsx\` и соседние экраны.
+4. README и заголовок страницы в \`frontend/index.html\`.
+
+Сервисные идентификаторы, маршруты и имена store намеренно сохранены от донора: массовое
+переименование скрыло бы несовпадения. Меняйте их осознанно, если копия будет работать
+в одной сети сервисов с исходным примером.
+`
+}
+
+function instructions(template, name, sourceReadme, port, title) {
+    return `# ${title}
+
+Самостоятельная копия примера ${template} (пакет \`${name}\`). Название npm-пакета изменено; сервисные идентификаторы, маршруты и предметная модель сохранены, чтобы пример работал без скрытого массового переименования.
 
 ## Первый запуск
 
@@ -141,7 +201,7 @@ ${sourceReadme ? '## Документация исходного примера\
 }
 
 export async function createSaasExample(deps) {
-    const {template, destination, name} = deps
+    const {template, destination, name, title} = deps
     const root = path.resolve(deps.repository ?? repository)
     if (!templates(root).includes(template)) throw new Error('Выберите один из шаблонов: ' + templates(root).join(', '))
     if (typeof destination != 'string' || !destination.trim()) throw new Error('Укажите новый пустой каталог назначения')
@@ -194,7 +254,20 @@ export async function createSaasExample(deps) {
     lock.packages[''].name = packageName
     files.set('package.json', Buffer.from(JSON.stringify(packageJson, null, 2) + '\n'))
     files.set('package-lock.json', Buffer.from(JSON.stringify(lock, null, 2) + '\n'))
-    files.set('README.md', Buffer.from(instructions(template, packageName, files.get('README.md')?.toString('utf8'), servicePort(files))))
+    const donorPort = servicePort(files)
+    const port = String(deps.port ?? Number(donorPort) + 100)
+    if (!/^\d+$/.test(port) || Number(port) < 1024 || Number(port) > 65535) throw new Error('Порт копии: число от 1024 до 65535')
+    replacePort(files, donorPort, port)
+    const pageTitle = title ?? packageName
+    if (typeof pageTitle != 'string' || !pageTitle.trim() || pageTitle.length > 120) throw new Error('Заголовок страницы: непустая строка до 120 символов')
+    const page = files.get('frontend/index.html')?.toString('utf8')
+    if (page) files.set('frontend/index.html', Buffer.from(page.replace(/<title>[^<]*<\/title>/, '<title>' + pageTitle + '</title>')))
+    const inherited = markInherited(files, template)
+    // Описание донора попадает в README копии целиком: порт в нём тоже должен быть новым.
+    const sourceReadme = files.get('README.md')?.toString('utf8').split(donorPort).join(port)
+    files.set('README.md', Buffer.from(instructions(template, packageName, sourceReadme, port, pageTitle)))
+    const libraries = Object.entries(packageJson.dependencies ?? {}).filter(entry => entry[0].startsWith('wenay-'))
+    files.set('SCAFFOLD.md', Buffer.from(scaffoldNote(template, packageName, port, pageTitle, inherited, libraries.map(entry => entry[0] + ' ' + entry[1]).join(', '))))
     files.set('.gitignore', Buffer.from('node_modules/\npublic/\ndist/\ncoverage/\n.env\n.env.*\n!.env.example\n*-data/\ndata/\n*.log\n*.replay\n'))
     const codeRules = path.join(root, 'doc', 'CODE-RULES.md')
     await rejectLinks(codeRules)
@@ -210,11 +283,24 @@ export async function createSaasExample(deps) {
         // Exclusive creation also protects an initially empty destination if another writer appears.
         await writeFile(output, content, {flag: 'wx'})
     }
-    return {template, destination: target, name: packageName, files: files.size}
+    return {template, destination: target, name: packageName, files: files.size, port, title: pageTitle, inherited}
 }
 
 function usage() {
-    return 'node scripts/create-saas-example.mjs <' + templates().join('|') + '> <empty-directory> [--name npm-name]'
+    return 'node scripts/create-saas-example.mjs <' + templates().join('|')
+        + '> <empty-directory> [--name npm-name] [--port число] [--title "Название"]'
+}
+
+const flags = ['--name', '--port', '--title']
+
+function options(args) {
+    const value = {}
+    for (let at = 0; at < args.length; at += 2) {
+        if (!flags.includes(args[at])) throw new Error('Неизвестный параметр: ' + args[at])
+        if (args[at + 1] == undefined) throw new Error('Параметру ' + args[at] + ' нужно значение')
+        value[args[at].slice(2)] = args[at + 1]
+    }
+    return value
 }
 
 async function main(args) {
@@ -222,9 +308,11 @@ async function main(args) {
         console.log(usage())
         return
     }
-    if (args.length != 2 && !(args.length == 4 && args[2] == '--name')) throw new Error('Использование: ' + usage())
-    const result = await createSaasExample({template: args[0], destination: args[1], name: args[3]})
-    console.log('Создан ' + result.name + ': ' + result.destination + ' (' + result.files + ' файлов). Дальше: npm ci, npm run typecheck, npm test, npm run build.')
+    if (args.length < 2 || args.length % 2 != 0) throw new Error('Использование: ' + usage())
+    const chosen = options(args.slice(2))
+    const result = await createSaasExample({template: args[0], destination: args[1], ...chosen})
+    console.log('Создан ' + result.name + ' на порту ' + result.port + ': ' + result.destination + ' (' + result.files + ' файлов).')
+    console.log('Дальше: npm ci, npm run typecheck, npm test, npm run build. Что менять первым — SCAFFOLD.md.')
 }
 
 if (process.argv[1] && import.meta.url == pathToFileURL(path.resolve(process.argv[1])).href) {

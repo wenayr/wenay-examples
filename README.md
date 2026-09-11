@@ -44,11 +44,11 @@ npm start
 ## Своё приложение из готового
 
 ```text
-node scripts/create-saas-example.mjs approvals ../my-approvals --name my-approvals
+node scripts/create-saas-example.mjs approvals ../my-approvals --name my-approvals --port 4990 --title "Заявки"
 cd ../my-approvals && npm ci && npm run typecheck && npm test && npm run build
 ```
 
-Копируются только исходники, точные npm-зависимости и правила. Прогоняйте все четыре команды сразу: scaffold переносит и проверки исходного примера. Что менять дальше — [рецепты для разработчика и ИИ](doc/SAAS-RECIPES.md).
+Копируются только исходники, точные npm-зависимости и правила. `--port` и `--title` необязательны: по умолчанию копия получает порт донора плюс 100 и заголовок по имени пакета. Проверки исходного примера переносятся вместе с кодом — каждая помечена в первой строке как унаследованная, а `SCAFFOLD.md` в копии перечисляет их и говорит, что менять первым. Что менять дальше — [рецепты для разработчика и ИИ](doc/SAAS-RECIPES.md).
 
 ## Проверка всего каталога
 
