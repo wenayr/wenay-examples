@@ -31,8 +31,12 @@ function text(value: string, max: number, required = true) {
     if ((required && !clean) || clean.length > max) throw new Error('Текст должен содержать ' + (required ? '1' : '0') + '–' + max + ' символов')
     return clean
 }
-function amount(value: number) {if (!Number.isSafeInteger(value) || value < 0 || value > 100000000) throw new Error('Сумма — целое число от 0 до 100000000 условных копеек')}
-function operation(ctx: Ctx, kind: string) {return kind + '-' + createHash('sha256').update(Command.commandReceiptKey(ctx.account, ctx.requestId)).digest('hex')}
+function amount(value: number) {
+    if (!Number.isSafeInteger(value) || value < 0 || value > 100000000) throw new Error('Сумма — целое число от 0 до 100000000 условных копеек')
+}
+function operation(ctx: Ctx, kind: string) {
+    return kind + '-' + createHash('sha256').update(Command.commandReceiptKey(ctx.account, ctx.requestId)).digest('hex')
+}
 function linked<T extends Company | Contact>(records: Record<string, T>, id: string, orgId: string) {
     const value = Object.hasOwn(records, id) ? records[id] : undefined
     if (!value || value.orgId != orgId || value.archived) throw new Error('Связанная запись недоступна или архивирована')
@@ -52,12 +56,18 @@ export function crmWorkspace(state: CrmState, principal: tServicePrincipal | nul
     return {
         me: Object.hasOwn(state.accounts, account) ? {account, name: state.accounts[account].name} : null,
         organizations,
-        people: organizations.flatMap(org => Object.entries(state.organizations[org.id].members).filter(([id, role]) => org.role != 'customer' || id == account || role != 'customer').map(([id, role]) => ({orgId: org.id, account: id, name: state.accounts[id]?.name ?? id, role}))),
+        people: organizations.flatMap(org => Object.entries(state.organizations[org.id].members).filter(([id, role]) => org.role != 'customer' || id == account || role != 'customer').map(([id, role]) => ({
+            orgId: org.id, account: id, name: state.accounts[id]?.name ?? id, role
+        }))),
         companies: Object.values(state.companies).filter(company => staffOrgs.has(company.orgId)).map(value => ({...value})),
         contacts: Object.values(state.contacts).filter(contact => staffOrgs.has(contact.orgId)).map(value => ({...value})),
         deals: visible.map(summary),
-        columns: organizations.map(org => ({orgId: org.id, stages: STAGES.map(key => ({key, items: (state.columns[org.id]?.[key] ?? []).filter(id => ids.has(id))}))})),
-        audit: state.audit.filter(entry => organizations.some(org => org.id == entry.orgId && leaders.includes(org.role as typeof leaders[number]))).map(entry => ({...entry}))
+        columns: organizations.map(org => ({
+            orgId: org.id, stages: STAGES.map(key => ({key, items: (state.columns[org.id]?.[key] ?? []).filter(id => ids.has(id))}))
+        })),
+        audit: state.audit.filter(entry => organizations.some(org => org.id == entry.orgId && leaders.includes(org.role as typeof leaders[number]))).map(entry => ({
+            ...entry
+        }))
     }
 }
 export type CrmWorkspace = ReturnType<typeof crmWorkspace>
@@ -77,7 +87,12 @@ export function createCrmDomain(deps: {now?: () => number, accepted?: (ctx: Ctx,
         ctx.state.audit.push({id: operation(ctx, 'audit'), orgId, actor: ctx.account, action, target, at: now()})
         if (ctx.state.audit.length > 1000) ctx.state.audit.splice(0, ctx.state.audit.length - 1000)
     }
-    function changed(ctx: Ctx, deal: Deal, action: string) {deal.revision++; deal.updatedAt = now(); audit(ctx, deal.orgId, action, deal.id); return {id: deal.id, revision: deal.revision}}
+    function changed(ctx: Ctx, deal: Deal, action: string) {
+        deal.revision++
+        deal.updatedAt = now()
+        audit(ctx, deal.orgId, action, deal.id)
+        return {id: deal.id, revision: deal.revision}
+    }
     function editable(ctx: Ctx, input: {orgId: string, id: string, revision: number}) {
         const access = dealAccess(ctx.state, ctx.account, input.orgId, input.id, {edit: true})
         revision(access.deal, input.revision)
@@ -152,7 +167,9 @@ export function createCrmDomain(deps: {now?: () => number, accepted?: (ctx: Ctx,
             if (!previous && (input.revision != 0 || Object.keys(ctx.state.deals).length >= 2000)) throw new Error('До 2000 сделок; новая запись с revision 0')
             const id = previous?.id ?? operation(ctx, 'deal'), at = now()
             if (previous) {
-                Object.assign(previous, {title, description, companyId: input.companyId, contactId: input.contactId, assignee: input.assignee, customerAccount: input.customerAccount, amount: input.amount})
+                Object.assign(previous, {
+                    title, description, companyId: input.companyId, contactId: input.contactId, assignee: input.assignee, customerAccount: input.customerAccount, amount: input.amount
+                })
                 return changed(ctx, previous, 'deal.saved')
             }
             ctx.state.deals[id] = {id, orgId: input.orgId, title, description, companyId: input.companyId, contactId: input.contactId,
@@ -165,7 +182,9 @@ export function createCrmDomain(deps: {now?: () => number, accepted?: (ctx: Ctx,
         dealMove: schemaCommand({orgId: 'string', id: 'string', revision: 'number', stage: {enum: STAGES}, beforeId: 'string', reason: 'string'}, {allow: STAFF, apply(ctx: Ctx, input) {
             const {deal, role} = editable(ctx, input)
             const reason = text(input.reason, 500, false)
-            const transitions: Record<tStage, readonly tStage[]> = {incoming: ['incoming', 'qualified', 'lost'], qualified: ['incoming', 'qualified', 'proposal', 'lost'], proposal: ['qualified', 'proposal', 'won', 'lost'], won: ['won', 'qualified'], lost: ['lost', 'qualified']}
+            const transitions: Record<tStage, readonly tStage[]> = {
+                incoming: ['incoming', 'qualified', 'lost'], qualified: ['incoming', 'qualified', 'proposal', 'lost'], proposal: ['qualified', 'proposal', 'won', 'lost'], won: ['won', 'qualified'], lost: ['lost', 'qualified']
+            }
             if (!transitions[deal.stage].includes(input.stage)) throw new Error('Переход между этапами недоступен')
             if ((deal.stage == 'won' || deal.stage == 'lost') && input.stage != deal.stage && (!leaders.includes(role as typeof leaders[number]) || !reason)) throw new Error('Вернуть закрытую сделку может руководитель с причиной')
             if (input.stage == 'lost' && !reason) throw new Error('Укажите причину отказа')
@@ -234,7 +253,10 @@ export function createCrmDomain(deps: {now?: () => number, accepted?: (ctx: Ctx,
             if (input.archived && input.kind == 'contact' && Object.values(ctx.state.deals).some(deal => deal.contactId == input.id && !deal.archived)) throw new Error('Сначала архивируйте связанные сделки')
             if (!input.archived) {
                 if (input.kind == 'contact') linked(ctx.state.companies, (entry as Contact).companyId, input.orgId)
-                if (input.kind == 'deal') {linked(ctx.state.companies, (entry as Deal).companyId, input.orgId); linked(ctx.state.contacts, (entry as Deal).contactId, input.orgId)}
+                if (input.kind == 'deal') {
+                    linked(ctx.state.companies, (entry as Deal).companyId, input.orgId)
+                    linked(ctx.state.contacts, (entry as Deal).contactId, input.orgId)
+                }
             }
             entry.archived = input.archived
             entry.revision++

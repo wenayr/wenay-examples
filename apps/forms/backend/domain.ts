@@ -92,7 +92,9 @@ export function formsWorkspace(state: FormsState, principal: tServicePrincipal |
     const organizations = Object.values(state.organizations).flatMap(org => Object.hasOwn(org.members, account) && Object.hasOwn(state.accounts, account) ? [{id: org.id, name: org.name, revision: org.revision, role: org.members[account]}] : [])
     const allowed = new Set(organizations.map(org => org.id))
     return {me: Object.hasOwn(state.accounts, account) ? {account, name: state.accounts[account].name} : null, organizations,
-        forms: Object.values(state.forms).filter(form => allowed.has(form.orgId)).map(({tokenHash, fields, versions, ...form}) => ({...form, fields: fields.length, versions: versions.length})),
+        forms: Object.values(state.forms).filter(form => allowed.has(form.orgId)).map(({tokenHash, fields, versions, ...form}) => ({
+            ...form, fields: fields.length, versions: versions.length
+        })),
         people: organizations.flatMap(org => Object.entries(state.organizations[org.id].members).map(([account, role]) => ({orgId: org.id, account, role}))),
         aggregates: Object.values(state.aggregates).filter(entry => allowed.has(state.forms[entry.formId]?.orgId)).map(entry => {
             const version = state.forms[entry.formId].versions.find(value => value.version == entry.version)!
@@ -122,7 +124,10 @@ export function createFormsDomain(deps: {now?: () => number} = {}) {
             const entry = aggregate.fields[field.id], value = answers[field.id]
             entry.answered += delta
             if (field.kind == 'number') entry.sum += (value as number) * delta
-            if (field.kind == 'choice' || field.kind == 'boolean') {const bucket = hash(String(value)); entry.values[bucket] = (entry.values[bucket] ?? 0) + delta}
+            if (field.kind == 'choice' || field.kind == 'boolean') {
+                const bucket = hash(String(value))
+                entry.values[bucket] = (entry.values[bucket] ?? 0) + delta
+            }
         }
     }
     function remove(state: FormsState, id: string) {
@@ -132,7 +137,10 @@ export function createFormsDomain(deps: {now?: () => number} = {}) {
         updateAggregate(state, form, entry.version, entry.answers, -1)
         delete state.submissions[id]
         const receipt = state.receipts[id]
-        if (receipt) {receipt.signature = ''; receipt.deleted = true}
+        if (receipt) {
+            receipt.signature = ''
+            receipt.deleted = true
+        }
         form.answersRevision++
         state.erasureRevision = (state.erasureRevision ?? 0) + 1
         return true
@@ -146,7 +154,13 @@ export function createFormsDomain(deps: {now?: () => number} = {}) {
             if (previous) revision(previous, input.revision)
             else if (input.revision != 0 || Object.keys(ctx.state.forms).length >= 100) throw new Error('До 100 форм; новая форма с revision 0')
             const id = previous?.id ?? 'f-' + hash(Command.commandReceiptKey(ctx.account, ctx.requestId))
-            if (previous) {previous.title = input.title.trim(); previous.description = input.description.trim(); previous.fields = fields; previous.retentionDays = input.retentionDays; previous.revision++}
+            if (previous) {
+                previous.title = input.title.trim()
+                previous.description = input.description.trim()
+                previous.fields = fields
+                previous.retentionDays = input.retentionDays
+                previous.revision++
+            }
             else ctx.state.forms[id] = {id, orgId: input.orgId, title: input.title.trim(), description: input.description.trim(), fields, retentionDays: input.retentionDays,
                 revision: 1, enabled: false, publishedVersion: 0, accessGeneration: 0, tokenHash: '', versions: [], answersRevision: 0, createdAt: now()}
             return {id, revision: ctx.state.forms[id].revision}
@@ -158,7 +172,11 @@ export function createFormsDomain(deps: {now?: () => number} = {}) {
             if (!/^[a-f0-9]{64}$/.test(input.tokenHash) || !/^[a-f0-9]{64}$/.test(input.publication) || form.versions.length >= 20) throw new Error('До 20 версий; корректный внутренний запрос публикации')
             const fields = validateFields(form.fields), version = form.versions.length + 1
             form.versions.push({version, title: form.title, description: form.description, fields, publishedAt: now()})
-            form.publishedVersion = version; form.enabled = true; form.accessGeneration++; form.tokenHash = input.tokenHash; form.revision++
+            form.publishedVersion = version
+            form.enabled = true
+            form.accessGeneration++
+            form.tokenHash = input.tokenHash
+            form.revision++
             ctx.state.publications ??= {}
             ctx.state.publications[input.publication] = {orgId: form.orgId, formId: form.id, revision: input.revision, version}
             return {id: form.id, version, revision: form.revision}
@@ -166,7 +184,10 @@ export function createFormsDomain(deps: {now?: () => number} = {}) {
         formDisable: schemaCommand({orgId: 'string', id: 'string', revision: 'number'}, {allow: EDITORS, apply(ctx: Ctx, input) {
             const {form} = formAccess(ctx.state, ctx.account, input.orgId, input.id, EDITORS)
             revision(form, input.revision)
-            form.enabled = false; form.tokenHash = ''; form.accessGeneration++; form.revision++
+            form.enabled = false
+            form.tokenHash = ''
+            form.accessGeneration++
+            form.revision++
             return {id: form.id, revision: form.revision}
         }}),
         answerSubmit: schemaCommand({formId: 'string', version: 'number', nonce: 'string', answersJson: 'string'}, {allow: ['respondent'], limit: {perMinute: 30}, apply(ctx: Ctx, input) {
@@ -177,10 +198,15 @@ export function createFormsDomain(deps: {now?: () => number} = {}) {
             const id = hash(JSON.stringify([form.id, form.accessGeneration, input.nonce]))
             const signature = hash(JSON.stringify([input.version, Object.entries(answers).sort(([a], [b]) => a.localeCompare(b))]))
             const old = ctx.state.receipts[id]
-            if (old) {if (!old.deleted && old.signature != signature) throw new Error('Nonce уже использован для другого ответа'); return {id, duplicate: true, deleted: old.deleted}}
+            if (old) {
+                if (!old.deleted && old.signature != signature) throw new Error('Nonce уже использован для другого ответа')
+                return {id, duplicate: true, deleted: old.deleted}
+            }
             if (Object.keys(ctx.state.receipts).length >= 5000) throw new Error('До 5000 приёмов ответов; требуется архивирование ключей повторов')
             const at = now()
-            ctx.state.submissions[id] = {id, formId: form.id, orgId: form.orgId, version: version.version, answers, createdAt: at, expiresAt: at + form.retentionDays * 86400000}
+            ctx.state.submissions[id] = {
+                id, formId: form.id, orgId: form.orgId, version: version.version, answers, createdAt: at, expiresAt: at + form.retentionDays * 86400000
+            }
             ctx.state.receipts[id] = {id, formId: form.id, version: version.version, signature, deleted: false}
             updateAggregate(ctx.state, form, version.version, answers, 1)
             form.answersRevision++
@@ -206,12 +232,20 @@ export function createFormsDomain(deps: {now?: () => number} = {}) {
             ctx.state.erasureRevision = (ctx.state.erasureRevision ?? 0) + 1
             return {id: entry.id, answersRevision: form.answersRevision}
         }}),
-        retentionSweep: schemaCommand({}, {allow: ['system'], apply(ctx: Ctx) {internal(ctx); let deleted = 0; for (const entry of Object.values(ctx.state.submissions)) if (entry.expiresAt <= now()) {remove(ctx.state, entry.id); deleted++}; return {deleted}}}),
+        retentionSweep: schemaCommand({}, {
+            allow: ['system'], apply(ctx: Ctx) {
+                internal(ctx)
+                let deleted = 0
+                for (const entry of Object.values(ctx.state.submissions)) if (entry.expiresAt <= now()) {remove(ctx.state, entry.id); deleted++}
+                return {deleted}
+            }
+        }),
         memberRole: schemaCommand({orgId: 'string', revision: 'number', account: 'string', role: {enum: ['none', ...STAFF]}}, {allow: ['owner'], limit: {perMinute: 30}, apply(ctx: Ctx, input) {
             const {org} = organizationAccess(ctx.state, ctx.account, input.orgId, ['owner'])
             if (org.revision != input.revision || !Object.hasOwn(ctx.state.accounts, input.account)) throw new Error('Организация изменилась или аккаунт недоступен')
             if (org.members[input.account] == 'owner' && input.role != 'owner' && Object.values(org.members).filter(value => value == 'owner').length == 1) throw new Error('Нельзя удалить последнего владельца')
-            if (input.role == 'none') delete org.members[input.account]; else org.members[input.account] = input.role
+            if (input.role == 'none') delete org.members[input.account]
+            else org.members[input.account] = input.role
             org.revision++
             return {revision: org.revision}
         }})

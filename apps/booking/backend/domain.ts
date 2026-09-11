@@ -33,7 +33,9 @@ function canonical(value: unknown): string {
     if (value && typeof value == 'object') return '{' + Object.keys(value).sort().map(key => JSON.stringify(key) + ':' + canonical((value as Record<string, unknown>)[key])).join(',') + '}'
     return JSON.stringify(value)
 }
-function receipt(value: {id: string, revision?: number, status?: string}): Receipt {return {id: value.id, revision: value.revision ?? 0, status: value.status ?? 'saved', fresh: true}}
+function receipt(value: {id: string, revision?: number, status?: string}): Receipt {
+    return {id: value.id, revision: value.revision ?? 0, status: value.status ?? 'saved', fresh: true}
+}
 function intent(ctx: Ctx, kind: string, input: {orgId: string, key: string}, apply: (id: string) => Receipt) {
     organizationAccess(ctx.state, ctx.account, input.orgId)
     text(input.key, 120)
@@ -75,7 +77,10 @@ function newBooking(state: BookingState, service: Offering, input: {id: string, 
     state.bookings[booking.id] = booking
     return booking
 }
-function change(booking: Booking, at: number) {booking.revision++; booking.updatedAt = at}
+function change(booking: Booking, at: number) {
+    booking.revision++
+    booking.updatedAt = at
+}
 
 export function bookingWorkspace(state: BookingState, principal: tServicePrincipal | null) {
     const account = principal?.account ?? ''
@@ -83,8 +88,14 @@ export function bookingWorkspace(state: BookingState, principal: tServicePrincip
     const orgIds = new Set(organizations.map(org => org.id)), staff = new Set(organizations.filter(org => org.role != 'customer').map(org => org.id))
     function visible(entry: {orgId: string, customer: string}) {return orgIds.has(entry.orgId) && (staff.has(entry.orgId) || entry.customer == account)}
     return {account: {account, name: own(state.accounts, account)?.name ?? ''}, organizations,
-        people: organizations.flatMap(org => Object.entries(state.organizations[org.id].members).filter(([id, role]) => staff.has(org.id) || id == account || role != 'customer').map(([id, role]) => ({orgId: org.id, account: id, name: state.accounts[id]?.name ?? id, role}))),
-        resources: Object.values(state.resources).filter(value => orgIds.has(value.orgId)).map(value => ({...value, weekly: value.weekly.map(item => ({...item})), exceptions: value.exceptions.map(item => ({...item, windows: item.windows.map(window => ({...window}))}))})),
+        people: organizations.flatMap(org => Object.entries(state.organizations[org.id].members).filter(([id, role]) => staff.has(org.id) || id == account || role != 'customer').map(([id, role]) => ({
+            orgId: org.id, account: id, name: state.accounts[id]?.name ?? id, role
+        }))),
+        resources: Object.values(state.resources).filter(value => orgIds.has(value.orgId)).map(value => ({
+            ...value, weekly: value.weekly.map(item => ({...item})), exceptions: value.exceptions.map(item => ({
+                ...item, windows: item.windows.map(window => ({...window}))
+            }))
+        })),
         services: Object.values(state.services).filter(value => orgIds.has(value.orgId) && (value.active || staff.has(value.orgId))).map(value => ({...value})),
         bookings: Object.values(state.bookings).filter(visible).map(value => ({...value})),
         waitlist: Object.values(state.waitlist).filter(visible).map(value => ({...value})),
@@ -107,22 +118,33 @@ export function createBookingDomain(deps: {now?: () => number, holdMs?: number} 
             reminders(ctx.state, booking, at)
         }
         for (const entry of Object.values(ctx.state.waitlist)) {
-            if (entry.status == 'offered' && ['expired', 'cancelled'].includes(ctx.state.bookings[entry.offerId]?.status ?? '')) {entry.status = 'expired'; entry.updatedAt = at}
-            if (entry.status == 'waiting' && entry.start <= at) {entry.status = 'expired'; entry.updatedAt = at}
+            if (entry.status == 'offered' && ['expired', 'cancelled'].includes(ctx.state.bookings[entry.offerId]?.status ?? '')) {
+                entry.status = 'expired'
+                entry.updatedAt = at
+            }
+            if (entry.status == 'waiting' && entry.start <= at) {
+                entry.status = 'expired'
+                entry.updatedAt = at
+            }
         }
         for (const entry of Object.values(ctx.state.waitlist).filter(entry => entry.status == 'waiting').sort((a, b) => a.createdAt - b.createdAt || a.id.localeCompare(b.id))) {
             const service = own(ctx.state.services, entry.serviceId)
             if (!service || !own(ctx.state.organizations[entry.orgId].members, entry.customer)) continue
             try {
                 const booking = newBooking(ctx.state, service, {id: hash('offer', entry.id), customer: entry.customer, start: entry.start, partySize: entry.partySize, note: 'Предложение из листа ожидания', reminder: true}, at, holdMs)
-                entry.status = 'offered'; entry.offerId = booking.id; entry.updatedAt = at
+                entry.status = 'offered'
+                entry.offerId = booking.id
+                entry.updatedAt = at
                 audit(ctx, entry.orgId, 'wait.offer', entry.id, at)
             } catch { /* A waiting entry never removes an existing booking when capacity is unavailable. */ }
         }
         for (const notice of Object.values(ctx.state.notices)) if (notice.status == 'pending' && notice.dueAt <= at) {
             const booking = ctx.state.bookings[notice.bookingId]
             if (booking?.status != 'confirmed' || booking.revision != notice.revision || !booking.reminder) notice.status = 'cancelled'
-            else {notice.status = 'delivered'; notice.deliveredAt = at}
+            else {
+                notice.status = 'delivered'
+                notice.deliveredAt = at
+            }
         }
         return {ok: true}
     }
@@ -135,7 +157,9 @@ export function createBookingDomain(deps: {now?: () => number, holdMs?: number} 
             if (!STAFF.includes(org.members[input.staff] as typeof STAFF[number])) throw new Error('Исполнитель не состоит в команде')
             if (old) revision(old, input.revision)
             else if (input.id || input.revision != 0 || Object.keys(ctx.state.resources).length >= 50) throw new Error('Новый ресурс: пустой id, revision 0; не более 50 ресурсов')
-            const value: Resource = {...input, id: old?.id ?? hash('resource', ctx.account, ctx.requestId), name: text(input.name, 100), revision: (old?.revision ?? 0) + 1}
+            const value: Resource = {
+                ...input, id: old?.id ?? hash('resource', ctx.account, ctx.requestId), name: text(input.name, 100), revision: (old?.revision ?? 0) + 1
+            }
             validateResource(value)
             if (old && remaining(ctx.state, value, now(), Infinity, now()) < 0) throw new Error('Новая вместимость меньше существующих броней')
             if (Object.values(ctx.state.services).some(service => service.resourceId == value.id && service.capacity > value.capacity)) throw new Error('Вместимость ниже числа участников услуги')
@@ -151,7 +175,9 @@ export function createBookingDomain(deps: {now?: () => number, holdMs?: number} 
             else if (input.id || input.revision != 0 || Object.keys(ctx.state.services).length >= 100) throw new Error('Новая услуга: пустой id, revision 0; до 100 услуг')
             for (const [key, max] of [['duration', 480], ['before', 120], ['after', 120], ['depositUnits', 10000]] as const) if (!Number.isInteger(input[key]) || input[key] < (key == 'duration' ? 15 : 0) || input[key] > max) throw new Error('Недопустимая длительность, буфер или депозит')
             if (!Number.isInteger(input.capacity) || input.capacity < 1 || input.capacity > resource.capacity) throw new Error('Число участников превышает вместимость ресурса')
-            const value = {...input, id: old?.id ?? hash('service', ctx.account, ctx.requestId), name: text(input.name, 100), description: text(input.description, 1000, false), revision: (old?.revision ?? 0) + 1}
+            const value = {
+                ...input, id: old?.id ?? hash('service', ctx.account, ctx.requestId), name: text(input.name, 100), description: text(input.description, 1000, false), revision: (old?.revision ?? 0) + 1
+            }
             ctx.state.services[value.id] = value
             audit(ctx, input.orgId, 'service.save', value.id, now())
             return receipt(value)
@@ -171,7 +197,8 @@ export function createBookingDomain(deps: {now?: () => number, holdMs?: number} 
                 revision(booking, input.revision)
                 if (booking.status != 'held' || booking.holdUntil <= now()) throw new Error('Временная бронь истекла или уже завершена')
                 if (!['none', 'paid'].includes(booking.deposit)) throw new Error('Сначала завершите тестовый депозит')
-                booking.status = 'confirmed'; change(booking, now())
+                booking.status = 'confirmed'
+                change(booking, now())
                 for (const entry of Object.values(ctx.state.waitlist)) if (entry.offerId == booking.id && entry.status == 'offered') {entry.status = 'accepted'; entry.updatedAt = now()}
                 reminders(ctx.state, booking, now())
                 audit(ctx, input.orgId, 'booking.confirm', booking.id, now())
@@ -183,9 +210,11 @@ export function createBookingDomain(deps: {now?: () => number, holdMs?: number} 
             return intent(ctx, 'cancel', input, function cancel() {
                 revision(booking, input.revision)
                 if (!['held', 'confirmed'].includes(booking.status)) throw new Error('Бронь уже завершена')
-                booking.status = 'cancelled'; change(booking, now())
+                booking.status = 'cancelled'
+                change(booking, now())
                 if (booking.deposit == 'paid') booking.deposit = 'refundDue'
-                reminders(ctx.state, booking, now()); audit(ctx, input.orgId, 'booking.cancel', booking.id, now())
+                reminders(ctx.state, booking, now())
+                audit(ctx, input.orgId, 'booking.cancel', booking.id, now())
                 return receipt(booking)
             })
         }}),
@@ -197,14 +226,26 @@ export function createBookingDomain(deps: {now?: () => number, holdMs?: number} 
                 const service = serviceAccess(ctx.state, input.orgId, booking.serviceId)
                 const slot = slotFor(ctx.state, service, input.start, booking.partySize, now(), booking.id)
                 // All checks finish before the original booking is changed.
-                booking.resourceId = service.resourceId; booking.start = slot.start; booking.end = slot.end; booking.occupiedFrom = slot.occupiedFrom; booking.occupiedTo = slot.occupiedTo
-                change(booking, now()); reminders(ctx.state, booking, now()); audit(ctx, input.orgId, 'booking.move', booking.id, now())
+                booking.resourceId = service.resourceId
+                booking.start = slot.start
+                booking.end = slot.end
+                booking.occupiedFrom = slot.occupiedFrom
+                booking.occupiedTo = slot.occupiedTo
+                change(booking, now())
+                reminders(ctx.state, booking, now())
+                audit(ctx, input.orgId, 'booking.move', booking.id, now())
                 return receipt(booking)
             })
         }}),
         reminderSet: schemaCommand({...bookingInput, enabled: 'boolean'}, {allow: ROLES, apply(ctx: Ctx, input) {
             const booking = bookingAccess(ctx.state, ctx.account, input.orgId, input.id)
-            return intent(ctx, 'reminder', input, function settings() {revision(booking, input.revision); booking.reminder = input.enabled; change(booking, now()); reminders(ctx.state, booking, now()); return receipt(booking)})
+            return intent(ctx, 'reminder', input, function settings() {
+                revision(booking, input.revision)
+                booking.reminder = input.enabled
+                change(booking, now())
+                reminders(ctx.state, booking, now())
+                return receipt(booking)
+            })
         }}),
         waitJoin: schemaCommand({orgId: 'string', key: 'string', serviceId: 'string', start: 'number', partySize: 'number'}, {allow: ROLES, apply(ctx: Ctx, input) {
             return intent(ctx, 'wait', input, function join(id) {
@@ -213,7 +254,9 @@ export function createBookingDomain(deps: {now?: () => number, holdMs?: number} 
                 slotFor({...ctx.state, bookings: {}}, service, input.start, input.partySize, now())
                 if (Object.keys(ctx.state.waitlist).length >= 500) throw new Error('До 500 заявок ожидания')
                 if (Object.values(ctx.state.waitlist).some(entry => entry.orgId == input.orgId && entry.customer == ctx.account && entry.serviceId == input.serviceId && entry.start == input.start && ['waiting', 'offered'].includes(entry.status))) throw new Error('Вы уже ожидаете это время')
-                const value = {id, orgId: input.orgId, serviceId: input.serviceId, customer: ctx.account, start: input.start, partySize: input.partySize, status: 'waiting' as const, offerId: '', createdAt: now(), updatedAt: now()}
+                const value = {
+                    id, orgId: input.orgId, serviceId: input.serviceId, customer: ctx.account, start: input.start, partySize: input.partySize, status: 'waiting' as const, offerId: '', createdAt: now(), updatedAt: now()
+                }
                 ctx.state.waitlist[id] = value
                 audit(ctx, input.orgId, 'wait.join', id, now())
                 return receipt(value)
@@ -225,8 +268,13 @@ export function createBookingDomain(deps: {now?: () => number, holdMs?: number} 
             return intent(ctx, 'wait-cancel', input, function cancel() {
                 if (!['waiting', 'offered'].includes(entry.status)) throw new Error('Заявка уже завершена')
                 const booking = ctx.state.bookings[entry.offerId]
-                if (booking?.status == 'held') {booking.status = 'cancelled'; change(booking, now()); if (booking.deposit == 'paid') booking.deposit = 'refundDue'}
-                entry.status = 'cancelled'; entry.updatedAt = now()
+                if (booking?.status == 'held') {
+                    booking.status = 'cancelled'
+                    change(booking, now())
+                    if (booking.deposit == 'paid') booking.deposit = 'refundDue'
+                }
+                entry.status = 'cancelled'
+                entry.updatedAt = now()
                 return receipt(entry)
             })
         }}),
@@ -237,7 +285,8 @@ export function createBookingDomain(deps: {now?: () => number, holdMs?: number} 
                 if (['paid', 'refundDue'].includes(booking.deposit)) throw new Error('Депозит уже обработан')
                 if (input.outcome == 'paid' && (booking.status != 'held' || booking.holdUntil <= now())) booking.deposit = 'refundDue'
                 else booking.deposit = input.outcome
-                change(booking, now()); audit(ctx, input.orgId, 'deposit.test-' + booking.deposit, booking.id, now())
+                change(booking, now())
+                audit(ctx, input.orgId, 'deposit.test-' + booking.deposit, booking.id, now())
                 return receipt(booking)
             })
         }}),

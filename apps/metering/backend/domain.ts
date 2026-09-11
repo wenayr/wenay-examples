@@ -9,13 +9,18 @@ function own<T>(values: Record<string, T>, id: string) {return Object.hasOwn(val
 export function organizationAccess(state: MeteringState, account: string, orgId: string, role?: 'owner') {
     const org = own(state.organizations, orgId)
     const member = org && own(org.members, account)
-    if (!org || !member || !own(state.accounts, account) || role && member != role) throw new Error('Нет доступа к организации')
+    const joined = !!org && !!member && !!own(state.accounts, account)
+    const matched = !role || member == role
+    if (!joined || !matched) throw new Error('Нет доступа к организации')
     return org
 }
 
 export function keyAccess(state: MeteringState, account: string, at: number, scope?: tScope) {
     const key = account.startsWith('key:') ? own(state.keys, account.slice(4)) : undefined
-    if (!key || key.revokedAt || key.expiresAt <= at || !own(state.organizations, key.orgId) || scope && !key.scopes.includes(scope)) throw new Error('API-ключ недействителен или не имеет нужного права')
+    const live = !!key && !key.revokedAt && key.expiresAt > at
+    const placed = live && !!own(state.organizations, key.orgId)
+    const permitted = !scope || (!!key && key.scopes.includes(scope))
+    if (!placed || !permitted) throw new Error('API-ключ недействителен или не имеет нужного права')
     return key
 }
 
@@ -65,7 +70,9 @@ export function meteringWorkspace(state: MeteringState, principal: tServicePrinc
 export type MeteringWorkspace = ReturnType<typeof meteringWorkspace>
 
 function units(value: number, allowZero = false) {
-    if (!Number.isSafeInteger(value) || value < (allowZero ? 0 : 1) || value > 10000) throw new Error('Количество единиц должно быть целым числом от ' + (allowZero ? 0 : 1) + ' до 10000')
+    const least = allowZero ? 0 : 1
+    const inRange = Number.isSafeInteger(value) && value >= least && value <= 10000
+    if (!inRange) throw new Error('Количество единиц должно быть целым числом от ' + least + ' до 10000')
 }
 export function eventKey(orgId: string, eventId: string) {
     if (!/^[\w:.-]{1,120}$/.test(eventId)) throw new Error('eventId: до 120 букв, цифр, точек, двоеточий и дефисов')
@@ -111,25 +118,46 @@ export function createMeteringDomain(deps: {now?: () => number} = {}) {
         const active = Object.values(ctx.state.periods).filter(value => value.orgId == org.id).reduce((sum, value) => sum + value.active, 0)
         if (reserve && active >= org.concurrent) throw new Error('Достигнут предел параллельных операций')
         const event: UsageEvent = {id, eventId: input.eventId, orgId: key.orgId, keyId: key.id, metric: input.metric, reference: input.reference, period,
-            units: reserve ? 0 : input.units, reservedUnits: reserve ? input.units : 0, signature, status: reserve ? 'reserved' : 'committed', reason: '', createdAt: at, updatedAt: at}
-        if (reserve) {totals.reserved += input.units; totals.active++}
+            units: reserve ? 0 : input.units,
+            reservedUnits: reserve ? input.units : 0,
+            signature,
+            status: reserve ? 'reserved' : 'committed',
+            reason: '', createdAt: at, updatedAt: at}
+        if (reserve) {
+            totals.reserved += input.units
+            totals.active++
+        }
         else totals.used += input.units
         ctx.state.periods[periodId] = {...totals}
         ctx.state.events[id] = event
         audit(ctx, key.orgId, reserve ? 'usage.reserve' : 'usage.record', id, at)
         return receipt(event, true)
     }
+    function workspace(state: MeteringState, principal: tServicePrincipal | null) {
+        return meteringWorkspace(state, principal, now())
+    }
     return {commands: {
-        keyRegister: schemaCommand({id: 'string', orgId: 'string', actor: 'string', label: 'string', hash: 'string', scopes: {array: {enum: SCOPES}}, days: 'number'}, {
+        keyRegister: schemaCommand({
+            id: 'string', orgId: 'string', actor: 'string', label: 'string',
+            hash: 'string', scopes: {array: {enum: SCOPES}}, days: 'number'
+        }, {
             allow: ['system'], apply(ctx: Ctx, input) {
                 if (ctx.account != 'system') throw new Error('Внутренняя операция')
                 organizationAccess(ctx.state, input.actor, input.orgId, 'owner')
-                if (!/^[a-f0-9]{64}$/.test(input.id) || !/^[a-f0-9]{64}$/.test(input.hash) || !input.label.trim() || input.label.length > 100 || !input.scopes.length || input.scopes.length > 2 || new Set(input.scopes).size != input.scopes.length) throw new Error('Проверьте название, права и данные ключа')
+                const hashed = /^[a-f0-9]{64}$/.test(input.id) && /^[a-f0-9]{64}$/.test(input.hash)
+                const named = !!input.label.trim() && input.label.length <= 100
+                const unique = new Set(input.scopes).size == input.scopes.length
+                const scoped = input.scopes.length >= 1 && input.scopes.length <= 2 && unique
+                if (!hashed || !named || !scoped) throw new Error('Проверьте название, права и данные ключа')
                 if (!Number.isInteger(input.days) || input.days < 1 || input.days > 90) throw new Error('Ключ действует от 1 до 90 дней')
                 if (own(ctx.state.keys, input.id)) throw new Error('Этот запрос выпуска уже использован')
                 if (Object.keys(ctx.state.keys).length >= 100) throw new Error('До 100 ключей на стенде')
                 const at = now()
-                const key = {id: input.id, orgId: input.orgId, label: input.label.trim(), hash: input.hash, scopes: [...input.scopes], createdBy: input.actor, createdAt: at, expiresAt: at + input.days * 86400_000, revokedAt: 0}
+                const key = {
+                    id: input.id, orgId: input.orgId, label: input.label.trim(), hash: input.hash,
+                    scopes: [...input.scopes], createdBy: input.actor, createdAt: at,
+                    expiresAt: at + input.days * 86400_000, revokedAt: 0
+                }
                 ctx.state.keys[key.id] = key
                 audit(ctx, input.orgId, 'key.issue', key.id, at, input.actor)
                 return {id: key.id, expiresAt: key.expiresAt}
@@ -153,15 +181,20 @@ export function createMeteringDomain(deps: {now?: () => number} = {}) {
                 const at = now(), period = new Date(at).toISOString().slice(0, 7)
                 const totals = ctx.state.periods[org.id + ':' + period]
                 const active = Object.values(ctx.state.periods).filter(value => value.orgId == org.id).reduce((sum, value) => sum + value.active, 0)
-                if (totals && totals.used + totals.reserved > input.monthlyUnits || active > input.concurrent) throw new Error('Новый лимит меньше уже использованной или зарезервированной квоты')
+                const spent = !!totals && totals.used + totals.reserved > input.monthlyUnits
+                if (spent || active > input.concurrent) throw new Error('Новый лимит меньше уже использованной или зарезервированной квоты')
                 org.monthlyUnits = input.monthlyUnits
                 org.concurrent = input.concurrent
                 audit(ctx, input.orgId, 'budget.configure', org.id, at)
                 return {ok: true}
             }
         }),
-        usageRecord: schemaCommand(USAGE_INPUTS.usageRecord, {allow: ['usage:write'], limit: {perMinute: 120}, apply(ctx: Ctx, input) {return record(ctx, input, false)}}),
-        usageReserve: schemaCommand(USAGE_INPUTS.usageReserve, {allow: ['usage:write'], limit: {perMinute: 120}, apply(ctx: Ctx, input) {return record(ctx, input, true)}}),
+        usageRecord: schemaCommand(USAGE_INPUTS.usageRecord, {
+            allow: ['usage:write'], limit: {perMinute: 120}, apply(ctx: Ctx, input) {return record(ctx, input, false)}
+        }),
+        usageReserve: schemaCommand(USAGE_INPUTS.usageReserve, {
+            allow: ['usage:write'], limit: {perMinute: 120}, apply(ctx: Ctx, input) {return record(ctx, input, true)}
+        }),
         usageSettle: schemaCommand(USAGE_INPUTS.usageSettle, {
             allow: ['usage:write'], limit: {perMinute: 120}, apply(ctx: Ctx, input) {
                 const at = now(), event = eventFor(ctx, input.eventId, at)
@@ -212,5 +245,5 @@ export function createMeteringDomain(deps: {now?: () => number} = {}) {
                 return receipt(event, true)
             }
         })
-    }, views: {workspace: {allow: ['owner', 'auditor'], project: (state: MeteringState, principal: tServicePrincipal | null) => meteringWorkspace(state, principal, now())}}}
+    }, views: {workspace: {allow: ['owner', 'auditor'], project: workspace}}}
 }

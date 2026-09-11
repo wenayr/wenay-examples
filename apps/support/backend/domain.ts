@@ -146,7 +146,9 @@ export function createSupportDomain(deps: {now?: () => number} = {}) {
                     const token = createHmac('sha256', ctx.state.accounts[ctx.account].secret.hash).update(id).digest('base64url')
                     for (const invite of expired) delete ctx.state.invites[invite.id]
                     const expiresAt = at + input.hours * 3600_000
-                    ctx.state.invites[id] = {id, orgId: input.orgId, role: input.role, tokenHash: createHash('sha256').update(token).digest('hex'), createdBy: ctx.account, expiresAt, usedBy: '', revoked: false}
+                    ctx.state.invites[id] = {
+                        id, orgId: input.orgId, role: input.role, tokenHash: createHash('sha256').update(token).digest('hex'), createdBy: ctx.account, expiresAt, usedBy: '', revoked: false
+                    }
                     audit(ctx, input.orgId, 'invite.create', id, at)
                     return {id, token, expiresAt}
                 }
@@ -220,7 +222,11 @@ export function createSupportDomain(deps: {now?: () => number} = {}) {
                     if (own(ctx.state.tickets, id)) throw new Error('Запрос создания уже использован')
                     const at = now()
                     const hours = {normal: 24, high: 4, urgent: 1}[input.priority]
-                    const ticket: Ticket = {id, orgId: input.orgId, customer: ctx.account, subject, priority: input.priority, status: 'open', assignee: '', revision: 1, createdAt: at, updatedAt: at, dueAt: at + hours * 3600_000, messages: [{id: requestId(ctx, 'message'), author: ctx.account, body, private: false, at}]}
+                    const ticket: Ticket = {
+                        id, orgId: input.orgId, customer: ctx.account, subject, priority: input.priority, status: 'open', assignee: '', revision: 1, createdAt: at, updatedAt: at, dueAt: at + hours * 3600_000, messages: [{
+                            id: requestId(ctx, 'message'), author: ctx.account, body, private: false, at
+                        }]
+                    }
                     ctx.state.tickets[id] = ticket
                     audit(ctx, input.orgId, 'ticket.create', id, at)
                     return {id, revision: ticket.revision}
@@ -296,7 +302,9 @@ export function createSupportDomain(deps: {now?: () => number} = {}) {
                     if (!previous) bound(Object.values(ctx.state.articles).filter(article => article.orgId == input.orgId).length, 200, 'статей организации')
                     const id = previous?.id ?? requestId(ctx, 'article')
                     if (!previous && own(ctx.state.articles, id)) throw new Error('Запрос создания уже использован')
-                    const article: Article = {id, orgId: input.orgId, title, body, status: 'draft', revision: (previous?.revision ?? 0) + 1, updatedAt: now(), history: previous ? articleHistory(previous) : []}
+                    const article: Article = {
+                        id, orgId: input.orgId, title, body, status: 'draft', revision: (previous?.revision ?? 0) + 1, updatedAt: now(), history: previous ? articleHistory(previous) : []
+                    }
                     ctx.state.articles[id] = article
                     audit(ctx, input.orgId, 'article.save', id, article.updatedAt)
                     return {id, revision: article.revision}
