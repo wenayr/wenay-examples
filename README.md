@@ -56,7 +56,7 @@ cd ../my-approvals && npm ci && npm run typecheck && npm test && npm run build
 npm run check:all
 ```
 
-Последовательно прогоняет typecheck, тесты и сборку всех приложений, проверяет синхронность общего кода, правила плотности и ссылки. Отдельно: `test:all`, `status`, `style:check`, `sync:check`, `links:check`.
+Последовательно прогоняет typecheck, тесты и сборку всех приложений, проверяет синхронность общего кода, правила плотности и ссылки. То же делает CI на каждый push; hosting и pizzeria там помечаются пропущенными, а не пройденными: первому нужны настоящие контейнеры, второй слишком долгий. Отдельно: `test:all`, `status`, `style:check`, `sync:check`, `links:check`.
 
 ## Документы
 

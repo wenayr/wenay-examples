@@ -1,0 +1,42 @@
+name: check
+
+on: [push, pull_request]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Установить зависимости приложений
+        run: |
+          for app in apps/*/; do
+            if [ -f "$app/package.json" ]; then
+              (cd "$app" && npm ci --no-audit --no-fund)
+            fi
+          done
+
+      # hosting поднимает настоящие контейнеры, pizzeria — самый долгий набор.
+      # Оба проверяются локально; в CI они помечены пропущенными, а не пройденными.
+      - name: Проверить каталог
+        env:
+          RUN_ALL_SKIP: hosting,pizzeria
+        run: npm run check:all
+
+      - name: Типы hosting и pizzeria
+        run: node scripts/run-all.mjs typecheck --only=hosting,pizzeria
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: status
+          path: |
+            doc/STATUS.md
+            work/run-all/
