@@ -38,3 +38,4 @@
 - L06 — 2026-09-11 — ожидает публикации: в npm нет версий новее common2 2.21.1 и react2 3.5.1, принимать нечего
 - L07 — 2026-09-11 — CURRENT-HANDOFF переписан: три открытые задачи common2 с воспроизведением, react2 без новых дефектов, четыре проверенных направления с выводами; прежняя версия с историей — doc/changes/handoff-2026-09-10.md — коммит ниже
 - Q04 metering: main.tsx 22 нарушения -> 0; typecheck, build, npm test зелёные; файл добавлен в style-check.json.
+- Q04 crm: main.tsx 26 нарушений -> 0; typecheck, build, npm test зелёные; файл добавлен в style-check.json.
