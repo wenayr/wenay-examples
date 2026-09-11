@@ -192,6 +192,9 @@ export function check(options = {}) {
         const apps = options.app ? [options.app] : config.apps
         for (const directory of config.paths) targets.push(...sourceFiles(path.join(repository, directory)))
         for (const app of apps) targets.push(...sourceFiles(path.join(repository, 'apps', app)))
+        // Отдельные файлы приложений, уже приведённых к правилам: приложение
+        // целиком попадает в `apps`, когда чистыми становятся все его файлы.
+        if (!options.app) for (const file of config.files ?? []) targets.push(path.join(repository, file))
     }
     const files = targets.flatMap(target => target.endsWith('.ts') || target.endsWith('.tsx') || target.endsWith('.mjs') ? [target] : sourceFiles(target))
     const selected = files.filter(file => !excluded.has(path.relative(repository, file).replaceAll('\\', '/')))

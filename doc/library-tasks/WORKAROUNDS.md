@@ -15,6 +15,7 @@
 | Место | Что делает обход |
 | --- | --- |
 | `apps/support/backend/domain.ts`, функция `articleHistory` | Перед заменой родителя копирует элементы истории поверхностно (`{...version}`), отделяя их от прежнего proxy |
+| `apps/monitoring/backend/domain.ts`, команда `monitorSave` | То же для истории наблюдений проверки перед заменой записи монитора |
 
 Проверка после исправления:
 
@@ -22,7 +23,7 @@
 cd apps/support && node --import tsx backend/store-nested-replacement-repro.ts --expect-fixed
 ```
 
-Удаление обхода: вернуть `[...(article.history ?? []), {…}]` без `.map(version => ({...version}))` и прогнать `npm test` в support.
+Удаление обхода: вернуть `[...(article.history ?? []), {…}]` без `.map(version => ({...version}))` и прогнать `npm test` в support и monitoring.
 
 ### AI-POLICY-INVALIDATION
 
