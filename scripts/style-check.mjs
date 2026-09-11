@@ -140,7 +140,8 @@ const rules = [
             // `.catch(` и `.find(` — вызовы метода, а не ключевые слова.
             if (/(?<![.\w])(?:if|for|while|switch|catch)\(/.test(code)) return true
             if (/,[^\s)\]}]/.test(code)) return true
-            return /[^\s=!<>+\-*/%&|^~]=[^\s=]/.test(code) && !/=>/.test(code)
+            // `attr={...}` и `attr="..."` — обычная запись атрибута JSX, а не присваивание.
+            return /[^\s=!<>+\-*/%&|^~]=[^\s={"]/.test(code) && !/=>/.test(code)
         }
     },
     {

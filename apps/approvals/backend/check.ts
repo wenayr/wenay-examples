@@ -1,104 +1,176 @@
 import assert from 'node:assert/strict'
-import {mkdtempSync, realpathSync, rmSync, readFileSync} from 'node:fs'
+import {mkdtempSync, realpathSync, rmSync} from 'node:fs'
 import {tmpdir} from 'node:os'
 import path from 'node:path'
 import {randomBytes} from 'node:crypto'
 import {performance} from 'node:perf_hooks'
 import {createServiceClient, describeService, type ServiceClient} from 'wenay-common2/service/client'
-import type {FormsDefinition} from './runtime'
+import type {ApprovalDefinition} from './runtime'
 import {createProcess} from './process-resource'
+
+type Client = ServiceClient<ApprovalDefinition>
 
 async function waitFor(label: string, check: () => boolean | Promise<boolean>) {
     const deadline = Date.now() + 15000
-    while (!await check()) {assert(Date.now() < deadline, 'Timeout: ' + label); await new Promise(resolve => setTimeout(resolve, 20))}
+    while (!await check()) {
+        assert(Date.now() < deadline, 'Timeout: ' + label)
+        await new Promise(resolve => setTimeout(resolve, 20))
+    }
 }
+
+// Настоящий authority и два обслуживающих узла: проверяем, что заявка проходит
+// полный цикл через разные узлы, переживает отключение узла и рестарт авторитета.
 async function main() {
-    const started = performance.now(), temporary = realpathSync(tmpdir()), directory = mkdtempSync(path.join(temporary, 'forms-network-'))
-    const env = {SERVICE_PORT: '0', SERVICE_HOST: '127.0.0.1', SERVICE_DATA_DIR: path.join(directory, 'authority'),
-        SERVICE_TOKEN_SECRET: randomBytes(32).toString('hex'), SERVICE_NODE_TOKEN: randomBytes(32).toString('hex')}
-    let host = createProcess({script: 'server.ts', env}), url = await host.ready
-    const nodes: ReturnType<typeof createProcess>[] = [], clients: ServiceClient<FormsDefinition>[] = [], resources: {close(): Promise<void>}[] = []
-    async function client(account: string, password = account + '-pass', rng = 0) {
-        const definition = await fetch(url + '/api/client').then(response => response.json()) as ReturnType<typeof describeService<FormsDefinition>>
-        const session = createServiceClient<FormsDefinition>({definition, url, auth: {credentials: {account, password}}, placement: {rng: () => rng}})
+    const started = performance.now()
+    const temporary = realpathSync(tmpdir())
+    const directory = mkdtempSync(path.join(temporary, 'approvals-network-'))
+    const env = {
+        SERVICE_PORT: '0', SERVICE_HOST: '127.0.0.1', SERVICE_DATA_DIR: path.join(directory, 'authority'),
+        SERVICE_TOKEN_SECRET: randomBytes(32).toString('hex'), SERVICE_NODE_TOKEN: randomBytes(32).toString('hex')
+    }
+    let host = createProcess({script: 'server.ts', env})
+    let url = await host.ready
+    const nodes: ReturnType<typeof createProcess>[] = []
+    const clients: Client[] = []
+
+    async function client(account: string, rng = 0) {
+        const response = await fetch(url + '/api/client')
+        const definition = await response.json() as ReturnType<typeof describeService<ApprovalDefinition>>
+        const auth = {credentials: {account, password: account + '-pass'}}
+        const session = createServiceClient<ApprovalDefinition>({definition, url, auth, placement: {rng: () => rng}})
         clients.push(session)
         await session.ready()
-        if (account != 'respondent') await session.views.workspace.ready
+        await session.views.workspace.ready
         return session
     }
-    async function resource<K extends keyof FormsDefinition['resources']>(client: ServiceClient<FormsDefinition>, name: K) {
-        const handle = client.resources.open(name)
-        resources.push(handle)
-        await waitFor(name + ' ready', () => handle.status.state.phase == 'ready')
-        return handle
+    function workspace(session: Client) {
+        return session.views.workspace.store.state
     }
-    async function stop() {
-        for (const resource of resources.splice(0)) await resource.close().catch(() => {})
-        for (const client of clients.splice(0)) client.close()
+    function request(session: Client, id: string) {
+        return workspace(session).requests.find(row => row.id == id)
+    }
+    async function cleanup() {
+        for (const session of clients.splice(0)) session.close()
         for (const node of nodes.splice(0)) await node.control.stop()
         await host.control.stop()
     }
-    const orgId = 'northstar', id = 'form-feedback'
+
+    const orgId = 'northstar'
+    const answers = JSON.stringify({purpose: 'Курс по доступности для команды', amount: 48000, urgent: false})
     try {
-        for (const nodeId of ['forms-a', 'forms-b']) {
-            const node = createProcess({script: 'node.ts', env: {...env, SERVICE_DATA_DIR: path.join(directory, nodeId), SERVICE_NODE_ID: nodeId, SERVICE_UPSTREAM: url}})
+        for (const nodeId of ['approvals-a', 'approvals-b']) {
+            const data = path.join(directory, nodeId)
+            const node = createProcess({script: 'node.ts', env: {...env, SERVICE_DATA_DIR: data, SERVICE_NODE_ID: nodeId, SERVICE_UPSTREAM: url}})
             nodes.push(node)
             await node.ready
         }
-        const owner = await client('owner'), analyst = await client('analyst', 'analyst-pass', 0.999), outsider = await client('outsider')
-        await waitFor('two different serving nodes', () => owner.view.endpoint()?.nodeId != 'leader' && analyst.view.endpoint()?.nodeId != 'leader' && owner.view.endpoint()?.nodeId != analyst.view.endpoint()?.nodeId)
-        const endpoints = [owner.view.endpoint()!.nodeId, analyst.view.endpoint()!.nodeId]
-        const editor = await resource(owner, 'editor')
-        const published = await editor.current()!.remote.control.publish({orgId, id, revision: 1, requestId: 'network-publication'})
-        assert(published.token)
-        const a = await client('respondent', published.token), b = await client('respondent', published.token, 0.999)
-        const formA = await resource(a, 'publicform'), formB = await resource(b, 'publicform')
-        const startedBatch = performance.now(), latencies: number[] = []
-        const outputs = await Promise.all(Array.from({length: 20}, async (_, index) => {
-            const start = performance.now()
-            const result = await (index % 2 ? formA : formB).current()!.remote.control.submit({version: 1, nonce: 'measured-response-' + index,
-                answers: {rating: index % 5 + 1, recommend: false, details: 'PRIVATE_MEASURED_RESPONSE_' + index}})
-            latencies.push(performance.now() - start)
-            return result
-        }))
+        const author = await client('requester')
+        const reviewer = await client('reviewer', 0.999)
+        const outsider = await client('outsider')
+        await waitFor('оба клиента обслуживаются узлами, а не авторитетом', function placed() {
+            const first = author.view.endpoint()?.nodeId
+            const second = reviewer.view.endpoint()?.nodeId
+            const placedFirst = !!first && first != 'leader'
+            const placedSecond = !!second && second != 'leader'
+            return placedFirst && placedSecond
+        })
+        const endpoints = [author.view.endpoint()!.nodeId, reviewer.view.endpoint()!.nodeId]
+        assert.notEqual(endpoints[0], endpoints[1], 'клиенты попали на разные узлы')
+
+        // Полный цикл через два узла: автор пишет на одном, проверяющий решает на другом.
+        const draft = {orgId, id: '', revision: 0, key: 'net-save-key', title: 'Курс по доступности', answersJson: answers}
+        const created = await author.commands.requestSave('net-save', draft)
+        await waitFor('заявка видна автору', () => !!request(author, created.id))
+        await author.commands.requestSubmit('net-submit', {orgId, id: created.id, revision: request(author, created.id)!.revision, key: 'net-submit-key'})
+        await waitFor('отправленная заявка дошла до проверяющего', () => request(reviewer, created.id)?.status == 'pending')
+        assert.equal(request(reviewer, created.id)!.versions.length, 1)
+
+        // Посторонняя организация не получает заявку ни через один узел.
+        assert.equal(workspace(outsider).requests.length, 0, 'чужая организация не видит заявок')
+        const stolen = {orgId, id: created.id, revision: 1, key: 'stolen-decide-key', version: 1, decision: 'approved' as const, body: ''}
+        await assert.rejects(outsider.commands.requestDecide('stolen-decide', stolen), /доступа|forbidden/)
+
+        const decide = {orgId, id: created.id, revision: request(reviewer, created.id)!.revision, version: 1, key: 'net-changes-key'}
+        await reviewer.commands.requestDecide('net-changes', {...decide, decision: 'changes', body: 'Добавьте программу курса'})
+        await waitFor('возврат дошёл до автора', () => request(author, created.id)?.status == 'changes')
+
+        // Повтор той же команды с тем же ключом не создаёт вторую версию.
+        const revision = request(author, created.id)!.revision
+        const first = await author.commands.requestSubmit('net-resubmit-a', {orgId, id: created.id, revision, key: 'net-resubmit-key'})
+        const again = await author.commands.requestSubmit('net-resubmit-b', {orgId, id: created.id, revision, key: 'net-resubmit-key'})
+        assert.deepEqual(again, first, 'повтор ключа намерения возвращает прежний результат')
+        await waitFor('вторая версия дошла до проверяющего', () => request(reviewer, created.id)?.versions.length == 2)
+
+        // Небольшой замер на локальном стенде, не производительный benchmark.
+        const startedBatch = performance.now()
+        const latencies: number[] = []
+        for (let index = 0; index < 20; index++) {
+            const begin = performance.now()
+            const side = index % 2 ? reviewer : author
+            const account = index % 2 ? 'reviewer' : 'requester'
+            await side.commands.requestSave('measured-' + account + '-' + index, {
+                orgId, id: '', revision: 0, key: 'measured-key-' + account + '-' + index,
+                title: 'Заявка ' + index, answersJson: answers
+            })
+            latencies.push(performance.now() - begin)
+        }
         const elapsed = performance.now() - startedBatch
-        latencies.sort((a, b) => a - b)
-        await waitFor('both aggregate replicas', () => owner.views.workspace.store.state.aggregates[0]?.count == 20 && analyst.views.workspace.store.state.aggregates[0]?.count == 20)
-        assert.equal(owner.views.workspace.store.state.aggregates[0].fields.find(field => field.id == 'rating')!.sum, 60)
-        assert.equal(outsider.views.workspace.store.state.aggregates.length, 0)
-        assert.equal(JSON.stringify(analyst.views.workspace.store.snapshot()).includes('PRIVATE_MEASURED_RESPONSE'), false)
-        const duplicate = await formB.current()!.remote.control.submit({version: 1, nonce: 'measured-response-0', answers: {rating: 1, recommend: false, details: 'PRIVATE_MEASURED_RESPONSE_0'}})
-        assert.equal(duplicate.duplicate, true)
-        assert.equal(new Set(outputs.map(value => value.id)).size, 20)
-        const before = owner.view.endpoint()!, mirror = owner.views.workspace.store
-        await nodes[before.nodeId == 'forms-a' ? 0 : 1].control.stop(true)
-        await waitFor('serving node failover', () => !!owner.view.endpoint() && owner.view.endpoint()!.nodeId != before.nodeId)
-        assert.equal(owner.views.workspace.store, mirror)
-        await waitFor('resource remains available', () => formA.status.state.phase == 'ready')
-        await formA.current()!.remote.control.submit({version: 1, nonce: 'after-serving-failure', answers: {rating: 5, recommend: true}})
-        await waitFor('accepted after failover', () => owner.views.workspace.store.state.aggregates[0]?.count == 21)
-        const answers = await resource(analyst, 'answers')
-        assert.equal((await answers.current()!.remote.control.list({orgId, formId: id, version: 0, offset: 0, limit: 100})).total, 21)
-        await owner.commands.answerDelete('network-delete', {orgId, formId: id, id: outputs[0].id})
-        await waitFor('erasure compacted', () => !readFileSync(path.join(env.SERVICE_DATA_DIR, 'forms.jsonl'), 'utf8').includes('PRIVATE_MEASURED_RESPONSE_0'))
-        const retained = answers.current()!.remote
-        await owner.commands.memberRole('revoke-live-analyst', {orgId, revision: 1, account: 'analyst', role: 'none'})
-        await assert.rejects(retained.control.list({orgId, formId: id, version: 0, offset: 0, limit: 100}))
-        await stop()
-        host = createProcess({script: 'server.ts', env}); url = await host.ready
-        const restored = await client('owner'), restoredRespondent = await client('respondent', published.token)
-        assert.equal(restored.views.workspace.store.state.aggregates[0].count, 20)
-        assert.equal(restored.views.workspace.store.state.aggregates[0].fields.find(field => field.id == 'rating')!.sum, 64)
-        const restoredPublic = await resource(restoredRespondent, 'publicform')
-        assert.equal((await restoredPublic.current()!.remote.control.submit({version: 1, nonce: 'measured-response-0', answers: {rating: 1, recommend: false, details: 'PRIVATE_MEASURED_RESPONSE_0'}})).deleted, true)
-        const restoredEditor = await resource(restored, 'editor')
-        assert.equal((await restoredEditor.current()!.remote.control.publish({orgId, id, revision: 1, requestId: 'network-publication'})).token, null)
-        console.log(JSON.stringify({check: 'forms measured local batch', responses: 20, clients: 2, servingNodes: endpoints, elapsedMs: Math.round(elapsed), responsesPerSecond: Number((20000 / elapsed).toFixed(1)), p50Ms: Math.round(latencies[9]), p95Ms: Math.round(latencies[18]), scope: 'small local acceptance sample, not a production benchmark'}))
-        console.log('PASS forms network: authority + 2 serving nodes, small concurrent response stream, live aggregate convergence/privacy, node failover, staff revoke, durable restart and compacted deletion (' + Math.round(performance.now() - started) + ' ms)')
+        const sorted = [...latencies].sort((a, b) => a - b)
+        const measurement = {
+            check: 'approvals measured local batch', requests: 20, clients: 2, servingNodes: endpoints,
+            elapsedMs: Math.round(elapsed), requestsPerSecond: Math.round(20000 / elapsed * 10) / 10,
+            p50Ms: Math.round(sorted[9]), p95Ms: Math.round(sorted[18]),
+            scope: 'small local acceptance sample, not a production benchmark'
+        }
+
+        // Отключение узла: клиент продолжает работать через оставшийся.
+        const lost = author.view.endpoint()!.nodeId
+        await nodes[endpoints[0] == 'approvals-a' ? 0 : 1].control.stop(true)
+        await waitFor('автор переключился на другой узел', () => {
+            const now = author.view.endpoint()?.nodeId
+            return !!now && now != lost
+        })
+        const retry = {orgId, id: '', revision: 0, key: 'after-failure-key', title: 'После отказа узла', answersJson: answers}
+        const afterFailure = await author.commands.requestSave('after-failure', retry)
+        await waitFor('заявка после отказа узла видна', () => !!request(author, afterFailure.id))
+
+        // Отзыв роли закрывает уже открытую сессию проверяющего.
+        const owner = await client('owner')
+        const team = () => workspace(owner).organizations.find(org => org.id == orgId)!
+        await owner.commands.memberRole('revoke-reviewer', {orgId, revision: team().revision, account: 'reviewer', role: 'none'})
+        await waitFor('проверяющий потерял доступ к организации', async function revoked() {
+            const attempt = {orgId, id: created.id, revision: 1, key: 'revoked-decide-key', version: 2, decision: 'approved' as const, body: ''}
+            try {
+                await reviewer.commands.requestDecide('revoked-decide-' + Date.now(), attempt)
+                return false
+            } catch {
+                return true
+            }
+        })
+
+        // Рестарт авторитета: заявки и история сохраняются.
+        const before = workspace(author).requests.length
+        await cleanup()
+        host = createProcess({script: 'server.ts', env})
+        url = await host.ready
+        const restored = await client('requester')
+        await waitFor('состояние восстановлено после рестарта', () => workspace(restored).requests.length == before)
+        const restoredRow = request(restored, created.id)!
+        assert.equal(restoredRow.versions.length, 2, 'обе версии пережили рестарт')
+        assert.deepEqual(restoredRow.history.map(entry => entry.kind), ['submitted', 'changes', 'submitted'])
+
+        console.log(JSON.stringify(measurement))
+        console.log('PASS approvals network: authority и два обслуживающих узла, полный цикл через разные узлы,')
+        console.log('  изоляция чужой организации, повтор ключа намерения, отказ узла, отзыв роли на открытой сессии,')
+        console.log('  восстановление заявок и истории после рестарта (' + Math.round(performance.now() - started) + ' ms)')
     } finally {
-        await stop()
-        assert(path.dirname(path.resolve(directory)) == temporary && path.basename(directory).startsWith('forms-network-'))
+        await cleanup().catch(() => {})
+        assert(path.dirname(path.resolve(directory)) == temporary && path.basename(directory).startsWith('approvals-network-'))
         rmSync(directory, {recursive: true, force: true})
     }
 }
-main().catch(function failed(error) {console.error(error); process.exitCode = 1})
+
+main().catch(function failed(error) {
+    console.error(error)
+    process.exitCode = 1
+})
