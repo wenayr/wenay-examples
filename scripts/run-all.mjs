@@ -13,10 +13,6 @@ export const APPS = [
 ]
 export const SCRIPTS = ['typecheck', 'test', 'build']
 
-// Витрина пока не переведена на общий скелет: у неё нет package.json.
-// Единственная доступная проверка — синтаксис сервера. Снимается задачей D06.
-const STATIC_APPS = {catalog: {typecheck: ['node', ['--check', 'apps/catalog/server.mjs']]}}
-
 const externalTools = {
     docker: ['docker', ['info']],
     python3: ['python3', ['--version']],
@@ -74,15 +70,12 @@ function writeLog(app, script, code, seconds, output) {
 
 async function execute(app, script) {
     const started = Date.now()
-    const statik = STATIC_APPS[app]?.[script]
     const declared = manifest(app)?.scripts?.[script]
-    if (!statik && !declared) return {status: 'нет', seconds: 0, log: ''}
+    if (!declared) return {status: 'нет', seconds: 0, log: ''}
     const blocked = await missingTool(app)
     if (blocked) return {status: 'пропущено: нет ' + blocked, seconds: 0, log: ''}
-    const cwd = statik ? repository : path.join(repository, 'apps', app)
-    const command = statik ? statik[0] : 'npm'
-    const args = statik ? statik[1] : ['run', script]
-    const result = await run(command, args, {cwd})
+    const cwd = path.join(repository, 'apps', app)
+    const result = await run('npm', ['run', script], {cwd})
     const seconds = (Date.now() - started) / 1000
     const log = writeLog(app, script, result.code, seconds, result.output)
     return {status: result.code == 0 ? 'ok' : 'fail(' + result.code + ')', seconds, log}
