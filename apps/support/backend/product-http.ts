@@ -9,10 +9,20 @@ import {authenticatedArgs} from './http-auth'
 export const SEARCH_INPUT = {orgId: 'string', query: 'string', limit: 'number', requestId: 'string'} as const
 const validate = buildInputValidate(SEARCH_INPUT)
 
-export function createSearchProductHttp(deps: {app: Express, account: (token: string) => string, search: ReturnType<typeof createArticleIndex>['search'], usage?: UsageGate}) {
+type SearchHttpDeps = {
+    app: Express,
+    account: (token: string) => string,
+    search: ReturnType<typeof createArticleIndex>['search'],
+    usage?: UsageGate
+}
+
+export function createSearchProductHttp(deps: SearchHttpDeps) {
     const object = {search: {async published(account: string, input: InferInput<typeof SEARCH_INPUT>) {
         validate(input)
-        if (!/^[\w.-]{1,100}$/.test(input.requestId) || !input.query.trim() || input.query.length > 2000) throw new Error('Укажите запрос до 2000 символов и уникальный requestId')
+        const asked = input.query.trim() && input.query.length <= 2000
+        if (!/^[\w.-]{1,100}$/.test(input.requestId) || !asked) {
+            throw new Error('Укажите запрос до 2000 символов и уникальный requestId')
+        }
         // The first read validates current membership before requesting any quota.
         deps.search(account, input.orgId, input.query, input.limit)
         async function execute() {return deps.search(account, input.orgId, input.query, input.limit)}
@@ -26,6 +36,9 @@ export function createSearchProductHttp(deps: {app: Express, account: (token: st
     const spec = createHttpFacadeOpenApi({object, methods: ['post'], basePath, limits, bearerAuth: true,
         info: {title: 'Published knowledge search', version: '1.0.0', description: 'Only currently published sources. Authentication and organization access use the support authority.'},
         argSchemas: {'/api/product/search/published': [inputJsonSchema(SEARCH_INPUT)]}})
-    deps.app.get('/api/product/openapi.json', function openApi(_request, response) {response.setHeader('Cache-Control', 'no-store'); response.json(spec.document())})
+    deps.app.get('/api/product/openapi.json', function openApi(_request, response) {
+        response.setHeader('Cache-Control', 'no-store')
+        response.json(spec.document())
+    })
     return {facade: object, routes: http.routes, openApi: spec.document}
 }

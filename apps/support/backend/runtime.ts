@@ -11,7 +11,16 @@ import {createNotifications, withNotification} from './notifications'
 import {createContentKnowledge} from './content-resource'
 import {createConversationHistory} from './conversation-resource'
 
-export function createSupportRuntime(deps: {directory?: string, provider?: DraftProvider, demo?: boolean, timeoutMs?: number, usage?: UsageGate, content?: Parameters<typeof createContentKnowledge>[0]} = {}) {
+type RuntimeOptions = {
+    directory?: string,
+    provider?: DraftProvider,
+    demo?: boolean,
+    timeoutMs?: number,
+    usage?: UsageGate,
+    content?: Parameters<typeof createContentKnowledge>[0]
+}
+
+export function createSupportRuntime(deps: RuntimeOptions = {}) {
     const assistant = createSupportAssistant(deps)
     const files = createSupportFiles({directory: deps.directory ? path.join(deps.directory, 'files') : undefined})
     const organizer = createTenantOrganizer()
@@ -21,7 +30,10 @@ export function createSupportRuntime(deps: {directory?: string, provider?: Draft
     const identityProvision = schemaCommand({issuer: 'string', subject: 'string', name: 'string'}, {allow: ['system'],
         apply(ctx: ServiceCommandCtx<SupportState>, input) {
             if (ctx.account != SYSTEM_ACCOUNT) throw new Error('Только сервер может подтвердить внешнюю личность')
-            if (!input.issuer || input.issuer.length > 2000 || !input.subject || input.subject.length > 255 || !input.name.trim() || input.name.length > 160) throw new Error('Некорректная внешняя личность')
+            const issued = input.issuer && input.issuer.length <= 2000
+            const subject = input.subject && input.subject.length <= 255
+            const named = input.name.trim() && input.name.length <= 160
+            if (!issued || !subject || !named) throw new Error('Некорректная внешняя личность')
             const account = 'oidc-' + createHash('sha256').update(JSON.stringify([input.issuer, input.subject])).digest('hex')
             if (!Object.hasOwn(ctx.state.accounts, account)) {
                 if (Object.keys(ctx.state.accounts).length >= 1000) throw new Error('Достигнут предел аккаунтов этого экземпляра')
@@ -39,14 +51,26 @@ export function createSupportRuntime(deps: {directory?: string, provider?: Draft
         ticketReply: withNotification(supportDefinition.commands.ticketReply, 'Новое сообщение'),
         ticketAssign: withNotification(supportDefinition.commands.ticketAssign, 'Назначен исполнитель'),
         ticketStatus: withNotification(supportDefinition.commands.ticketStatus, 'Статус обращения изменён'), identityProvision},
-        views: {...base.views, ...organizer.views, ...notifications.views}, resources: {assistant: assistant.resource, files: files.resource, content: content.resource, conversation: conversation.resource}},
+        views: {...base.views, ...organizer.views, ...notifications.views},
+        resources: {
+            assistant: assistant.resource,
+            files: files.resource,
+            content: content.resource,
+            conversation: conversation.resource
+        }
+    },
         search: assistant.search,
         mount(store: Parameters<typeof assistant.mount>[0]) {
             const closeAssistant = assistant.mount(store)
             const closeFiles = files.mount(store)
             const closeContent = content.mount(store)
             const closeConversation = conversation.mount(store)
-            return function close() {closeConversation(); closeContent(); closeFiles(); closeAssistant()}
+            return function close() {
+                closeConversation()
+                closeContent()
+                closeFiles()
+                closeAssistant()
+            }
         }}
 }
 export type SupportDefinition = ReturnType<typeof createSupportRuntime>['definition']

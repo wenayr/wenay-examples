@@ -8,6 +8,11 @@ import type {ServiceResourceContext} from 'wenay-common2/service'
 import type {SupportState} from './model'
 
 export type Attachment = {id: string, ticketId: string, orgId: string, name: string, size: number, author: string, at: number, blobId: string}
+function acceptedName(name: string) {
+    if (typeof name != 'string' || !name.trim() || name.length > 160) return false
+    return !/[\x00-\x1f]/.test(name)
+}
+
 export function createSupportFiles(deps: {directory?: string}) {
     let state: Store<SupportState> | null = null
     if (deps.directory) mkdirSync(deps.directory, {recursive: true})
@@ -18,7 +23,8 @@ export function createSupportFiles(deps: {directory?: string}) {
     function allowed(account: string, orgId: string, ticketId: string) {
         const role = state?.state.organizations[orgId]?.members[account]
         const ticket = state?.state.tickets[ticketId]
-        return !!role && !!ticket && ticket.orgId == orgId && (role != 'customer' || ticket.customer == account)
+        if (!role || !ticket || ticket.orgId != orgId) return false
+        return role != 'customer' || ticket.customer == account
     }
     function requireTicket(account: string, orgId: string, ticketId: string) {
         if (!allowed(account, orgId, ticketId)) throw new Error('Нет доступа к вложениям обращения')
@@ -28,7 +34,11 @@ export function createSupportFiles(deps: {directory?: string}) {
         authorize({context, operation, id}) {
             context.signal?.throwIfAborted()
             requireTicket(context.account, context.orgId, context.ticketId)
-            if (operation != 'upload' && !Object.values(attachments).some(item => item.blobId == id && item.orgId == context.orgId && item.ticketId == context.ticketId)) throw new Error('Файл не принадлежит обращению')
+            const linked = Object.values(attachments).some(function belongs(item) {
+                if (item.blobId != id || item.orgId != context.orgId) return false
+                return item.ticketId == context.ticketId
+            })
+            if (operation != 'upload' && !linked) throw new Error('Файл не принадлежит обращению')
         }
     }) : null
     function refresh() {
@@ -46,26 +56,55 @@ export function createSupportFiles(deps: {directory?: string}) {
         connections.add(connection)
         refresh()
         const replay = exposeStoreReplay(connection.store, {history: 2})
-        function active() {ctx.signal.throwIfAborted(); if (!state || !blobs) throw new Error('Хранилище не подключено')}
+        function active() {
+            ctx.signal.throwIfAborted()
+            if (!state || !blobs) throw new Error('Хранилище не подключено')
+        }
         async function upload(input: {orgId: string, ticketId: string, name: string, bytes: Uint8Array}) {
             active()
             requireTicket(connection.account, input.orgId, input.ticketId)
-            if (typeof input.name != 'string' || !input.name.trim() || input.name.length > 160 || /[\x00-\x1f]/.test(input.name)) throw new Error('Укажите имя файла до 160 символов')
-            if (!(input.bytes instanceof Uint8Array) || !input.bytes.length || input.bytes.length > 512 * 1024) throw new Error('Файл должен быть от 1 байта до 512 КиБ')
+            if (!acceptedName(input.name)) throw new Error('Укажите имя файла до 160 символов')
+            const sized = input.bytes instanceof Uint8Array && input.bytes.length
+            if (!sized || input.bytes.length > 512 * 1024) {
+                throw new Error('Файл должен быть от 1 байта до 512 КиБ')
+            }
             const hash = createHash('sha256').update(input.bytes).digest('hex')
             const id = createHash('sha256').update(JSON.stringify([input.orgId, input.ticketId, hash])).digest('hex')
             if (Object.hasOwn(attachments, id)) return {...attachments[id]}
             // Reserve metadata capacity before IO; concurrent uploads cannot oversubscribe this bounded profile.
-            if (Object.keys(attachments).length + uploading.size >= 100 || Object.values(attachments).filter(item => item.ticketId == input.ticketId).length + [...uploading.values()].filter(ticketId => ticketId == input.ticketId).length >= 10) throw new Error('Достигнут предел: 10 файлов на обращение, 100 на экземпляр')
+            const total = Object.keys(attachments).length + uploading.size
+            const stored = Object.values(attachments).filter(item => item.ticketId == input.ticketId)
+            const started = [...uploading.values()].filter(ticketId => ticketId == input.ticketId)
+            if (total >= 100 || stored.length + started.length >= 10) {
+                throw new Error('Достигнут предел: 10 файлов на обращение, 100 на экземпляр')
+            }
             if (uploading.has(id)) throw new Error('Этот файл уже загружается. Дождитесь результата')
             uploading.set(id, input.ticketId)
             try {
-                const stored = await blobs!.control.upload({account: connection.account, orgId: input.orgId, ticketId: input.ticketId, signal: ctx.signal}, input.bytes)
+                const context = {
+                    account: connection.account,
+                    orgId: input.orgId,
+                    ticketId: input.ticketId,
+                    signal: ctx.signal
+                }
+                const saved = await blobs!.control.upload(context, input.bytes)
                 active()
                 requireTicket(connection.account, input.orgId, input.ticketId)
-                const attachment: Attachment = {id, orgId: input.orgId, ticketId: input.ticketId, name: path.basename(input.name), size: stored.size, author: connection.account, at: Date.now(), blobId: stored.id}
+                const attachment: Attachment = {
+                    id,
+                    orgId: input.orgId,
+                    ticketId: input.ticketId,
+                    name: path.basename(input.name),
+                    size: saved.size,
+                    author: connection.account,
+                    at: Date.now(),
+                    blobId: saved.id
+                }
                 attachments[id] = attachment
-                try {save()} catch (error) {delete attachments[id]; throw error}
+                try {save()} catch (error) {
+                    delete attachments[id]
+                    throw error
+                }
                 return {...attachment}
             } finally {uploading.delete(id)}
         }
@@ -79,13 +118,21 @@ export function createSupportFiles(deps: {directory?: string}) {
             requireTicket(connection.account, item.orgId, item.ticketId)
             return {name: item.name, bytes: new Uint8Array(bytes)}
         }
-        return {facade: {view: replay.api.replay, control: {upload, download}}, close() {connections.delete(connection); replay.close()}}
+        function close() {
+            connections.delete(connection)
+            replay.close()
+        }
+        return {facade: {view: replay.api.replay, control: {upload, download}}, close}
     }}
     const uploading = new Map<string, string>()
     function mount(store: Store<SupportState>) {
         state = store
         const off = store.on(refresh)
-        return function close() {off(); connections.clear(); state = null}
+        return function close() {
+            off()
+            connections.clear()
+            state = null
+        }
     }
     return {resource, mount}
 }

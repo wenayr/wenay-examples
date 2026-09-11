@@ -24,4 +24,7 @@ async function main() {
         console.log('PASS external identity: system-only provisioning, issuer/subject identity, no demo or empty-password access, no automatic memberships, self onboarding')
     } finally {leader.control.close()}
 }
-main().catch(function failed(error) {console.error(error); process.exitCode = 1})
+main().catch(function failed(error) {
+    console.error(error)
+    process.exitCode = 1
+})

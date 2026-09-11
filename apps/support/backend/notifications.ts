@@ -3,7 +3,10 @@ import {schemaCommand, type ServiceCommandCtx, type tServiceCommand, type tServi
 import {authorizeOrganization} from './domain'
 import type {SupportState} from './model'
 
-export type Notice = {id: string, account: string, orgId: string, ticketId: string, subject: string, action: string, at: number, read: boolean, inApp: boolean, email: boolean}
+export type Notice = {
+    id: string, account: string, orgId: string, ticketId: string, subject: string,
+    action: string, at: number, read: boolean, inApp: boolean, email: boolean
+}
 export type NoticePreferences = {account: string, orgId: string, inApp: boolean, email: boolean}
 export type NotificationState = {notices?: Record<string, Notice>, notificationPreferences?: Record<string, NoticePreferences>}
 const key = (orgId: string, account: string) => createHash('sha256').update(JSON.stringify([orgId, account])).digest('hex')
@@ -21,17 +24,32 @@ export function withNotification<C extends tServiceCommand<SupportState>>(comman
     return {...command, apply(ctx: ServiceCommandCtx<SupportState>, input: Parameters<C['apply']>[1]): ReturnType<C['apply']> {
         const result = command.apply(ctx, input) as ReturnType<C['apply']>
         const resultId = (result as {id?: unknown})?.id
-        const ticketId = typeof input.id == 'string' ? input.id : typeof resultId == 'string' ? resultId : ''
+        let ticketId = ''
+        if (typeof input.id == 'string') ticketId = input.id
+        else if (typeof resultId == 'string') ticketId = resultId
         const ticket = ticketId && ctx.state.tickets[ticketId]
         if (!ticket) return result
         const members = ctx.state.organizations[ticket.orgId].members
         for (const [account, role] of Object.entries(members)) {
-            if (account == ctx.account || role == 'customer' && (account != ticket.customer || input.private == true)) continue
+            // Клиент получает уведомление только по своему обращению и не о приватных заметках.
+            const foreign = account != ticket.customer || input.private == true
+            if (account == ctx.account || role == 'customer' && foreign) continue
             const prefs = ctx.state.notificationPreferences?.[key(ticket.orgId, account)] ?? {inApp: true, email: false}
             if (!prefs.inApp && !prefs.email) continue
             const id = createHash('sha256').update(JSON.stringify([ctx.account, ctx.requestId, action, account])).digest('hex')
             ctx.state.notices ??= {}
-            ctx.state.notices[id] = {id, account, orgId: ticket.orgId, ticketId: ticket.id, subject: ticket.subject, action, at: Date.now(), read: false, inApp: prefs.inApp, email: prefs.email}
+            ctx.state.notices[id] = {
+                id,
+                account,
+                orgId: ticket.orgId,
+                ticketId: ticket.id,
+                subject: ticket.subject,
+                action,
+                at: Date.now(),
+                read: false,
+                inApp: prefs.inApp,
+                email: prefs.email
+            }
             const previous = Object.values(ctx.state.notices).filter(item => item.account == account && item.orgId == ticket.orgId).sort((a, b) => b.at - a.at)
             for (const old of previous.slice(100)) delete ctx.state.notices[old.id]
         }
@@ -43,7 +61,11 @@ export function withNotification<C extends tServiceCommand<SupportState>>(comman
 
 export function createNotifications() {
     return {commands: {
-        notificationPreferences: schemaCommand({orgId: 'string', inApp: 'boolean', email: 'boolean'}, {allow: ['signedIn'], apply(ctx: ServiceCommandCtx<SupportState>, input) {
+        notificationPreferences: schemaCommand({
+            orgId: 'string', inApp: 'boolean', email: 'boolean'
+        }, {
+            allow: ['signedIn'],
+            apply(ctx: ServiceCommandCtx<SupportState>, input) {
             authorizeOrganization(ctx.state, ctx.account, input.orgId)
             ctx.state.notificationPreferences ??= {}
             ctx.state.notificationPreferences[key(input.orgId, ctx.account)] = {account: ctx.account, ...input}

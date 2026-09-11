@@ -8,7 +8,13 @@ async function main() {
     const leader = createServiceLeader({definition, selfUrl: () => 'http://localhost'})
     const close = index.mount(leader.line.control.store), owner = leader.corridor.fragment('owner')
     try {
-        const article = await owner.articleSave('index-new', {orgId: 'northstar', id: '', revision: 0, title: 'Гарантия', body: 'Настройка гарантийного обслуживания'})
+        const article = await owner.articleSave('index-new', {
+            orgId: 'northstar',
+            id: '',
+            revision: 0,
+            title: 'Гарантия',
+            body: 'Настройка гарантийного обслуживания'
+        })
         assert.equal(index.search('customer', 'northstar', 'гарантийного').length, 0)
         const published = await owner.articlePublish('index-publish', {orgId: 'northstar', ...article, status: 'published'})
         assert.equal(index.search('customer', 'northstar', 'гарантийного')[0].revision, published.revision)
@@ -24,6 +30,10 @@ async function main() {
         assert.equal(restored.search('owner', 'northstar', 'возврат')[0].id, article.id, 'rebuild from authoritative state')
         closeRestored()
         console.log('PASS article index: draft excluded, version-bound refresh, immediate withdrawal, tenant isolation, current ACL and rebuild without separate durable state')
-    } finally {close(); leader.control.close()}
+    } finally {close()
+    leader.control.close()}
 }
-main().catch(function failed(error) {console.error(error); process.exitCode = 1})
+main().catch(function failed(error) {
+    console.error(error)
+    process.exitCode = 1
+})

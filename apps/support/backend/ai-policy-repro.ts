@@ -67,4 +67,7 @@ async function main() {
     }
 }
 
-void main().catch(function failed(error) {console.error(error); process.exitCode = 1})
+void main().catch(function failed(error) {
+    console.error(error)
+    process.exitCode = 1
+})

@@ -32,11 +32,19 @@ export type SupportState = NotificationState & {
 
 export const DEMO_LOGINS = {owner: 'owner-pass', lead: 'lead-pass', agent: 'agent-pass', customer: 'customer-pass', outsider: 'outsider-pass'} as const
 
+const DEMO_NAMES: Record<string, string> = {
+    owner: 'Алексей · владелец',
+    lead: 'Мария · руководитель',
+    agent: 'Даша · поддержка',
+    customer: 'Илья · клиент',
+    outsider: 'Никита · другая команда'
+}
+
 export function createSupportState(): SupportState {
     const at = Date.UTC(2026, 8, 10, 9)
     return {
         accounts: Object.fromEntries(Object.keys(DEMO_LOGINS).map(account => [account, {
-            account, name: ({owner: 'Алексей · владелец', lead: 'Мария · руководитель', agent: 'Даша · поддержка', customer: 'Илья · клиент', outsider: 'Никита · другая команда'} as Record<string, string>)[account],
+            account, name: DEMO_NAMES[account],
             secret: hashSecret(account + '-pass')
         }])),
         organizations: {
@@ -64,10 +72,46 @@ export function createSupportState(): SupportState {
             }
         },
         articles: {
-            'article-invite': {id: 'article-invite', orgId: 'northstar', title: 'Как пригласить коллегу', body: 'Откройте раздел «Команда». Владелец или руководитель создаёт одноразовое приглашение с ролью и сроком действия. Передайте код коллеге. Коллега входит в свой аккаунт и принимает приглашение.', status: 'published', revision: 1, updatedAt: at},
-            'article-export': {id: 'article-export', orgId: 'northstar', title: 'Экспорт данных', body: 'При незавершённом экспорте сообщите поддержке период и название отчёта. Не отправляйте пароли. Специалист проверит состояние операции до повторного запуска.', status: 'published', revision: 1, updatedAt: at},
-            'article-internal': {id: 'article-internal', orgId: 'northstar', title: 'Внутренняя инструкция', body: 'Черновик для сотрудников: порядок проверки доступа перед ответом клиенту.', status: 'draft', revision: 1, updatedAt: at},
-            'article-harbor': {id: 'article-harbor', orgId: 'harbor', title: 'Harbor onboarding', body: 'Внутренние данные другой организации.', status: 'published', revision: 1, updatedAt: at}
+            'article-invite': {
+                id: 'article-invite',
+                orgId: 'northstar',
+                title: 'Как пригласить коллегу',
+                body: 'Откройте раздел «Команда». Владелец или руководитель создаёт одноразовое'
+                    + ' приглашение с ролью и сроком действия. Передайте код коллеге.'
+                    + ' Коллега входит в свой аккаунт и принимает приглашение.',
+                status: 'published',
+                revision: 1,
+                updatedAt: at
+            },
+            'article-export': {
+                id: 'article-export',
+                orgId: 'northstar',
+                title: 'Экспорт данных',
+                body: 'При незавершённом экспорте сообщите поддержке период и название отчёта.'
+                    + ' Не отправляйте пароли.'
+                    + ' Специалист проверит состояние операции до повторного запуска.',
+                status: 'published',
+                revision: 1,
+                updatedAt: at
+            },
+            'article-internal': {
+                id: 'article-internal',
+                orgId: 'northstar',
+                title: 'Внутренняя инструкция',
+                body: 'Черновик для сотрудников: порядок проверки доступа перед ответом клиенту.',
+                status: 'draft',
+                revision: 1,
+                updatedAt: at
+            },
+            'article-harbor': {
+                id: 'article-harbor',
+                orgId: 'harbor',
+                title: 'Harbor onboarding',
+                body: 'Внутренние данные другой организации.',
+                status: 'published',
+                revision: 1,
+                updatedAt: at
+            }
         },
         invites: {}, audit: []
     }

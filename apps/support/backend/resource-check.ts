@@ -54,7 +54,12 @@ async function main() {
         // даёт необработанное исключение.
         // Удалить после исправления, см. doc/library-tasks/WORKAROUNDS.md
         const store = createStore(initial())
-        const sync = syncStoreReplay(store, remote, {onError(error) {replayErrors.push(error); store.replace(initial())}})
+        const sync = syncStoreReplay(store, remote, {
+            onError(error) {
+                replayErrors.push(error)
+                store.replace(initial())
+            }
+        })
         mirrors.push(sync)
         return {store, ready: sync.ready, close: sync}
     }
@@ -90,9 +95,15 @@ async function main() {
         const customer = await files('customer')
         const agent = await files('agent')
         const outsider = await files('outsider')
-        const payload = {orgId: 'northstar', ticketId: 'ticket-welcome', name: 'evidence.txt', bytes: new TextEncoder().encode('only the ticket participants may download this')}
+        const payload = {
+            orgId: 'northstar',
+            ticketId: 'ticket-welcome',
+            name: 'evidence.txt',
+            bytes: new TextEncoder().encode('only the ticket participants may download this')
+        }
         const uploaded = await customer.remote.control.upload(payload)
-        assert.equal((await customer.remote.control.upload({...payload, name: 'another-name.txt'})).id, uploaded.id, 'Same ticket/content upload is deduplicated')
+        const renamed = await customer.remote.control.upload({...payload, name: 'another-name.txt'})
+        assert.equal(renamed.id, uploaded.id, 'Same ticket/content upload is deduplicated')
         await waitFor('attachment reaches another account', () => agent.view.store.state.files.some(item => item.id == uploaded.id))
         assert.equal(customer.view.store.state.files.filter(item => item.id == uploaded.id).length, 1)
         assert.equal(outsider.view.store.state.files.length, 0)
@@ -109,7 +120,10 @@ async function main() {
 
         const oldGeneration = agent.resource.status.state.generation
         await owner.commands.memberRole('files-revoke', {orgId: 'northstar', account: 'agent', role: 'revoked'})
-        await waitFor('revoked resource generation replaced', () => agent.resource.status.state.generation > oldGeneration && agent.resource.status.state.phase == 'ready')
+        await waitFor('revoked resource generation replaced', function reopened() {
+            const status = agent.resource.status.state
+            return status.generation > oldGeneration && status.phase == 'ready'
+        })
         await assert.rejects(agent.remote.control.download(uploaded.id), 'Retained generation cannot read files')
         const deniedFiles = await files('agent')
         assert.equal(deniedFiles.view.store.state.files.length, 0)
@@ -121,7 +135,12 @@ async function main() {
         assert.deepEqual(Array.from((await restoredFiles.remote.control.download(uploaded.id)).bytes), Array.from(payload.bytes))
 
         const ai = await assistant('agent')
-        const request = {kind: 'answer', resourceIds: ['ticket-welcome'], input: {orgId: 'northstar', ticketId: 'ticket-welcome', revision: host.leader.line.control.store.state.tickets['ticket-welcome'].revision}}
+        const revision = host.leader.line.control.store.state.tickets['ticket-welcome'].revision
+        const request = {
+            kind: 'answer',
+            resourceIds: ['ticket-welcome'],
+            input: {orgId: 'northstar', ticketId: 'ticket-welcome', revision}
+        }
         const stale = await ai.remote.ai.createRun({...request, requestId: 'changed-source'})
         await waitFor('first provider waiting', () => pending.length == 1)
         assert(pending[0].sources.some(source => source.id == 'article-invite'))
@@ -182,4 +201,7 @@ async function main() {
     }
 }
 
-void main().catch(function failed(error) {console.error(error); process.exitCode = 1})
+void main().catch(function failed(error) {
+    console.error(error)
+    process.exitCode = 1
+})

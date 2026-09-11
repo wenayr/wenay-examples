@@ -51,7 +51,10 @@ async function check() {
             code_challenge_methods_supported: ['S256'], authorization_response_iss_parameter_supported: true
         })
     })
-    provider.get('/jwks', function keys(_req, res) {jwksCalls++; res.json({keys: [jwk]})})
+    provider.get('/jwks', function keys(_req, res) {
+        jwksCalls++
+        res.json({keys: [jwk]})
+    })
     provider.get('/authorize', function authorize(req, res) {
         assert.equal(req.query.client_id, 'support-local-check')
         assert.equal(req.query.response_type, 'code')
@@ -77,7 +80,11 @@ async function check() {
         codes.delete(code)
         if (!authorization) return res.status(400).json({error: 'invalid_grant'})
         const actual = createHash('sha256').update(String(req.body.code_verifier)).digest('base64url')
-        if (rejectedVerifier || actual != authorization.challenge || req.body.redirect_uri != authorization.redirect) return res.status(400).json({error: 'invalid_grant'})
+        const wrongChallenge = actual != authorization.challenge
+        const wrongRedirect = req.body.redirect_uri != authorization.redirect
+        if (rejectedVerifier || wrongChallenge || wrongRedirect) {
+            return res.status(400).json({error: 'invalid_grant'})
+        }
         const timestamp = Math.floor(Date.now() / 1000)
         const claims = {
             iss: authorization.mode == 'issuer' ? 'https://untrusted.invalid' : remote.origin,
@@ -89,7 +96,8 @@ async function check() {
         const header = Buffer.from(JSON.stringify({alg: 'RS256', kid: 'local-check-key', typ: 'JWT'})).toString('base64url')
         const payload = Buffer.from(JSON.stringify(claims)).toString('base64url')
         const body = header + '.' + payload
-        const signature = sign('RSA-SHA256', Buffer.from(body), authorization.mode == 'signature' ? wrongSigning.privateKey : signing.privateKey).toString('base64url')
+        const key = authorization.mode == 'signature' ? wrongSigning.privateKey : signing.privateKey
+        const signature = sign('RSA-SHA256', Buffer.from(body), key).toString('base64url')
         res.json({access_token: 'local-access-token', token_type: 'Bearer', expires_in: 300, id_token: body + '.' + signature})
     })
 
@@ -99,8 +107,14 @@ async function check() {
     const logins: string[] = []
     const config = {issuer: remote.origin, origin: local.origin, clientId: 'support-local-check', clientSecret: 'local-client-secret', allowLoopbackHttp: true}
     const adapter = createOidc({config, now: () => currentTime,
-        provision: async identity => {provisions.push(identity); return 'external-local-person'},
-        login: account => {logins.push(account); return {token: 'library-session-' + logins.length}}
+        provision: async identity => {
+            provisions.push(identity)
+            return 'external-local-person'
+        },
+        login: account => {
+            logins.push(account)
+            return {token: 'library-session-' + logins.length}
+        }
     })
     adapter.mount(app)
 
@@ -205,8 +219,17 @@ async function check() {
 
         assert.throws(() => createOidc({config: {...config, allowLoopbackHttp: false}, provision: async () => '', login: () => ({token: ''})}), /HTTPS/)
         assert.throws(() => createOidc({config: {...config, issuer: 'http://remote.example'}, provision: async () => '', login: () => ({token: ''})}), /HTTPS/)
-        assert.throws(() => createOidc({config: {...config, origin: local.origin + '/subpath'}, provision: async () => '', login: () => ({token: ''})}), /origin/)
-        assert.throws(() => createOidc({config: {...config, issuer: remote.origin + '/.well-known/openid-configuration'}, provision: async () => '', login: () => ({token: ''})}), /issuer/)
+        assert.throws(() => createOidc({
+            config: {...config, origin: local.origin + '/subpath'},
+            provision: async () => '',
+            login: () => ({token: ''})
+        }), /origin/)
+        const discoveryIssuer = remote.origin + '/.well-known/openid-configuration'
+        assert.throws(() => createOidc({
+            config: {...config, issuer: discoveryIssuer},
+            provision: async () => '',
+            login: () => ({token: ''})
+        }), /issuer/)
         adapter.close()
         assert.equal((await fetch(local.origin + '/auth/oidc/start', {redirect: 'manual'})).status, 404)
         assert.equal((await exchange('')).status, 204)
@@ -218,4 +241,7 @@ async function check() {
     }
 }
 
-check().catch(function failed(error) {console.error(error); process.exitCode = 1})
+check().catch(function failed(error) {
+    console.error(error)
+    process.exitCode = 1
+})

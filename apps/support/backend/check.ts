@@ -29,9 +29,19 @@ async function main() {
     const resources: {close(): Promise<void>}[] = []
     const aiClients: ReturnType<typeof createAiRunClient>[] = []
     async function client(account: string) {
-        const answer = await fetch(url + '/api/support/login', {method: 'POST', headers: {'content-type': 'application/json'}, body: JSON.stringify({args: [{account, password: account + '-pass'}]})}).then(response => response.json())
+        const response = await fetch(url + '/api/support/login', {
+            method: 'POST',
+            headers: {'content-type': 'application/json'},
+            body: JSON.stringify({args: [{account, password: account + '-pass'}]})
+        })
+        const answer = await response.json()
         assert(answer.ok, JSON.stringify(answer))
-        const session = createServiceClient<SupportDefinition>({definition: describeService(definition), url, auth: {token: answer.value.token}, placement: {rng: () => 0}})
+        const session = createServiceClient<SupportDefinition>({
+            definition: describeService(definition),
+            url,
+            auth: {token: answer.value.token},
+            placement: {rng: () => 0}
+        })
         sessions.push(session)
         await session.ready()
         await session.views.workspace.ready
@@ -53,13 +63,24 @@ async function main() {
         const input = {orgId: 'northstar', subject: 'Пригласить коллегу', body: 'Как пригласить коллегу в проект?', priority: 'normal' as const}
         const created = await customer.commands.ticketCreate('new-ticket', input)
         const linked = await agent.commands.taskFromTicket('confirm-linked-task', {orgId: 'northstar', ticketId: created.id, revision: created.revision})
-        assert.equal((await owner.commands.taskFromTicket('same-ticket-another-request', {orgId: 'northstar', ticketId: created.id, revision: created.revision})).id, linked.id)
+        const again = await owner.commands.taskFromTicket('same-ticket-another-request', {
+            orgId: 'northstar',
+            ticketId: created.id,
+            revision: created.revision
+        })
+        assert.equal(again.id, linked.id)
         await owner.views.taskBoards.ready
         await waitFor('linked task replicated', () => owner.views.taskBoards.store.state.boards.some(board => board.tasks.some(task => task.id == linked.id)))
         await assert.rejects(customer.commands.taskFromTicket('customer-no-tasks', {orgId: 'northstar', ticketId: created.id, revision: created.revision}))
         assert.equal((await customer.commands.ticketCreate('new-ticket', input)).id, created.id)
         await waitFor('new ticket on second live session', () => agent.views.workspace.store.state.tickets.some(item => item.id == created.id))
-        await assert.rejects(outsider.commands.ticketReply('cross-org', {orgId: 'northstar', id: created.id, revision: created.revision, body: 'forbidden', private: false}))
+        await assert.rejects(outsider.commands.ticketReply('cross-org', {
+            orgId: 'northstar',
+            id: created.id,
+            revision: created.revision,
+            body: 'forbidden',
+            private: false
+        }))
         const races = await Promise.allSettled([
             owner.commands.ticketAssign('assign-owner', {orgId: 'northstar', id: created.id, revision: created.revision, assignee: 'owner'}),
             agent.commands.ticketAssign('assign-agent', {orgId: 'northstar', id: created.id, revision: created.revision, assignee: 'agent'})
@@ -73,7 +94,12 @@ async function main() {
         const ai = createAiRunClient({remote: remote.ai})
         aiClients.push(ai)
         await ai.ready
-        const run = await ai.createRun({requestId: 'answer-1', kind: 'answer', resourceIds: [created.id], input: {orgId: 'northstar', ticketId: created.id, revision}})
+        const run = await ai.createRun({
+            requestId: 'answer-1',
+            kind: 'answer',
+            resourceIds: [created.id],
+            input: {orgId: 'northstar', ticketId: created.id, revision}
+        })
         await waitFor('draft completed', () => ['completed', 'failed'].includes(ai.store.state.runs[run.id]?.state))
         assert.equal(ai.store.state.runs[run.id].state, 'completed', ai.store.state.runs[run.id].error ?? 'draft should complete')
         const draft = await remote.control.result(run.id)
@@ -100,7 +126,12 @@ async function main() {
         const freshAi = createAiRunClient({remote: restoredRemote.ai})
         aiClients.push(freshAi)
         await freshAi.ready
-        const secondRun = await freshAi.createRun({requestId: 'answer-2', kind: 'answer', resourceIds: [created.id], input: {orgId: 'northstar', ticketId: created.id, revision}})
+        const secondRun = await freshAi.createRun({
+            requestId: 'answer-2',
+            kind: 'answer',
+            resourceIds: [created.id],
+            input: {orgId: 'northstar', ticketId: created.id, revision}
+        })
         await waitFor('fresh result', () => freshAi.store.state.runs[secondRun.id]?.state == 'completed')
         freshAi.close()
         const endpoint = customer.view.endpoint()
@@ -109,8 +140,17 @@ async function main() {
         const selected = endpoint.nodeId == 'support-a' ? nodes[0] : nodes[1]
         await selected.control.stop(true)
         await waitFor('reader moves after serving process dies', () => customer.view.endpoint()?.nodeId != endpoint.nodeId && !!customer.view.endpoint())
-        const reply = await customer.commands.ticketReply('after-node-loss', {orgId: 'northstar', id: created.id, revision, body: 'Спасибо, жду ответ', private: false})
-        await waitFor('reply visible after node loss', () => customer.views.workspace.store.state.tickets.find(item => item.id == created.id)?.revision == reply.revision)
+        const reply = await customer.commands.ticketReply('after-node-loss', {
+            orgId: 'northstar',
+            id: created.id,
+            revision,
+            body: 'Спасибо, жду ответ',
+            private: false
+        })
+        await waitFor('reply visible after node loss', function delivered() {
+            const tickets = customer.views.workspace.store.state.tickets
+            return tickets.find(item => item.id == created.id)?.revision == reply.revision
+        })
         assert.equal(customer.views.workspace.store, stable)
         await waitFor('AI resource after node change', () => resource.status.state.phase == 'ready')
         await assert.rejects(resource.current()!.remote.control.result(secondRun.id), /Обращение изменилось/)
@@ -126,7 +166,9 @@ async function main() {
         assert.equal((await restored.commands.ticketCreate('new-ticket', input)).id, created.id, 'receipt survives restart')
         const restoredOwner = await client('owner')
         await restoredOwner.views.taskBoards.ready
-        assert(restoredOwner.views.taskBoards.store.state.boards.some(board => board.tasks.some(task => task.id == linked.id)), 'linked organizer task survives restart')
+        const boards = restoredOwner.views.taskBoards.store.state.boards
+        const kept = boards.some(board => board.tasks.some(task => task.id == linked.id))
+        assert(kept, 'linked organizer task survives restart')
         console.log('PASS support: real authority + 2 serving processes, tenant/private-note isolation, command receipts, revision race, live revocation, private AI source guards, node loss and durable restart (' + (Date.now() - started) + ' ms)')
     } finally {
         for (const ai of aiClients) ai.close()
@@ -139,4 +181,7 @@ async function main() {
         rmSync(resolved, {recursive: true, force: true})
     }
 }
-main().catch(function failed(error) {console.error(error); process.exitCode = 1})
+main().catch(function failed(error) {
+    console.error(error)
+    process.exitCode = 1
+})

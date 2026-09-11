@@ -16,7 +16,10 @@ async function waitFor(check: () => boolean) {
 // Run in its own process: an unexpected library timer throw must remain visible.
 async function main() {
     const runs = createAiRunHost({runner: {run({run}) {
-        return run.kind == 'slow' ? new Promise<{result: {done: boolean}}>(resolve => setTimeout(() => resolve({result: {done: true}}), 25)) : {result: {done: true}}
+        if (run.kind != 'slow') return {result: {done: true}}
+        return new Promise<{result: {done: boolean}}>(function later(resolve) {
+            setTimeout(() => resolve({result: {done: true}}), 25)
+        })
     }}})
     const definition = {
         name: 'ai-resource-lifecycle', storeId: 'lifecycle', originId: 'authority',
@@ -48,7 +51,10 @@ async function main() {
     })
     try {
         await waitFor(() => resource.status.state.phase == 'ready')
-        client = process.argv.includes('--safe-state') ? safeStateClient(resource.current()!.remote.ai) : createAiRunClient({remote: resource.current()!.remote.ai})
+        const remote = resource.current()!.remote.ai
+        client = process.argv.includes('--safe-state')
+            ? safeStateClient(remote)
+            : createAiRunClient({remote})
         await client.ready
         const run = await client.createRun({requestId: 'first', kind: 'fixture', input: null})
         await waitFor(() => client!.store.state.runs[run.id]?.state == 'completed')
@@ -85,4 +91,7 @@ async function main() {
     }
 }
 
-void main().catch(function failed(error) {console.error(error); process.exitCode = 1})
+void main().catch(function failed(error) {
+    console.error(error)
+    process.exitCode = 1
+})

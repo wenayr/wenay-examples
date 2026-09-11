@@ -10,6 +10,11 @@ type ScopedHost = TaskHost & {sources: {id: string, label: string, kind: 'ticket
 function empty(): TaskState {return {tasks: {}, columns: {todo: [], doing: [], done: []}}}
 function role(value: string) {return value == 'lead' ? 'manager' : value}
 
+// В доску задач попадают только сотрудники организации, клиенты — нет.
+function staffOf(org: {members: Record<string, string>}) {
+    return Object.entries(org.members).filter(([, membership]) => membership != 'customer')
+}
+
 export function taskBoards(state: SupportState, principal: tServicePrincipal | null) {
     const account = principal?.account ?? ''
     return {boards: Object.values(state.organizations).flatMap(function project(org) {
@@ -21,7 +26,7 @@ export function taskBoards(state: SupportState, principal: tServicePrincipal | n
         const visible = new Set(tasks.map(task => task.id))
         return [{orgId: org.id, me: account, manager, tasks,
             columns: WORK_COLUMNS.map(column => ({...column, items: work.columns[column.key].filter(id => visible.has(id))})),
-            people: Object.entries(org.members).filter(([, membership]) => membership != 'customer').map(([id]) => ({account: id, name: state.accounts[id]?.name ?? id})),
+            people: staffOf(org).map(([id]) => ({account: id, name: state.accounts[id]?.name ?? id})),
             sources: Object.values(state.tickets).filter(ticket => ticket.orgId == org.id).map(ticket => ({id: ticket.id, label: ticket.subject}))}]
     })}
 }
@@ -35,17 +40,29 @@ export function createTenantOrganizer() {
         ctx.state.workspaces[orgId] ??= empty()
         const work = ctx.state.workspaces[orgId]
         const accounts = Object.fromEntries(Object.entries(access.org.members).map(([account, membership]) => [account, {roles: [role(membership)]}]))
-        const sources = Object.values(ctx.state.tickets).filter(ticket => ticket.orgId == orgId).map(ticket => ({id: ticket.id, label: ticket.subject, kind: 'ticket' as const}))
+        const own = Object.values(ctx.state.tickets).filter(ticket => ticket.orgId == orgId)
+        const sources = own.map(function source(ticket) {
+            return {id: ticket.id, label: ticket.subject, kind: 'ticket' as const}
+        })
         return {...ctx, roles: [role(access.role)], state: {accounts, organizer: work, sources}}
     }
-    function scoped<const Sch extends tInputSchema, R>(command: {input: Sch, validate?: (input: InferInput<Sch>) => void, apply: (ctx: ServiceCommandCtx<ScopedHost>, input: InferInput<Sch>) => R}) {
+    type ScopedCommand<Sch extends tInputSchema, R> = {
+        input: Sch,
+        validate?: (input: InferInput<Sch>) => void,
+        apply: (ctx: ServiceCommandCtx<ScopedHost>, input: InferInput<Sch>) => R
+    }
+
+    function scoped<const Sch extends tInputSchema, R>(command: ScopedCommand<Sch, R>) {
         return schemaCommand({...command.input, orgId: 'string'}, {allow: staff,
             apply(ctx: ServiceCommandCtx<SupportState>, input) {
                 const {orgId, ...fields} = input as InferInput<Sch> & {orgId: string}
                 const inner = scope(ctx, orgId)
                 const data = fields as unknown as InferInput<Sch>
                 command.validate?.(data)
-                if (Object.keys(inner.state.organizer.tasks).length >= 500 && 'id' in fields && !fields.id) throw new Error('Достигнут предел 500 задач организации')
+                const full = Object.keys(inner.state.organizer.tasks).length >= 500
+                if (full && 'id' in fields && !fields.id) {
+                    throw new Error('Достигнут предел 500 задач организации')
+                }
                 return command.apply(inner, data)
             }})
     }
@@ -63,7 +80,11 @@ export function createTenantOrganizer() {
                 if (Object.keys(inner.state.organizer.tasks).length >= 500) throw new Error('Достигнут предел 500 задач организации')
                 const task: WorkTask = {id, title: ticket.subject, description: 'Работа по обращению. Подробности доступны в исходной переписке.',
                     assignee: ctx.account, createdBy: ctx.account, status: 'todo', due: ticket.dueAt ? new Date(ticket.dueAt).toISOString().slice(0, 10) : '',
-                    priority: ticket.priority == 'normal' ? 'normal' : 'high', revision: 1, checklist: [], source: {kind: 'ticket', id: ticket.id, label: ticket.subject}}
+                    priority: ticket.priority == 'normal' ? 'normal' : 'high',
+                    revision: 1,
+                    checklist: [],
+                    source: {kind: 'ticket', id: ticket.id, label: ticket.subject}
+                }
                 inner.state.organizer.tasks[id] = task
                 inner.state.organizer.columns.todo.push(id)
                 return {id, revision: 1}

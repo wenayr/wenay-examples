@@ -12,15 +12,14 @@
         "documents",
         "booking",
         "forms",
-        "content"
+        "content",
+        "support"
     ],
     "files": [
         "apps/crm/backend/domain.ts",
         "apps/crm/backend/service.ts",
         "apps/hosting/backend/service.ts",
         "apps/pizzeria/backend/service.ts",
-        "apps/support/backend/domain.ts",
-        "apps/support/frontend/main.tsx",
         "scripts/backup.mjs",
         "scripts/restore.mjs",
         "apps/crm/frontend/main.tsx",

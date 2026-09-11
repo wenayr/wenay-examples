@@ -33,8 +33,11 @@ export function createOidc<T extends {token: string}>(deps: {
     const handoffs = new Map<string, Handoff>()
     const origin = config ? validUrl(config.origin, 'Адрес приложения') : undefined
     const issuer = config ? validUrl(config.issuer, 'OIDC issuer') : undefined
-    if (origin && (origin.pathname != '/' || origin.search || origin.hash)) throw new Error('OIDC origin должен содержать только origin приложения')
-    if (issuer && (issuer.search || issuer.hash || issuer.pathname.includes('/.well-known/'))) throw new Error('Укажите issuer, а не адрес discovery-документа')
+    const pathed = origin && (origin.pathname != '/' || origin.search || origin.hash)
+    if (pathed) throw new Error('OIDC origin должен содержать только origin приложения')
+    const discoveryUrl = issuer && (issuer.search || issuer.hash)
+    const wellKnown = issuer?.pathname.includes('/.well-known/')
+    if (discoveryUrl || wellKnown) throw new Error('Укажите issuer, а не адрес discovery-документа')
     if (config && (!config.clientId.trim() || config.clientId.length > 1000)) throw new Error('Не задан OIDC clientId')
     const endpointOrigins = new Set([issuer?.origin, ...(config?.endpointOrigins ?? []).map(value => {
         const url = validUrl(value, 'Origin OIDC endpoint')
@@ -53,7 +56,10 @@ export function createOidc<T extends {token: string}>(deps: {
         try {url = new URL(value)}
         catch {throw new Error(label + ': некорректный адрес')}
         const loopback = ['127.0.0.1', '[::1]', 'localhost'].includes(url.hostname)
-        if (url.username || url.password || (url.protocol != 'https:' && !(config?.allowLoopbackHttp && loopback && url.protocol == 'http:'))) {
+        // HTTP разрешён только для явно включённого локального провайдера.
+        const localHttp = config?.allowLoopbackHttp && loopback && url.protocol == 'http:'
+        const secure = url.protocol == 'https:' || localHttp
+        if (url.username || url.password || !secure) {
             throw new Error(label + ': необходим HTTPS; HTTP разрешён только явно включённому loopback')
         }
         return url
@@ -75,7 +81,10 @@ export function createOidc<T extends {token: string}>(deps: {
     async function getClient() {
         if (!config || !issuer || closed) throw new Error('OIDC отключён')
         if (!discovery) {
-            discovery = oidc.discovery(issuer, config.clientId, config.clientSecret, config.clientSecret ? oidc.ClientSecretPost(config.clientSecret) : oidc.None(), {
+            const auth = config.clientSecret
+                ? oidc.ClientSecretPost(config.clientSecret)
+                : oidc.None()
+            discovery = oidc.discovery(issuer, config.clientId, config.clientSecret, auth, {
                 timeout: 10,
                 [oidc.customFetch]: providerFetch,
                 execute: [oidc.enableNonRepudiationChecks, ...(config.allowLoopbackHttp ? [oidc.allowInsecureRequests] : [])]
@@ -154,7 +163,8 @@ export function createOidc<T extends {token: string}>(deps: {
         const flow = pending.get(id)
         // Consume before the network request so simultaneous callbacks cannot both succeed.
         pending.delete(id)
-        if (!config || closed || !flow || req.originalUrl.length > 8192) return failure(res)
+        if (!config || closed || !flow) return failure(res)
+        if (req.originalUrl.length > 8192) return failure(res)
         try {
             const url = new URL(req.originalUrl, origin)
             if (url.origin != origin!.origin || url.pathname != callbackPath) return failure(res)
@@ -162,8 +172,15 @@ export function createOidc<T extends {token: string}>(deps: {
                 pkceCodeVerifier: flow.verifier, expectedState: flow.state, expectedNonce: flow.nonce, idTokenExpected: true
             })
             const claims = tokens.claims()
-            if (closed || !claims || claims.iss != config.issuer || typeof claims.sub != 'string' || !claims.sub || claims.sub.length > 255) return failure(res)
-            const identity = {issuer: claims.iss, subject: claims.sub, name: typeof claims.name == 'string' && claims.name.trim() ? claims.name.trim().slice(0, 160) : 'Участник'}
+            const subject = typeof claims?.sub == 'string' && claims.sub && claims.sub.length <= 255
+            const trusted = claims && claims.iss == config.issuer
+            if (closed || !trusted || !subject) return failure(res)
+            const label = typeof claims.name == 'string' ? claims.name.trim() : ''
+            const identity = {
+                issuer: claims.iss,
+                subject: claims.sub,
+                name: label ? label.slice(0, 160) : 'Участник'
+            }
             const handoffId = oidc.randomState()
             handoffs.set(handoffId, {identity, expiresAt: now() + handoffTtl})
             res.cookie(cookieName, handoffId, {...cookieOptions, maxAge: handoffTtl})
@@ -178,7 +195,10 @@ export function createOidc<T extends {token: string}>(deps: {
         noStore(res)
         if (!config || closed) return res.status(204).end()
         // A cross-site form cannot supply this header; exact Origin rejects foreign fetches.
-        if (req.get('Origin') != origin!.origin || req.get('X-OIDC-Exchange') != '1') return res.status(403).json({error: 'Вход доступен только с адреса приложения'})
+        const sameOrigin = req.get('Origin') == origin!.origin
+        if (!sameOrigin || req.get('X-OIDC-Exchange') != '1') {
+            return res.status(403).json({error: 'Вход доступен только с адреса приложения'})
+        }
         sweep()
         const id = readCookie(req)
         const handoff = handoffs.get(id)
@@ -197,7 +217,10 @@ export function createOidc<T extends {token: string}>(deps: {
     }
 
     function mount(app: Express) {
-        app.get('/auth/oidc/status', function status(_req, res) {noStore(res); res.json({enabled: !!config && !closed})})
+        app.get('/auth/oidc/status', function status(_req, res) {
+            noStore(res)
+            res.json({enabled: !!config && !closed})
+        })
         app.get(startPath, start)
         app.get(callbackPath, callback)
         app.post(exchangePath, exchange)

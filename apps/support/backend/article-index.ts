@@ -18,7 +18,9 @@ export function createArticleIndex() {
     function search(account: string, orgId: string, query: string, limit = 3) {
         if (!store) throw new Error('Поиск закрыт')
         authorizeOrganization(store.state, account, orgId)
-        if (typeof query != 'string' || query.length > 8000 || !Number.isInteger(limit) || limit < 1 || limit > 50) throw new Error('Некорректный запрос поиска')
+        const text = typeof query == 'string' && query.length <= 8000
+        const size = Number.isInteger(limit) && limit >= 1 && limit <= 50
+        if (!text || !size) throw new Error('Некорректный запрос поиска')
         const words = [...new Set(query.toLocaleLowerCase().match(/[\p{L}\p{N}]{4,}/gu) ?? [])]
         // A stale or withdrawn index entry can never authorize a result. A just-published
         // version is indexed on demand while the reconciler catches up with the rest.
@@ -32,10 +34,17 @@ export function createArticleIndex() {
         const worker = createReconciler({read: () => Object.values(value.state.articles), subscribe: value.listen().on,
             run(articles) {
                 const live = new Set<string>()
-                for (const article of articles) if (article.status == 'published') {entry(article); live.add(article.id)}
+                for (const article of articles) if (article.status == 'published') {
+                    entry(article)
+                    live.add(article.id)
+                }
                 for (const id of index.keys()) if (!live.has(id)) index.delete(id)
             }})
         worker.control.request()
-        return function close() {store = null; index.clear(); void worker.close()}
+        return function close() {
+            store = null
+            index.clear()
+            void worker.close()
+        }
     }}
 }
