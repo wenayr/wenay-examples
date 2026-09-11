@@ -13,6 +13,23 @@ export type EditProvider = {suggest(input: {source: EditSource, instruction: str
 export type EditResult = EditSource & {after: string, demo: boolean, requiresConfirmation: true}
 type SavedEdit = EditResult & {owner: string}
 
+function isTextual(kind: string) {
+    return kind == 'heading' || kind == 'text' || kind == 'quote'
+}
+
+type EditRequest = {
+    orgId: string,
+    id: string,
+    revision: number,
+    blockId: string,
+    instruction: string
+}
+
+// Тестовая правка: нормализуем пробелы и ставим заглавную букву, без модели.
+function demoSuggestion(text: string) {
+    return text.replace(/\s+/g, ' ').trim().replace(/^[а-яa-z]/, letter => letter.toUpperCase())
+}
+
 export function createContentAssistant(deps: {directory?: string, provider?: EditProvider, timeoutMs?: number} = {}) {
     let store: Store<ContentState> | null = null
     const pending = new Map<string, {controller: AbortController, account: string, source: EditSource}>()
@@ -22,12 +39,22 @@ export function createContentAssistant(deps: {directory?: string, provider?: Edi
         const page = writeAccess(store.state, account, input.orgId, input.id)
         checkRevision(page, input.revision)
         const block = page.draft.blocks.find(value => value.id == input.blockId)
-        if (!block || block.kind != 'heading' && block.kind != 'text' && block.kind != 'quote') throw new Error('Выберите текстовый блок')
-        return {orgId: page.orgId, id: page.id, revision: page.revision, title: page.draft.title, blockId: block.id, kind: block.kind, before: block.text}
+        const textual = block && isTextual(block.kind)
+        if (!textual) throw new Error('Выберите текстовый блок')
+        return {
+            orgId: page.orgId,
+            id: page.id,
+            revision: page.revision,
+            title: page.draft.title,
+            blockId: block!.id,
+            kind: block!.kind as EditSource['kind'],
+            before: block!.text
+        }
     }
     function result(account: string, runId: string) {
         const value = Object.hasOwn(results, runId) ? results[runId] : undefined
-        if (!value || value.owner != account || host.store.state.runs[runId]?.state != 'completed') throw new Error('Предложение недоступно')
+        const finished = host.store.state.runs[runId]?.state == 'completed'
+        if (!value || value.owner != account || !finished) throw new Error('Предложение недоступно')
         const current = source(account, value)
         if (current.before != value.before) throw new Error('Исходный текст изменился')
         const {owner: _owner, ...publicResult} = value
@@ -43,43 +70,105 @@ export function createContentAssistant(deps: {directory?: string, provider?: Edi
             ctx.report({progress: 0.2, message: 'Готовим вариант для сравнения'})
             const interrupted = new Promise<never>(function interrupt(_resolve, reject) {
                 function abort() {reject(new Error('Подготовка прервана'))}
-                signal.addEventListener('abort', abort, {once: true}); offAbort = () => signal.removeEventListener('abort', abort)
+                signal.addEventListener('abort', abort, {once: true})
+                offAbort = () => signal.removeEventListener('abort', abort)
             })
             signal.throwIfAborted()
-            const answer = await Promise.race([deps.provider ? deps.provider.suggest({source: {...selected}, instruction: input.instruction, signal}) : Promise.resolve(selected.before.replace(/\s+/g, ' ').trim().replace(/^[а-яa-z]/, letter => letter.toUpperCase())), interrupted])
-            signal.throwIfAborted(); if (ctx.cancelled()) return
+            const prepared = deps.provider
+                ? deps.provider.suggest({source: {...selected}, instruction: input.instruction, signal})
+                : Promise.resolve(demoSuggestion(selected.before))
+            const answer = await Promise.race([prepared, interrupted])
+            signal.throwIfAborted()
+            if (ctx.cancelled()) return
             source(ctx.run.owner, selected)
             const after = cleanText(answer, selected.kind == 'heading' ? 500 : 4000)
-            results[ctx.run.id] = {...selected, after, owner: ctx.run.owner, demo: !deps.provider, requiresConfirmation: true}
+            results[ctx.run.id] = {
+                ...selected,
+                after,
+                owner: ctx.run.owner,
+                demo: !deps.provider,
+                requiresConfirmation: true
+            }
             journal?.save(results)
             ctx.report({progress: 1, message: 'Сравните варианты и примите правку самостоятельно'})
             return {result: {available: true, demo: !deps.provider, requiresConfirmation: true}}
-        } catch {throw new Error(signal.aborted ? 'Предложение прервано: отмена, изменение документа/прав или тайм-аут' : 'Не удалось подготовить предложение. Проверьте документ и исполнителя')}
-        finally {offAbort(); pending.delete(ctx.run.id)}
+        } catch {
+            const interruptedMessage = 'Предложение прервано: отмена, изменение документа/прав или тайм-аут'
+            const failedMessage = 'Не удалось подготовить предложение. Проверьте документ и исполнителя'
+            throw new Error(signal.aborted ? interruptedMessage : failedMessage)
+        } finally {
+            offAbort()
+            pending.delete(ctx.run.id)
+        }
     }, cancel({run}) {pending.get(run.id)?.controller.abort()}}
-    const host = createAiRunHost({...openAiCheckpoint({directory: deps.directory ? path.join(deps.directory, 'runs') : undefined}), runner, history: 5,
-        capabilities: [{kind: 'edit', label: deps.provider ? 'Предложить правку' : 'Тестовая правка текста (без LLM)'}],
-        policy: {canRead: (account, run) => run.owner == account, canWrite: (account, run) => run.owner == account, canCreate(account, request) {
+    const checkpoint = openAiCheckpoint({
+        directory: deps.directory ? path.join(deps.directory, 'runs') : undefined
+    })
+    const label = deps.provider ? 'Предложить правку' : 'Тестовая правка текста (без LLM)'
+    const host = createAiRunHost({
+        ...checkpoint,
+        runner,
+        history: 5,
+        capabilities: [{kind: 'edit', label}],
+        policy: {
+            canRead: (account, run) => run.owner == account,
+            canWrite: (account, run) => run.owner == account,
+            canCreate(account, request) {
             try {
-                const input = request.input as {orgId: string, id: string, revision: number, blockId: string, instruction: string}
-                if (request.kind != 'edit' || !input || request.resourceIds?.length != 1 || request.resourceIds[0] != input.id) return false
-                cleanText(input.instruction, 1000); source(account, input)
-                const runs = Object.values(host.store.state.runs), active = runs.filter(run => ['queued', 'running', 'waiting_input', 'waiting_approval'].includes(run.state))
-                return runs.some(run => run.owner == account && run.requestId == request.requestId) || runs.length < 100 && active.length < 2 && !active.some(run => run.owner == account)
+                const input = request.input as EditRequest
+                if (request.kind != 'edit' || !input) return false
+                if (request.resourceIds?.length != 1 || request.resourceIds[0] != input.id) return false
+                cleanText(input.instruction, 1000)
+                source(account, input)
+                const runs = Object.values(host.store.state.runs)
+                const busyStates = ['queued', 'running', 'waiting_input', 'waiting_approval']
+                const active = runs.filter(run => busyStates.includes(run.state))
+                // Повтор того же requestId возвращает прежний запуск и лимитами не ограничен.
+                const repeat = runs.some(function same(run) {
+                    return run.owner == account && run.requestId == request.requestId
+                })
+                if (repeat) return true
+                if (runs.length >= 100 || active.length >= 2) return false
+                return !active.some(run => run.owner == account)
             } catch {return false}
-        }}})
-    for (const entry of host.recovery.pending()) host.recovery.settle(entry.run.id, {state: 'failed', error: 'Предложение прервано рестартом. Создайте новое'})
+            }
+        }
+    })
+    const restartError = 'Предложение прервано рестартом. Создайте новое'
+    for (const entry of host.recovery.pending()) {
+        host.recovery.settle(entry.run.id, {state: 'failed', error: restartError})
+    }
     const resource = {allow: WRITERS, placement: 'authority' as const, open(ctx: ServiceResourceContext) {
         const connection = host.connection(ctx.principal.account)
         return {facade: {ai: connection.fragment, control: {
-            source(input: {orgId: string, id: string, revision: number, blockId: string}) {ctx.signal.throwIfAborted(); return source(ctx.principal.account, input)},
-            result(runId: string) {ctx.signal.throwIfAborted(); return result(ctx.principal.account, runId)}
+            source(input: {orgId: string, id: string, revision: number, blockId: string}) {
+                ctx.signal.throwIfAborted()
+                return source(ctx.principal.account, input)
+            },
+            result(runId: string) {
+                ctx.signal.throwIfAborted()
+                return result(ctx.principal.account, runId)
+            }
         }}, close: connection.close}
     }}
     function mount(state: Store<ContentState>) {
         store = state
-        const off = state.on(function changed() {for (const entry of pending.values()) {try {source(entry.account, entry.source)} catch {entry.controller.abort()}}})
-        return function close() {off(); for (const entry of pending.values()) entry.controller.abort(); host.close(); store = null}
+        // Правка документа или потеря доступа обесценивают уже идущую подготовку.
+        const off = state.on(function changed() {
+            for (const entry of pending.values()) {
+                try {
+                    source(entry.account, entry.source)
+                } catch {
+                    entry.controller.abort()
+                }
+            }
+        })
+        return function close() {
+            off()
+            for (const entry of pending.values()) entry.controller.abort()
+            host.close()
+            store = null
+        }
     }
     return {resource, mount}
 }
@@ -90,6 +179,7 @@ function openResults(directory: string) {
     const storage = openFsReplayStorage<[Record<string, SavedEdit>]>(file)
     return {initial: storage.getKeyframe()?.event[0] ?? {}, save(value: Record<string, SavedEdit>) {
         storage.putKeyframe({seq: Date.now(), ts: Date.now(), event: [value]})
-        const fd = openSync(file, 'r+'); try {fsyncSync(fd)} finally {closeSync(fd)}
+        const fd = openSync(file, 'r+')
+        try {fsyncSync(fd)} finally {closeSync(fd)}
     }}
 }

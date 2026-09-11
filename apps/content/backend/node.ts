@@ -10,5 +10,9 @@ runNodeProcess({definition: runtime.definition, mount({app}) {
     app.get('/health', function health(_request, response) {response.json({ok: true, application: 'content-node'})})
     app.get('/api/client', function descriptor(_request, response) {response.json(describeService(runtime.definition))})
     if (!process.env.SERVICE_UPSTREAM) throw new Error('Authority upstream required')
-    app.use('/api/content/public', publicRouter({upstream: process.env.SERVICE_UPSTREAM})); app.use(express.static(path.resolve('public')))
-}}).then(function ready(host) {process.send?.({type: 'ready', url: host.url})}).catch(function failed(error) {console.error(error); process.exitCode = 1})
+    app.use('/api/content/public', publicRouter({upstream: process.env.SERVICE_UPSTREAM}))
+    app.use(express.static(path.resolve('public')))
+}}).then(function ready(host) {process.send?.({type: 'ready', url: host.url})}).catch(function failed(error) {
+    console.error(error)
+    process.exitCode = 1
+})

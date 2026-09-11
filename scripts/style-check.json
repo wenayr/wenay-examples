@@ -11,12 +11,10 @@
         "monitoring",
         "documents",
         "booking",
-        "forms"
+        "forms",
+        "content"
     ],
     "files": [
-        "apps/content/backend/domain.ts",
-        "apps/content/backend/service.ts",
-        "apps/content/frontend/main.tsx",
         "apps/crm/backend/domain.ts",
         "apps/crm/backend/service.ts",
         "apps/hosting/backend/service.ts",
