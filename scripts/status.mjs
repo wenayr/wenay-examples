@@ -125,7 +125,8 @@ export function replaceMarked(text, marker, body) {
     return text.slice(0, start + open.length) + '\n' + body + '\n' + text.slice(end)
 }
 
-function updateMarkers(rows) {
+// `apply` разделяет режимы: обычный запуск переписывает файлы, --verify только сравнивает.
+function updateMarkers(rows, apply) {
     const changed = []
     const line = versionLine(rows)
     const files = [path.join(repository, 'README.md')]
@@ -146,18 +147,19 @@ function updateMarkers(rows) {
         if (!passport) after = replaceMarked(before, 'status:versions', row ? own : line)
         if (row) after = replaceMarked(after, 'status:imports', libraryImports(app).map(name => '`' + name + '`').join(', '))
         if (after == before) continue
-        writeFileSync(file, after, 'utf8')
+        if (apply) writeFileSync(file, after, 'utf8')
         changed.push(path.relative(repository, file))
     }
     return changed
 }
 
-export function write() {
-    const rows = collect()
+const statusFile = path.join(repository, 'doc', 'STATUS.md')
+
+function render(rows, stamp) {
     const head = [
         '# Состояние каталога',
         '',
-        'Сгенерировано `scripts/status.mjs` ' + new Date().toISOString().slice(0, 16).replace('T', ' ') + ' UTC. Не редактировать вручную.',
+        'Сгенерировано `scripts/status.mjs` ' + stamp + ' UTC. Не редактировать вручную.',
         '',
         versionLine(rows),
         '',
@@ -166,18 +168,31 @@ export function write() {
         '',
         ''
     ].join('\n')
-    const file = path.join(repository, 'doc', 'STATUS.md')
-    writeFileSync(file, head + table(rows) + '\n', 'utf8')
-    const changed = updateMarkers(rows)
+    return head + table(rows) + '\n'
+}
+
+// Отметка времени меняется при каждом запуске, поэтому сравнению не подлежит.
+function withoutStamp(text) {
+    return text.replace(/^Сгенерировано .*$/m, '')
+}
+
+export function write() {
+    const rows = collect()
+    const stamp = new Date().toISOString().slice(0, 16).replace('T', ' ')
+    writeFileSync(statusFile, render(rows, stamp), 'utf8')
+    const changed = updateMarkers(rows, true)
     return {rows, changed}
 }
 
 // В check:all скрипт запускается с --verify: он не должен ничего менять.
-// Если файл изменился, значит версии правили руками и забыли перегенерировать.
+// Расхождение означает, что таблицу или версии правили руками и забыли перегенерировать.
 function verify() {
-    const {changed} = write()
+    const rows = collect()
+    const changed = updateMarkers(rows, false)
+    const current = existsSync(statusFile) ? readFileSync(statusFile, 'utf8') : ''
+    if (withoutStamp(current) != withoutStamp(render(rows, ''))) changed.unshift('doc/STATUS.md')
     if (changed.length == 0) return 0
-    console.log('Устаревшие маркеры версий: ' + changed.join(', '))
+    console.log('Устарело: ' + changed.join(', '))
     console.log('Запустите npm run status и закоммитьте результат.')
     return 1
 }
