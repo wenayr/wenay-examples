@@ -1,0 +1,140 @@
+import {spawn} from 'node:child_process'
+import {existsSync, mkdirSync, readFileSync, writeFileSync} from 'node:fs'
+import path from 'node:path'
+import {fileURLToPath} from 'node:url'
+
+const repository = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
+const logDirectory = path.join(repository, 'work', 'run-all')
+
+// Порядок появления приложений. Используется везде, где каталог перебирается целиком.
+export const APPS = [
+    'pizzeria', 'hosting', 'support', 'documents', 'metering', 'crm',
+    'booking', 'forms', 'monitoring', 'content', 'catalog', 'approvals'
+]
+export const SCRIPTS = ['typecheck', 'test', 'build']
+
+// Витрина пока не переведена на общий скелет: у неё нет package.json.
+// Единственная доступная проверка — синтаксис сервера. Снимается задачей D06.
+const STATIC_APPS = {catalog: {typecheck: ['node', ['--check', 'apps/catalog/server.mjs']]}}
+
+const externalTools = {
+    docker: ['docker', ['info']],
+    python3: ['python3', ['--version']],
+    python: ['python', ['--version']]
+}
+
+export function manifest(app) {
+    const file = path.join(repository, 'apps', app, 'package.json')
+    if (!existsSync(file)) return null
+    return JSON.parse(readFileSync(file, 'utf8'))
+}
+
+function run(command, args, options) {
+    return new Promise(function wait(resolve) {
+        const child = spawn(command, args, {shell: true, ...options})
+        let output = ''
+        child.stdout?.on('data', chunk => {output += chunk})
+        child.stderr?.on('data', chunk => {output += chunk})
+        child.on('error', function failed(error) {resolve({code: 1, output: output + error.message})})
+        child.on('close', code => resolve({code: code ?? 1, output}))
+    })
+}
+
+const toolCache = new Map()
+
+async function hasTool(name) {
+    if (toolCache.has(name)) return toolCache.get(name)
+    const tool = externalTools[name]
+    let available = false
+    if (tool) {
+        const result = await run(tool[0], tool[1], {cwd: repository})
+        available = result.code == 0
+    }
+    // python3 отсутствует в типовой установке Windows; засчитываем python той же версии.
+    if (!available && name == 'python3') available = await hasTool('python')
+    toolCache.set(name, available)
+    return available
+}
+
+async function missingTool(app) {
+    const required = manifest(app)?.wenayExamples?.requires ?? []
+    for (const name of required) {
+        if (!await hasTool(name)) return name
+    }
+    return ''
+}
+
+function writeLog(app, script, code, seconds, output) {
+    mkdirSync(logDirectory, {recursive: true})
+    const file = path.join(logDirectory, app + '-' + script + '.log')
+    const header = '# exit ' + code + ' ' + new Date().toISOString() + ' ' + seconds.toFixed(1)
+    writeFileSync(file, header + '\n' + output, 'utf8')
+    return path.relative(repository, file)
+}
+
+async function execute(app, script) {
+    const started = Date.now()
+    const statik = STATIC_APPS[app]?.[script]
+    const declared = manifest(app)?.scripts?.[script]
+    if (!statik && !declared) return {status: 'нет', seconds: 0, log: ''}
+    const blocked = await missingTool(app)
+    if (blocked) return {status: 'пропущено: нет ' + blocked, seconds: 0, log: ''}
+    const cwd = statik ? repository : path.join(repository, 'apps', app)
+    const command = statik ? statik[0] : 'npm'
+    const args = statik ? statik[1] : ['run', script]
+    const result = await run(command, args, {cwd})
+    const seconds = (Date.now() - started) / 1000
+    const log = writeLog(app, script, result.code, seconds, result.output)
+    return {status: result.code == 0 ? 'ok' : 'fail(' + result.code + ')', seconds, log}
+}
+
+function parse(argv) {
+    const scripts = argv.filter(value => !value.startsWith('--'))
+    const flag = name => argv.find(value => value.startsWith('--' + name + '='))?.split('=')[1] ?? ''
+    const list = value => value.split(',').map(item => item.trim()).filter(Boolean)
+    const skip = list(flag('skip') + ',' + (process.env.RUN_ALL_SKIP ?? ''))
+    const only = list(flag('only'))
+    const unknown = scripts.filter(script => !SCRIPTS.includes(script))
+    if (unknown.length > 0) throw new Error('Неизвестный скрипт: ' + unknown.join(', ') + '. Допустимы: ' + SCRIPTS.join(', '))
+    return {scripts: scripts.length > 0 ? scripts : SCRIPTS, skip, only, stop: !argv.includes('--continue') && argv.includes('--stop')}
+}
+
+export async function runAll(argv) {
+    const options = parse(argv)
+    const selected = APPS.filter(function chosen(app) {
+        if (options.only.length > 0 && !options.only.includes(app)) return false
+        return !options.skip.includes(app)
+    })
+    const rows = []
+    let failed = 0
+    for (const app of selected) {
+        for (const script of options.scripts) {
+            const result = await execute(app, script)
+            rows.push({app, script, ...result})
+            if (result.status.startsWith('fail')) failed++
+            console.log([app, script, result.status, result.seconds.toFixed(1) + ' c'].join(' · '))
+            if (failed > 0 && options.stop) break
+        }
+        if (failed > 0 && options.stop) break
+    }
+    const width = {app: 12, script: 10, status: 22}
+    const pad = (value, size) => String(value).padEnd(size)
+    console.log('')
+    console.log(pad('Приложение', width.app) + pad('Скрипт', width.script) + pad('Статус', width.status) + 'Секунды  Лог')
+    for (const row of rows) {
+        const cells = pad(row.app, width.app) + pad(row.script, width.script) + pad(row.status, width.status)
+        console.log(cells + pad(row.seconds.toFixed(1), 9) + row.log)
+    }
+    console.log('')
+    console.log('Всего: ' + rows.length + ', с ошибкой: ' + failed)
+    return failed
+}
+
+if (process.argv[1] && import.meta.url.endsWith(path.basename(process.argv[1]))) {
+    runAll(process.argv.slice(2)).then(function finished(failed) {
+        process.exitCode = failed > 0 ? 1 : 0
+    }).catch(function crashed(error) {
+        console.error(error.message)
+        process.exitCode = 1
+    })
+}

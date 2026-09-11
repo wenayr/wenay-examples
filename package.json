@@ -1,0 +1,12 @@
+{
+  "name": "wenay-examples",
+  "private": true,
+  "engines": {"node": ">=22.12"},
+  "scripts": {
+    "typecheck:all": "node scripts/run-all.mjs typecheck",
+    "test:all": "node scripts/run-all.mjs test",
+    "build:all": "node scripts/run-all.mjs build",
+    "check:all": "node scripts/run-all.mjs typecheck test build",
+    "status": "node scripts/status.mjs"
+  }
+}
