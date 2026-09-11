@@ -1,0 +1,7 @@
+[
+  {"account": "admin", "password": "REPLACE-WITH-A-UNIQUE-ADMIN-SECRET", "role": "admin", "projects": []},
+  {"account": "owner", "password": "REPLACE-WITH-A-UNIQUE-OWNER-SECRET", "role": "owner", "projects": ["shop"]},
+  {"account": "operator", "password": "REPLACE-WITH-A-UNIQUE-OPERATOR-SECRET", "role": "operator", "projects": ["shop"]},
+  {"account": "observer", "password": "REPLACE-WITH-A-UNIQUE-OBSERVER-SECRET", "role": "observer", "projects": ["shop"]},
+  {"account": "agent", "password": "REPLACE-WITH-A-UNIQUE-AGENT-SECRET", "role": "agent", "projects": ["shop"]}
+]

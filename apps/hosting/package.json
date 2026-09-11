@@ -1,0 +1,51 @@
+{
+  "name": "wenay-hosting",
+  "version": "0.4.0",
+  "private": true,
+  "scripts": {
+    "start": "tsx backend/server.ts",
+    "start:agent": "tsx backend/agent-main.ts",
+    "start:lxd-agent": "tsx backend/lxd-agent-main.ts",
+    "build": "vite build frontend --outDir ../public",
+    "test:docker": "tsx backend/docker-live-check.ts",
+    "test:support": "tsx backend/support-live-check.ts",
+    "test:metering": "tsx backend/metering-live-check.ts",
+    "test:documents": "tsx backend/documents-live-check.ts",
+    "test:library-audit": "tsx backend/library-audit-check.ts",
+    "prepare:examples": "node scripts/prepare-examples.mjs",
+    "prepare:products": "node scripts/prepare-products.mjs",
+    "test:stateful": "tsx backend/stateful-live-check.ts --rest-only",
+    "repro:public-address": "tsx backend/stateful-live-check.ts",
+    "test:public-address": "tsx backend/stateful-live-check.ts",
+    "test:gateway-ws": "tsx backend/gateway-ws-check.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "tsx backend/check.ts && tsx backend/docker-check.ts && tsx backend/gateway-check.ts && tsx backend/agent-check.ts && tsx backend/lxd-check.ts && npm run test:orchestration && npm run test:gateway-ws",
+    "test:orchestration": "tsx backend/orchestration-check.ts",
+    "test:crm": "tsx backend/crm-live-check.ts",
+    "test:booking": "tsx backend/booking-live-check.ts",
+    "test:forms": "tsx backend/forms-live-check.ts",
+    "test:monitoring": "tsx backend/monitoring-live-check.ts"
+  },
+  "dependencies": {
+    "express": "5.2.1",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "socket.io": "4.8.3",
+    "socket.io-client": "4.8.3",
+    "swagger-ui-dist": "5.32.14",
+    "wenay-common2": "2.21.1",
+    "wenay-react2": "3.5.1"
+  },
+  "devDependencies": {
+    "@types/express": "5.0.6",
+    "@types/node": "26.1.2",
+    "@types/react": "19.2.18",
+    "@types/react-dom": "19.2.4",
+    "tsx": "4.23.1",
+    "typescript": "7.0.2",
+    "vite": "8.2.2"
+  },
+  "engines": {
+    "node": ">=22.12"
+  }
+}
