@@ -30,7 +30,8 @@
         "apps/support/backend/domain.ts",
         "apps/support/frontend/main.tsx",
         "scripts/backup.mjs",
-        "scripts/restore.mjs"
+        "scripts/restore.mjs",
+        "apps/metering/frontend/main.tsx"
     ],
     "exclude": [
         "scripts/create-saas-example.mjs",
