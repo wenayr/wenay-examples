@@ -2,7 +2,7 @@
 
 Статус: **открыто, воспроизведено** 10 сентября 2026 на опубликованной npm-версии **wenay-common2 2.21.1**. React2 3.5.1 установлен в примере, но воспроизведение не использует React и не предъявляет задачу frontend-библиотеке.
 
-Связанные материалы: [инвентаризация публичных механизмов](../saas-library-inventory.md), [воспроизведение](../../apps/support/backend/ai-policy-repro.ts), [потребитель поддержки](../../apps/support/backend/assistant-resource.ts), [потребитель органайзера](../../apps/pizzeria/organizer/assistant-resource.ts).
+Связанные материалы: [инвентаризация публичных механизмов](../internal/saas-library-inventory.md), [воспроизведение](../../apps/support/backend/ai-policy-repro.ts), [потребитель поддержки](../../apps/support/backend/assistant-resource.ts), [потребитель органайзера](../../apps/pizzeria/organizer/assistant-resource.ts).
 
 ## Пользовательский сценарий
 

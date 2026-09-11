@@ -1,0 +1,9 @@
+# Журнал выполнения плана 2
+
+Формат строки: `- <ID> — <дата время UTC> — <результат> — <коммит>`.
+
+- G01 — 2026-09-11 — 631 файл разложен на 15 коммитов; .gitattributes задаёт LF; .gitignore исправлен: шаблон apps/*/*-data/ вместо перечня (content-data и docs-data не покрывались и попали бы в историю); doc/progress выведен из ignore — f52086a
+- G02 — 2026-09-11 — корневой run-all.mjs: typecheck 11/12 ok (approvals fail), test 8/8 ok; docker и python3 доступны — hosting/documents не пропускались — 7c261ae
+- G03 — 2026-09-11 — status.mjs генерирует doc/STATUS.md; порты берутся из точек входа, прежний текст задания про pizzeria 3700/hosting 3705 был неверен (3500/3600/3700) — 54104ca
+- G05 — 2026-09-11 — раздел «Коммиты» в CODE-RULES, ссылка из AGENTS.md — 998b18f
+- D01 — 2026-09-11 — NEXT-CHAT, контрольная точка, progress, NEXT-STEPS, 8 отчётов приёмки и инвентаризация переведены в doc/internal; 42 битые ссылки исправлены; links-check.mjs включён в check:all — коммит ниже

@@ -14,7 +14,7 @@
 - AI-сводка: факты, приватный результат, изменение источника, отмена/timeout, отзыв доступа.
 - Настоящий authority + два serving nodes + два отдельных probe-процесса: оба выполняют HTTP, работа распределяется, второй подхватывает первую цель при отказе; отключение serving node и полный restart сохраняют данные и продолжают расписание.
 
-Frontend: `index-Ds-uNzwM.js`, CSS `index-DQMtTSLx.css`. Vite сообщает о будущем native config loader и общем chunk около 579 kB; ошибок типов/сборки нет. Браузерный отчёт — [MONITORING-UI-ACCEPTANCE.md](MONITORING-UI-ACCEPTANCE.md).
+Frontend: `index-Ds-uNzwM.js`, CSS `index-DQMtTSLx.css`. Vite сообщает о будущем native config loader и общем chunk около 579 kB; ошибок типов/сборки нет. Браузерный отчёт — [MONITORING-UI-ACCEPTANCE.md](../internal/acceptance/MONITORING-UI-ACCEPTANCE.md).
 
 Общий scaffold-check проходил семь шаблонов после добавления Monitoring; дальнейшая параллельная переработка Documents выявила отсутствующий в его manifest `model-extraction`. Этот отдельный набор обновляет владелец Documents. Окончательная самостоятельная копия Monitoring со всеми локальными импортами прошла независимо.
 

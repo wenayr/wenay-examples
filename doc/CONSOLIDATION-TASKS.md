@@ -38,7 +38,7 @@
 
 - Node ≥ 22.12, npm. Команды приложений выполняются из каталога приложения: `cd apps/<name> && npm run <script>`.
 - Оболочка — Git Bash. Пути в скриптах — через `node:path`, без жёстких `C:\`.
-- Порты приложений: pizzeria 3700, hosting 3705, catalog 3800, support 3810, documents 3811, metering 3812, crm 3813, booking 3814, forms 3815, monitoring 3816, content 3817, approvals 3818. Тесты используют порт 0 и временные каталоги — их запускать можно всегда.
+- Порты приложений (из точек входа, проверено 11 сентября): pizzeria 3500, органайзер пиццерии 3600, hosting 3700, catalog 3800, support 3810, documents 3811, metering 3812, crm 3813, booking 3814, forms 3815, monitoring 3816, content 3817, approvals 3818. Тесты используют порт 0 и временные каталоги — их запускать можно всегда.
 - Docker есть не всегда. Перед любым `test:docker`/`*-live-check` выполнить `docker info`; при ошибке — пометить «Docker недоступен, не проверено» и не считать это падением.
 - Python 3 нужен только `documents` (отдельный обработчик). Проверить `python3 --version` или `python --version`.
 
