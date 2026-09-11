@@ -13,18 +13,36 @@ import type {BookingState} from './model'
 
 async function waitFor(check: () => boolean) {
     const deadline = Date.now() + 4000
-    while (!check()) {assert(Date.now() < deadline, 'Condition timeout'); await delay(10)}
+    while (!check()) {
+        assert(Date.now() < deadline, 'Condition timeout')
+        await delay(10)
+    }
 }
 async function main() {
     const temporary = realpathSync(tmpdir()), directory = mkdtempSync(path.join(temporary, 'booking-assistant-check-'))
     const now = () => Date.UTC(2026, 8, 14, 6)
     const definition = createBookingService({now}).definition
     // Fixture models access removal by an external identity administrator through the authority writer.
-    const leader = createServiceLeader({definition: {...definition, commands: {...definition.commands, revokeFixture: schemaCommand({}, {allow: ['system'], apply(ctx: ServiceCommandCtx<BookingState>) {delete ctx.state.organizations.northstar.members.customer; return {ok: true}}})}}, selfUrl: () => 'http://localhost'})
+    const revokeFixture = schemaCommand({}, {
+        allow: ['system'],
+        apply(ctx: ServiceCommandCtx<BookingState>) {
+            delete ctx.state.organizations.northstar.members.customer
+            return {ok: true}
+        }
+    })
+    const leader = createServiceLeader({
+        definition: {...definition, commands: {...definition.commands, revokeFixture}},
+        selfUrl: () => 'http://localhost'
+    })
     const pending: {facts: PreferenceFact[], signal: AbortSignal, finish: (value: Preference) => void, reject: (error: Error) => void}[] = []
     const provider: PreferenceProvider = {parse(input) {return new Promise((finish, reject) => pending.push({...input, finish, reject}))}}
     const owner = leader.corridor.fragment('owner'), snapshot = () => leader.line.control.store.snapshot()
-    const context = (account: string) => ({principal: {account, roles: ['customer']}, sessionId: account, resourceId: 'assistant', signal: new AbortController().signal})
+    const context = (account: string) => ({
+        principal: {account, roles: ['customer']},
+        sessionId: account,
+        resourceId: 'assistant',
+        signal: new AbortController().signal
+    })
     let sequence = 0
     const rpc = () => 'assistant-test-' + (++sequence)
     function start(selected?: PreferenceProvider) {
@@ -42,7 +60,9 @@ async function main() {
     }
     function closeConnections() {for (const stop of stops.splice(0)) stop()}
     function request(client: Awaited<ReturnType<typeof open>>, requestId: string, prompt = 'Консультация 2026-09-15 в 10:00 на 1 человека') {
-        return {kind: 'preferences', requestId, resourceIds: ['northstar'], input: {orgId: 'northstar', prompt, catalogKey: client.control.context('northstar').catalogKey}}
+        const catalogKey = client.control.context('northstar').catalogKey
+        const input = {orgId: 'northstar', prompt, catalogKey}
+        return {kind: 'preferences', requestId, resourceIds: ['northstar'], input}
     }
     const answer: Preference = {serviceId: 'consultation', date: '2026-09-15', partySize: 1, time: '10:00'}
     try {
@@ -61,10 +81,31 @@ async function main() {
         assert.equal(Object.keys(snapshot().bookings).length, 0, 'AI proposal never creates a hold')
         assert.throws(() => outsider.control.result(defaultRun.id), /недоступно/)
         const slot = suggestion.slots[0]
-        await owner.bookingHold(rpc(), {orgId: 'northstar', key: 'occupy-after-proposal', serviceId: 'consultation', start: slot.start, partySize: 1, customer: 'customer2', note: 'Not a source of AI facts', reminder: false})
+        await owner.bookingHold(rpc(), {
+            orgId: 'northstar',
+            key: 'occupy-after-proposal',
+            serviceId: 'consultation',
+            start: slot.start,
+            partySize: 1,
+            customer: 'customer2',
+            note: 'Not a source of AI facts',
+            reminder: false
+        })
         assert.equal(customer.control.result(defaultRun.id).slots.length, 0, 'result read recomputes current availability')
-        await assert.rejects(leader.corridor.fragment('customer').bookingHold(rpc(), {orgId: 'northstar', key: 'confirm-after-race', serviceId: 'consultation', start: slot.start, partySize: 1, customer: '', note: '', reminder: false}), /недостаточно/)
-        closeConnections(); running.close(); await delay(10)
+        const late = leader.corridor.fragment('customer').bookingHold(rpc(), {
+            orgId: 'northstar',
+            key: 'confirm-after-race',
+            serviceId: 'consultation',
+            start: slot.start,
+            partySize: 1,
+            customer: '',
+            note: '',
+            reminder: false
+        })
+        await assert.rejects(late, /недостаточно/)
+        closeConnections()
+        running.close()
+        await delay(10)
         running = start(provider)
         const active = await open('customer')
         assert.equal(active.control.result(defaultRun.id).date, '2026-09-15', 'private saved proposal survives restart and revalidates slots')
@@ -122,9 +163,15 @@ async function main() {
         assert.throws(() => active.ai.createRun(requestAfterRevoke), /forbidden/)
         console.log('PASS booking assistant: explicit local parser, allowed catalog/versions/zones, no booking side effect, fresh availability and final capacity guard, private durable output, cancellation/timeout/late completion, sanitized errors, foreign-service rejection and authority ACL revoke')
     } finally {
-        closeConnections(); running.close(); await delay(10); leader.control.close()
+        closeConnections()
+        running.close()
+        await delay(10)
+        leader.control.close()
         assert(path.dirname(path.resolve(directory)) == temporary && path.basename(directory).startsWith('booking-assistant-check-'))
         rmSync(directory, {recursive: true, force: true})
     }
 }
-main().catch(function failed(error) {console.error(error); process.exitCode = 1})
+main().catch(function failed(error) {
+    console.error(error)
+    process.exitCode = 1
+})

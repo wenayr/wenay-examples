@@ -12,8 +12,17 @@ function time(value: string) {
 }
 export function validateWindows(windows: Window[]) {
     if (windows.length > 8) throw new Error('Не более восьми окон за день')
-    const sorted = windows.map(value => {time(value.start); time(value.end); return value}).sort((a, b) => a.start.localeCompare(b.start))
-    for (let i = 0; i < sorted.length; i++) if (sorted[i].start >= sorted[i].end || i > 0 && sorted[i - 1].end > sorted[i].start) throw new Error('Окна должны быть непересекающимися и заканчиваться в тот же день')
+    const sorted = windows.map(value => {
+        time(value.start)
+        time(value.end)
+        return value
+    }).sort((a, b) => a.start.localeCompare(b.start))
+    for (let index = 0; index < sorted.length; index++) {
+        const window = sorted[index]
+        const overlaps = index > 0 && sorted[index - 1].end > window.start
+        if (window.start < window.end && !overlaps) continue
+        throw new Error('Окна должны быть непересекающимися и заканчиваться в тот же день')
+    }
 }
 export function validateResource(value: Resource) {
     if (!Number.isInteger(value.capacity) || value.capacity < 1 || value.capacity > 20) throw new Error('Вместимость от 1 до 20')
@@ -48,12 +57,15 @@ export function daySlots(resource: Resource, service: Offering, day: string) {
         const ends = instants(date, endTime, resource.zone)
         const from = starts[0] ?? date.toPlainDateTime(startTime).toZonedDateTime(resource.zone, {disambiguation: 'later'}).epochMilliseconds
         const until = ends.at(-1) ?? date.toPlainDateTime(endTime).toZonedDateTime(resource.zone, {disambiguation: 'earlier'}).epochMilliseconds
-        for (let current = date.toPlainDateTime(startTime); Temporal.PlainDateTime.compare(current, date.toPlainDateTime(endTime)) < 0; current = current.add({minutes: 15})) {
+        const limit = date.toPlainDateTime(endTime)
+        let current = date.toPlainDateTime(startTime)
+        for (; Temporal.PlainDateTime.compare(current, limit) < 0; current = current.add({minutes: 15})) {
             for (const start of instants(date, current.toPlainTime(), resource.zone)) {
                 const end = start + service.duration * minute, occupiedFrom = start - service.before * minute, occupiedTo = end + service.after * minute
                 if (occupiedFrom < from || occupiedTo > until) continue
                 const zoned = Temporal.Instant.fromEpochMilliseconds(start).toZonedDateTimeISO(resource.zone)
-                results.set(start, {start, end, occupiedFrom, occupiedTo, local: zoned.toPlainDateTime().toString({smallestUnit: 'minute'}), offset: zoned.offset})
+                const local = zoned.toPlainDateTime().toString({smallestUnit: 'minute'})
+                results.set(start, {start, end, occupiedFrom, occupiedTo, local, offset: zoned.offset})
             }
         }
     }
@@ -65,11 +77,16 @@ export function activeBooking(booking: BookingState['bookings'][string], at: num
 export function remaining(state: BookingState, resource: Resource, from: number, until: number, at: number, exclude = '') {
     const points: {at: number, delta: number}[] = []
     for (const booking of Object.values(state.bookings)) {
-        if (booking.id == exclude || booking.resourceId != resource.id || !activeBooking(booking, at) || booking.occupiedFrom >= until || booking.occupiedTo <= from) continue
+        if (booking.id == exclude || booking.resourceId != resource.id) continue
+        if (!activeBooking(booking, at)) continue
+        if (booking.occupiedFrom >= until || booking.occupiedTo <= from) continue
         points.push({at: Math.max(from, booking.occupiedFrom), delta: booking.partySize}, {at: Math.min(until, booking.occupiedTo), delta: -booking.partySize})
     }
     let used = 0, peak = 0
-    for (const point of points.sort((a, b) => a.at - b.at || a.delta - b.delta)) {used += point.delta; peak = Math.max(peak, used)}
+    for (const point of points.sort((a, b) => a.at - b.at || a.delta - b.delta)) {
+        used += point.delta
+        peak = Math.max(peak, used)
+    }
     return resource.capacity - peak
 }
 export function slotFor(state: BookingState, service: Offering, start: number, partySize: number, at: number, exclude = '') {
@@ -89,7 +106,9 @@ export function availability(state: BookingState, service: Offering, input: {fro
     if (!Number.isInteger(input.days) || input.days < 1 || input.days > 14) throw new Error('Запрашивайте от 1 до 14 дней')
     if (!Number.isInteger(input.partySize) || input.partySize < 1 || input.partySize > service.capacity) throw new Error('Недопустимое число участников')
     const today = Temporal.Instant.fromEpochMilliseconds(at).toZonedDateTimeISO(resource.zone).toPlainDate()
-    if (Temporal.PlainDate.compare(from, today.subtract({days: 1})) < 0 || Temporal.PlainDate.compare(from.add({days: input.days}), today.add({days: 181})) > 0) throw new Error('Диапазон вне горизонта записи')
+    const tooEarly = Temporal.PlainDate.compare(from, today.subtract({days: 1})) < 0
+    const tooLate = Temporal.PlainDate.compare(from.add({days: input.days}), today.add({days: 181})) > 0
+    if (tooEarly || tooLate) throw new Error('Диапазон вне горизонта записи')
     const slots = service.active ? Array.from({length: input.days}, (_, index) => daySlots(resource, service, from.add({days: index}).toString())).flat()
         .filter(slot => slot.start > at && slot.start <= at + 180 * 86400000)
         .map(slot => ({...slot, available: Math.min(service.capacity, remaining(state, resource, slot.occupiedFrom, slot.occupiedTo, at))}))

@@ -88,7 +88,8 @@ export function withoutText(line, state) {
             index += 2
             continue
         }
-        if (rest[0] == '/' && startsRegExp(result)) {
+        // `/>` закрывает элемент JSX: это не начало регулярного выражения.
+        if (rest[0] == '/' && rest[1] != '>' && startsRegExp(result)) {
             const end = regExpEnd(rest)
             result += ' '.repeat(end)
             index += end

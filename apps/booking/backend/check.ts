@@ -10,7 +10,10 @@ import {createProcess} from './process-resource'
 
 async function until(label: string, predicate: () => boolean | Promise<boolean>, timeout = 16000) {
     const end = Date.now() + timeout
-    while (!await predicate()) {assert(Date.now() < end, label); await new Promise(resolve => setTimeout(resolve, 30))}
+    while (!await predicate()) {
+        assert(Date.now() < end, label)
+        await new Promise(resolve => setTimeout(resolve, 30))
+    }
 }
 async function main() {
     const temporary = realpathSync(tmpdir()), directory = mkdtempSync(path.join(temporary, 'booking-network-'))
@@ -23,7 +26,12 @@ async function main() {
     let sequence = 0
     const rpc = () => 'network-' + (++sequence)
     async function client(account: string) {
-        const session = createServiceClient<BookingDefinition>({definition, url, auth: {credentials: {account, password: account + '-pass'}}, placement: {rng: () => 0}})
+        const session = createServiceClient<BookingDefinition>({
+            definition,
+            url,
+            auth: {credentials: {account, password: account + '-pass'}},
+            placement: {rng: () => 0}
+        })
         clients.push(session)
         await session.ready()
         await session.views.workspace.ready
@@ -50,13 +58,21 @@ async function main() {
         assert(slots.slots.length > 0)
         const start = slots.slots[0].start
         const hold = {orgId: 'northstar', serviceId: 'consultation', start, partySize: 1, customer: '', note: 'network-private-note', reminder: true}
-        const race = await Promise.allSettled([a.commands.bookingHold(rpc(), {...hold, key: 'race-a'}), b.commands.bookingHold(rpc(), {...hold, key: 'race-b'})])
+        const race = await Promise.allSettled([
+            a.commands.bookingHold(rpc(), {...hold, key: 'race-a'}),
+            b.commands.bookingHold(rpc(), {...hold, key: 'race-b'})
+        ])
         assert.equal(race.filter(value => value.status == 'fulfilled').length, 1, 'authority allocates final place once across clients')
         const winnerIndex = race[0].status == 'fulfilled' ? 0 : 1
-        const winner = winnerIndex == 0 ? a : b, loser = winnerIndex == 0 ? b : a
+        const winner = winnerIndex == 0 ? a : b
+        const loser = winnerIndex == 0 ? b : a
         const booking = (race[winnerIndex] as PromiseFulfilledResult<{id: string}>).value
         await winner.commands.bookingConfirm(rpc(), {orgId: 'northstar', id: booking.id, revision: 1, key: 'confirm-winner'})
-        await until('owner sees confirmed booking', () => owner.views.workspace.store.state.bookings.some(value => value.id == booking.id && value.status == 'confirmed'))
+        await until('owner sees confirmed booking', function confirmed() {
+            return owner.views.workspace.store.state.bookings.some(function match(value) {
+                return value.id == booking.id && value.status == 'confirmed'
+            })
+        })
         assert.equal(loser.views.workspace.store.state.bookings.length, 0)
         assert(!JSON.stringify(outsider.views.workspace.store.state).includes('network-private-note'))
         const waiting = await loser.commands.waitJoin(rpc(), {orgId: 'northstar', serviceId: 'consultation', start, partySize: 1, key: 'wait-next'})
@@ -68,9 +84,17 @@ async function main() {
         assert.equal(owner.views.workspace.store, stableStore)
         assert.equal((await read.control.read(query)).slots.some(value => value.start == start), false)
         await winner.commands.bookingCancel(rpc(), {orgId: 'northstar', id: booking.id, revision: 2, key: 'cancel-winner'})
-        await until('waitlist gets one hold after node failure', () => loser.views.workspace.store.state.waitlist.some(value => value.id == waiting.id && value.status == 'offered'))
+        await until('waitlist gets one hold after node failure', function offered() {
+            return loser.views.workspace.store.state.waitlist.some(function match(value) {
+                return value.id == waiting.id && value.status == 'offered'
+            })
+        })
         const offerId = loser.views.workspace.store.state.waitlist.find(value => value.id == waiting.id)!.offerId
-        await until('reconciler expires offer without user command', () => loser.views.workspace.store.state.bookings.some(value => value.id == offerId && value.status == 'expired'), 12000)
+        await until('reconciler expires offer without user command', function expired() {
+            return loser.views.workspace.store.state.bookings.some(function match(value) {
+                return value.id == offerId && value.status == 'expired'
+            })
+        }, 12000)
         assert((await read.control.read(query)).slots.some(value => value.start == start), 'expired hold immediately frees availability')
         const finalInput = {...hold, key: 'stable-final'}
         const final = await a.commands.bookingHold(rpc(), finalInput)
@@ -100,4 +124,7 @@ async function main() {
         rmSync(directory, {recursive: true, force: true})
     }
 }
-main().catch(function failed(error) {console.error(error); process.exitCode = 1})
+main().catch(function failed(error) {
+    console.error(error)
+    process.exitCode = 1
+})

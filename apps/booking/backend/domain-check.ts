@@ -19,25 +19,46 @@ async function main() {
     assert(!daySlots(lordHowe, short, '2026-10-04').some(slot => slot.local == '2026-10-04T02:15'), '30 minute DST gap is respected')
     assert.equal(daySlots({...sunday, exceptions: [{date: '2026-10-25', windows: []}]}, short, '2026-10-25').length, 0)
     assert.throws(() => validateResource({...source, zone: 'not/a-zone'}))
-    assert.throws(() => validateResource({...source, weekly: [{day: 1, start: '09:00', end: '12:00'}, {day: 1, start: '11:00', end: '13:00'}]}), /непересекающимися/)
+    const overlapping = [
+        {day: 1, start: '09:00', end: '12:00'},
+        {day: 1, start: '11:00', end: '13:00'}
+    ]
+    assert.throws(() => validateResource({...source, weekly: overlapping}), /непересекающимися/)
     assert.throws(() => daySlots(source, short, '2026-02-30'))
     let clock = Date.UTC(2026, 8, 14, 6)
     const runtime = createBookingRuntime({now: () => clock, holdMs: 60000})
     const leader = createServiceLeader({definition: runtime.definition, selfUrl: () => 'http://localhost'})
     const close = runtime.mount({store: leader.line.control.store, system: leader.corridor.system})
     const state = () => leader.line.control.store.snapshot()
-    const owner = leader.corridor.fragment('owner'), staff = leader.corridor.fragment('staff'), first = leader.corridor.fragment('customer'), second = leader.corridor.fragment('customer2'), outsider = leader.corridor.fragment('outsider')
+    const owner = leader.corridor.fragment('owner')
+    const staff = leader.corridor.fragment('staff')
+    const first = leader.corridor.fragment('customer')
+    const second = leader.corridor.fragment('customer2')
+    const outsider = leader.corridor.fragment('outsider')
     const controller = new AbortController()
-    const context = (account: string) => ({principal: {account, roles: bookingRoles(state(), account)}, sessionId: account, resourceId: 'calendar-test', signal: controller.signal})
+    const context = (account: string) => ({
+        principal: {account, roles: bookingRoles(state(), account)},
+        sessionId: account,
+        resourceId: 'calendar-test',
+        signal: controller.signal
+    })
     const calendar = runtime.definition.resources.calendar.open(context('customer'))
     let sequence = 0
     const rpc = () => 'check-' + (++sequence)
     const orgId = 'northstar'
     async function until(label: string, test: () => boolean) {
         const limit = Date.now() + 3000
-        while (!test()) {assert(Date.now() < limit, label); await new Promise(resolve => setTimeout(resolve, 10))}
+        while (!test()) {
+            assert(Date.now() < limit, label)
+            await new Promise(resolve => setTimeout(resolve, 10))
+        }
     }
-    function hold(key: string, start: number) {return {orgId, key, serviceId: 'consultation', start, partySize: 1, customer: '', note: 'Клиентская заметка', reminder: true}}
+    function hold(key: string, start: number) {
+        return {
+            orgId, key, serviceId: 'consultation', start, partySize: 1,
+            customer: '', note: 'Клиентская заметка', reminder: true
+        }
+    }
     function action(id: string, key: string) {return {orgId, id, revision: state().bookings[id].revision, key}}
     try {
         assert.equal(runtime.definition.access.login.resolve(state(), {account: 'customer', password: 'customer-pass'}), 'customer')
@@ -45,7 +66,9 @@ async function main() {
         await owner.resourceSave(rpc(), {...state().resources.studio, capacity: 1})
         await assert.rejects(first.resourceSave(rpc(), {...state().resources.studio, name: 'forged'}), /forbidden/)
         await assert.rejects(staff.resourceSave(rpc(), {...state().resources.harbor}), /доступа/)
-        assert.throws(() => runtime.definition.resources.calendar.open(context('outsider')).facade.control.read({orgId, serviceId: 'consultation', from: '2026-09-14', days: 1, partySize: 1}), /доступа/)
+            const foreign = runtime.definition.resources.calendar.open(context('outsider'))
+        const range = {orgId, serviceId: 'consultation', from: '2026-09-14', days: 1, partySize: 1}
+        assert.throws(() => foreign.facade.control.read(range), /доступа/)
         assert.throws(() => calendar.facade.control.read({orgId, serviceId: 'consultation', from: '2026-09-14', days: 15, partySize: 1}), /14 дней/)
         assert.throws(() => calendar.facade.control.read({orgId, serviceId: 'harbor', from: '2026-09-14', days: 1, partySize: 1}), /недоступна/)
         const slots = calendar.facade.control.read({orgId, serviceId: 'consultation', from: '2026-09-14', days: 1, partySize: 1}).slots
@@ -59,7 +82,10 @@ async function main() {
         const winningInput = state().bookings[winner].customer == 'customer' ? firstInput : secondInput
         assert.equal((await winningClient.bookingHold(rpc(), winningInput)).fresh, false)
         await assert.rejects(winningClient.bookingHold(rpc(), {...winningInput, start: start + 3600000}), /другими параметрами/)
-        assert(!calendar.facade.control.read({orgId, serviceId: 'consultation', from: '2026-09-14', days: 1, partySize: 1}).slots.some(slot => slot.start == start + 15 * 60000), 'buffer occupies resource through end+15min')
+        const day = {orgId, serviceId: 'consultation', from: '2026-09-14', days: 1, partySize: 1}
+        const free = calendar.facade.control.read(day).slots
+        const note = 'buffer occupies resource through end+15min'
+        assert(!free.some(slot => slot.start == start + 15 * 60000), note)
         await assert.rejects(outsider.bookingConfirm(rpc(), action(winner, 'cross-tenant')), /доступа/)
         const otherClient = state().bookings[winner].customer == 'customer' ? second : first
         await assert.rejects(otherClient.bookingConfirm(rpc(), action(winner, 'other-customer')), /недоступна/)
@@ -82,7 +108,10 @@ async function main() {
         const original = state().bookings[offerId]
         const left = {...original, id: 'adjacent-left', occupiedFrom: start, occupiedTo: start + 3600000, status: 'confirmed' as const}
         const right = {...original, id: 'adjacent-right', occupiedFrom: start + 3600000, occupiedTo: start + 7200000, status: 'confirmed' as const}
-        assert.equal(remaining({...state(), bookings: {[left.id]: left, [right.id]: right}}, {...state().resources.studio, capacity: 2}, start + 1800000, start + 5400000, clock), 1, 'adjacent bookings do not get summed as if they overlapped')
+        const both = {...state(), bookings: {[left.id]: left, [right.id]: right}}
+        const studio = {...state().resources.studio, capacity: 2}
+        const capacityLeft = remaining(both, studio, start + 1800000, start + 5400000, clock)
+        assert.equal(capacityLeft, 1, 'adjacent bookings do not get summed as if they overlapped')
         await assert.rejects(otherClient.bookingMove(rpc(), {...action(offerId, 'conflicting-move'), start: secondSlot}), /недостаточно/)
         assert.deepEqual(state().bookings[offerId], original, 'failed reschedule preserves all original fields')
         await otherClient.bookingMove(rpc(), {...action(offerId, 'move-free'), start: secondSlot + 3600000})
@@ -134,7 +163,12 @@ async function main() {
         controller.abort()
         assert.throws(() => calendar.facade.control.read({orgId, serviceId: 'consultation', from: '2026-09-14', days: 1, partySize: 1}))
         console.log('PASS booking: DST gap/fold/30min transition, exceptions, range, tenant/role/privacy, atomic final-place race, buffers, TTL, semantic repeats, conflict-safe move, waitlist promotion, stale reminders and local test deposits including late payment/refund')
-    } finally {calendar.close(); await close(); leader.control.close()}
+    } finally {calendar.close()
+    await close()
+    leader.control.close()}
 }
-main().catch(function failed(error) {console.error(error); process.exitCode = 1})
+main().catch(function failed(error) {
+    console.error(error)
+    process.exitCode = 1
+})
 

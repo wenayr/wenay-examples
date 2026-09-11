@@ -9,12 +9,10 @@
         "catalog",
         "metering",
         "monitoring",
-        "documents"
+        "documents",
+        "booking"
     ],
     "files": [
-        "apps/booking/backend/domain.ts",
-        "apps/booking/backend/service.ts",
-        "apps/booking/frontend/main.tsx",
         "apps/content/backend/domain.ts",
         "apps/content/backend/service.ts",
         "apps/content/frontend/main.tsx",

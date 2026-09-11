@@ -41,7 +41,11 @@ export function createBookingRuntime(deps: {now?: () => number, holdMs?: number,
                 for (const value of events) if (value.at > now()) ctx.retry(value.id, Math.max(1, value.at - now()))
             }})
             worker.control.request()
-            return async function close() {closeAssistant(); await worker.close(); store = null}
+            return async function close() {
+                closeAssistant()
+                await worker.close()
+                store = null
+            }
         }}
 }
 export type BookingDefinition = ReturnType<typeof createBookingRuntime>['definition']
