@@ -168,8 +168,12 @@ async function check() {
         assert.deepEqual(meterPackage.devDependencies, meterSource.devDependencies)
         assert.equal(meterPackage.name, meterLock.packages[''].name)
         assert.equal(meterPackage.name, meterLock.name)
-        assert.equal(meterPackage.scripts.test, meterSource.scripts.test)
+        // Копия сохраняет основной npm test донора без шагов, которых в ней нет.
+        const meterExpected = meterSource.scripts.test.split(' && ').filter(step => !step.includes('backup-check.ts')).join(' && ')
+        assert.equal(meterPackage.scripts.test, meterExpected)
         assert.equal(meterPackage.scripts['test:integration'], undefined)
+        assert.equal(meterPackage.scripts['test:backup'], undefined)
+        await assert.rejects(lstat(path.join(metering, 'backend/backup-check.ts')), {code: 'ENOENT'})
         await assert.rejects(lstat(path.join(metering, 'backend/integration-check.ts')), {code: 'ENOENT'})
         for (const file of ['backend/domain-check.ts', 'backend/webhook-check.ts', 'backend/check.ts', 'backend/provider-http.ts', 'frontend/webhooks.tsx', 'Dockerfile', '.dockerignore', '.env.example']) assert((await lstat(path.join(metering, file))).isFile())
         assert((await readFile(path.join(metering, 'README.md'), 'utf8')).includes('только для исходного репозитория'))

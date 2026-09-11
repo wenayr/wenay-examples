@@ -8,9 +8,10 @@
     "dev": "vite frontend --host 127.0.0.1",
     "build": "vite build frontend --outDir ../public",
     "typecheck": "tsc --noEmit",
-    "test": "tsx backend/domain-check.ts && tsx backend/webhook-check.ts && tsx backend/check.ts",
+    "test": "tsx backend/domain-check.ts && tsx backend/webhook-check.ts && tsx backend/check.ts && tsx backend/backup-check.ts",
     "test:webhooks": "tsx backend/webhook-check.ts",
-    "test:integration": "tsx backend/integration-check.ts"
+    "test:integration": "tsx backend/integration-check.ts",
+    "test:backup": "tsx backend/backup-check.ts"
   },
   "dependencies": {
     "ag-grid-community": "36.1.0",
