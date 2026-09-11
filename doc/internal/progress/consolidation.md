@@ -57,3 +57,4 @@
 - Q05 crm: 366 нарушений -> 0 по всем 57 файлам; typecheck, build, npm test зелёные; приложение добавлено в apps.
 - Q05 pizzeria: 486 нарушений -> 0 по всем 84 файлам; typecheck, build, npm test зелёные. organizer/board.tsx и organizer/canvas.tsx переписаны вручную: вынесены предикаты (visible, canEdit, dragOutdated, vacantSpot), фрагменты разметки (tabs, summary, filters, taskForm, lanes, people) и обработчики.
 - Q05 завершён: в scripts/style-check.json больше нет списков apps/files/paths, проверка плотности идёт по всему каталогу (426 файлов, 0 нарушений). В exclude остались только scripts/create-saas-example.mjs и scripts/scaffold-check.mjs. npm run check:all зелёный.
+- Итоговый отчёт — 2026-09-11 — doc/reports/CONSOLIDATION-REPORT.md: таблица 36 задач, показатели плана 2 с командами проверки, STATUS целиком, границы проверки (CI не запускался, браузер только по approvals), семь попутных находок и четыре открытых вопроса — коммит ниже
