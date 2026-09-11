@@ -36,7 +36,7 @@ const manifests = {
         'frontend/tasks.css', 'frontend/vite.config.ts', 'frontend/workspace.tsx', 'organizer/task-domain.ts', 'organizer/task-model.ts'
     ]),
     support: [
-        ...commonBackend, 'check.ts', 'resource-check.ts', 'identity-check.ts', 'organizer.ts', 'organizer-check.ts', 'notifications.ts', 'notifications-check.ts', 'assistant-resource.ts', 'files-resource.ts', 'content-resource.ts', 'published-contract.ts', 'conversation-resource.ts', 'conversation-check.ts', 'article-index.ts', 'article-index-check.ts', 'product-http.ts', 'product-check.ts', 'oidc.ts', 'oidc-check.ts',
+        ...commonBackend, 'check.ts', 'resource-check.ts', 'identity-check.ts', 'organizer.ts', 'organizer-check.ts', 'notifications.ts', 'notifications-check.ts', 'assistant-resource.ts', 'files-resource.ts', 'content-resource.ts', 'published-contract.ts', 'conversation-resource.ts', 'conversation-check.ts', 'article-index.ts', 'article-index-check.ts', 'http-auth.ts', 'product-http.ts', 'product-check.ts', 'oidc.ts', 'oidc-check.ts',
         'ai-resource-lifecycle-repro.ts', 'ai-policy-repro.ts', 'store-nested-replacement-repro.ts'
     ].map(file => 'backend/' + file).concat(shared, [
         'frontend/assistant.tsx', 'frontend/attachments.tsx', 'frontend/content-knowledge.tsx', 'frontend/conversation-history.tsx', 'frontend/contracts.tsx', 'frontend/env.d.ts', 'frontend/inbox.tsx',

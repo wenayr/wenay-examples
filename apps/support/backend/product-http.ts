@@ -1,31 +1,13 @@
-import express, {type Express, type RequestHandler} from 'express'
+import express, {type Express} from 'express'
 import {createHash} from 'node:crypto'
 import {createHttpFacadeServer, createHttpFacadeOpenApi} from 'wenay-common2/server'
 import {buildInputValidate, inputJsonSchema, type InferInput} from 'wenay-common2/service'
 import type {createArticleIndex} from './article-index'
 import type {UsageGate} from './metered-execution'
+import {authenticatedArgs} from './http-auth'
 
 export const SEARCH_INPUT = {orgId: 'string', query: 'string', limit: 'number', requestId: 'string'} as const
 const validate = buildInputValidate(SEARCH_INPUT)
-
-// Authentication is resolved by the service's own identity authority. The middleware
-// inserts that account; a caller cannot choose an account in the request arguments.
-export function authenticatedArgs(deps: {account: (token: string) => string}): RequestHandler {
-    return function authenticate(request, response, next) {
-        response.setHeader('Cache-Control', 'no-store')
-        const header = request.get('authorization') ?? ''
-        let account: string
-        try {
-            if (!header.startsWith('Bearer ') || header.length > 16000) throw new Error('token')
-            account = deps.account(header.slice(7))
-            if (!account) throw new Error('account')
-        } catch {response.status(401).json({ok: false, error: {message: 'Требуется действующая сессия'}}); return}
-        const args = Array.isArray(request.body) ? request.body : request.body?.args
-        if (!Array.isArray(args) || args.length != 1) {response.status(400).json({ok: false, error: {message: 'Ожидается один объект в args'}}); return}
-        request.body = {args: [account, args[0]]}
-        next()
-    }
-}
 
 export function createSearchProductHttp(deps: {app: Express, account: (token: string) => string, search: ReturnType<typeof createArticleIndex>['search'], usage?: UsageGate}) {
     const object = {search: {async published(account: string, input: InferInput<typeof SEARCH_INPUT>) {

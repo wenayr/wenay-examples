@@ -146,5 +146,12 @@
             "apps/content/frontend/env.d.ts",
             "apps/approvals/frontend/env.d.ts"
         ]
+    },
+    {
+        "canon": "shared/backend/http-auth.ts",
+        "copies": [
+            "apps/documents/backend/http-auth.ts",
+            "apps/support/backend/http-auth.ts"
+        ]
     }
 ]
