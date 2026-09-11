@@ -3,7 +3,10 @@ import path from 'node:path'
 import {fileURLToPath} from 'node:url'
 
 const repository = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
-const skipped = new Set(['node_modules', 'public', 'work', 'dist', '.git', 'organizer-public', 'vendor'])
+// `data` — рабочее состояние запущенных приложений (см. .gitignore), не исходный код.
+const skipped = new Set([
+    'node_modules', 'public', 'work', 'dist', '.git', 'organizer-public', 'vendor', 'data'
+])
 
 export function settings() {
     const file = path.join(repository, 'scripts', 'style-check.json')

@@ -11,7 +11,11 @@ export function validateMachineSpec(spec: MachineSpec) {
     }
     if (!/^ssh-ed25519 [A-Za-z0-9+/]{68}={0,2}( [^\r\n]{1,100})?$/.test(spec.sshKey)) throw new Error('an Ed25519 public SSH key is required')
     const raw = Buffer.from(spec.sshKey.split(' ')[1], 'base64')
-    if (raw.length != 51 || raw.readUInt32BE(0) != 11 || raw.subarray(4, 15).toString() != 'ssh-ed25519' || raw.readUInt32BE(15) != 32) throw new Error('invalid Ed25519 public key')
+    // Формат ключа фиксирован: длина типа, сам тип и длина 32-байтового ключа.
+    const typed = raw.readUInt32BE(0) == 11 && raw.subarray(4, 15).toString() == 'ssh-ed25519'
+    if (raw.length != 51 || !typed || raw.readUInt32BE(15) != 32) {
+        throw new Error('invalid Ed25519 public key')
+    }
 }
 
 export function machineIdentity(input: {owner: string, id: string, project: string, spec: MachineSpec}) {

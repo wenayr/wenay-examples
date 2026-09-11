@@ -19,11 +19,17 @@ async function reconcilerCheck() {
     let active = 0
     const worker = createReconciler({
         read: () => value,
-        subscribe(request) {notify = request; return function off() {unsubscribed++}},
+        subscribe(request) {
+            notify = request
+            return function off() {unsubscribed++}
+        },
         async run(snapshot) {
             assert.equal(++active, 1, 'passes must be serial')
             snapshots.push(snapshot)
-            if (snapshots.length == 1) {entered.resolve(); await release.promise}
+            if (snapshots.length == 1) {
+                entered.resolve()
+                await release.promise
+            }
             active--
         },
     })
@@ -42,7 +48,8 @@ async function reconcilerCheck() {
         await worker.control.idle()
         assert.equal(unsubscribed, 1)
         assert.equal(snapshots.length, 2)
-    } finally {release.resolve(); await worker.close()}
+    } finally {release.resolve()
+    await worker.close()}
 
     let passes = 0
     let mode: 'retry' | 'ok' | 'fail' = 'retry'
@@ -83,7 +90,8 @@ async function reconcilerCheck() {
         const closed = passes
         await pause(70)
         assert.equal(passes, closed, 'close clears pending retries')
-    } finally {await retrying.close(); off()}
+    } finally {await retrying.close()
+    off()}
 
     const started = Promise.withResolvers<void>()
     const finishing = Promise.withResolvers<void>()
@@ -105,7 +113,8 @@ async function reconcilerCheck() {
         assert.equal(complete, false, 'close awaits the actual pass completion')
         finishing.resolve()
         await close
-    } finally {finishing.resolve(); await cancellable.close()}
+    } finally {finishing.resolve()
+    await cancellable.close()}
     console.log('PASS H1 public reconciler: bursts across IO, fresh reads, serial passes, keyed retry, obsolete timer removal, errors, shared close and unsubscribe')
 }
 
@@ -115,7 +124,10 @@ async function ownershipCheck() {
     const original = new Error('startup failed')
     const disposal = new Error('close failed')
     scope.resource.own(function lock() {closed.push('lock')})
-    scope.resource.own(function client() {closed.push('client'); throw disposal})
+    scope.resource.own(function client() {
+        closed.push('client')
+        throw disposal
+    })
     await assert.rejects(scope.start(async function start() {throw original}), error => error == original)
     assert.deepEqual(closed, ['client', 'lock'], 'cleanup continues after a failed disposer')
     await assert.rejects(scope.settled(), AggregateError)
@@ -126,8 +138,14 @@ async function ownershipCheck() {
     let freed = false
     late.resource.own(function releaseLock() {assert(freed, 'lock waits for the late dependent resource')})
     const acquired = late.resource.acquire({
-        async open() {opening.resolve(); return resource.promise},
-        close(value) {assert.equal(value, 'connection'); freed = true},
+        async open() {
+            opening.resolve()
+            return resource.promise
+        },
+        close(value) {
+            assert.equal(value, 'connection')
+            freed = true
+        },
     })
     const rejected = assert.rejects(acquired)
     await opening.promise
@@ -145,8 +163,14 @@ async function ownershipCheck() {
     let transportClosed = false
     group.resource.own(function releaseLock() {assert(transportClosed)})
     group.resource.parallel([
-        async function pass() {await finished.promise; assert(transportClosed)},
-        function transport() {transportClosed = true; finished.resolve()},
+        async function pass() {
+            await finished.promise
+            assert(transportClosed)
+        },
+        function transport() {
+            transportClosed = true
+            finished.resolve()
+        },
     ])
     await group.close()
     console.log('PASS H2 public ownership: original startup error, continued reverse cleanup, late acquisition, shared deadline/actual settlement and parallel IO shutdown before lock release')
@@ -155,7 +179,10 @@ async function ownershipCheck() {
 async function partialAgentStart() {
     const root = await realpath(tmpdir())
     const directory = await mkdtemp(path.join(root, 'hosting-start-check-'))
-    const server = http.createServer(function unavailable(_request, response) {response.writeHead(503); response.end()})
+    const server = http.createServer(function unavailable(_request, response) {
+        response.writeHead(503)
+        response.end()
+    })
     await new Promise<void>(resolve => server.listen(0, '127.0.0.1', resolve))
     const url = 'http://127.0.0.1:' + (server.address() as {port: number}).port
     const deps = {url, account: 'fixture-agent', password: 'fixture-only', socketPath: 'unused', directory}
@@ -180,4 +207,7 @@ async function main() {
     await ownershipCheck()
     await partialAgentStart()
 }
-main().catch(function failed(error) {console.error(error); process.exitCode = 1})
+main().catch(function failed(error) {
+    console.error(error)
+    process.exitCode = 1
+})

@@ -11,14 +11,24 @@ import {startDockerAgent} from './agent'
 import {createDockerResource, type Deployment} from './docker'
 import type {SupportDefinition} from '../../support/backend/runtime'
 
+// Развёртывание закрепляется digest образа, а не подвижным тегом.
+function imageDigest(release: string) {
+    const reference = 'wenay-examples.local/support:' + release
+    const args = ['image', 'inspect', reference, '--format', '{{index .RepoDigests 0}}']
+    return execFileSync('docker', args, {windowsHide: true, encoding: 'utf8'}).trim()
+}
+
 async function main() {
     const images = Object.fromEntries(['first', 'second'].map(release => [release,
-        execFileSync('docker', ['image', 'inspect', 'wenay-examples.local/support:' + release, '--format', '{{index .RepoDigests 0}}'], {windowsHide: true, encoding: 'utf8'}).trim()]))
+        imageDigest(release)]))
     for (const value of Object.values(images)) assert(/@sha256:[a-f0-9]{64}$/.test(value), 'Build pinned support images before live check')
     const directory = await mkdtemp(path.join(os.tmpdir(), 'support-hosting-'))
     const account = 'support-' + randomBytes(5).toString('hex')
     const password = randomBytes(24).toString('hex')
-    const definition = createHostingDefinition({accounts: [{account: 'admin', password, role: 'admin', projects: []}, {account, password, role: 'agent', projects: ['support']}]})
+    const definition = createHostingDefinition({accounts: [
+        {account: 'admin', password, role: 'admin', projects: []},
+        {account, password, role: 'agent', projects: ['support']}
+    ]})
     const host = await createServiceLeaderHost({definition, env: {SERVICE_PORT: '0'}, mount({app}) {
         app.get('/api/client', function descriptor(_req, res) {res.json(describeService(definition))})
     }})
@@ -32,14 +42,23 @@ async function main() {
     const profile = {port: 8080, healthPath: '/health', memoryMiB: 256, cpus: 0.5, dataVersion: 'support-1'}
     async function wait(label: string, predicate: () => boolean | Promise<boolean>) {
         const until = Date.now() + 35000
-        while (!await predicate()) {assert(Date.now() < until, label); await new Promise(resolve => setTimeout(resolve, 70))}
+        while (!await predicate()) {
+            assert(Date.now() < until, label)
+            await new Promise(resolve => setTimeout(resolve, 70))
+        }
     }
     try {
         await control.ready()
         await control.views.dashboard.ready
         await control.commands.createProject('project', {id: 'support', title: 'Support acceptance'})
         await control.commands.createEnvironment('environment', {id: 'app', project: 'support', kind: 'docker', agent: account})
-        for (const release of ['first', 'second']) await control.commands.publishRelease('release-' + release, {id: release, project: 'support', version: release, artifact: images[release], ...profile})
+        for (const release of ['first', 'second']) await control.commands.publishRelease('release-' + release, {
+            id: release,
+            project: 'support',
+            version: release,
+            artifact: images[release],
+            ...profile
+        })
         agent = await startDockerAgent({url: host.url, account, password, socketPath, directory, readinessMs: 20000})
         let route = ''
         let ticketId = ''
@@ -50,31 +69,62 @@ async function main() {
             const input = {environment: 'app', release, revision: current.revision}
             const operation = index == 2 ? await control.commands.rollback('rollback', input) : await control.commands.deploy('deploy-' + index, input)
             deployments.push({operation: operation.id, environment: 'app', artifact: images[release], workload: profile})
-            await wait('deployment terminal', () => control.views.dashboard.store.state.operations.some(item => item.id == operation.id && ['succeeded', 'failed'].includes(item.status)))
+            await wait('deployment terminal', function done() {
+                return control.views.dashboard.store.state.operations.some(function finished(item) {
+                    return item.id == operation.id && ['succeeded', 'failed'].includes(item.status)
+                })
+            })
             const completed = control.views.dashboard.store.state.operations.find(item => item.id == operation.id)
             assert.equal(completed?.status, 'succeeded', completed?.detail ?? 'deployment failed')
             const endpoint = control.views.dashboard.store.state.environments[0].route!
             route ||= endpoint
             assert.equal(endpoint, route)
-            await wait('release through stable gateway', async () => fetch(route + '/health', {signal: AbortSignal.timeout(2000)}).then(response => response.json()).then(body => body.release == release).catch(() => false))
+            await wait('release through stable gateway', async function healthy() {
+                const answer = fetch(route + '/health', {signal: AbortSignal.timeout(2000)})
+                const body = await answer.then(response => response.json()).catch(() => null)
+                return body?.release == release
+            })
             assert((await fetch(route).then(response => response.text())).includes('Northstar'))
             if (!app) {
                 const descriptor = await fetch(route + '/api/client').then(response => response.json())
-                app = createServiceClient<SupportDefinition>({definition: descriptor, url: route, auth: {credentials: {account: 'customer', password: 'customer-pass'}}})
+                app = createServiceClient<SupportDefinition>({
+                    definition: descriptor,
+                    url: route,
+                    auth: {credentials: {account: 'customer', password: 'customer-pass'}}
+                })
                 await app.ready()
                 await app.views.workspace.ready
-                const created = await app.commands.ticketCreate('hosted-ticket', {orgId: 'northstar', subject: 'Заявка через хостинг', body: 'Проверяем размещение и сохранение', priority: 'normal'})
+                const created = await app.commands.ticketCreate('hosted-ticket', {
+                    orgId: 'northstar',
+                    subject: 'Заявка через хостинг',
+                    body: 'Проверяем размещение и сохранение',
+                    priority: 'normal'
+                })
                 ticketId = created.id
                 watcher = app.resources.open('files')
                 await wait('resource generation established', () => !!watcher?.current())
                 const files = app.resources.open('files')
                 try {
                     await wait('files resource', () => files.status.state.phase == 'ready')
-                    attachmentId = (await files.current()!.remote.control.upload({orgId: 'northstar', ticketId, name: 'hello.txt', bytes: new TextEncoder().encode('durable attachment')})).id
+                    attachmentId = (await files.current()!.remote.control.upload({
+                        orgId: 'northstar',
+                        ticketId,
+                        name: 'hello.txt',
+                        bytes: new TextEncoder().encode('durable attachment')
+                    })).id
                 } finally {await files.close()}
             } else {
-                await wait('same live session reconnects', () => app!.health.state.connected && (watcher?.current()?.generation ?? 0) > previousGeneration && !!app!.views.workspace.store.state.tickets.find(item => item.id == ticketId))
-                const repeat = await app.commands.ticketCreate('hosted-ticket', {orgId: 'northstar', subject: 'Заявка через хостинг', body: 'Проверяем размещение и сохранение', priority: 'normal'})
+                await wait('same live session reconnects', function reconnected() {
+                    if (!app!.health.state.connected) return false
+                    if ((watcher?.current()?.generation ?? 0) <= previousGeneration) return false
+                    return !!app!.views.workspace.store.state.tickets.find(item => item.id == ticketId)
+                })
+                const repeat = await app.commands.ticketCreate('hosted-ticket', {
+                    orgId: 'northstar',
+                    subject: 'Заявка через хостинг',
+                    body: 'Проверяем размещение и сохранение',
+                    priority: 'normal'
+                })
                 assert.equal(repeat.id, ticketId)
                 const files = app.resources.open('files')
                 try {
@@ -92,9 +142,15 @@ async function main() {
         await host.close()
         for (const deployment of deployments) await docker.control.remove(deployment)
         const volume = 'wenay-data-' + createHash('sha256').update(JSON.stringify([account, 'app'])).digest('hex')
-        try {execFileSync('docker', ['volume', 'inspect', volume], {windowsHide: true, stdio: 'pipe'}); execFileSync('docker', ['volume', 'rm', volume], {windowsHide: true, stdio: 'pipe'})} catch { /* Volume may not have been created. */ }
+        try {
+            execFileSync('docker', ['volume', 'inspect', volume], {windowsHide: true, stdio: 'pipe'})
+            execFileSync('docker', ['volume', 'rm', volume], {windowsHide: true, stdio: 'pipe'})
+        } catch { /* Volume may not have been created. */ }
         if (!path.resolve(directory).startsWith(path.resolve(os.tmpdir()) + path.sep)) throw new Error('Unexpected cleanup directory')
         await rm(directory, {recursive: true, force: true})
     }
 }
-main().catch(function failed(error) {console.error(error); process.exitCode = 1})
+main().catch(function failed(error) {
+    console.error(error)
+    process.exitCode = 1
+})

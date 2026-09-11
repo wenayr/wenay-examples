@@ -8,7 +8,13 @@ import {createHostingDefinition, type AccountConfig} from './service'
 async function main() {
     const configFile = process.env.HOSTING_ACCOUNTS_FILE
     if (!configFile) throw new Error('HOSTING_ACCOUNTS_FILE must point to a protected JSON account configuration')
-    if ((process.env.SERVICE_TOKEN_SECRET?.length ?? 0) < 32 || (process.env.SERVICE_NODE_TOKEN?.length ?? 0) < 32 || process.env.SERVICE_TOKEN_SECRET == process.env.SERVICE_NODE_TOKEN) throw new Error('SERVICE_TOKEN_SECRET and SERVICE_NODE_TOKEN must be different secrets of at least 32 characters, retained across restarts')
+    const tokenSecret = process.env.SERVICE_TOKEN_SECRET ?? ''
+    const nodeToken = process.env.SERVICE_NODE_TOKEN ?? ''
+    const strong = tokenSecret.length >= 32 && nodeToken.length >= 32
+    if (!strong || tokenSecret == nodeToken) {
+        throw new Error('SERVICE_TOKEN_SECRET and SERVICE_NODE_TOKEN must be different secrets'
+            + ' of at least 32 characters, retained across restarts')
+    }
     const accounts: AccountConfig[] = JSON.parse(await readFile(configFile, 'utf8'))
     const definition = createHostingDefinition({accounts})
     const host = await runLeaderProcess({definition,
@@ -21,4 +27,7 @@ async function main() {
     console.log('Hosting control API: '+host.url)
 }
 
-main().catch(function failed(error) {console.error(error.message); process.exitCode = 1})
+main().catch(function failed(error) {
+    console.error(error.message)
+    process.exitCode = 1
+})

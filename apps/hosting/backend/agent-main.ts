@@ -15,4 +15,7 @@ async function main() {
     console.log('Docker agent connected')
 }
 
-main().catch(function failed(error) {console.error(error.message); process.exitCode = 1})
+main().catch(function failed(error) {
+    console.error(error.message)
+    process.exitCode = 1
+})

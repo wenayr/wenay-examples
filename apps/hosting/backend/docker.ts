@@ -2,14 +2,34 @@ import http from 'node:http'
 import {createHash} from 'node:crypto'
 import {workload, type Workload} from './workload'
 
-type Container = {Id: string, Config: {Image: string, Labels: Record<string, string>}, State: {Running: boolean}, NetworkSettings: {Ports: Record<string, {HostIp: string, HostPort: string}[] | null>}}
+type PortBinding = {HostIp: string, HostPort: string}
+
+type Container = {
+    Id: string,
+    Config: {Image: string, Labels: Record<string, string>},
+    State: {Running: boolean},
+    NetworkSettings: {Ports: Record<string, PortBinding[] | null>}
+}
 export type Deployment = {operation: string, environment: string, artifact: string, workload?: Workload}
 
 export class DeploymentRejected extends Error {}
 
+// Контейнер должен принадлежать этому владельцу, окружению, операции и образу.
+function sameDeployment(container: Container, owner: string, deployment: Deployment) {
+    const labels = container.Config.Labels ?? {}
+    if (labels['wenay.owner'] != owner) return false
+    if (labels['wenay.operation'] != deployment.operation) return false
+    if (labels['wenay.environment'] != deployment.environment) return false
+    return container.Config.Image == deployment.artifact
+}
+
 export function createDockerResource(deps: {socketPath: string, owner: string, readinessMs?: number, runtime?: (environment: string) => Promise<string[]>}) {
     function dataName(environment: string) {return 'wenay-data-' + createHash('sha256').update(JSON.stringify([deps.owner, environment])).digest('hex')}
-    function nameOf(deployment: Deployment) {return deployment.workload?.dataVersion ? dataName(deployment.environment) + '-writer' : 'wenay-' + deployment.operation}
+    // Приложение с постоянными данными занимает именованный контейнер-писатель.
+    function nameOf(deployment: Deployment) {
+        if (deployment.workload?.dataVersion) return dataName(deployment.environment) + '-writer'
+        return 'wenay-' + deployment.operation
+    }
     async function request<T>(method: string, pathname: string, body?: unknown, signal?: AbortSignal): Promise<T> {
         const text = body == undefined ? undefined : JSON.stringify(body)
         return new Promise(function call(resolve, reject) {
@@ -21,7 +41,10 @@ export function createDockerResource(deps: {socketPath: string, owner: string, r
                 const chunks: Buffer[] = []
                 response.on('data', function data(chunk: Buffer) {
                     bytes += chunk.length
-                    if (bytes > 4*1024*1024) {call.destroy(new Error('Docker response exceeded limit')); return}
+                    if (bytes > 4*1024*1024) {
+                        call.destroy(new Error('Docker response exceeded limit'))
+                        return
+                    }
                     chunks.push(chunk)
                 })
                 response.on('error', reject)
@@ -41,11 +64,16 @@ export function createDockerResource(deps: {socketPath: string, owner: string, r
 
     async function inspect(name: string, signal?: AbortSignal) {
         try {return await request<Container>('GET', '/containers/'+encodeURIComponent(name)+'/json', undefined, signal)}
-        catch (error) {if ((error as {status?: number}).status == 404) return null; throw error}
+        catch (error) {
+            if ((error as {status?: number}).status == 404) return null
+            throw error
+        }
     }
 
     function owned(container: Container, deployment: Deployment) {
-        if (container.Config.Labels?.['wenay.owner'] != deps.owner || container.Config.Labels?.['wenay.operation'] != deployment.operation || container.Config.Labels?.['wenay.environment'] != deployment.environment || container.Config.Image != deployment.artifact) throw new Error('container identity conflicts with requested operation')
+        if (!sameDeployment(container, deps.owner, deployment)) {
+            throw new Error('container identity conflicts with requested operation')
+        }
     }
 
     async function deploy(deployment: Deployment, signal: AbortSignal) {
@@ -59,10 +87,12 @@ export function createDockerResource(deps: {socketPath: string, owner: string, r
                 if (error.status == 404) throw new DeploymentRejected('Pinned image is not installed on the host')
                 throw error
             })
+            const runtimeEnv = await deps.runtime?.(deployment.environment) ?? []
+            const environmentValues = ['SERVICE_PORT=' + profile.port, 'SERVICE_DATA_DIR=/data', ...runtimeEnv]
             try {
-                await request('POST', '/containers/create?name='+name, {
+                await request('POST', '/containers/create?name=' + name, {
                     Image: deployment.artifact,
-                    ...(profile.dataVersion ? {Env: ['SERVICE_PORT=' + profile.port, 'SERVICE_DATA_DIR=/data', ...(await deps.runtime?.(deployment.environment) ?? [])]} : {}),
+                    ...(profile.dataVersion ? {Env: environmentValues} : {}),
                     Labels: {'wenay.owner': deps.owner, 'wenay.operation': deployment.operation, 'wenay.environment': deployment.environment},
                     ExposedPorts: {[profile.port+'/tcp']: {}},
                     HostConfig: {Memory: profile.memoryMiB*1024*1024, NanoCpus: Math.round(profile.cpus*1e9),
@@ -85,7 +115,7 @@ export function createDockerResource(deps: {socketPath: string, owner: string, r
             container = await inspect(name, signal)
             if (!container || !container.State.Running) throw new DeploymentRejected('Candidate stopped before readiness')
             owned(container, deployment)
-            const binding = container.NetworkSettings.Ports[profile.port+'/tcp']?.find(item=>item.HostIp == '127.0.0.1')
+            const binding = container.NetworkSettings.Ports[profile.port+'/tcp']?.find(item => item.HostIp == '127.0.0.1')
             if (binding && /^\d+$/.test(binding.HostPort)) {
                 const endpoint = 'http://127.0.0.1:'+binding.HostPort
                 try {
@@ -103,7 +133,13 @@ export function createDockerResource(deps: {socketPath: string, owner: string, r
         if (!/^[a-f0-9]{64}$/.test(deployment.operation)) throw new Error('invalid operation id')
         const container = await inspect(nameOf(deployment))
         if (!container) return
-        if (deployment.workload?.dataVersion && container.Config.Labels?.['wenay.owner'] == deps.owner && container.Config.Labels?.['wenay.environment'] == deployment.environment && container.Config.Labels?.['wenay.operation'] != deployment.operation) return
+        // Писатель с данными переиспользуется другой операцией того же окружения: не трогаем.
+        const labels = container.Config.Labels ?? {}
+        const own = labels['wenay.owner'] == deps.owner
+        const sameEnvironment = labels['wenay.environment'] == deployment.environment
+        const otherOperation = labels['wenay.operation'] != deployment.operation
+        const reused = own && sameEnvironment && otherOperation
+        if (deployment.workload?.dataVersion && reused) return
         owned(container, deployment)
         if (deployment.workload?.dataVersion && container.State.Running) await request('POST', '/containers/' + container.Id + '/stop?t=10')
         await request('DELETE', '/containers/'+container.Id+'?force=true')
@@ -117,12 +153,12 @@ export function createDockerResource(deps: {socketPath: string, owner: string, r
         owned(container, deployment)
         if (!container.State.Running) return null
         const profile = workload(deployment.workload ?? {})
-        const binding = container.NetworkSettings.Ports[profile.port+'/tcp']?.find(item=>item.HostIp == '127.0.0.1')
+        const binding = container.NetworkSettings.Ports[profile.port+'/tcp']?.find(item => item.HostIp == '127.0.0.1')
         if (!binding || !/^[1-9][0-9]{0,4}$/.test(binding.HostPort) || Number(binding.HostPort) > 65535) return null
         return {endpoint: 'http://127.0.0.1:'+binding.HostPort}
     }
 
-    return {control: {deploy, remove}, view: {observe, version: ()=>request<{Version: string, Os: string}>('GET', '/version')}}
+    return {control: {deploy, remove}, view: {observe, version: () => request<{Version: string, Os: string}>('GET', '/version')}}
 }
 
 export type DockerResource = ReturnType<typeof createDockerResource>

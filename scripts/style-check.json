@@ -13,17 +13,16 @@
         "booking",
         "forms",
         "content",
-        "support"
+        "support",
+        "hosting"
     ],
     "files": [
         "apps/crm/backend/domain.ts",
         "apps/crm/backend/service.ts",
-        "apps/hosting/backend/service.ts",
         "apps/pizzeria/backend/service.ts",
         "scripts/backup.mjs",
         "scripts/restore.mjs",
         "apps/crm/frontend/main.tsx",
-        "apps/hosting/frontend/main.tsx",
         "apps/pizzeria/frontend/main.tsx"
     ],
     "exclude": [

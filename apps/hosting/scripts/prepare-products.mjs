@@ -12,7 +12,11 @@ for (const mode of ['organizer', 'pizzeria']) {
     for (const release of ['first', 'second']) {
         const tag = 'wenay-examples.local/' + mode + ':' + release
         console.log('Build', mode, release)
-        await exec('docker', ['build', '--memory', '768m', '--build-arg', 'APP_MODE=' + mode, '--build-arg', 'APP_RELEASE=' + release, '-t', tag, source], {windowsHide: true, timeout: 600000, maxBuffer: 8 * 1024 * 1024})
+        await exec('docker', ['build', '--memory', '768m', '--build-arg', 'APP_MODE=' + mode, '--build-arg', 'APP_RELEASE=' + release, '-t', tag, source], {
+            windowsHide: true,
+            timeout: 600000,
+            maxBuffer: 8 * 1024 * 1024
+        })
         const result = await exec('docker', ['image', 'inspect', tag, '--format', '{{index .RepoDigests 0}}'], {windowsHide: true})
         images[mode + '-' + release] = result.stdout.trim()
     }

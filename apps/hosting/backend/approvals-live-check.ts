@@ -69,7 +69,15 @@ async function main() {
                 const people = workspace(owner!).people
                 assert.equal(people.some(person => person.account == 'reviewer'), false, 'отзыв роли пережил откат')
                 const headers = {'content-type': 'application/json', authorization: 'Bearer ' + reviewerBearer}
-                const body = JSON.stringify({args: ['after-rollback', {orgId, id: requestId, revision: 3, key: 'after-rollback-key', version: 1, decision: 'approved', body: ''}]})
+                const body = JSON.stringify({args: ['after-rollback', {
+                    orgId,
+                    id: requestId,
+                    revision: 3,
+                    key: 'after-rollback-key',
+                    version: 1,
+                    decision: 'approved',
+                    body: ''
+                }]})
                 const denied = await fetch(url + '/api/approvals/commands/requestDecide', {method: 'POST', headers, body, signal: AbortSignal.timeout(3000)})
                 const answer = await denied.json()
                 assert.equal(answer.ok, false, 'отозванный проверяющий не решает после отката')

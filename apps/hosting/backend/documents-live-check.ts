@@ -33,15 +33,25 @@ function textPdf(text: string) {
     return Buffer.from(pdf)
 }
 
+// Разворачиваем тег в digest: развёртывание закрепляется неизменяемым идентификатором образа.
+function imageDigest(application: string, release: string) {
+    const reference = 'wenay-examples.local/' + application + ':' + release
+    const args = ['image', 'inspect', reference, '--format', '{{index .RepoDigests 0}}']
+    return execFileSync('docker', args, {windowsHide: true, encoding: 'utf8'}).trim()
+}
+
 async function main() {
     const images = Object.fromEntries(['first', 'second'].map(release => [release,
-        execFileSync('docker', ['image', 'inspect', 'wenay-examples.local/documents:' + release, '--format', '{{index .RepoDigests 0}}'], {windowsHide: true, encoding: 'utf8'}).trim()]))
+        imageDigest('documents', release)]))
     for (const value of Object.values(images)) assert(/@sha256:[a-f0-9]{64}$/.test(value), 'Build pinned documents images before live check')
     const temporary = realpathSync(os.tmpdir())
     const directory = await mkdtemp(path.join(temporary, 'documents-hosting-'))
     const account = 'documents-' + randomBytes(5).toString('hex')
     const password = randomBytes(24).toString('hex')
-    const definition = createHostingDefinition({accounts: [{account: 'admin', password, role: 'admin', projects: []}, {account, password, role: 'agent', projects: ['documents']}]})
+    const definition = createHostingDefinition({accounts: [
+        {account: 'admin', password, role: 'admin', projects: []},
+        {account, password, role: 'agent', projects: ['documents']}
+    ]})
     const host = await createServiceLeaderHost({definition, env: {SERVICE_PORT: '0'}, mount({app}) {
         app.get('/api/client', function descriptor(_request, response) {response.json(describeService(definition))})
     }})
@@ -57,22 +67,38 @@ async function main() {
     const profile = {port: 8080, healthPath: '/health', memoryMiB: 256, cpus: 0.5, dataVersion: 'documents-1'}
     async function wait(label: string, predicate: () => boolean | Promise<boolean>, timeout = 40000) {
         const until = Date.now() + timeout
-        while (!await predicate()) {assert(Date.now() < until, label); await new Promise(resolve => setTimeout(resolve, 70))}
+        while (!await predicate()) {
+            assert(Date.now() < until, label)
+            await new Promise(resolve => setTimeout(resolve, 70))
+        }
     }
     function ownContainers() {
-        return execFileSync('docker', ['ps', '-q', '--filter', 'label=wenay.owner=' + account, '--filter', 'label=wenay.environment=app'], {windowsHide: true, encoding: 'utf8'}).trim().split(/\s+/).filter(Boolean)
+        const args = [
+            'ps', '-q',
+            '--filter', 'label=wenay.owner=' + account,
+            '--filter', 'label=wenay.environment=app'
+        ]
+        const output = execFileSync('docker', args, {windowsHide: true, encoding: 'utf8'})
+        return output.trim().split(/\s+/).filter(Boolean)
     }
     function memorySample(label: string) {
         const ids = ownContainers()
         assert.equal(ids.length, 1, 'Exactly one owned application container is running')
-        const limits = JSON.parse(execFileSync('docker', ['inspect', ids[0], '--format', '{"limit":{{.HostConfig.Memory}},"oom":{{.State.OOMKilled}}}'], {windowsHide: true, encoding: 'utf8'}))
+        const format = '{"limit":{{.HostConfig.Memory}},"oom":{{.State.OOMKilled}}}'
+        const args = ['inspect', ids[0], '--format', format]
+        const limits = JSON.parse(execFileSync('docker', args, {windowsHide: true, encoding: 'utf8'}))
         assert.equal(limits.limit, 256 * 1024 * 1024)
         assert.equal(limits.oom, false)
         const sample = execFileSync('docker', ['stats', '--no-stream', '--format', '{{.MemUsage}}', ids[0]], {windowsHide: true, encoding: 'utf8'}).trim()
         console.log('MEMORY SAMPLE ' + label + ': ' + sample + ' (current observation, not peak)')
     }
     const fixtures = [
-        {name: 'node-invoice.csv', processor: 'node', bytes: Buffer.from('name,amount\nConsulting,42\nHosting,7'), rows: [['Consulting', '43'], ['Hosting', '7']]},
+        {
+            name: 'node-invoice.csv',
+            processor: 'node',
+            bytes: Buffer.from('name,amount\nConsulting,42\nHosting,7'),
+            rows: [['Consulting', '43'], ['Hosting', '7']]
+        },
         {name: 'python-invoice.csv', processor: 'python', bytes: Buffer.from('name,amount\nPython worker,17'), rows: [['Python worker', '17']]},
         {name: 'invoice.pdf', processor: 'node', bytes: textPdf('Invoice total 42'), rows: [['1', 'Invoice total 42']]}
     ]
@@ -82,7 +108,13 @@ async function main() {
         await control.views.dashboard.ready
         await control.commands.createProject('project', {id: 'documents', title: 'Documents acceptance'})
         await control.commands.createEnvironment('environment', {id: 'app', project: 'documents', kind: 'docker', agent: account})
-        for (const release of ['first', 'second']) await control.commands.publishRelease('release-' + release, {id: release, project: 'documents', version: release, artifact: images[release], ...profile})
+        for (const release of ['first', 'second']) await control.commands.publishRelease('release-' + release, {
+            id: release,
+            project: 'documents',
+            version: release,
+            artifact: images[release],
+            ...profile
+        })
         agent = await startDockerAgent({url: host.url, account, password, socketPath, directory, readinessMs: 25000})
         let route = ''
         for (const [index, release] of ['first', 'second', 'first'].entries()) {
@@ -91,18 +123,34 @@ async function main() {
             const input = {environment: 'app', release, revision: previous.revision}
             const operation = index == 2 ? await control.commands.rollback('rollback', input) : await control.commands.deploy('deploy-' + index, input)
             deployments.push({operation: operation.id, environment: 'app', artifact: images[release], workload: profile})
-            await wait('deployment completes', () => control.views.dashboard.store.state.operations.some(item => item.id == operation.id && ['succeeded', 'failed'].includes(item.status)))
+            await wait('deployment completes', function terminal() {
+                return control.views.dashboard.store.state.operations.some(function done(item) {
+                    return item.id == operation.id && ['succeeded', 'failed'].includes(item.status)
+                })
+            })
             const completed = control.views.dashboard.store.state.operations.find(item => item.id == operation.id)
             assert.equal(completed?.status, 'succeeded', completed?.detail ?? 'deployment failed')
             const endpoint = control.views.dashboard.store.state.environments[0].route!
             route ||= endpoint
             assert.equal(endpoint, route, 'Gateway address stays stable')
-            await wait('expected release health', async () => fetch(route + '/health', {signal: AbortSignal.timeout(2000)}).then(response => response.json()).then(body => body.release == release).catch(() => false))
+            await wait('expected release health', async function healthy() {
+                const answer = fetch(route + '/health', {signal: AbortSignal.timeout(2000)})
+                const body = await answer.then(response => response.json()).catch(() => null)
+                return body?.release == release
+            })
             assert((await fetch(route).then(response => response.text())).includes('Papertrail'))
             if (!customer) {
                 const descriptor = await fetch(route + '/api/client').then(response => response.json())
-                customer = createServiceClient<DocumentDefinition>({definition: descriptor, url: route, auth: {credentials: {account: 'customer', password: 'customer-pass'}}})
-                reviewer = createServiceClient<DocumentDefinition>({definition: descriptor, url: route, auth: {credentials: {account: 'reviewer', password: 'reviewer-pass'}}})
+                customer = createServiceClient<DocumentDefinition>({
+                    definition: descriptor,
+                    url: route,
+                    auth: {credentials: {account: 'customer', password: 'customer-pass'}}
+                })
+                reviewer = createServiceClient<DocumentDefinition>({
+                    definition: descriptor,
+                    url: route,
+                    auth: {credentials: {account: 'reviewer', password: 'reviewer-pass'}}
+                })
                 await customer.ready()
                 await reviewer.ready()
                 await customer.views.workspace.ready
@@ -115,12 +163,22 @@ async function main() {
                     const uploaded = await remote.control.upload({orgId: 'northstar', name: fixture.name, bytes: fixture.bytes})
                     await remote.ai.createRun({requestId: 'extract-' + fixture.name, kind: 'extract', resourceIds: [uploaded.id],
                         input: {orgId: 'northstar', documentId: uploaded.id, revision: uploaded.revision, processor: fixture.processor}})
-                    const item = (): DocumentWorkspace['documents'][number] | undefined => customer!.views.workspace.store.state.documents.find(item => item.id == uploaded.id)
+                    function item(): DocumentWorkspace['documents'][number] | undefined {
+                        const documents = customer!.views.workspace.store.state.documents
+                        return documents.find(value => value.id == uploaded.id)
+                    }
                     await wait(fixture.name + ' parsed in container', () => !!item() && ['review', 'failed', 'cancelled', 'uncertain'].includes(item()!.status))
                     assert.equal(item()!.status, 'review', fixture.name + ': ' + item()!.error)
                     let revision = item()!.revision
                     if (fixture.name == 'node-invoice.csv') {
-                        revision = (await reviewer.commands.documentRow('correct-node-amount', {orgId: 'northstar', id: uploaded.id, revision, index: 0, values: ['Consulting', '43'], comment: 'Checked against the agreement'})).revision
+                        revision = (await reviewer.commands.documentRow('correct-node-amount', {
+                            orgId: 'northstar',
+                            id: uploaded.id,
+                            revision,
+                            index: 0,
+                            values: ['Consulting', '43'],
+                            comment: 'Checked against the agreement'
+                        })).revision
                     }
                     const detail = await reviewResource.current()!.remote.control.detail({orgId: 'northstar', id: uploaded.id, revision})
                     assert.deepEqual(detail.table.rows, fixture.rows)
@@ -131,7 +189,11 @@ async function main() {
                 }
             } else {
                 await wait('same sessions and resource reconnect', () => customer!.health.state.connected && reviewer!.health.state.connected &&
-                    (resource?.current()?.generation ?? 0) > generation && !!reviewResource?.current() && saved.every(file => customer!.views.workspace.store.state.documents.some(item => item.id == file.id && item.status == 'approved')))
+                    (resource?.current()?.generation ?? 0) > generation && !!reviewResource?.current()
+                    && saved.every(function approved(file) {
+                        const documents = customer!.views.workspace.store.state.documents
+                        return documents.some(item => item.id == file.id && item.status == 'approved')
+                    }))
             }
             for (const file of saved) {
                 const remote = resource!.current()!.remote
@@ -162,4 +224,7 @@ async function main() {
     }
 }
 
-void main().catch(function failed(error) {console.error(error); process.exitCode = 1})
+void main().catch(function failed(error) {
+    console.error(error)
+    process.exitCode = 1
+})

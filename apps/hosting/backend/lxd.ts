@@ -3,10 +3,46 @@ import {setTimeout as pause} from 'node:timers/promises'
 import {machineIdentity, type MachineSpec} from './machine-spec'
 
 type Reply<T> = {type: 'sync' | 'async' | 'error', status_code: number, metadata: T, operation?: string, error_code?: number}
-type Instance = {name: string, type: string, config: Record<string, string>, devices: Record<string, Record<string, string>>, profiles: string[], status_code: number}
+type Instance = {
+    name: string,
+    type: string,
+    config: Record<string,
+    string>,
+    devices: Record<string,
+    Record<string,
+    string>>,
+    profiles: string[],
+    status_code: number
+}
 export type MachineRequest = {id: string, project: string, spec: MachineSpec, providerName?: string}
 
 export class MachineRejected extends Error {}
+
+type Devices = Record<string, Record<string, string>>
+
+// Существующая машина принимается, только если полностью совпадает с заявкой.
+function sameDevices(instance: Instance, devices: Devices) {
+    if (Object.keys(instance.devices).length != 2) return false
+    return Object.entries(devices).every(function device([key, values]) {
+        return Object.entries(values).every(function field([name, value]) {
+            return instance.devices[key]?.[name] == value
+        })
+    })
+}
+
+function sameInstance(
+    instance: Instance,
+    name: string,
+    machine: MachineRequest,
+    config: Record<string, string>,
+    devices: Devices
+) {
+    if (instance.name != name || instance.type != machine.spec.kind) return false
+    if (instance.profiles.length) return false
+    if (instance.config['volatile.base_image'] != machine.spec.image) return false
+    if (Object.entries(config).some(([key, value]) => instance.config[key] != value)) return false
+    return sameDevices(instance, devices)
+}
 
 export function createLxdResource(deps: {socketPath: string, owner: string, project: string, pool: string, network: string, timeoutMs?: number}) {
     for (const value of [deps.owner, deps.project, deps.pool, deps.network]) {
@@ -25,7 +61,10 @@ export function createLxdResource(deps: {socketPath: string, owner: string, proj
                 let bytes = 0
                 response.on('data', function data(chunk: Buffer) {
                     bytes += chunk.length
-                    if (bytes > 4*1024*1024) {call.destroy(new Error('LXD response exceeded limit')); return}
+                    if (bytes > 4*1024*1024) {
+                        call.destroy(new Error('LXD response exceeded limit'))
+                        return
+                    }
                     chunks.push(chunk)
                 })
                 response.on('error', reject)
@@ -33,7 +72,9 @@ export function createLxdResource(deps: {socketPath: string, owner: string, proj
                     try {
                         const reply = JSON.parse(Buffer.concat(chunks).toString()) as Reply<T>
                         if ((response.statusCode ?? 500) >= 400 || reply.type == 'error') {
-                            reject(Object.assign(new Error('LXD API returned '+(reply.error_code ?? response.statusCode)), {status: reply.error_code ?? response.statusCode}))
+                            const status = reply.error_code ?? response.statusCode
+                            const failure = new Error('LXD API returned ' + status)
+                            reject(Object.assign(failure, {status}))
                         } else resolve(reply)
                     } catch (error) {reject(error)}
                 })
@@ -60,7 +101,10 @@ export function createLxdResource(deps: {socketPath: string, owner: string, proj
 
     async function inspect(name: string, signal: AbortSignal) {
         try {return (await request<Instance>('GET', '/1.0/instances/'+name, signal)).metadata}
-        catch (error) {if ((error as {status?: number}).status == 404) return null; throw error}
+        catch (error) {
+            if ((error as {status?: number}).status == 404) return null
+            throw error
+        }
     }
 
     function expected(machine: MachineRequest) {
@@ -69,18 +113,30 @@ export function createLxdResource(deps: {socketPath: string, owner: string, proj
             'user.wenay.owner': deps.owner, 'user.wenay.project': machine.project, 'user.wenay.machine': machine.id, 'user.wenay.spec': identity.fingerprint,
             'limits.cpu': String(machine.spec.cpus), 'limits.memory': machine.spec.memoryMiB+'MiB',
             'security.privileged': 'false', 'security.nesting': 'false',
-            'cloud-init.user-data': '#cloud-config\n'+JSON.stringify({users: [{name: 'hosting', groups: ['sudo'], shell: '/bin/bash', sudo: ['ALL=(ALL) NOPASSWD:ALL'], lock_passwd: true, ssh_authorized_keys: [machine.spec.sshKey]}], ssh_pwauth: false, disable_root: true}),
+            'cloud-init.user-data': '#cloud-config\n'+JSON.stringify({
+                users: [{
+                    name: 'hosting',
+                    groups: ['sudo'],
+                    shell: '/bin/bash',
+                    sudo: ['ALL=(ALL) NOPASSWD:ALL'],
+                    lock_passwd: true,
+                    ssh_authorized_keys: [machine.spec.sshKey]
+                }],
+                ssh_pwauth: false,
+                disable_root: true
+            }),
         }
         // Container-only security options are rejected by the VM API.
         if (machine.spec.kind == 'virtual-machine') {
             delete (config as Partial<typeof config>)['security.privileged']
             delete (config as Partial<typeof config>)['security.nesting']
         }
-        const devices = {root: {type: 'disk', path: '/', pool: deps.pool, size: machine.spec.diskGiB+'GiB'}, eth0: {type: 'nic', network: deps.network, name: 'eth0'}}
+        const devices = {
+            root: {type: 'disk', path: '/', pool: deps.pool, size: machine.spec.diskGiB+'GiB'},
+            eth0: {type: 'nic', network: deps.network, name: 'eth0'}
+        }
         function owned(instance: Instance) {
-            if (instance.name != identity.name || instance.type != machine.spec.kind || instance.profiles.length || instance.config['volatile.base_image'] != machine.spec.image ||
-                Object.entries(config).some(([key, value])=>instance.config[key] != value) ||
-                Object.keys(instance.devices).length != 2 || Object.entries(devices).some(([key, values])=>Object.entries(values).some(([field, value])=>instance.devices[key]?.[field] != value))) {
+            if (!sameInstance(instance, identity.name, machine, config, devices)) {
                 throw new MachineRejected('machine identity or configuration conflicts with the request')
             }
         }
@@ -90,7 +146,10 @@ export function createLxdResource(deps: {socketPath: string, owner: string, proj
     async function preflight(kind: MachineSpec['kind'], signal?: AbortSignal) {
         const active = deadline(signal)
         const server = (await request<{auth: string, environment: {instance_types: string[]}}>('GET', '/1.0', active)).metadata
-        if (server.auth != 'trusted' || !server.environment.instance_types.includes(kind)) throw new MachineRejected('LXD host does not support the requested instance type or access')
+        const supported = server.environment.instance_types.includes(kind)
+        if (server.auth != 'trusted' || !supported) {
+            throw new MachineRejected('LXD host does not support the requested instance type or access')
+        }
         await request('GET', '/1.0/storage-pools/'+deps.pool, active)
         const network = (await request<{managed: boolean, type: string}>('GET', '/1.0/networks/'+deps.network, active)).metadata
         if (!network.managed || network.type != 'bridge') throw new MachineRejected('an existing managed bridge network is required')
@@ -106,7 +165,10 @@ export function createLxdResource(deps: {socketPath: string, owner: string, proj
             if (target == 'stopped' || machine.providerName) throw new MachineRejected('previously created machine is missing; explicit recovery is required')
             await preflight(machine.spec.kind, active)
             const image = (await request<{fingerprint: string, type: string}>('GET', '/1.0/images/'+machine.spec.image, active)).metadata
-            if (image.fingerprint != machine.spec.image || image.type != machine.spec.kind) throw new MachineRejected('local image does not match requested fingerprint and type')
+            const expected = image.fingerprint == machine.spec.image && image.type == machine.spec.kind
+            if (!expected) {
+                throw new MachineRejected('local image does not match requested fingerprint and type')
+            }
             try {
                 await complete(await request('POST', '/1.0/instances', active, {name: identity.name, type: machine.spec.kind,
                     source: {type: 'image', fingerprint: machine.spec.image}, profiles: [], config: identity.config, devices: identity.devices,
@@ -127,7 +189,12 @@ export function createLxdResource(deps: {socketPath: string, owner: string, proj
             identity.owned(instance)
         }
         if (instance.status_code != desired) {
-            await complete(await request('PUT', '/1.0/instances/'+identity.name+'/state', active, {action: target == 'running' ? 'start' : 'stop', timeout: 30, force: false, stateful: false}), active)
+            await complete(await request('PUT', '/1.0/instances/'+identity.name+'/state', active, {
+                action: target == 'running' ? 'start' : 'stop',
+                timeout: 30,
+                force: false,
+                stateful: false
+            }), active)
         }
         instance = await inspect(identity.name, active)
         if (!instance) throw new Error('LXD instance disappeared after operation')

@@ -13,15 +13,21 @@ export async function startDockerAgent(deps: {url: string, account: string, pass
         await mkdir(deps.directory, {recursive: true})
         const lockPath = path.join(deps.directory, 'agent.lock')
         const lock = await scope.resource.acquire({
-            open: () => open(lockPath, 'wx'),
-            async close(file) { try { await file.close() } finally { await unlink(lockPath) } },
+            open: () => open(lockPath, 'wx'), 
+            async close(file) { try { await file.close() } finally { await unlink(lockPath) } }, 
         })
         await lock.writeFile(JSON.stringify({pid: process.pid, account: deps.account}))
-        const definition: ServiceClientDefinition<HostingDefinition> = await fetch(deps.url+'/api/client', {signal: AbortSignal.any([signal, AbortSignal.timeout(5000)])}).then(function descriptor(response) {
+        const bounded = AbortSignal.any([signal, AbortSignal.timeout(5000)])
+        const request = fetch(deps.url + '/api/client', {signal: bounded})
+        const definition: ServiceClientDefinition<HostingDefinition> = await request.then(function descriptor(response) {
             if (!response.ok) throw new Error('control service descriptor unavailable')
             return response.json()
         })
-        const client = createServiceClient<HostingDefinition>({definition, url: deps.url, auth: {credentials: {account: deps.account, password: deps.password}}})
+        const client = createServiceClient<HostingDefinition>({
+            definition,
+            url: deps.url,
+            auth: {credentials: {account: deps.account, password: deps.password}}
+        })
         const closeClient = scope.resource.own(client.close)
         async function runtime(environment: string) {
             const route = client.views.assignments.store.state.environments.find(item => item.id == environment)?.route
@@ -43,7 +49,7 @@ export async function startDockerAgent(deps: {url: string, account: string, pass
         async function maintainRoutes() {
             const ready = new Set<string>()
             const snapshot = client.views.assignments.store.snapshot()
-            for (const environment of snapshot.environments.filter(item=>item.kind == 'docker')) {
+            for (const environment of snapshot.environments.filter(item => item.kind == 'docker')) {
                 if (signal.aborted || !client.health.state.connected) return ready
                 try {
                     const endpoint = await gateway.control.open(environment.id, environment.route)
@@ -52,22 +58,34 @@ export async function startDockerAgent(deps: {url: string, account: string, pass
                         if (registered.endpoint != endpoint) throw new Error('route registration did not retain the bound address')
                     }
                     ready.add(environment.id)
-                    const active = snapshot.retained.find(item=>item.id == environment.activeOperation && item.status == 'succeeded')
-                    const release = snapshot.releases.find(item=>item.id == active?.release)
-                    if (!active || !release) {gateway.control.activate(environment.id, null); continue}
-                    const observed = await docker.view.observe({operation: active.id, environment: environment.id, artifact: release.artifact, workload: release.workload}, signal)
+                    const active = snapshot.retained.find(item => item.id == environment.activeOperation && item.status == 'succeeded')
+                    const release = snapshot.releases.find(item => item.id == active?.release)
+                    if (!active || !release) {
+                        gateway.control.activate(environment.id, null)
+                        continue
+                    }
+                    const observed = await docker.view.observe({
+                        operation: active.id,
+                        environment: environment.id,
+                        artifact: release.artifact,
+                        workload: release.workload
+                    }, signal)
                     if (!observed || observed.endpoint != environment.endpoint) {
                         gateway.control.activate(environment.id, null)
                         retry('route-'+environment.id)
                         continue
                     }
                     gateway.control.activate(environment.id, {operation: active.id, endpoint: observed.endpoint})
-                    for (const old of snapshot.retained.filter(item=>item.environment == environment.id && item.id != active.id && item.id != environment.pending)) {
-                        const previous = snapshot.releases.find(item=>item.id == old.release)
+                    const stale = snapshot.retained.filter(function replaced(item) {
+                        if (item.environment != environment.id) return false
+                        return item.id != active.id && item.id != environment.pending
+                    })
+                    for (const old of stale) {
+                        const previous = snapshot.releases.find(item => item.id == old.release)
                         if (!previous) continue
                         await gateway.control.drain(old.id)
                         if (signal.aborted || !client.health.state.connected) return ready
-                        const current = client.views.assignments.store.state.environments.find(item=>item.id == environment.id)
+                        const current = client.views.assignments.store.state.environments.find(item => item.id == environment.id)
                         if (current?.activeOperation != active.id || current.pending == old.id) break
                         await docker.control.remove({operation: old.id, environment: environment.id, artifact: previous.artifact, workload: previous.workload})
                         await client.commands.confirmCleanup('cleanup-'+old.id, {operation: old.id})
@@ -86,16 +104,27 @@ export async function startDockerAgent(deps: {url: string, account: string, pass
             const routes = await maintainRoutes()
             for (const item of snapshot.operations ?? []) {
                 if (signal.aborted) break
-                const environment = snapshot.environments.find(environment=>environment.id == item.environment)
+                const environment = snapshot.environments.find(environment => environment.id == item.environment)
                 if (environment?.kind != 'docker' || !routes.has(environment.id)) continue
-                const release = snapshot.releases.find(release=>release.id == item.release)
+                const release = snapshot.releases.find(release => release.id == item.release)
                 if (!release) continue
                 try {
-                    const operation = item.status == 'queued' ? await client.commands.claimOperation('claim-'+item.id, {operation: item.id, revision: item.revision}) : {...item}
+                    const claim = {operation: item.id, revision: item.revision}
+                    const operation = item.status == 'queued'
+                        ? await client.commands.claimOperation('claim-' + item.id, claim)
+                        : {...item}
                     const deployment = {operation: operation.id, environment: environment.id, artifact: release.artifact, workload: release.workload}
                     const previousOperation = snapshot.retained.find(old => old.id == environment.activeOperation)
                     const previousRelease = snapshot.releases.find(old => old.id == previousOperation?.release)
-                    const previous = previousOperation && previousRelease ? {operation: previousOperation.id, environment: environment.id, artifact: previousRelease.artifact, workload: previousRelease.workload} : null
+                    let previous = null
+                    if (previousOperation && previousRelease) {
+                        previous = {
+                            operation: previousOperation.id,
+                            environment: environment.id,
+                            artifact: previousRelease.artifact,
+                            workload: previousRelease.workload
+                        }
+                    }
                     try {
                         if (release.workload?.dataVersion && previous) {
                             gateway.control.activate(environment.id, null)
@@ -103,12 +132,27 @@ export async function startDockerAgent(deps: {url: string, account: string, pass
                             await docker.control.remove(previous)
                         }
                         const result = await docker.control.deploy(deployment, signal)
-                        await client.commands.finishOperation('finish-'+operation.id, {operation: operation.id, revision: operation.revision, success: true, observedArtifact: result.artifact, detail: 'Ready: '+result.endpoint, endpoint: result.endpoint})
+                        await client.commands.finishOperation('finish-' + operation.id, {
+                            operation: operation.id,
+                            revision: operation.revision,
+                            success: true,
+                            observedArtifact: result.artifact,
+                            detail: 'Ready: ' + result.endpoint,
+                            endpoint: result.endpoint
+                        })
                     } catch (error) {
                         if (!(error instanceof DeploymentRejected) || signal.aborted) throw error
                         await docker.control.remove(deployment)
                         const restored = release.workload?.dataVersion && previous ? await docker.control.deploy(previous, signal) : null
-                        await client.commands.finishOperation('failed-'+operation.id, {operation: operation.id, revision: operation.revision, success: false, observedArtifact: restored?.artifact ?? '', detail: error.message.slice(0, 500), ...(restored ? {endpoint: restored.endpoint} : {})})
+                        const endpoint = restored ? {endpoint: restored.endpoint} : {}
+                        await client.commands.finishOperation('failed-' + operation.id, {
+                            operation: operation.id,
+                            revision: operation.revision,
+                            success: false,
+                            observedArtifact: restored?.artifact ?? '',
+                            detail: error.message.slice(0, 500),
+                            ...endpoint
+                        })
                     }
                 } catch (error) {
                     if (signal.aborted) break
@@ -125,13 +169,13 @@ export async function startDockerAgent(deps: {url: string, account: string, pass
         if (!identity.roles.includes('agent')) throw new Error('agent role is required')
         await client.views.assignments.ready
         await docker.view.version()
-        const worker = createReconciler({signal, read: () => client.views.assignments.store.snapshot(), run: reconcile,
-            subscribe: client.views.assignments.store.listen().on,
+        const worker = createReconciler({signal, read: () => client.views.assignments.store.snapshot(), run: reconcile, 
+            subscribe: client.views.assignments.store.listen().on, 
         })
         // Closing IO unblocks the pass; the lock remains owned until all three settle.
         scope.resource.parallel([worker.close, closeGateway, closeClient])
         scope.resource.own(worker.events.errors(function failed() {console.error('Agent reconciliation failed')}))
         worker.control.request()
-        return {close: scope.close, view: {account: ()=>deps.account, instance: randomUUID()}}
+        return {close: scope.close, view: {account: () => deps.account, instance: randomUUID()}}
     })
 }

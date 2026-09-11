@@ -9,7 +9,10 @@ async function main() {
     const operation = randomBytes(32).toString('hex')
     const socketPath = process.platform == 'win32' ? '\\\\.\\pipe\\wenay-check-'+operation : path.join(tmpdir(), 'wenay-'+operation+'.sock')
     let healthy = true
-    const application = http.createServer(function app(_request, response) {response.writeHead(healthy ? 200 : 503); response.end('app')})
+    const application = http.createServer(function app(_request, response) {
+        response.writeHead(healthy ? 200 : 503)
+        response.end('app')
+    })
     await new Promise<void>(function start(resolve) {application.listen(0, '127.0.0.1', resolve)})
     const port = (application.address() as {port: number}).port
     let container: any = null
@@ -22,20 +25,48 @@ async function main() {
         for await (const chunk of request) chunks.push(chunk)
         const body = chunks.length ? JSON.parse(Buffer.concat(chunks).toString()) : null
         response.setHeader('content-type', 'application/json')
-        if (url.pathname.includes('/images/')) {response.end('{}'); return}
+        if (url.pathname.includes('/images/')) {
+            response.end('{}')
+            return
+        }
         if (url.pathname.endsWith('/create')) {
             creates++
             assert.equal(body.HostConfig.Privileged, undefined)
             assert.equal(body.HostConfig.Memory, 256*1024*1024)
             assert.equal(body.HostConfig.PortBindings['8080/tcp'][0].HostIp, '127.0.0.1')
-            container = {Id: operation, Config: body, State: {Running: false}, NetworkSettings: {Ports: {'8080/tcp': [{HostIp: '127.0.0.1', HostPort: String(port)}]}}}
-            if (loseCreateReply) {loseCreateReply = false; request.socket.destroy(); return}
-            response.end(JSON.stringify({Id: operation})); return
+            container = {
+                Id: operation,
+                Config: body,
+                State: {Running: false},
+                NetworkSettings: {Ports: {'8080/tcp': [{HostIp: '127.0.0.1', HostPort: String(port)}]}}
+            }
+            if (loseCreateReply) {
+                loseCreateReply = false
+                request.socket.destroy()
+                return
+            }
+            response.end(JSON.stringify({Id: operation}))
+            return
         }
-        if (url.pathname.endsWith('/start')) {starts++; container.State.Running = true; response.writeHead(204); response.end(); return}
-        if (request.method == 'DELETE') {container = null; response.writeHead(204); response.end(); return}
-        if (url.pathname.endsWith('/json') && container) {response.end(JSON.stringify(container)); return}
-        response.writeHead(404); response.end('{}')
+        if (url.pathname.endsWith('/start')) {
+            starts++
+            container.State.Running = true
+            response.writeHead(204)
+            response.end()
+            return
+        }
+        if (request.method == 'DELETE') {
+            container = null
+            response.writeHead(204)
+            response.end()
+            return
+        }
+        if (url.pathname.endsWith('/json') && container) {
+            response.end(JSON.stringify(container))
+            return
+        }
+        response.writeHead(404)
+        response.end('{}')
     })
     await new Promise<void>(function start(resolve) {daemon.listen(socketPath, resolve)})
     const docker = createDockerResource({socketPath, owner: 'test-agent', readinessMs: 250})
@@ -59,8 +90,11 @@ async function main() {
     } finally {
         application.closeAllConnections()
         daemon.closeAllConnections()
-        await Promise.all([new Promise<void>(resolve=>application.close(()=>resolve())), new Promise<void>(resolve=>daemon.close(()=>resolve()))])
+        await Promise.all([new Promise<void>(resolve => application.close(() => resolve())), new Promise<void>(resolve => daemon.close(() => resolve()))])
     }
 }
 
-main().catch(function failed(error) {console.error(error); process.exitCode = 1})
+main().catch(function failed(error) {
+    console.error(error)
+    process.exitCode = 1
+})

@@ -5,11 +5,26 @@ import {checkHostedApplication, waitForHosted} from './hosted-application-check'
 
 function openAssistant(client: ServiceClient<MonitoringDefinition>) {return client.resources.open('assistant')}
 async function main() {
-    let owner: ServiceClient<MonitoringDefinition> | undefined, oncall: ServiceClient<MonitoringDefinition> | undefined, anonymous: ServiceClient<MonitoringDefinition> | undefined
+    let owner: ServiceClient<MonitoringDefinition> | undefined
+    let oncall: ServiceClient<MonitoringDefinition> | undefined
+    let anonymous: ServiceClient<MonitoringDefinition> | undefined
     let assistant: ReturnType<typeof openAssistant> | undefined, privateAssistant: ReturnType<typeof openAssistant> | undefined
     let id = '', incidentId = '', summaryId = '', privateSummaryId = '', generation = 0, bearer = ''
     const orgId = 'northstar'
-    const create = {orgId, id: '', revision: 0, name: 'Hosted local HTTP check', presetId: 'missing', preferred: 'probe-a', public: true, paused: false, intervalMs: 15000, timeoutMs: 1000, downThreshold: 1, upThreshold: 1}
+    const create = {
+        orgId,
+        id: '',
+        revision: 0,
+        name: 'Hosted local HTTP check',
+        presetId: 'missing',
+        preferred: 'probe-a',
+        public: true,
+        paused: false,
+        intervalMs: 15000,
+        timeoutMs: 1000,
+        downThreshold: 1,
+        upThreshold: 1
+    }
     const workspace = () => owner!.views.workspace.store.state
     const monitor = () => workspace().monitors.find(value => value.id == id)!
     const task = () => owner!.views.taskBoards.store.state.boards.flatMap(board => board.tasks).find(value => value.source?.id == incidentId)!
@@ -19,8 +34,20 @@ async function main() {
         return saved
     }
     async function summarize(requestId: string, handle: NonNullable<typeof assistant>) {
-        const run = await handle.current()!.remote.ai.createRun({kind: 'summary', requestId, resourceIds: [id], input: {orgId, id, revision: monitor().revision}})
-        await waitForHosted('summary completed', async () => {try {await handle.current()!.remote.control.result(run.id); return true} catch {return false}})
+        const run = await handle.current()!.remote.ai.createRun({
+            kind: 'summary',
+            requestId,
+            resourceIds: [id],
+            input: {orgId, id, revision: monitor().revision}
+        })
+        await waitForHosted('summary completed', async function ready() {
+            try {
+                await handle.current()!.remote.control.result(run.id)
+                return true
+            } catch {
+                return false
+            }
+        })
         return run.id
     }
     await checkHostedApplication({name: 'monitoring', async verify({url, iteration}) {
@@ -30,23 +57,46 @@ async function main() {
             owner = createServiceClient<MonitoringDefinition>({definition, url, auth: {credentials: {account: 'owner', password: 'owner-pass'}}})
             oncall = createServiceClient<MonitoringDefinition>({definition, url, auth: {credentials: {account: 'oncall', password: 'oncall-pass'}}})
             anonymous = createServiceClient<MonitoringDefinition>({definition, url})
-            await owner.ready(); await oncall.ready(); await anonymous.ready()
-            await owner.views.workspace.ready; await owner.views.taskBoards.ready; await anonymous.views.status.ready
-            assistant = openAssistant(owner); privateAssistant = openAssistant(oncall)
+            await owner.ready()
+            await oncall.ready()
+            await anonymous.ready()
+            await owner.views.workspace.ready
+            await owner.views.taskBoards.ready
+            await anonymous.views.status.ready
+            assistant = openAssistant(owner)
+            privateAssistant = openAssistant(oncall)
             await waitForHosted('assistant resources', () => !!assistant?.current() && !!privateAssistant?.current())
-            const login = await fetch(url + '/api/monitoring/login', {method: 'POST', headers: {'content-type': 'application/json'}, body: JSON.stringify({args: [{account: 'oncall', password: 'oncall-pass'}]}), signal: AbortSignal.timeout(3000)}).then(response => response.json())
-            assert(login.ok); bearer = login.value.token
+            const login = await fetch(url + '/api/monitoring/login', {
+                method: 'POST',
+                headers: {'content-type': 'application/json'},
+                body: JSON.stringify({args: [{account: 'oncall', password: 'oncall-pass'}]}),
+                signal: AbortSignal.timeout(3000)
+            }).then(response => response.json())
+            assert(login.ok)
+            bearer = login.value.token
             id = (await owner.commands.monitorSave('hosted-monitor', create)).id
-            await waitForHosted('real embedded HTTP 404 opens incident', () => monitor()?.status == 'down' && monitor().history.some(point => point.code == 404 && point.outcome == 'down'))
+            await waitForHosted('real embedded HTTP 404 opens incident', function failing() {
+                if (monitor()?.status != 'down') return false
+                return monitor().history.some(point => point.code == 404 && point.outcome == 'down')
+            })
             assert.equal(monitor().lastWorker, 'probe-a')
             incidentId = monitor().incidentId
             await waitForHosted('one derived task', () => !!task())
-            await oncall.commands.incidentAcknowledge('hosted-ack', {orgId, id: incidentId, revision: workspace().incidents.find(value => value.id == incidentId)!.revision, body: 'HOSTED_PRIVATE_INCIDENT_NOTE'})
+            await oncall.commands.incidentAcknowledge('hosted-ack', {
+                orgId,
+                id: incidentId,
+                revision: workspace().incidents.find(value => value.id == incidentId)!.revision,
+                body: 'HOSTED_PRIVATE_INCIDENT_NOTE'
+            })
             await configure('missing', true, 'pause-first')
             summaryId = await summarize('first-summary', assistant)
             assert((await assistant.current()!.remote.control.result(summaryId)).text.includes('HOSTED_PRIVATE_INCIDENT_NOTE'))
         } else {
-            await waitForHosted('same session and assistant after deploy', () => !!owner?.health.state.connected && (assistant?.current()?.generation ?? 0) > generation && workspace().monitors.some(value => value.id == id))
+            await waitForHosted('same session and assistant after deploy', function restored() {
+                if (!owner?.health.state.connected) return false
+                if ((assistant?.current()?.generation ?? 0) <= generation) return false
+                return workspace().monitors.some(value => value.id == id)
+            })
             assert.equal((await owner.commands.monitorSave('hosted-monitor', create)).id, id)
             assert.equal(workspace().monitors.length, 1)
             assert.equal(owner.views.taskBoards.store.state.boards.flatMap(board => board.tasks).filter(value => value.source?.id == incidentId).length, 1)
@@ -55,7 +105,11 @@ async function main() {
             if (iteration == 1) {
                 assert(saved.text.includes('HOSTED_PRIVATE_INCIDENT_NOTE'))
                 await configure('self', false, 'recover-on-second')
-                await waitForHosted('real embedded HTTP 200 resolves incident', () => monitor().status == 'up' && workspace().incidents.find(value => value.id == incidentId)?.status == 'resolved')
+                await waitForHosted('real embedded HTTP 200 resolves incident', function healthy() {
+                    if (monitor().status != 'up') return false
+                    const incident = workspace().incidents.find(value => value.id == incidentId)
+                    return incident?.status == 'resolved'
+                })
                 assert(monitor().history.some(point => point.code == 200 && point.outcome == 'up'))
                 assert.equal(task().status, 'todo', 'HTTP recovery does not complete human checklist')
                 await configure('self', true, 'pause-second')
@@ -67,7 +121,12 @@ async function main() {
                 await waitForHosted('oncall resource after deploy', () => !!privateAssistant?.current())
                 privateSummaryId = await summarize('oncall-current-summary', privateAssistant!)
                 const retained = privateAssistant!.current()!.remote
-                await owner.commands.memberRole('revoke-oncall', {orgId, revision: workspace().organizations.find(value => value.id == orgId)!.revision, account: 'oncall', role: 'none'})
+                await owner.commands.memberRole('revoke-oncall', {
+                    orgId,
+                    revision: workspace().organizations.find(value => value.id == orgId)!.revision,
+                    account: 'oncall',
+                    role: 'none'
+                })
                 await assert.rejects(retained.control.result(privateSummaryId))
             } else {
                 assert.equal(monitor().presetId, 'self')
@@ -82,7 +141,10 @@ async function main() {
                 assert.equal(task().checklist?.[0].done, true)
                 assert.equal(task().checklist?.[1].done, false)
                 assert.equal(workspace().people.some(value => value.orgId == orgId && value.account == 'oncall'), false)
-                const denied = await fetch(url + '/api/monitoring/views/workspace', {headers: {authorization: 'Bearer ' + bearer}, signal: AbortSignal.timeout(3000)}).then(response => response.json())
+                const denied = await fetch(url + '/api/monitoring/views/workspace', {
+                    headers: {authorization: 'Bearer ' + bearer},
+                    signal: AbortSignal.timeout(3000)
+                }).then(response => response.json())
                 assert.equal(denied.ok, false)
                 assert.match(denied.error.message, /forbidden|denied|доступ|unauthorized/i)
             }
@@ -92,6 +154,13 @@ async function main() {
         assert(!publicJson.includes('HOSTED_PRIVATE_INCIDENT_NOTE') && !publicJson.includes('probe-a') && !publicJson.includes('127.0.0.1'))
         assert(!JSON.stringify(await assistant!.current()!.remote.ai.state.keyframe()).includes('HOSTED_PRIVATE_INCIDENT_NOTE'))
         generation = assistant?.current()?.generation ?? 0
-    }, async close() {await privateAssistant?.close(); await assistant?.close(); anonymous?.close(); oncall?.close(); owner?.close()}})
+    }, async close() {await privateAssistant?.close()
+    await assistant?.close()
+    anonymous?.close()
+    oncall?.close()
+    owner?.close()}})
 }
-main().catch(function failed(error) {console.error(error); process.exitCode = 1})
+main().catch(function failed(error) {
+    console.error(error)
+    process.exitCode = 1
+})

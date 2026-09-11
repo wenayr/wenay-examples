@@ -11,15 +11,25 @@ import {startDockerAgent} from './agent'
 import {createDockerResource, type Deployment} from './docker'
 import type {MeteringDefinition} from '../../metering/backend/runtime'
 
+// Развёртывание закрепляется digest образа, а не подвижным тегом.
+function imageDigest(release: string) {
+    const reference = 'wenay-examples.local/metering:' + release
+    const args = ['image', 'inspect', reference, '--format', '{{index .RepoDigests 0}}']
+    return execFileSync('docker', args, {windowsHide: true, encoding: 'utf8'}).trim()
+}
+
 async function main() {
     const images = Object.fromEntries(['first', 'second'].map(release => [release,
-        execFileSync('docker', ['image', 'inspect', 'wenay-examples.local/metering:' + release, '--format', '{{index .RepoDigests 0}}'], {windowsHide: true, encoding: 'utf8'}).trim()]))
+        imageDigest(release)]))
     for (const image of Object.values(images)) assert(/@sha256:[a-f0-9]{64}$/.test(image), 'Build pinned metering images before live check')
     const temporary = await realpath(os.tmpdir())
     const directory = await mkdtemp(path.join(temporary, 'metering-hosting-'))
     const account = 'metering-' + randomBytes(5).toString('hex')
     const password = randomBytes(24).toString('hex')
-    const definition = createHostingDefinition({accounts: [{account: 'admin', password, role: 'admin', projects: []}, {account, password, role: 'agent', projects: ['metering']}]})
+    const definition = createHostingDefinition({accounts: [
+        {account: 'admin', password, role: 'admin', projects: []},
+        {account, password, role: 'agent', projects: ['metering']}
+    ]})
     const host = await createServiceLeaderHost({definition, env: {SERVICE_PORT: '0'}, mount({app}) {
         app.get('/api/client', function descriptor(_request, response) {response.json(describeService(definition))})
     }})
@@ -34,14 +44,23 @@ async function main() {
     const volume = 'wenay-data-' + createHash('sha256').update(JSON.stringify([account, 'app'])).digest('hex')
     async function wait(label: string, predicate: () => boolean | Promise<boolean>) {
         const until = Date.now() + 35000
-        while (!await predicate()) {assert(Date.now() < until, label); await new Promise(resolve => setTimeout(resolve, 70))}
+        while (!await predicate()) {
+            assert(Date.now() < until, label)
+            await new Promise(resolve => setTimeout(resolve, 70))
+        }
     }
     try {
         await control.ready()
         await control.views.dashboard.ready
         await control.commands.createProject('project', {id: 'metering', title: 'Metering acceptance'})
         await control.commands.createEnvironment('environment', {id: 'app', project: 'metering', kind: 'docker', agent: account})
-        for (const release of ['first', 'second']) await control.commands.publishRelease('release-' + release, {id: release, project: 'metering', version: release, artifact: images[release], ...profile})
+        for (const release of ['first', 'second']) await control.commands.publishRelease('release-' + release, {
+            id: release,
+            project: 'metering',
+            version: release,
+            artifact: images[release],
+            ...profile
+        })
         agent = await startDockerAgent({url: host.url, account, password, socketPath, directory, readinessMs: 20000})
         let route = ''
         let owner: ServiceClient<MeteringDefinition> | undefined
@@ -55,17 +74,29 @@ async function main() {
             const input = {environment: 'app', release, revision: current.revision}
             const operation = index == 2 ? await control.commands.rollback('rollback', input) : await control.commands.deploy('deploy-' + index, input)
             deployments.push({operation: operation.id, environment: 'app', artifact: images[release], workload: profile})
-            await wait('deployment terminal', () => control.views.dashboard.store.state.operations.some(item => item.id == operation.id && ['succeeded', 'failed'].includes(item.status)))
+            await wait('deployment terminal', function done() {
+                return control.views.dashboard.store.state.operations.some(function finished(item) {
+                    return item.id == operation.id && ['succeeded', 'failed'].includes(item.status)
+                })
+            })
             const completed = control.views.dashboard.store.state.operations.find(item => item.id == operation.id)
             assert.equal(completed?.status, 'succeeded', completed?.detail ?? 'deployment failed')
             const endpoint = control.views.dashboard.store.state.environments[0].route!
             route ||= endpoint
             assert.equal(endpoint, route)
-            await wait('release through stable gateway', async () => fetch(route + '/health', {signal: AbortSignal.timeout(2000)}).then(response => response.json()).then(body => body.release == release && body.application == 'metering').catch(() => false))
+            await wait('release through stable gateway', async function healthy() {
+                const answer = fetch(route + '/health', {signal: AbortSignal.timeout(2000)})
+                const body = await answer.then(response => response.json()).catch(() => null)
+                return body?.release == release && body?.application == 'metering'
+            })
             assert((await fetch(route).then(response => response.text())).includes('Counter'))
             const descriptor = await fetch(route + '/api/client').then(response => response.json())
             if (!owner) {
-                owner = createServiceClient<MeteringDefinition>({definition: descriptor, url: route, auth: {credentials: {account: 'owner', password: 'owner-pass'}}})
+                owner = createServiceClient<MeteringDefinition>({
+                    definition: descriptor,
+                    url: route,
+                    auth: {credentials: {account: 'owner', password: 'owner-pass'}}
+                })
                 clients.push(owner)
                 await owner.ready()
                 await owner.views.workspace.ready
@@ -73,11 +104,21 @@ async function main() {
                 resources.push(keys)
                 watcher = keys
                 await wait('key resource ready', () => !!keys.current())
-                const issued = await keys.current()!.remote.control.issue({requestId: 'hosted-key', orgId: 'northstar', label: 'Hosting acceptance', scopes: ['usage:read', 'usage:write'], days: 1})
+                const issued = await keys.current()!.remote.control.issue({
+                    requestId: 'hosted-key',
+                    orgId: 'northstar',
+                    label: 'Hosting acceptance',
+                    scopes: ['usage:read', 'usage:write'],
+                    days: 1
+                })
                 assert(issued.secret)
                 key = {id: issued.id, account: issued.account, secret: issued.secret}
                 // The secret remains an in-memory login input; archives store only its hash.
-                writer = createServiceClient<MeteringDefinition>({definition: descriptor, url: route, auth: {credentials: {account: key.account, password: key.secret}}})
+                writer = createServiceClient<MeteringDefinition>({
+                    definition: descriptor,
+                    url: route,
+                    auth: {credentials: {account: key.account, password: key.secret}}
+                })
                 clients.push(writer)
                 await writer.ready()
                 const activeUsage = writer.resources.open('usage')
@@ -90,7 +131,11 @@ async function main() {
                 // Command-only sessions reconnect on current()/ready(); resource connections are independent.
                 await writer!.ready()
                 // A fresh login after deployment proves the persisted hash still validates the original secret.
-                const restored = createServiceClient<MeteringDefinition>({definition: descriptor, url: route, auth: {credentials: {account: key!.account, password: key!.secret}}})
+                const restored = createServiceClient<MeteringDefinition>({
+                    definition: descriptor,
+                    url: route,
+                    auth: {credentials: {account: key!.account, password: key!.secret}}
+                })
                 clients.push(restored)
                 await restored.ready()
                 const usage = restored.resources.open('usage')
@@ -117,12 +162,17 @@ async function main() {
                     await assert.rejects(remote.control.identity())
                 }
             }
-            await wait('workspace ledger updated', () => owner!.views.workspace.store.state.events.length == 1 && owner!.views.workspace.store.state.events[0].status == (index == 0 ? 'reserved' : 'committed'))
+            const expected = index == 0 ? 'reserved' : 'committed'
+            await wait('workspace ledger updated', function recorded() {
+                const events = owner!.views.workspace.store.state.events
+                return events.length == 1 && events[0].status == expected
+            })
             assert(!JSON.stringify(owner.views.workspace.store.state).includes(key!.secret))
             const inspect = JSON.parse(execFileSync('docker', ['inspect', volume + '-writer'], {windowsHide: true, encoding: 'utf8'}))[0]
             assert.equal(inspect.HostConfig.Memory, 256 * 1024 * 1024)
             assert.equal(inspect.Config.Labels['wenay.owner'], account)
-            const usage = execFileSync('docker', ['stats', '--no-stream', '--format', '{{.MemUsage}}', volume + '-writer'], {windowsHide: true, encoding: 'utf8'}).trim()
+            const args = ['stats', '--no-stream', '--format', '{{.MemUsage}}', volume + '-writer']
+            const usage = execFileSync('docker', args, {windowsHide: true, encoding: 'utf8'}).trim()
             console.log('PASS metering hosted ' + (index == 2 ? 'rollback' : release) + ': stable route, session reconnect, persistent key/ledger; memory ' + usage)
         }
     } finally {
@@ -140,5 +190,8 @@ async function main() {
         await rm(directory, {recursive: true, force: true})
     }
 }
-main().catch(function failed(error) {console.error(error); process.exitCode = 1})
+main().catch(function failed(error) {
+    console.error(error)
+    process.exitCode = 1
+})
 
