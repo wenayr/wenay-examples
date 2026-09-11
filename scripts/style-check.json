@@ -3,7 +3,8 @@
     "paths": ["scripts", "shared"],
     "apps": ["approvals"],
     "files": [
-        "apps/monitoring/backend/domain.ts"
+        "apps/monitoring/backend/domain.ts",
+        "apps/content/backend/domain.ts"
     ],
     "exclude": [
         "scripts/create-saas-example.mjs",
