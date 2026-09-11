@@ -15,6 +15,7 @@
         "apps/crm/backend/domain.ts",
         "apps/crm/backend/service.ts",
         "apps/documents/backend/domain.ts",
+        "apps/documents/frontend/main.tsx",
         "apps/forms/backend/domain.ts",
         "apps/forms/backend/service.ts",
         "apps/hosting/backend/service.ts",
@@ -24,6 +25,7 @@
         "apps/monitoring/frontend/main.tsx",
         "apps/pizzeria/backend/service.ts",
         "apps/support/backend/domain.ts",
+        "apps/support/frontend/main.tsx",
         "scripts/backup.mjs",
         "scripts/restore.mjs"
     ],

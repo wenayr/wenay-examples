@@ -27,7 +27,15 @@ const sections = [
     {id: 'audit', title: 'История действий', icon: '◷'}
 ] as const
 
-const initial: SupportWorkspace = {account: {account: '', name: ''}, organizations: [], people: [], tickets: [], articles: [], audit: [], invites: []}
+const initial: SupportWorkspace = {
+    account: {account: '', name: ''}, organizations: [], people: [],
+    tickets: [], articles: [], audit: [], invites: []
+}
+
+const presets = {
+    owner: 'Владельца', lead: 'Руководителя', agent: 'Специалиста',
+    customer: 'Клиента', outsider: 'Другой команды'
+}
 const initialBoards: TaskBoards = {boards: []}
 type BoardsRemote = ReturnType<typeof createServiceClient<SupportDefinition>>['views']['taskBoards']
 type NoticesRemote = ReturnType<typeof createServiceClient<SupportDefinition>>['views']['notifications']
@@ -55,16 +63,110 @@ function App() {
         })
     }
 
+    function dismiss() {
+        connection.dismissError()
+        loginAction.clearError()
+        commands.clearError()
+    }
+
+    const banner = error ? (
+        <div className="error-banner" role="alert">
+            <strong>Действие не завершено.</strong> {error}
+            <button aria-label="Закрыть сообщение об ошибке" onClick={dismiss}>×</button>
+        </div>
+    ) : null
+
+    const entry = <main className="login-layout">
+        <section className="login-story">
+            <div className="brand">
+                <span className="brand-mark">✳</span> northstar<span className="brand-tag">SUPPORT</span>
+            </div>
+            <p className="eyebrow">БЛИЖЕ К КЛИЕНТАМ</p>
+            <h1>Хорошая поддержка<br/>начинается<br/>с внимания.</h1>
+            <p className="login-description">
+                Обращения, знания и команда.<br/>Всё, что нужно для следующего хорошего ответа.
+            </p>
+            <div className="story-card">
+                <span className="story-line">Клиенту помогли — команда стала сильнее.</span>
+                <span className="story-dots">● ● ●</span>
+            </div>
+            <footer>Одно рабочее пространство. Общий контекст.</footer>
+        </section>
+        <section className="login-form-wrap">
+            <div className="login-heading">
+                <p className="eyebrow">ВАШЕ РАБОЧЕЕ МЕСТО</p>
+                <h2>Рады видеть вас</h2>
+                <p>Войдите в аккаунт, чтобы продолжить работу.</p>
+            </div>
+            <form key={preset} onSubmit={login} className="stack">
+                <label>Аккаунт
+                    <input name="account" autoComplete="username" defaultValue={preset} required/>
+                </label>
+                <label>Пароль
+                    <input name="password" type="password" autoComplete="current-password" defaultValue={preset + '-pass'} required/>
+                </label>
+                <button className="primary" disabled={loginAction.busy}>
+                    {loginAction.busy ? 'Входим…' : 'Войти в рабочее пространство →'}
+                </button>
+            </form>
+            <OidcLogin onToken={connection.setToken}/>
+            <div className="demo-presets">
+                <p>Посмотреть от лица</p>
+                <div>
+                    {Object.entries(presets).map(([id, label]) => (
+                        <button key={id} aria-pressed={preset == id} onClick={() => setPreset(id)}>{label}</button>
+                    ))}
+                </div>
+                <small>Демонстрационные аккаунты. Пароль: имя аккаунта + «-pass».</small>
+            </div>
+        </section>
+    </main>
+
+    const waiting = <main className="connection-state">
+        <span className="brand-mark">✳</span>
+        <h1>{connection.me ? 'Рабочее пространство недоступно' : 'Подключаемся к команде…'}</h1>
+        <p>Права и данные загружаются с сервера.</p>
+        <button onClick={() => connection.setToken('')}>Вернуться ко входу</button>
+    </main>
+
+    let page = entry
+    if (connection.token) {
+        page = waiting
+        if (connection.session && connection.me?.views.includes('workspace')) {
+            page = <ServiceView remote={connection.session.views.workspace} initial={initial}>
+                {value => (
+                    <Workspace
+                        key={value.account.account}
+                        value={value}
+                        commands={commands}
+                        resources={connection.session!.resources}
+                        taskBoards={connection.session!.views.taskBoards}
+                        notifications={connection.session!.views.notifications}
+                        connected={connection.connected}
+                        logout={() => connection.setToken('')}
+                    />
+                )}
+            </ServiceView>
+        }
+    }
+
     return <>
-        {error && <div className="error-banner" role="alert"><strong>Действие не завершено.</strong> {error}<button aria-label="Закрыть сообщение об ошибке" onClick={function dismiss() {connection.dismissError(); loginAction.clearError(); commands.clearError()}}>×</button></div>}
-        {!connection.token ? <main className="login-layout">
-            <section className="login-story"><div className="brand"><span className="brand-mark">✳</span> northstar<span className="brand-tag">SUPPORT</span></div><p className="eyebrow">БЛИЖЕ К КЛИЕНТАМ</p><h1>Хорошая поддержка<br/>начинается<br/>с внимания.</h1><p className="login-description">Обращения, знания и команда.<br/>Всё, что нужно для следующего хорошего ответа.</p><div className="story-card"><span className="story-line">Клиенту помогли — команда стала сильнее.</span><span className="story-dots">● ● ●</span></div><footer>Одно рабочее пространство. Общий контекст.</footer></section>
-            <section className="login-form-wrap"><div className="login-heading"><p className="eyebrow">ВАШЕ РАБОЧЕЕ МЕСТО</p><h2>Рады видеть вас</h2><p>Войдите в аккаунт, чтобы продолжить работу.</p></div><form key={preset} onSubmit={login} className="stack"><label>Аккаунт<input name="account" autoComplete="username" defaultValue={preset} required/></label><label>Пароль<input name="password" type="password" autoComplete="current-password" defaultValue={preset + '-pass'} required/></label><button className="primary" disabled={loginAction.busy}>{loginAction.busy ? 'Входим…' : 'Войти в рабочее пространство →'}</button></form><OidcLogin onToken={connection.setToken}/><div className="demo-presets"><p>Посмотреть от лица</p><div>{Object.entries({owner: 'Владельца', lead: 'Руководителя', agent: 'Специалиста', customer: 'Клиента', outsider: 'Другой команды'}).map(([id, label]) => <button key={id} aria-pressed={preset == id} onClick={() => setPreset(id)}>{label}</button>)}</div><small>Демонстрационные аккаунты. Пароль: имя аккаунта + «-pass».</small></div></section>
-        </main> : connection.session && connection.me?.views.includes('workspace') ? <ServiceView remote={connection.session.views.workspace} initial={initial}>{value => <Workspace key={value.account.account} value={value} commands={commands} resources={connection.session!.resources} taskBoards={connection.session!.views.taskBoards} notifications={connection.session!.views.notifications} connected={connection.connected} logout={() => connection.setToken('')}/>}</ServiceView> : <main className="connection-state"><span className="brand-mark">✳</span><h1>{connection.me ? 'Рабочее пространство недоступно' : 'Подключаемся к команде…'}</h1><p>Права и данные загружаются с сервера.</p><button onClick={() => connection.setToken('')}>Вернуться ко входу</button></main>}
+        {banner}
+        {page}
     </>
 }
 
-function Workspace({value, commands, resources, taskBoards, notifications, connected, logout}: {value: SupportWorkspace, commands: CommandController, resources: SupportResources, taskBoards: BoardsRemote, notifications: NoticesRemote, connected: boolean, logout: () => void}) {
+type WorkspaceProps = {
+    value: SupportWorkspace,
+    commands: CommandController,
+    resources: SupportResources,
+    taskBoards: BoardsRemote,
+    notifications: NoticesRemote,
+    connected: boolean,
+    logout: () => void
+}
+
+function Workspace({value, commands, resources, taskBoards, notifications, connected, logout}: WorkspaceProps) {
     const [orgId, setOrgId] = useState(value.organizations[0]?.id ?? '')
     const [section, setSection] = useState<string>('inbox')
     const organization = value.organizations.find(item => item.id == orgId) ?? value.organizations[0]
@@ -72,25 +174,106 @@ function Workspace({value, commands, resources, taskBoards, notifications, conne
     const open = value.tickets.filter(ticket => ticket.orgId == scope && ticket.status != 'resolved').length
     const manage = organization && (organization.role == 'owner' || organization.role == 'lead')
     const staff = !!organization && organization.role != 'customer'
-    const activeSection = (section == 'audit' && !manage) || (section == 'tasks' && !staff) ? 'inbox' : section
-    useEffect(function revokeSection() {if (activeSection != section) setSection(activeSection)}, [activeSection, section])
+    // Роль могли понизить при открытом разделе: возвращаем в общий inbox.
+    const closedForRole = (section == 'audit' && !manage) || (section == 'tasks' && !staff)
+    const activeSection = closedForRole ? 'inbox' : section
+    useEffect(function revokeSection() {
+        if (activeSection != section) setSection(activeSection)
+    }, [activeSection, section])
     const busy = commands.busy || !connected
+    const visibleSections = sections.filter(function shown(item) {
+        if (item.id == 'audit') return !!manage
+        if (item.id == 'tasks') return staff
+        return true
+    })
+
+    function switchOrg(event: React.ChangeEvent<HTMLSelectElement>) {
+        setOrgId(event.target.value)
+        commands.clearError()
+    }
 
     return <div className="app-shell">
-        <aside className="sidebar"><a className="brand" href="#inbox" onClick={() => setSection('inbox')}><span className="brand-mark">✳</span> northstar</a><span className="brand-tag sidebar-tag">CUSTOMER CARE</span><label className="org-picker"><span>Рабочее пространство</span><select value={scope} onChange={function switchOrg(event) {setOrgId(event.target.value); commands.clearError()}} aria-label="Организация">{value.organizations.map(org => <option key={org.id} value={org.id}>{org.name}</option>)}{!organization && <option value="">Нет организаций</option>}</select></label><nav aria-label="Разделы поддержки">{sections.filter(item => (item.id != 'audit' || manage) && (item.id != 'tasks' || staff)).map(item => <button className={activeSection == item.id ? 'selected' : ''} aria-current={activeSection == item.id ? 'page' : undefined} key={item.id} onClick={() => setSection(item.id)}><span className="nav-icon" aria-hidden="true">{item.icon}</span>{item.title}{item.id == 'inbox' && <span className="nav-count">{open}</span>}</button>)}</nav><div className="sidebar-note"><span>✧</span><strong>Каждый ответ важен</strong><p>Сохраняйте полезные решения в базе знаний команды.</p><button onClick={() => setSection('knowledge')}>Открыть знания ↗</button></div><div className="account-block"><Avatar name={value.account.name}/><div><strong>{value.account.name.split(' · ')[0]}</strong><small>{organization ? roleLabels[organization.role] : 'Участник'}</small></div><button title="Выйти" aria-label="Выйти из аккаунта" onClick={logout}>↪</button></div></aside>
-        <main className="main-workspace"><header className="topbar"><div><span className="breadcrumb">Рабочее пространство <span>/</span></span><strong>{sections.find(item => item.id == activeSection)?.title}</strong></div><div><span className={'connection-pill' + (connected ? '' : ' offline')} role="status"><i/>{connected ? 'На связи' : 'Переподключение…'}</span><button className="mobile-logout" onClick={logout}>Выйти</button></div></header>
+        <aside className="sidebar">
+            <a className="brand" href="#inbox" onClick={() => setSection('inbox')}>
+                <span className="brand-mark">✳</span> northstar
+            </a>
+            <span className="brand-tag sidebar-tag">CUSTOMER CARE</span>
+            <label className="org-picker">
+                <span>Рабочее пространство</span>
+                <select value={scope} onChange={switchOrg} aria-label="Организация">
+                    {value.organizations.map(org => <option key={org.id} value={org.id}>{org.name}</option>)}
+                    {!organization && <option value="">Нет организаций</option>}
+                </select>
+            </label>
+            <nav aria-label="Разделы поддержки">
+                {visibleSections.map(item => (
+                    <button
+                        className={activeSection == item.id ? 'selected' : ''}
+                        aria-current={activeSection == item.id ? 'page' : undefined}
+                        key={item.id}
+                        onClick={() => setSection(item.id)}
+                    >
+                        <span className="nav-icon" aria-hidden="true">{item.icon}</span>
+                        {item.title}
+                        {item.id == 'inbox' && <span className="nav-count">{open}</span>}
+                    </button>
+                ))}
+            </nav>
+            <div className="sidebar-note">
+                <span>✧</span>
+                <strong>Каждый ответ важен</strong>
+                <p>Сохраняйте полезные решения в базе знаний команды.</p>
+                <button onClick={() => setSection('knowledge')}>Открыть знания ↗</button>
+            </div>
+            <div className="account-block">
+                <Avatar name={value.account.name}/>
+                <div>
+                    <strong>{value.account.name.split(' · ')[0]}</strong>
+                    <small>{organization ? roleLabels[organization.role] : 'Участник'}</small>
+                </div>
+                <button title="Выйти" aria-label="Выйти из аккаунта" onClick={logout}>↪</button>
+            </div>
+        </aside>
+        <main className="main-workspace">
+            <header className="topbar">
+                <div>
+                    <span className="breadcrumb">Рабочее пространство <span>/</span></span>
+                    <strong>{sections.find(item => item.id == activeSection)?.title}</strong>
+                </div>
+                <div>
+                    <span className={'connection-pill' + (connected ? '' : ' offline')} role="status">
+                        <i/>{connected ? 'На связи' : 'Переподключение…'}
+                    </span>
+                    <button className="mobile-logout" onClick={logout}>Выйти</button>
+                </div>
+            </header>
             {!connected && <p className="connection-notice" role="status">Связь восстанавливается. Изменения станут доступны после подключения.</p>}
             {organization ? <React.Fragment key={scope + ':' + activeSection}>
                 {activeSection == 'inbox' && <Inbox value={value} org={organization} commands={commands} resources={resources} busy={busy}/>}
-                {activeSection == 'tasks' && staff && <ServiceView remote={taskBoards} initial={initialBoards}>{state => {const board = state.boards.find(item => item.orgId == scope); return board ? <Tasks board={board} commands={commands} busy={busy}/> : <p className="empty">Доска недоступна для текущей роли.</p>}}</ServiceView>}
-                {activeSection == 'notifications' && <ServiceView remote={notifications} initial={initialNotices}>{state => <Notifications value={state} orgId={scope} commands={commands} busy={busy}/>}</ServiceView>}
-                {activeSection == 'knowledge' && <><Knowledge value={value} org={organization} commands={commands} busy={busy}/><ContentKnowledge resources={resources} orgId={scope} disabled={busy}/></>}
+                {activeSection == 'tasks' && staff && <ServiceView remote={taskBoards} initial={initialBoards}>
+                    {state => {
+                        const board = state.boards.find(item => item.orgId == scope)
+                        if (!board) return <p className="empty">Доска недоступна для текущей роли.</p>
+                        return <Tasks board={board} commands={commands} busy={busy}/>
+                    }}
+                </ServiceView>}
+                {activeSection == 'notifications' && <ServiceView remote={notifications} initial={initialNotices}>
+                    {state => <Notifications value={state} orgId={scope} commands={commands} busy={busy}/>}
+                </ServiceView>}
+                {activeSection == 'knowledge' && <>
+                    <Knowledge value={value} org={organization} commands={commands} busy={busy}/>
+                    <ContentKnowledge resources={resources} orgId={scope} disabled={busy}/>
+                </>}
                 {activeSection == 'team' && <Team value={value} org={organization} commands={commands} busy={busy}/>}
                 {activeSection == 'audit' && manage && <Audit value={value} orgId={scope}/>}
-            </React.Fragment> : <section className="page-content"><h1>Присоединитесь к команде</h1><p>Создайте организацию или примите приглашение.</p><Team value={value} commands={commands} busy={busy}/></section>}
+            </React.Fragment> : <section className="page-content">
+                <h1>Присоединитесь к команде</h1>
+                <p>Создайте организацию или примите приглашение.</p>
+                <Team value={value} commands={commands} busy={busy}/>
+            </section>}
         </main>
     </div>
 }
 
-createRoot(document.getElementById('root')!).render(<App/> )
+createRoot(document.getElementById('root')!).render(<App/>)
 
