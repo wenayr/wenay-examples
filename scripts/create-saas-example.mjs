@@ -1,68 +1,33 @@
+import {existsSync, readFileSync, readdirSync} from 'node:fs'
 import {lstat, mkdir, readFile, readdir, writeFile} from 'node:fs/promises'
 import {builtinModules} from 'node:module'
 import path from 'node:path'
 import {fileURLToPath, pathToFileURL} from 'node:url'
 
 const repository = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
-// Эти файлы совпадают с каноном shared/ репозитория (scripts/sync-map.json).
-// Копия получает их из каталога приложения, поэтому scaffold остаётся автономным,
-// а расхождение между приложениями ловит scripts/sync-check.mjs.
-const shared = ['command-action.ts', 'replay-view.ts', 'service-action.ts', 'service-session.ts', 'service-view.tsx'].map(file => 'shared/react/' + file)
-const commonBackend = ['ai-checkpoint.ts', 'domain.ts', 'domain-check.ts', 'identity.ts', 'metered-execution.ts', 'metering-contract.ts', 'model.ts', 'node.ts', 'process-resource.ts', 'runtime.ts', 'server.ts', 'service.ts']
-const manifests = {
-    monitoring: ['ai-checkpoint.ts', 'assistant-resource.ts', 'assistant-check.ts', 'check.ts', 'domain.ts', 'domain-check.ts',
-        'http-probe.ts', 'identity.ts', 'model.ts', 'node.ts', 'organizer.ts', 'probe-check.ts', 'embedded-probe-check.ts', 'probe-main.ts',
-        'probe-worker.ts', 'process-resource.ts', 'runtime.ts', 'server.ts', 'service.ts', 'ui-fixture.ts'
-    ].map(file => 'backend/' + file).concat(shared, [
-        'frontend/assistant.tsx', 'frontend/contracts.ts', 'frontend/env.d.ts', 'frontend/index.html', 'frontend/main.tsx',
-        'frontend/style.css', 'frontend/tasks.tsx', 'frontend/tasks.css', 'frontend/vite.config.ts', 'organizer/task-domain.ts', 'organizer/task-model.ts'
-    ]),
-    approvals: ['check.ts', 'domain.ts', 'domain-check.ts', 'identity.ts', 'model.ts', 'node.ts',
-        'process-resource.ts', 'questions.ts', 'runtime.ts', 'server.ts', 'service.ts'
-    ].map(file => 'backend/' + file).concat(shared, [
-        'frontend/env.d.ts', 'frontend/index.html', 'frontend/main.tsx', 'frontend/questions.tsx',
-        'frontend/style.css', 'frontend/vite.config.ts'
-    ]),
-    forms: ['ai-checkpoint.ts', 'archive.ts', 'browser-policy.ts', 'check.ts', 'domain.ts', 'domain-check.ts',
-        'exports-resource.ts', 'grouping-resource.ts', 'grouping-check.ts', 'identity.ts', 'model.ts', 'node.ts',
-        'process-resource.ts', 'resource-check.ts', 'runtime.ts', 'server.ts', 'service.ts'
-    ].map(file => 'backend/' + file).concat(shared, [
-        'frontend/contracts.ts', 'frontend/editor.tsx', 'frontend/env.d.ts', 'frontend/grouping.tsx', 'frontend/index.html',
-        'frontend/main.tsx', 'frontend/questions.tsx', 'frontend/respondent.tsx', 'frontend/results.tsx', 'frontend/style.css', 'frontend/vite.config.ts'
-    ]),
-    booking: ['ai-checkpoint.ts', 'assistant-resource.ts', 'assistant-check.ts', 'domain.ts', 'domain-check.ts', 'identity.ts',
-        'model.ts', 'schedule.ts', 'service.ts', 'runtime.ts', 'server.ts', 'node.ts', 'process-resource.ts', 'check.ts'
-    ].map(file => 'backend/' + file).concat(shared, [
-        'frontend/assistant.tsx', 'frontend/calendar.tsx', 'frontend/contracts.ts', 'frontend/env.d.ts', 'frontend/index.html',
-        'frontend/main.tsx', 'frontend/reservations.tsx', 'frontend/settings.tsx', 'frontend/style.css', 'frontend/vite.config.ts'
-    ]),
-    crm: [...commonBackend, 'assistant-resource.ts', 'assistant-check.ts', 'check.ts', 'csv-table.ts', 'imports.ts', 'import-check.ts', 'organizer.ts'].map(file => 'backend/' + file).concat(shared, [
-        'frontend/assistant.tsx', 'frontend/contracts.ts', 'frontend/deals.tsx', 'frontend/detail.tsx', 'frontend/env.d.ts',
-        'frontend/imports.tsx', 'frontend/index.html', 'frontend/main.tsx', 'frontend/style.css', 'frontend/tasks.tsx',
-        'frontend/tasks.css', 'frontend/vite.config.ts', 'frontend/workspace.tsx', 'organizer/task-domain.ts', 'organizer/task-model.ts'
-    ]),
-    support: [
-        ...commonBackend, 'check.ts', 'resource-check.ts', 'identity-check.ts', 'organizer.ts', 'organizer-check.ts', 'notifications.ts', 'notifications-check.ts', 'assistant-resource.ts', 'files-resource.ts', 'content-resource.ts', 'published-contract.ts', 'conversation-resource.ts', 'conversation-check.ts', 'article-index.ts', 'article-index-check.ts', 'http-auth.ts', 'product-http.ts', 'product-check.ts', 'oidc.ts', 'oidc-check.ts',
-        'ai-resource-lifecycle-repro.ts', 'ai-policy-repro.ts', 'store-nested-replacement-repro.ts'
-    ].map(file => 'backend/' + file).concat(shared, [
-        'frontend/assistant.tsx', 'frontend/attachments.tsx', 'frontend/content-knowledge.tsx', 'frontend/conversation-history.tsx', 'frontend/contracts.tsx', 'frontend/env.d.ts', 'frontend/inbox.tsx',
-        'frontend/index.html', 'frontend/main.tsx', 'frontend/oidc-login.tsx', 'frontend/notifications.tsx', 'frontend/style.css', 'frontend/tasks.tsx', 'frontend/tasks.css', 'frontend/vite.config.ts', 'frontend/workspace.tsx',
-        'organizer/task-domain.ts', 'organizer/task-model.ts'
-    ]),
-    documents: [...commonBackend, 'check.ts', 'csv-table.ts', 'pdf-processor.mjs', 'processing-resource.ts', 'processor.py', 'model-extraction.ts', 'advanced-check.ts', 'http-auth.ts', 'product-http.ts', 'product-check.ts'].map(file => 'backend/' + file).concat(shared, [
-        'frontend/contracts.ts', 'frontend/env.d.ts', 'frontend/index.html', 'frontend/main.tsx', 'frontend/studio.tsx', 'frontend/style.css', 'frontend/vite.config.ts', 'frontend/version-comparison.tsx'
-    ]),
-    metering: [
-        'billing-domain.ts', 'billing-model.ts', 'check.ts', 'client-contract.ts', 'domain.ts', 'domain-check.ts',
-        'identity.ts', 'model.ts', 'node.ts', 'process-resource.ts', 'provider-http.ts', 'runtime.ts', 'server.ts',
-        'service.ts', 'webhook-check.ts', 'webhook-resource.ts'
-    ].map(file => 'backend/' + file).concat(shared, [
-        'frontend/contracts.ts', 'frontend/env.d.ts', 'frontend/index.html', 'frontend/keys.tsx', 'frontend/ledger.tsx',
-        'frontend/main.tsx', 'frontend/playground.tsx', 'frontend/style.css', 'frontend/vite.config.ts', 'frontend/webhooks.tsx'
-    ])
+// Манифест копии принадлежит приложению: apps/<app>/scaffold.json перечисляет
+// копируемые исходники, необязательные файлы и осознанно пропущенные с причиной.
+// Копия остаётся автономной, а расхождение общих файлов ловит scripts/sync-check.mjs.
+function manifestFile(root, template) {
+    return path.join(root, 'apps', template, 'scaffold.json')
 }
-const optionalFiles = ['README.md', 'API.md', '.env.example', 'Dockerfile', '.dockerignore', 'OIDC.md']
-const requiredFiles = ['package.json', 'package-lock.json', 'tsconfig.json']
+
+export function templates(root = repository) {
+    const apps = readdirSync(path.join(root, 'apps'), {withFileTypes: true})
+    const found = apps.filter(entry => entry.isDirectory() && existsSync(manifestFile(root, entry.name)))
+    return found.map(entry => entry.name).sort()
+}
+
+function manifest(root, template) {
+    const value = JSON.parse(readFileSync(manifestFile(root, template), 'utf8'))
+    if (!Array.isArray(value.files) || value.files.length == 0) throw new Error('scaffold.json без списка files: ' + template)
+    if (!Array.isArray(value.optional)) throw new Error('scaffold.json без списка optional: ' + template)
+    if (!value.skip || typeof value.skip != 'object') throw new Error('scaffold.json без объекта skip: ' + template)
+    return value
+}
+
+// scaffold.json переносится вместе с исходниками: копия остаётся пригодной для следующей копии.
+const requiredFiles = ['package.json', 'package-lock.json', 'tsconfig.json', 'scaffold.json']
 
 function inside(parent, child) {
     const relative = path.relative(parent, child)
@@ -124,11 +89,12 @@ function validateSource(files, sourceRoot, manifest) {
     }
 }
 
-function removeScript(manifest, name, file) {
-    const scripts = manifest.scripts ?? {}
-    delete scripts[name]
+// Шаги, запускающие пропущенный файл, убираются; опустевший npm script удаляется целиком.
+function removeScript(packageJson, file) {
+    const scripts = packageJson.scripts ?? {}
     for (const [key, command] of Object.entries(scripts)) {
         const parts = command.split(' && ').filter(step => !step.includes(file))
+        if (parts.length == command.split(' && ').length) continue
         if (parts.length == 0) delete scripts[key]
         else scripts[key] = parts.join(' && ')
     }
@@ -168,13 +134,13 @@ ${sourceReadme ? '## Документация исходного примера\
 
 export async function createSaasExample(deps) {
     const {template, destination, name} = deps
-    if (!Object.hasOwn(manifests, template)) throw new Error('Выберите support, documents, metering, crm, booking, forms, monitoring или approvals')
-    if (typeof destination != 'string' || !destination.trim()) throw new Error('Укажите новый пустой каталог назначения')
     const root = path.resolve(deps.repository ?? repository)
+    if (!templates(root).includes(template)) throw new Error('Выберите один из шаблонов: ' + templates(root).join(', '))
+    if (typeof destination != 'string' || !destination.trim()) throw new Error('Укажите новый пустой каталог назначения')
     const sourceRoot = path.join(root, 'apps', template)
     const target = path.resolve(destination)
     if (inside(sourceRoot, target) || inside(target, sourceRoot)) throw new Error('Каталог назначения пересекается с исходным примером')
-    for (const other of Object.keys(manifests)) {
+    for (const other of templates(root)) {
         const otherRoot = path.join(root, 'apps', other)
         if (inside(otherRoot, target) || inside(target, otherRoot)) throw new Error('Каталог назначения пересекается с исходными примерами')
     }
@@ -187,7 +153,8 @@ export async function createSaasExample(deps) {
 
     // The explicit manifest is a boundary: newly added files are never swept into a copy implicitly.
     const files = new Map()
-    for (const relative of [...requiredFiles, ...manifests[template], ...optionalFiles]) {
+    const plan = manifest(root, template)
+    for (const relative of [...requiredFiles, ...plan.files, ...plan.optional]) {
         const file = path.join(sourceRoot, relative)
         await rejectLinks(file)
         const value = await info(file)
@@ -199,10 +166,9 @@ export async function createSaasExample(deps) {
         files.set(relative, await readFile(file))
     }
     const packageJson = JSON.parse(files.get('package.json').toString('utf8'))
-    if (template == 'metering') delete packageJson.scripts['test:integration']
-    // backup-check запускает scripts/backup.mjs и restore.mjs из корня каталога примеров,
-    // а в самостоятельной копии их нет: проверка холодной копии остаётся в исходном репозитории.
-    removeScript(packageJson, 'test:backup', 'backend/backup-check.ts')
+    // Пропущенный исходник не должен остаться в npm scripts копии: иначе она выглядит
+    // рабочей, а падает на первой же команде.
+    for (const skipped of Object.keys(plan.skip)) removeScript(packageJson, skipped)
     const lock = JSON.parse(files.get('package-lock.json').toString('utf8'))
     if (!lock.packages?.[''] || lock.lockfileVersion < 2) throw new Error('Нужен современный package-lock.json с корневым пакетом')
     for (const [entry, value] of Object.entries(lock.packages)) {
@@ -239,12 +205,16 @@ export async function createSaasExample(deps) {
     return {template, destination: target, name: packageName, files: files.size}
 }
 
+function usage() {
+    return 'node scripts/create-saas-example.mjs <' + templates().join('|') + '> <empty-directory> [--name npm-name]'
+}
+
 async function main(args) {
     if (args.length == 1 && ['--help', '-h'].includes(args[0])) {
-        console.log('node scripts/create-saas-example.mjs <support|documents|metering|crm|booking|forms|monitoring|approvals> <empty-directory> [--name npm-name]')
+        console.log(usage())
         return
     }
-    if (args.length != 2 && !(args.length == 4 && args[2] == '--name')) throw new Error('Использование: node scripts/create-saas-example.mjs <support|documents|metering|crm|booking|forms|monitoring|approvals> <empty-directory> [--name npm-name]')
+    if (args.length != 2 && !(args.length == 4 && args[2] == '--name')) throw new Error('Использование: ' + usage())
     const result = await createSaasExample({template: args[0], destination: args[1], name: args[3]})
     console.log('Создан ' + result.name + ': ' + result.destination + ' (' + result.files + ' файлов). Дальше: npm ci, npm run typecheck, npm test, npm run build.')
 }

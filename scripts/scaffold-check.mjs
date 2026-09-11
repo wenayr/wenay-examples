@@ -1,11 +1,35 @@
 import assert from 'node:assert/strict'
+import {execFileSync} from 'node:child_process'
+import {readFileSync} from 'node:fs'
 import {cp, lstat, mkdir, mkdtemp, readFile, readdir, realpath, rm, symlink, writeFile} from 'node:fs/promises'
 import {tmpdir} from 'node:os'
 import path from 'node:path'
 import {fileURLToPath} from 'node:url'
-import {createSaasExample} from './create-saas-example.mjs'
+import {createSaasExample, templates} from './create-saas-example.mjs'
 
 const repository = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
+
+
+// Ни один отслеживаемый исходник приложения не должен потеряться молча: он либо копируется,
+// либо назван в skip с причиной. Иначе новый файл просто не попадёт в самостоятельную копию.
+function checkManifests() {
+    const always = new Set(['package.json', 'package-lock.json', 'tsconfig.json', 'scaffold.json'])
+    for (const app of templates(repository)) {
+        const prefix = 'apps/' + app + '/'
+        const plan = JSON.parse(readFileSync(path.join(repository, prefix, 'scaffold.json'), 'utf8'))
+        const known = new Set([...plan.files, ...plan.optional, ...Object.keys(plan.skip), ...always])
+        const listed = execFileSync('git', ['ls-files', prefix], {cwd: repository, encoding: 'utf8'})
+        for (const line of listed.trim().split('\n').filter(Boolean)) {
+            const relative = line.slice(prefix.length)
+            assert(known.has(relative), app + ': файл не описан в scaffold.json (добавьте в files или в skip с причиной): ' + relative)
+        }
+        for (const [file, reason] of Object.entries(plan.skip)) {
+            assert(typeof reason == 'string' && reason.length >= 10, app + ': у пропуска ' + file + ' нет внятной причины')
+            assert(!plan.files.includes(file), app + ': файл одновременно в files и skip: ' + file)
+        }
+    }
+    return templates(repository).length
+}
 
 async function check() {
     const temporary = await mkdtemp(path.join(await realpath(tmpdir()), 'wenay-scaffold-check-'))
@@ -31,6 +55,8 @@ async function check() {
     }
 
     try {
+        const described = checkManifests()
+        assert(described >= 8, 'ожидалось не меньше восьми шаблонов с манифестом')
         const copy = path.join(temporary, 'support-copy')
         const result = await createSaasExample({template: 'support', destination: copy, name: 'support-copy'})
         assert(result.files >= 20)
@@ -96,7 +122,7 @@ async function check() {
         await assert.rejects(createSaasExample({template: 'support', repository: fixture, destination: path.join(temporary, 'linked-source')}), /Ссылки/)
         assert.equal(await readFile(path.join(copy, 'frontend', 'main.tsx'), 'utf8'), original)
 
-        await assert.rejects(createSaasExample({template: 'unknown', destination: path.join(temporary, 'bad')}), /Выберите support/)
+        await assert.rejects(createSaasExample({template: 'unknown', destination: path.join(temporary, 'bad')}), /Выберите один из шаблонов/)
         await assert.rejects(createSaasExample({template: 'support', destination: path.join(temporary, 'bad'), name: '../escape'}), /Имя npm/)
         const documents = path.join(temporary, 'documents-copy')
         const crm = path.join(temporary, 'crm-copy')
@@ -180,7 +206,7 @@ async function check() {
         const monitoringClean = path.join(temporary, 'monitoring-clean')
         await createSaasExample({template: 'monitoring', repository: fixture, destination: monitoringClean})
         for (const file of await allFiles(monitoringClean)) assert(!(await readFile(file, 'utf8')).includes(marker))
-        console.log('Scaffold checks passed: eight apps, exact lock/name, monitoring HTTP workers/AI/organizer, forms archive/grouping/public sources, booking DST/AI/runtime sources, metering repo-only integration omitted, no secrets/data/build/deps, no overwrite, collision guards, no symlink/junction following, approvals decision domain without forms commands, no cross-app or missing local imports')
+        console.log('Scaffold checks passed: ' + described + ' apps with own manifests, exact lock/name, monitoring HTTP workers/AI/organizer, forms archive/grouping/public sources, booking DST/AI/runtime sources, metering repo-only integration omitted, no secrets/data/build/deps, no overwrite, collision guards, no symlink/junction following, approvals decision domain without forms commands, no cross-app or missing local imports')
     } finally {
         await remove(temporary)
     }
