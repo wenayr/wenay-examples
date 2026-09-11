@@ -15,6 +15,27 @@ export type GroupingInput = {orgId: string, formId: string, version: number, ans
 export type GroupingResult = GroupingInput & {owner: string, revision: number, demo: boolean, groups: Group[], sampleSize: number, expiresAt: number}
 
 // Source text remains private. Run history contains only status and a readiness flag.
+// Тестовые правила подписи группы: явные ключевые слова, без модели и оценки качества.
+function demoLabel(text: string) {
+    if (/цен|дорог|стоим|price|cost/.test(text)) return 'Цена'
+    if (/скор|медлен|быстр|speed|slow|fast/.test(text)) return 'Скорость'
+    if (/удоб|сложн|понят|interface|easy|difficult/.test(text)) return 'Удобство'
+    return 'Другие ответы'
+}
+
+function wellFormedGroup(group: Group, labels: Set<string>) {
+    if (!group || typeof group.label != 'string' || !group.label.trim()) return false
+    if (group.label.length > 100 || labels.has(group.label.trim())) return false
+    if (!Array.isArray(group.sourceIds) || !group.sourceIds.length) return false
+    return group.sourceIds.length <= 200
+}
+
+function wellFormedInput(input: GroupingInput | null): input is GroupingInput {
+    if (!input || typeof input.orgId != 'string' || typeof input.formId != 'string') return false
+    if (typeof input.fieldId != 'string') return false
+    return Number.isSafeInteger(input.version) && Number.isSafeInteger(input.answersRevision)
+}
+
 export function createFormsGrouping(deps: {directory: string, now?: () => number, provider?: GroupingProvider, timeoutMs?: number}) {
     const now = deps.now ?? Date.now
     let store: Store<FormsState> | null = null
@@ -31,15 +52,30 @@ export function createFormsGrouping(deps: {directory: string, now?: () => number
     }
     function sources(account: string, input: GroupingInput) {
         const form = current(account, input)
-        const rows = Object.values(store!.state.submissions).filter(row => row.formId == form.id && row.version == input.version && row.expiresAt > now() && typeof row.answers[input.fieldId] == 'string' && String(row.answers[input.fieldId]).trim()).sort((a, b) => a.id.localeCompare(b.id))
-        if (rows.length < 3 || rows.length > 200) throw new Error('Для группировки нужны от 3 до 200 непустых текстовых ответов одной версии')
-        return {values: rows.map(row => ({id: row.id, text: String(row.answers[input.fieldId])})), expiresAt: Math.min(...rows.map(row => row.expiresAt))}
+        const answered = Object.values(store!.state.submissions).filter(function usable(row) {
+            if (row.formId != form.id || row.version != input.version) return false
+            if (row.expiresAt <= now()) return false
+            if (typeof row.answers[input.fieldId] != 'string') return false
+            return !!String(row.answers[input.fieldId]).trim()
+        })
+        const rows = answered.sort((a, b) => a.id.localeCompare(b.id))
+        if (rows.length < 3 || rows.length > 200) {
+            throw new Error('Для группировки нужны от 3 до 200 непустых текстовых ответов одной версии')
+        }
+        return {
+            values: rows.map(row => ({id: row.id, text: String(row.answers[input.fieldId])})),
+            expiresAt: Math.min(...rows.map(row => row.expiresAt))
+        }
     }
     function validateGroups(groups: Group[], ids: string[]) {
         if (!Array.isArray(groups) || !groups.length || groups.length > 20) throw new Error('Нужны от 1 до 20 групп')
-        const allowed = new Set(ids), seen = new Set<string>(), labels = new Set<string>()
+        const allowed = new Set(ids)
+        const seen = new Set<string>()
+        const labels = new Set<string>()
         const value = groups.map(function validate(group) {
-            if (!group || typeof group.label != 'string' || !group.label.trim() || group.label.length > 100 || labels.has(group.label.trim()) || !Array.isArray(group.sourceIds) || !group.sourceIds.length || group.sourceIds.length > 200) throw new Error('Группа должна иметь уникальное название до 100 символов и источники')
+            if (!wellFormedGroup(group, labels)) {
+                throw new Error('Группа должна иметь уникальное название до 100 символов и источники')
+            }
             labels.add(group.label.trim())
             for (const id of group.sourceIds) {
                 if (typeof id != 'string' || !allowed.has(id) || seen.has(id)) throw new Error('Каждый источник должен входить ровно в одну группу')
@@ -77,37 +113,77 @@ export function createFormsGrouping(deps: {directory: string, now?: () => number
                 off = () => signal.removeEventListener('abort', abort)
             })
             signal.throwIfAborted()
-            const groups = await Promise.race([deps.provider ? deps.provider.group({sources: selected.values, signal}) : demoGroups(selected.values), interrupted])
+            const prepared = deps.provider
+                ? deps.provider.group({sources: selected.values, signal})
+                : demoGroups(selected.values)
+            const groups = await Promise.race([prepared, interrupted])
             signal.throwIfAborted()
             if (ctx.cancelled()) return
-            const output: GroupingResult = {...input, owner: ctx.run.owner, revision: 1, demo: !deps.provider,
-                groups: validateGroups(groups, selected.values.map(value => value.id)), sampleSize: selected.values.length, expiresAt: selected.expiresAt}
+            const output: GroupingResult = {
+                ...input,
+                owner: ctx.run.owner,
+                revision: 1,
+                demo: !deps.provider,
+                groups: validateGroups(groups, selected.values.map(value => value.id)),
+                sampleSize: selected.values.length,
+                expiresAt: selected.expiresAt
+            }
             validate(ctx.run.owner, output)
             results[ctx.run.id] = output
             journal.save(results)
             ctx.report({progress: 1, message: 'Группы готовы. Проверьте источники и при необходимости исправьте'})
             return {result: {available: true, demo: !deps.provider}}
         } catch {
-            throw new Error(signal.aborted ? 'Группировка отменена, устарела или превысила время ожидания' : 'Не удалось сгруппировать текущие источники')
-        } finally {off(); pending.delete(ctx.run.id)}
+            const interruptedMessage = 'Группировка отменена, устарела или превысила время ожидания'
+            const failedMessage = 'Не удалось сгруппировать текущие источники'
+            throw new Error(signal.aborted ? interruptedMessage : failedMessage)
+        } finally {
+            off()
+            pending.delete(ctx.run.id)
+        }
     }, cancel({run}) {pending.get(run.id)?.controller.abort()}}
-    const host = createAiRunHost({...openAiCheckpoint({directory: path.join(deps.directory, 'runs')}), runner, history: 5,
-        capabilities: [{kind: 'group', label: deps.provider ? 'Группировка ответов' : 'Тестовая группировка по ключевым словам'}],
-        policy: {canRead: (account, run) => run.owner == account, canWrite: (account, run) => run.owner == account,
+    const label = deps.provider ? 'Группировка ответов' : 'Тестовая группировка по ключевым словам'
+    const host = createAiRunHost({
+        ...openAiCheckpoint({directory: path.join(deps.directory, 'runs')}),
+        runner,
+        history: 5,
+        capabilities: [{kind: 'group', label}],
+        policy: {
+            canRead: (account, run) => run.owner == account,
+            canWrite: (account, run) => run.owner == account,
             canCreate(account, request) {
                 try {
                     const input = request.input as GroupingInput | null
-                    if (request.kind != 'group' || !input || typeof input.orgId != 'string' || typeof input.formId != 'string' || typeof input.fieldId != 'string' || !Number.isSafeInteger(input.version) || !Number.isSafeInteger(input.answersRevision) || request.resourceIds?.length != 1 || request.resourceIds[0] != input.formId) return false
+                    if (request.kind != 'group' || !wellFormedInput(input)) return false
+                    if (request.resourceIds?.length != 1) return false
+                    if (request.resourceIds[0] != input.formId) return false
                     sources(account, input)
-                    const runs = Object.values(host.store.state.runs), active = runs.filter(run => ['queued', 'running', 'waiting_input', 'waiting_approval'].includes(run.state))
-                    return runs.some(run => run.owner == account && run.requestId == request.requestId) || runs.length < 50 && active.length < 2 && !active.some(run => run.resourceIds[0] == input.formId)
+                    const runs = Object.values(host.store.state.runs)
+                    const busyStates = ['queued', 'running', 'waiting_input', 'waiting_approval']
+                    const active = runs.filter(run => busyStates.includes(run.state))
+                    // Повтор того же requestId возвращает прежний запуск и лимитами не ограничен.
+                    const repeat = runs.some(function same(run) {
+                        return run.owner == account && run.requestId == request.requestId
+                    })
+                    if (repeat) return true
+                    if (runs.length >= 50 || active.length >= 2) return false
+                    return !active.some(run => run.resourceIds[0] == input.formId)
                 } catch {return false}
-            }}})
-    for (const entry of host.recovery.pending()) host.recovery.settle(entry.run.id, {state: 'failed', error: 'Группировка прервана перезапуском. Создайте новый запуск после проверки источников'})
+            }
+        }
+    })
+    const restartError = 'Группировка прервана перезапуском.'
+        + ' Создайте новый запуск после проверки источников'
+    for (const entry of host.recovery.pending()) {
+        host.recovery.settle(entry.run.id, {state: 'failed', error: restartError})
+    }
     const resource = {allow: STAFF, placement: 'authority' as const, open(ctx: ServiceResourceContext) {
         const connection = host.connection(ctx.principal.account)
         return {facade: {ai: connection.fragment, control: {
-            result(id: string) {ctx.signal.throwIfAborted(); return result(ctx.principal.account, id)},
+            result(id: string) {
+                ctx.signal.throwIfAborted()
+                return result(ctx.principal.account, id)
+            },
             correct(input: {runId: string, revision: number, groups: Group[]}) {
                 ctx.signal.throwIfAborted()
                 const output = result(ctx.principal.account, input.runId)
@@ -128,13 +204,21 @@ export function createFormsGrouping(deps: {directory: string, now?: () => number
             }
             let dirty = false
             for (const [id, value] of Object.entries(results)) {
-                try {validate(value.owner, value)} catch {delete results[id]; dirty = true}
+                try {validate(value.owner, value)} catch {
+                    delete results[id]
+                    dirty = true
+                }
             }
             if (dirty) journal.save(results)
         }
         changed()
         const off = store.on(changed)
-        return function close() {off(); for (const value of pending.values()) value.controller.abort(); host.close(); store = null}
+        return function close() {
+            off()
+            for (const value of pending.values()) value.controller.abort()
+            host.close()
+            store = null
+        }
     }
     return {resource, mount}
 }
@@ -145,7 +229,7 @@ async function demoGroups(sources: GroupingSource[]) {
     const groups = new Map<string, string[]>()
     for (const source of sources) {
         const text = source.text.toLowerCase()
-        const label = /цен|дорог|стоим|price|cost/.test(text) ? 'Цена' : /скор|медлен|быстр|speed|slow|fast/.test(text) ? 'Скорость' : /удоб|сложн|понят|interface|easy|difficult/.test(text) ? 'Удобство' : 'Другие ответы'
+        const label = demoLabel(text)
         if (!groups.has(label)) groups.set(label, [])
         groups.get(label)!.push(source.id)
     }

@@ -13,11 +13,20 @@ import {createFormsArchive} from './archive'
 
 async function waitFor(check: () => boolean | Promise<boolean>) {
     const until = Date.now() + 5000
-    while (!await check()) {assert(Date.now() < until, 'Condition timeout'); await delay(10)}
+    while (!await check()) {
+        assert(Date.now() < until, 'Condition timeout')
+        await delay(10)
+    }
 }
 async function main() {
     const temporary = realpathSync(tmpdir()), directory = mkdtempSync(path.join(temporary, 'forms-resource-check-'))
-    const env = {SERVICE_PORT: '0', SERVICE_HOST: '127.0.0.1', SERVICE_DATA_DIR: directory, SERVICE_TOKEN_SECRET: randomBytes(32).toString('hex'), SERVICE_NODE_TOKEN: randomBytes(32).toString('hex')}
+    const env = {
+        SERVICE_PORT: '0',
+        SERVICE_HOST: '127.0.0.1',
+        SERVICE_DATA_DIR: directory,
+        SERVICE_TOKEN_SECRET: randomBytes(32).toString('hex'),
+        SERVICE_NODE_TOKEN: randomBytes(32).toString('hex')
+    }
     let clock = Date.UTC(2026, 8, 10), definition!: FormsDefinition
     async function start() {
         const runtime = createFormsRuntime({directory: path.join(directory, 'exports'), now: () => clock})
@@ -25,7 +34,10 @@ async function main() {
         definition = runtime.definition
         return createServiceLeaderHost({definition, env, durable: archive.durable, mount({leader}) {
             const close = runtime.mount({store: leader.line.control.store, corridor: leader.corridor}), closeArchive = archive.mount(leader)
-            return async function stop() {await close(); closeArchive()}
+            return async function stop() {
+                await close()
+                closeArchive()
+            }
         }})
     }
     let host = await start()
@@ -42,7 +54,11 @@ async function main() {
         await waitFor(() => handle.status.state.phase == 'ready')
         return handle.current()!.remote
     }
-    async function stop() {for (const close of closes.splice(0).reverse()) await close(); for (const client of clients.splice(0)) client.close(); await host.close()}
+    async function stop() {
+        for (const close of closes.splice(0).reverse()) await close()
+        for (const client of clients.splice(0)) client.close()
+        await host.close()
+    }
     const id = 'form-feedback', orgId = 'northstar'
     const form = () => host.leader.line.control.store.state.forms[id]
     try {
@@ -62,7 +78,12 @@ async function main() {
         const accepted = await publicform.control.submit(submission)
         assert.equal((await publicform.control.submit(submission)).duplicate, true)
         await assert.rejects(publicform.control.submit({...submission, answers: {...submission.answers, rating: 1}}), /другого ответа/)
-        await assert.rejects(publicform.control.submit({...submission, nonce: 'bad-hidden-001', answers: {...submission.answers, recommend: true}}), /known field/)
+        const hidden = {
+            ...submission,
+            nonce: 'bad-hidden-001',
+            answers: {...submission.answers, recommend: true}
+        }
+        await assert.rejects(publicform.control.submit(hidden), /known field/)
         await owner.views.workspace.ready
         await waitFor(() => owner.views.workspace.store.state.aggregates[0]?.count == 1)
         assert.equal(JSON.stringify(owner.views.workspace.store.snapshot()).includes('PRIVATE_SURVEY_TEXT'), false)
@@ -77,20 +98,41 @@ async function main() {
         const sync = syncStoreReplay(mirror, exports.ai.state, {onError() {mirror.replace({runs: {}, inputs: {}, approvals: {}})}})
         closes.push(sync)
         await sync.ready
-        const exported = await exports.ai.createRun({requestId: 'export-json', kind: 'export', resourceIds: [id], input: {orgId, formId: id, revision: form().answersRevision, version: 1, format: 'json'}})
+        const exported = await exports.ai.createRun({
+            requestId: 'export-json',
+            kind: 'export',
+            resourceIds: [id],
+            input: {orgId, formId: id, revision: form().answersRevision, version: 1, format: 'json'}
+        })
         await waitFor(() => mirror.state.runs[exported.id]?.state == 'completed')
         const output = await exports.control.result(exported.id)
         assert.equal(JSON.parse(Buffer.from(output.bytes).toString('utf8'))[0].answers.details, '=PRIVATE_SURVEY_TEXT')
         assert.equal(JSON.stringify(await exports.ai.state.keyframe()).includes('PRIVATE_SURVEY_TEXT'), false)
-        const csv = await exports.ai.createRun({requestId: 'export-csv', kind: 'export', resourceIds: [id], input: {orgId, formId: id, revision: form().answersRevision, version: 0, format: 'csv'}})
+        const csv = await exports.ai.createRun({
+            requestId: 'export-csv',
+            kind: 'export',
+            resourceIds: [id],
+            input: {orgId, formId: id, revision: form().answersRevision, version: 0, format: 'csv'}
+        })
         await waitFor(() => mirror.state.runs[csv.id]?.state == 'completed')
         assert.match(Buffer.from((await exports.control.result(csv.id)).bytes).toString('utf8'), /'=PRIVATE_SURVEY_TEXT/)
-        const localExport = definition.resources.exports.open({principal: {account: 'analyst', roles: ['analyst']}, sessionId: 'cancel-test', resourceId: 'exports', signal: new AbortController().signal})
-        const cancelled = localExport.facade.ai.createRun({requestId: 'cancel-export', kind: 'export', resourceIds: [id], input: {orgId, formId: id, revision: form().answersRevision, version: 0, format: 'csv'}})
+        const localExport = definition.resources.exports.open({
+            principal: {account: 'analyst', roles: ['analyst']},
+            sessionId: 'cancel-test',
+            resourceId: 'exports',
+            signal: new AbortController().signal
+        })
+        const cancelled = localExport.facade.ai.createRun({
+            requestId: 'cancel-export',
+            kind: 'export',
+            resourceIds: [id],
+            input: {orgId, formId: id, revision: form().answersRevision, version: 0, format: 'csv'}
+        })
         assert.equal(localExport.facade.ai.cancelRun(cancelled.id, 'Cancel before file commit').state, 'cancelled')
         await assert.rejects(localExport.facade.control.result(cancelled.id), /недоступна/)
         localExport.close()
-        assert(readFileSync(path.join(directory, 'forms.jsonl'), 'utf8').includes('PRIVATE_SURVEY_TEXT'), 'fixture must occur in durable archive before erasure')
+        const archive = readFileSync(path.join(directory, 'forms.jsonl'), 'utf8')
+        assert(archive.includes('PRIVATE_SURVEY_TEXT'), 'fixture must occur in durable archive before erasure')
         await stop()
         host = await start()
         const restoredOwner = await client('owner'), restoredAnalyst = await client('analyst')
@@ -99,14 +141,17 @@ async function main() {
         const oldPublicClient = await client('respondent', first.token), oldPublic = await resource(oldPublicClient, 'publicform')
         await restoredOwner.commands.answerDelete('delete-private-answer', {orgId, formId: id, id: accepted.id})
         await waitFor(() => !readFileSync(path.join(directory, 'forms.jsonl'), 'utf8').includes('PRIVATE_SURVEY_TEXT'))
-        assert.equal(readFileSync(path.join(directory, 'forms.control.jsonl'), 'utf8').includes('PRIVATE_SURVEY_TEXT'), false, 'command receipts do not keep raw answers')
+        const receipts = readFileSync(path.join(directory, 'forms.control.jsonl'), 'utf8')
+        const note = 'command receipts do not keep raw answers'
+        assert.equal(receipts.includes('PRIVATE_SURVEY_TEXT'), false, note)
         await assert.rejects(restoredExport.control.result(exported.id), /измени|недоступна/)
         await waitFor(() => readdirSync(path.join(directory, 'exports', 'files')).filter(name => /^[a-f0-9]{64}$/.test(name)).length == 0)
         assert.equal((await oldPublic.control.submit(submission)).deleted, true)
         const fresh = await oldPublic.control.submit({version: 1, nonce: 'expiry-response-001', answers: {rating: 3, recommend: true}})
         clock += 31 * 86400000
         const rows = await resource(restoredAnalyst, 'answers')
-        assert.equal((await rows.control.list({orgId, formId: id, version: 0, offset: 0, limit: 100})).total, 0, 'expired raw responses denied before sweeper catches up')
+        const page = await rows.control.list({orgId, formId: id, version: 0, offset: 0, limit: 100})
+        assert.equal(page.total, 0, 'expired raw responses denied before sweeper catches up')
         await host.leader.corridor.system.retentionSweep('expire-test-clock', {})
         assert.equal(host.leader.line.control.store.state.submissions[fresh.id], undefined)
         assert.equal(host.leader.line.control.store.state.aggregates[id + ':1'].count, 0)
@@ -116,14 +161,25 @@ async function main() {
         const next = await newEditor.control.publish({orgId, id, revision: form().revision, requestId: 'new-public-token'})
         assert(next.token)
         await assert.rejects(oldPublic.control.submit({...submission, version: 2, nonce: 'old-generation-after-publish'}))
-        await restoredOwner.commands.memberRole('revoke-analyst', {orgId, revision: host.leader.line.control.store.state.organizations[orgId].revision, account: 'analyst', role: 'none'})
+        const revision = host.leader.line.control.store.state.organizations[orgId].revision
+        await restoredOwner.commands.memberRole('revoke-analyst', {
+            orgId,
+            revision,
+            account: 'analyst',
+            role: 'none'
+        })
         await assert.rejects(rows.control.list({orgId, formId: id, version: 0, offset: 0, limit: 100}))
         console.log('PASS forms resources: real service login/SC1 public form, single-display token, receipt privacy, guarded private pages, durable AI export bytes, CSV formula escaping, correction/deletion invalidation + physical cleanup, expiry, public generation and retained staff revocation')
     } finally {
         await stop()
-        if (path.dirname(path.resolve(directory)) != temporary || !path.basename(directory).startsWith('forms-resource-check-')) throw new Error('Unsafe cleanup target')
+        const parent = path.dirname(path.resolve(directory))
+        const named = path.basename(directory).startsWith('forms-resource-check-')
+        if (parent != temporary || !named) throw new Error('Unsafe cleanup target')
         rmSync(directory, {recursive: true, force: true})
     }
 }
 
-main().catch(function failed(error) {console.error(error); process.exitCode = 1})
+main().catch(function failed(error) {
+    console.error(error)
+    process.exitCode = 1
+})

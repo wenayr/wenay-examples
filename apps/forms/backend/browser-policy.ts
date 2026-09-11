@@ -1,7 +1,8 @@
 import type {Request, Response, NextFunction} from 'express'
 
 export function createFormsBrowserPolicy(deps: {ancestors?: string} = {}) {
-    const ancestors = (deps.ancestors ?? '').split(',').map(value => value.trim()).filter(Boolean).map(value => {
+    const listed = (deps.ancestors ?? '').split(',').map(value => value.trim())
+    const ancestors = listed.filter(Boolean).map(value => {
         const url = new URL(value)
         if (!['http:', 'https:'].includes(url.protocol) || url.origin != value) throw new Error('FORM_FRAME_ANCESTORS допускает только точные HTTP(S) origins')
         return url.origin

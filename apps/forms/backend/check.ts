@@ -10,7 +10,10 @@ import {createProcess} from './process-resource'
 
 async function waitFor(label: string, check: () => boolean | Promise<boolean>) {
     const deadline = Date.now() + 15000
-    while (!await check()) {assert(Date.now() < deadline, 'Timeout: ' + label); await new Promise(resolve => setTimeout(resolve, 20))}
+    while (!await check()) {
+        assert(Date.now() < deadline, 'Timeout: ' + label)
+        await new Promise(resolve => setTimeout(resolve, 20))
+    }
 }
 async function main() {
     const started = performance.now(), temporary = realpathSync(tmpdir()), directory = mkdtempSync(path.join(temporary, 'forms-network-'))
@@ -41,12 +44,24 @@ async function main() {
     const orgId = 'northstar', id = 'form-feedback'
     try {
         for (const nodeId of ['forms-a', 'forms-b']) {
-            const node = createProcess({script: 'node.ts', env: {...env, SERVICE_DATA_DIR: path.join(directory, nodeId), SERVICE_NODE_ID: nodeId, SERVICE_UPSTREAM: url}})
+            const node = createProcess({
+                script: 'node.ts',
+                env: {
+                    ...env,
+                    SERVICE_DATA_DIR: path.join(directory, nodeId),
+                    SERVICE_NODE_ID: nodeId,
+                    SERVICE_UPSTREAM: url
+                }
+            })
             nodes.push(node)
             await node.ready
         }
         const owner = await client('owner'), analyst = await client('analyst', 'analyst-pass', 0.999), outsider = await client('outsider')
-        await waitFor('two different serving nodes', () => owner.view.endpoint()?.nodeId != 'leader' && analyst.view.endpoint()?.nodeId != 'leader' && owner.view.endpoint()?.nodeId != analyst.view.endpoint()?.nodeId)
+        await waitFor('two different serving nodes', function separated() {
+            const first = owner.view.endpoint()?.nodeId
+            const second = analyst.view.endpoint()?.nodeId
+            return first != 'leader' && second != 'leader' && first != second
+        })
         const endpoints = [owner.view.endpoint()!.nodeId, analyst.view.endpoint()!.nodeId]
         const editor = await resource(owner, 'editor')
         const published = await editor.current()!.remote.control.publish({orgId, id, revision: 1, requestId: 'network-publication'})
@@ -63,11 +78,20 @@ async function main() {
         }))
         const elapsed = performance.now() - startedBatch
         latencies.sort((a, b) => a - b)
-        await waitFor('both aggregate replicas', () => owner.views.workspace.store.state.aggregates[0]?.count == 20 && analyst.views.workspace.store.state.aggregates[0]?.count == 20)
+        await waitFor('both aggregate replicas', function converged() {
+            const first = owner.views.workspace.store.state.aggregates[0]?.count
+            const second = analyst.views.workspace.store.state.aggregates[0]?.count
+            return first == 20 && second == 20
+        })
         assert.equal(owner.views.workspace.store.state.aggregates[0].fields.find(field => field.id == 'rating')!.sum, 60)
         assert.equal(outsider.views.workspace.store.state.aggregates.length, 0)
         assert.equal(JSON.stringify(analyst.views.workspace.store.snapshot()).includes('PRIVATE_MEASURED_RESPONSE'), false)
-        const duplicate = await formB.current()!.remote.control.submit({version: 1, nonce: 'measured-response-0', answers: {rating: 1, recommend: false, details: 'PRIVATE_MEASURED_RESPONSE_0'}})
+        const repeated = {
+            version: 1,
+            nonce: 'measured-response-0',
+            answers: {rating: 1, recommend: false, details: 'PRIVATE_MEASURED_RESPONSE_0'}
+        }
+        const duplicate = await formB.current()!.remote.control.submit(repeated)
         assert.equal(duplicate.duplicate, true)
         assert.equal(new Set(outputs.map(value => value.id)).size, 20)
         const before = owner.view.endpoint()!, mirror = owner.views.workspace.store
@@ -85,20 +109,38 @@ async function main() {
         await owner.commands.memberRole('revoke-live-analyst', {orgId, revision: 1, account: 'analyst', role: 'none'})
         await assert.rejects(retained.control.list({orgId, formId: id, version: 0, offset: 0, limit: 100}))
         await stop()
-        host = createProcess({script: 'server.ts', env}); url = await host.ready
+        host = createProcess({script: 'server.ts', env})
+        url = await host.ready
         const restored = await client('owner'), restoredRespondent = await client('respondent', published.token)
         assert.equal(restored.views.workspace.store.state.aggregates[0].count, 20)
         assert.equal(restored.views.workspace.store.state.aggregates[0].fields.find(field => field.id == 'rating')!.sum, 64)
         const restoredPublic = await resource(restoredRespondent, 'publicform')
-        assert.equal((await restoredPublic.current()!.remote.control.submit({version: 1, nonce: 'measured-response-0', answers: {rating: 1, recommend: false, details: 'PRIVATE_MEASURED_RESPONSE_0'}})).deleted, true)
+        const afterRestart = await restoredPublic.current()!.remote.control.submit(repeated)
+        assert.equal(afterRestart.deleted, true)
         const restoredEditor = await resource(restored, 'editor')
         assert.equal((await restoredEditor.current()!.remote.control.publish({orgId, id, revision: 1, requestId: 'network-publication'})).token, null)
-        console.log(JSON.stringify({check: 'forms measured local batch', responses: 20, clients: 2, servingNodes: endpoints, elapsedMs: Math.round(elapsed), responsesPerSecond: Number((20000 / elapsed).toFixed(1)), p50Ms: Math.round(latencies[9]), p95Ms: Math.round(latencies[18]), scope: 'small local acceptance sample, not a production benchmark'}))
-        console.log('PASS forms network: authority + 2 serving nodes, small concurrent response stream, live aggregate convergence/privacy, node failover, staff revoke, durable restart and compacted deletion (' + Math.round(performance.now() - started) + ' ms)')
+        console.log(JSON.stringify({
+            check: 'forms measured local batch',
+            responses: 20,
+            clients: 2,
+            servingNodes: endpoints,
+            elapsedMs: Math.round(elapsed),
+            responsesPerSecond: Number((20000 / elapsed).toFixed(1)),
+            p50Ms: Math.round(latencies[9]),
+            p95Ms: Math.round(latencies[18]),
+            scope: 'small local acceptance sample, not a production benchmark'
+        }))
+        const summary = 'PASS forms network: authority + 2 serving nodes,'
+            + ' small concurrent response stream, live aggregate convergence/privacy,'
+            + ' node failover, staff revoke, durable restart and compacted deletion'
+        console.log(summary + ' (' + Math.round(performance.now() - started) + ' ms)')
     } finally {
         await stop()
         assert(path.dirname(path.resolve(directory)) == temporary && path.basename(directory).startsWith('forms-network-'))
         rmSync(directory, {recursive: true, force: true})
     }
 }
-main().catch(function failed(error) {console.error(error); process.exitCode = 1})
+main().catch(function failed(error) {
+    console.error(error)
+    process.exitCode = 1
+})

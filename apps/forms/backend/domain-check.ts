@@ -17,14 +17,21 @@ async function main() {
     try {
         await assert.rejects(analyst.formSave('analyst-edit', save()), /forbidden/)
         await assert.rejects(author.formSave('other-org', {...save(), orgId: 'harbor', id: 'form-harbor'}), /доступа/)
-        await assert.rejects(owner.formPublish('forged-publish', {orgId, id, revision: 1, actor: 'owner', tokenHash: 'a'.repeat(64), publication: 'b'.repeat(64)}), /forbidden/)
+        const forged = {
+            orgId, id, revision: 1, actor: 'owner',
+            tokenHash: 'a'.repeat(64), publication: 'b'.repeat(64)
+        }
+        await assert.rejects(owner.formPublish('forged-publish', forged), /forbidden/)
         assert.throws(() => validateFields([{...fields[0], id: 'constructor'}]), /безопасными/)
         const bool: Field = {id: 'a', label: 'A', kind: 'boolean', required: true, choices: [], min: 0, max: 0, whenField: 'b', whenEquals: 'true'}
         assert.throws(() => validateFields([bool, {...bool, id: 'b', whenField: 'a'}]), /цикл/)
         assert.throws(() => validateFields([{...bool, whenField: 'missing'}]), /Условие/)
         await author.formSave('retention-day', save())
         const token = 'x'.repeat(43)
-        await leader.corridor.system.formPublish('publish', {orgId, id, revision: form().revision, actor: 'author', tokenHash: hash(token), publication: 'a'.repeat(64)})
+        await leader.corridor.system.formPublish('publish', {
+            orgId, id, revision: form().revision, actor: 'author',
+            tokenHash: hash(token), publication: 'a'.repeat(64)
+        })
         const account = definition.access.login.resolve(state(), {account: 'respondent', password: token})!
         assert.equal(account, 'form:form-feedback:1')
         assert.equal(JSON.stringify(state()).includes(token), false)
@@ -53,7 +60,13 @@ async function main() {
         assert.equal(JSON.stringify(workspace).includes('Улучшите поиск'), false)
         assert.equal(JSON.stringify(workspace).includes('tokenHash'), false)
         assert.equal(formsWorkspace(state(), {account: 'outsider', roles: ['owner']}).aggregates.length, 0)
-        await owner.answerCorrect('correct', {orgId, formId: id, id: first.id, answersRevision: form().answersRevision, answersJson: JSON.stringify({rating: 5, recommend: true})})
+        await owner.answerCorrect('correct', {
+            orgId,
+            formId: id,
+            id: first.id,
+            answersRevision: form().answersRevision,
+            answersJson: JSON.stringify({rating: 5, recommend: true})
+        })
         aggregate = state().aggregates[id + ':1']
         assert.equal(aggregate.count, 2)
         assert.equal(aggregate.fields.rating.sum, 7)
@@ -64,10 +77,14 @@ async function main() {
         assert.equal(state().submissions[second.id], undefined)
         assert.equal(state().receipts[second.id].signature, '')
         const frozen = JSON.stringify(form().versions[0])
-        await author.formSave('draft-changes', {...save(), title: 'Новое название', fields: fields.map(field => field.id == 'rating' ? {...field, max: 10} : field)})
+        const widened = fields.map(field => field.id == 'rating' ? {...field, max: 10} : field)
+        await author.formSave('draft-changes', {...save(), title: 'Новое название', fields: widened})
         assert.equal(JSON.stringify(form().versions[0]), frozen)
         await assert.rejects(respondent.answerSubmit('old-public-range', submit('response-003', {rating: 9, recommend: true})), /диапазона/)
-        await leader.corridor.system.formPublish('publish-second', {orgId, id, revision: form().revision, actor: 'author', tokenHash: hash('y'.repeat(43)), publication: 'b'.repeat(64)})
+        await leader.corridor.system.formPublish('publish-second', {
+            orgId, id, revision: form().revision, actor: 'author',
+            tokenHash: hash('y'.repeat(43)), publication: 'b'.repeat(64)
+        })
         assert.equal(definition.access.login.resolve(state(), {account: 'respondent', password: token}), null)
         await assert.rejects(respondent.answerSubmit('old-session', request), /forbidden/)
         const newAccount = definition.access.login.resolve(state(), {account: 'respondent', password: 'y'.repeat(43)})!
@@ -85,13 +102,22 @@ async function main() {
         assert.equal(JSON.stringify(state()).includes('Улучшите поиск'), false)
         await owner.formDisable('unpublish', {orgId, id, revision: form().revision})
         await assert.rejects(newer.answerSubmit('disabled-session', submit('response-006', {rating: 9, recommend: true}, 2)), /forbidden/)
-        await leader.corridor.system.formPublish('republish', {orgId, id, revision: form().revision, actor: 'author', tokenHash: hash('z'.repeat(43)), publication: 'c'.repeat(64)})
+        await leader.corridor.system.formPublish('republish', {
+            orgId, id, revision: form().revision, actor: 'author',
+            tokenHash: hash('z'.repeat(43)), publication: 'c'.repeat(64)
+        })
         await assert.rejects(newer.answerSubmit('old-session-after-republish', submit('response-007', {rating: 9, recommend: true}, 3)), /forbidden/)
         await assert.rejects(owner.memberRole('remove-last-owner', {orgId, revision: 1, account: 'owner', role: 'none'}), /последнего/)
         const restored = createServiceLeader({definition: {...definition, initial: state()}, selfUrl: () => 'http://localhost'})
-        try {assert.equal(restored.line.control.store.snapshot().forms[id].versions.length, 3); assert.equal(Object.keys(restored.line.control.store.snapshot().receipts).length, 3)} finally {restored.control.close()}
+        try {
+            assert.equal(restored.line.control.store.snapshot().forms[id].versions.length, 3)
+            assert.equal(Object.keys(restored.line.control.store.snapshot().receipts).length, 3)
+        } finally {restored.control.close()}
         console.log('PASS forms domain: schema/DAG, dynamic library validation, hidden/unknown/required fields, immutable versions, hash-only public tokens, generation/session revocation, nonce idempotency/conflict, incremental aggregates/correction/delete, retention and restored tombstones')
     } finally {leader.control.close()}
 }
 
-main().catch(function failed(error) {console.error(error); process.exitCode = 1})
+main().catch(function failed(error) {
+    console.error(error)
+    process.exitCode = 1
+})

@@ -12,4 +12,7 @@ runNodeProcess({definition: service.definition, mount({app}) {
     app.use(createFormsBrowserPolicy({ancestors: process.env.FORM_FRAME_ANCESTORS}))
     app.use(express.static(path.resolve('public')))
 }}).then(function started(host) {process.send?.({type: 'ready', url: host.url})})
-    .catch(function failed(error) {console.error(error); process.exitCode = 1})
+    .catch(function failed(error) {
+        console.error(error)
+        process.exitCode = 1
+    })

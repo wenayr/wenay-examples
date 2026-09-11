@@ -12,7 +12,10 @@ import {hash} from './domain'
 
 async function waitFor(check: () => boolean) {
     const end = Date.now() + 3000
-    while (!check()) {assert(Date.now() < end, 'Condition timeout'); await delay(5)}
+    while (!check()) {
+        assert(Date.now() < end, 'Condition timeout')
+        await delay(5)
+    }
 }
 async function main() {
     const temporary = realpathSync(tmpdir()), directory = mkdtempSync(path.join(temporary, 'forms-grouping-check-'))
@@ -29,23 +32,45 @@ async function main() {
     let running = start()
     const stops: (() => void)[] = []
     async function open(account: string) {
-        const connection = running.grouping.resource.open({principal: {account, roles: ['owner']}, sessionId: account, resourceId: 'grouping', signal: new AbortController().signal})
+        const connection = running.grouping.resource.open({
+            principal: {account, roles: ['owner']},
+            sessionId: account,
+            resourceId: 'grouping',
+            signal: new AbortController().signal
+        })
         const view = createStore<AiRunStore>({runs: {}, inputs: {}, approvals: {}})
         const mirror = syncStoreReplay(view, connection.facade.ai.state)
         await mirror.ready
         stops.push(mirror, connection.close)
         return {...connection.facade, view}
     }
-    function request(requestId: string) {return {kind: 'group', requestId, resourceIds: [id], input: {orgId, formId: id, version: 1, fieldId: 'details', answersRevision: state().forms[id].answersRevision}}}
+    function request(requestId: string) {
+        const input = {
+            orgId,
+            formId: id,
+            version: 1,
+            fieldId: 'details',
+            answersRevision: state().forms[id].answersRevision
+        }
+        return {kind: 'group', requestId, resourceIds: [id], input}
+    }
     function finish(index: number, label = 'PRIVATE_GROUP_LABEL') {pending[index].finish([{label, sourceIds: pending[index].sources.map(source => source.id)}])}
     try {
-        await leader.corridor.system.formPublish('publish', {orgId, id, revision: 1, actor: 'owner', tokenHash: hash('x'.repeat(43)), publication: 'a'.repeat(64)})
+        await leader.corridor.system.formPublish('publish', {
+            orgId, id, revision: 1, actor: 'owner',
+            tokenHash: hash('x'.repeat(43)), publication: 'a'.repeat(64)
+        })
         const publicClient = leader.corridor.fragment('form:form-feedback:1')
         const admin = await open('owner'), outsider = await open('outsider')
         assert.throws(() => admin.ai.createRun(request('too-small')), /forbidden/)
         const ids: string[] = []
         for (const [index, details] of ['PRIVATE_SOURCE_TEXT дорогой тариф', 'Нужен быстрый поиск', 'Неудобный редактор'].entries()) {
-            const receipt = await publicClient.answerSubmit('answer-' + index, {formId: id, version: 1, nonce: 'answer-nonce-' + index, answersJson: JSON.stringify({rating: 3, recommend: false, details})})
+            const receipt = await publicClient.answerSubmit('answer-' + index, {
+                formId: id,
+                version: 1,
+                nonce: 'answer-nonce-' + index,
+                answersJson: JSON.stringify({rating: 3, recommend: false, details})
+            })
             ids.push(receipt.id)
         }
         assert.throws(() => outsider.ai.createRun(request('cross-tenant')), /forbidden/)
@@ -101,7 +126,14 @@ async function main() {
         assert.throws(() => readOnly.control.result(analystRun.id), /недоступен/)
         const changed = restored.ai.createRun(request('changed'))
         await waitFor(() => pending.length == 7)
-        await owner.answerCorrect('source-correct', {orgId, formId: id, id: ids[0], answersRevision: state().forms[id].answersRevision, answersJson: JSON.stringify({rating: 4, recommend: false, details: 'Исправленный дорогой тариф'})})
+        const fixedAnswers = {rating: 4, recommend: false, details: 'Исправленный дорогой тариф'}
+        await owner.answerCorrect('source-correct', {
+            orgId,
+            formId: id,
+            id: ids[0],
+            answersRevision: state().forms[id].answersRevision,
+            answersJson: JSON.stringify(fixedAnswers)
+        })
         await waitFor(() => pending[6].signal.aborted)
         finish(6, 'PRIVATE_CHANGED')
         await waitFor(() => restored.view.state.runs[changed.id]?.state == 'failed')
@@ -133,8 +165,13 @@ async function main() {
         running.close()
         await delay(10)
         leader.control.close()
-        if (path.dirname(path.resolve(directory)) != temporary || !path.basename(directory).startsWith('forms-grouping-check-')) throw new Error('Unsafe cleanup path')
+        const parent = path.dirname(path.resolve(directory))
+        const named = path.basename(directory).startsWith('forms-grouping-check-')
+        if (parent != temporary || !named) throw new Error('Unsafe cleanup path')
         rmSync(directory, {recursive: true, force: true})
     }
 }
-main().catch(function failed(error) {console.error(error); process.exitCode = 1})
+main().catch(function failed(error) {
+    console.error(error)
+    process.exitCode = 1
+})

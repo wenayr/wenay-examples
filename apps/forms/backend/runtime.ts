@@ -11,6 +11,13 @@ import {createFormsExports} from './exports-resource'
 import {createFormsGrouping} from './grouping-resource'
 
 export type FormsLeader = ReturnType<typeof createServiceLeader<typeof formsDefinition>>
+// Страница ответов: номер версии 0 означает «все», размер ограничен сотней.
+function validPage(input: {version: number, offset: number, limit: number}) {
+    if (!Number.isInteger(input.version) || input.version < 0) return false
+    if (!Number.isInteger(input.offset) || input.offset < 0 || input.offset > 5000) return false
+    return Number.isInteger(input.limit) && input.limit >= 1 && input.limit <= 100
+}
+
 export function createFormsRuntime(deps: {directory?: string, now?: () => number} = {}) {
     const service = createFormsService(deps), now = deps.now ?? Date.now
     const exports = createFormsExports({directory: deps.directory ?? path.resolve('forms-data', 'exports'), now})
@@ -19,7 +26,10 @@ export function createFormsRuntime(deps: {directory?: string, now?: () => number
     let corridor: FormsLeader['corridor'] | null = null
     const queue = createAsyncQueue(1)
     const editor = {allow: STAFF, placement: 'authority' as const, open(ctx: ServiceResourceContext) {
-        function active() {ctx.signal.throwIfAborted(); if (!store || !corridor) throw new Error('Сервис закрыт')}
+        function active() {
+            ctx.signal.throwIfAborted()
+            if (!store || !corridor) throw new Error('Сервис закрыт')
+        }
         function detail(input: {orgId: string, id: string}) {
             active()
             const {form} = formAccess(store!.state, ctx.principal.account, input.orgId, input.id)
@@ -36,11 +46,21 @@ export function createFormsRuntime(deps: {directory?: string, now?: () => number
                 const publication = hash(Command.commandReceiptKey(ctx.principal.account, input.requestId))
                 const previous = store!.state.publications?.[publication]
                 if (previous) {
-                    if (previous.orgId != input.orgId || previous.formId != input.id || previous.revision != input.revision) throw new Error('Запрос публикации уже использован с другими параметрами')
+                    const same = previous.orgId == input.orgId
+                        && previous.formId == input.id
+                        && previous.revision == input.revision
+                    if (!same) throw new Error('Запрос публикации уже использован с другими параметрами')
                     return {id: previous.formId, version: previous.version, token: null as string | null}
                 }
                 const token = randomBytes(32).toString('base64url')
-                const result = await corridor!.system.formPublish('publish-' + publication, {orgId: input.orgId, id: input.id, revision: input.revision, actor: ctx.principal.account, tokenHash: hash(token), publication})
+                const result = await corridor!.system.formPublish('publish-' + publication, {
+                    orgId: input.orgId,
+                    id: input.id,
+                    revision: input.revision,
+                    actor: ctx.principal.account,
+                    tokenHash: hash(token),
+                    publication
+                })
                 active()
                 formAccess(store!.state, ctx.principal.account, input.orgId, input.id, EDITORS)
                 return {id: result.id, version: result.version, token: token as string | null}
@@ -49,7 +69,11 @@ export function createFormsRuntime(deps: {directory?: string, now?: () => number
         return {facade: {control: {detail, publish}}, close() {}}
     }}
     const publicform = {allow: ['respondent'], placement: 'authority' as const, open(ctx: ServiceResourceContext) {
-        function active() {ctx.signal.throwIfAborted(); if (!store || !corridor) throw new Error('Сервис закрыт'); return publicForm(store.state, ctx.principal.account)}
+        function active() {
+            ctx.signal.throwIfAborted()
+            if (!store || !corridor) throw new Error('Сервис закрыт')
+            return publicForm(store.state, ctx.principal.account)
+        }
         function current() {
             const {form, version} = active()
             return {id: form.id, ...version, retentionDays: form.retentionDays, fields: version.fields.map(field => ({...field, choices: [...field.choices]}))}
@@ -58,7 +82,12 @@ export function createFormsRuntime(deps: {directory?: string, now?: () => number
             const {form} = active()
             const answersJson = JSON.stringify(input.answers)
             if (typeof answersJson != 'string' || Buffer.byteLength(answersJson) > 32768) throw new Error('Ответ до 32 KiB')
-            return corridor!.fragment(ctx.principal.account).answerSubmit(randomUUID(), {formId: form.id, version: input.version, nonce: input.nonce, answersJson})
+            return corridor!.fragment(ctx.principal.account).answerSubmit(randomUUID(), {
+                formId: form.id,
+                version: input.version,
+                nonce: input.nonce,
+                answersJson
+            })
         }
         return {facade: {control: {current, submit}}, close() {}}
     }}
@@ -67,19 +96,38 @@ export function createFormsRuntime(deps: {directory?: string, now?: () => number
             ctx.signal.throwIfAborted()
             if (!store) throw new Error('Сервис закрыт')
             const {form} = formAccess(store.state, ctx.principal.account, input.orgId, input.formId)
-            if (!Number.isInteger(input.version) || input.version < 0 || !Number.isInteger(input.offset) || input.offset < 0 || input.offset > 5000 || !Number.isInteger(input.limit) || input.limit < 1 || input.limit > 100) throw new Error('До 100 ответов на странице; version 0 означает все')
-            const all = Object.values(store.state.submissions).filter(value => value.formId == form.id && value.expiresAt > now() && (!input.version || value.version == input.version)).sort((a, b) => a.createdAt - b.createdAt || a.id.localeCompare(b.id))
+            if (!validPage(input)) {
+                throw new Error('До 100 ответов на странице, version 0 означает все')
+            }
+            const live = Object.values(store.state.submissions).filter(function mine(value) {
+                if (value.formId != form.id || value.expiresAt <= now()) return false
+                return !input.version || value.version == input.version
+            })
+            const all = live.sort((a, b) => a.createdAt - b.createdAt || a.id.localeCompare(b.id))
             const items = all.slice(input.offset, input.offset + input.limit).map(value => ({...value, answers: {...value.answers}}))
-            return {items, total: all.length, next: input.offset + items.length < all.length ? input.offset + items.length : null, answersRevision: form.answersRevision}
+            const after = input.offset + items.length
+            return {
+                items,
+                total: all.length,
+                next: after < all.length ? after : null,
+                answersRevision: form.answersRevision
+            }
         }
         return {facade: {control: {list}}, close() {}}
     }}
     return {definition: {...service.definition, resources: {editor, publicform, answers, exports: exports.resource, grouping: grouping.resource}},
         mount(deps: {store: Store<FormsState>, corridor: FormsLeader['corridor']}) {
-            store = deps.store; corridor = deps.corridor
+            store = deps.store
+            corridor = deps.corridor
             const closeExports = exports.mount({store, execute: corridor.system})
             const closeGrouping = grouping.mount(store)
-            return async function close() {closeGrouping(); await closeExports(); await queue.onIdle(); store = null; corridor = null}
+            return async function close() {
+                closeGrouping()
+                await closeExports()
+                await queue.onIdle()
+                store = null
+                corridor = null
+            }
         }}
 }
 export type FormsDefinition = ReturnType<typeof createFormsRuntime>['definition']

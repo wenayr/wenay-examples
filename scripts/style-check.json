@@ -10,7 +10,8 @@
         "metering",
         "monitoring",
         "documents",
-        "booking"
+        "booking",
+        "forms"
     ],
     "files": [
         "apps/content/backend/domain.ts",
@@ -18,9 +19,6 @@
         "apps/content/frontend/main.tsx",
         "apps/crm/backend/domain.ts",
         "apps/crm/backend/service.ts",
-        "apps/forms/backend/domain.ts",
-        "apps/forms/backend/service.ts",
-        "apps/forms/frontend/main.tsx",
         "apps/hosting/backend/service.ts",
         "apps/pizzeria/backend/service.ts",
         "apps/support/backend/domain.ts",

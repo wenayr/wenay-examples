@@ -6,7 +6,10 @@ export const FIELD_TYPES = ['text', 'longtext', 'number', 'choice', 'boolean'] a
 export type tFieldType = typeof FIELD_TYPES[number]
 export type tAnswer = string | number | boolean
 export type Answers = Record<string, tAnswer>
-export type Field = {id: string, label: string, kind: tFieldType, required: boolean, choices: string[], min: number, max: number, whenField: string, whenEquals: string}
+export type Field = {
+    id: string, label: string, kind: tFieldType, required: boolean, choices: string[],
+    min: number, max: number, whenField: string, whenEquals: string
+}
 export type PublishedVersion = {version: number, title: string, description: string, fields: Field[], publishedAt: number}
 export type Form = {id: string, orgId: string, title: string, description: string, fields: Field[], revision: number,
     versions: PublishedVersion[], publishedVersion: number, enabled: boolean, accessGeneration: number, tokenHash: string,
@@ -26,10 +29,29 @@ export function createFormsState(): FormsState {
     const fields: Field[] = [
         {id: 'rating', label: 'Как вам наш продукт?', kind: 'number', required: true, choices: [], min: 1, max: 5, whenField: '', whenEquals: ''},
         {id: 'recommend', label: 'Порекомендуете нас коллегам?', kind: 'boolean', required: true, choices: [], min: 0, max: 0, whenField: '', whenEquals: ''},
-        {id: 'details', label: 'Что нам улучшить?', kind: 'longtext', required: true, choices: [], min: 1, max: 2000, whenField: 'recommend', whenEquals: 'false'}
+        {
+            id: 'details', label: 'Что нам улучшить?', kind: 'longtext', required: true,
+            choices: [], min: 1, max: 2000, whenField: 'recommend', whenEquals: 'false'
+        }
     ]
-    function form(id: string, orgId: string, title: string): Form {return {id, orgId, title, description: 'Помогите нам выбрать следующий шаг.', fields: fields.map(field => ({...field, choices: [...field.choices]})),
-        revision: 1, versions: [], publishedVersion: 0, enabled: false, accessGeneration: 0, tokenHash: '', retentionDays: 30, answersRevision: 0, createdAt: Date.UTC(2026, 8, 10)}}
+    function form(id: string, orgId: string, title: string): Form {
+        return {
+            id,
+            orgId,
+            title,
+            description: 'Помогите нам выбрать следующий шаг.',
+            fields: fields.map(field => ({...field, choices: [...field.choices]})),
+            revision: 1,
+            versions: [],
+            publishedVersion: 0,
+            enabled: false,
+            accessGeneration: 0,
+            tokenHash: '',
+            retentionDays: 30,
+            answersRevision: 0,
+            createdAt: Date.UTC(2026, 8, 10)
+        }
+    }
     return {
         accounts: Object.fromEntries(Object.keys(DEMO_LOGINS).map(account => [account, {account, name: account, secret: hashSecret(account + '-pass')}])),
         organizations: {northstar: {id: 'northstar', name: 'Northstar Studio', revision: 1, members: {owner: 'owner', author: 'author', analyst: 'analyst'}},

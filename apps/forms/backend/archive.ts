@@ -32,7 +32,11 @@ export function createFormsArchive(deps: {directory: string}) {
         }
         const off = leader.line.control.store.on(request)
         request()
-        return function close() {closed = true; off(); compact()}
+        return function close() {
+            closed = true
+            off()
+            compact()
+        }
     }
     return {durable: {storage}, mount}
 }
