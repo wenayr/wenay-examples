@@ -12,7 +12,10 @@ async function main() {
             maxImageSize: 0})
         stop = () => loading.destroy()
         const pdf = await loading.promise
-        if (pdf.numPages > 10) {error = 'pdf_limit'; throw new Error('pages')}
+        if (pdf.numPages > 10) {
+            error = 'pdf_limit'
+            throw new Error('pages')
+        }
         const rows = []
         let size = 0
         for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {
@@ -23,12 +26,18 @@ async function main() {
                 if (!chunk.trim()) return
                 rows.push([String(pageNumber), chunk.trim()])
                 chunk = ''
-                if (rows.length > 200) {error = 'pdf_limit'; throw new Error('rows')}
+                if (rows.length > 200) {
+                    error = 'pdf_limit'
+                    throw new Error('rows')
+                }
             }
             for (const item of content.items) {
                 if (!('str' in item)) continue
                 size += item.str.length
-                if (size > 200000) {error = 'pdf_limit'; throw new Error('text')}
+                if (size > 200000) {
+                    error = 'pdf_limit'
+                    throw new Error('text')
+                }
                 const text = item.str + (item.hasEOL ? '\n' : ' ')
                 for (const character of text) {
                     if (chunk.length >= 990) saveChunk()
@@ -38,8 +47,16 @@ async function main() {
             saveChunk()
             page.cleanup()
         }
-        if (!rows.length) {error = 'pdf_empty'; throw new Error('no text')}
-        console.log('DOCUMENT_RESULT ' + JSON.stringify({headers: ['Страница', 'Текст'], rows}).replace(/[\u007f-\uffff]/g, value => '\\u' + value.charCodeAt(0).toString(16).padStart(4, '0')))
+        if (!rows.length) {
+            error = 'pdf_empty'
+            throw new Error('no text')
+        }
+        // Родительский процесс читает строку как ASCII: не-ASCII отдаём \uXXXX.
+        const payload = JSON.stringify({headers: ['Страница', 'Текст'], rows})
+        const ascii = payload.replace(/[\u007f-\uffff]/g, function escaped(value) {
+            return '\\u' + value.charCodeAt(0).toString(16).padStart(4, '0')
+        })
+        console.log('DOCUMENT_RESULT ' + ascii)
     } catch (problem) {
         if (problem instanceof Error && problem.name == 'PasswordException') error = 'pdf_password'
         console.log('DOCUMENT_RESULT ' + JSON.stringify({error}))

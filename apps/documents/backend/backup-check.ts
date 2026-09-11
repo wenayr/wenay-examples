@@ -82,7 +82,9 @@ async function main() {
         run('backup.mjs', ['documents', copy, '--i-stopped-it', '--from=' + live, '--data-version=docs-1'])
         assert(existsSync(path.join(copy, 'manifest.json')))
         assert(existsSync(path.join(copy, 'complete')))
-        const manifest = JSON.parse(execFileSync('node', ['-e', 'process.stdout.write(require("fs").readFileSync(process.argv[1], "utf8"))', path.join(copy, 'manifest.json')], {encoding: 'utf8'}))
+        const readScript = 'process.stdout.write(require("fs").readFileSync(process.argv[1], "utf8"))'
+        const args = ['-e', readScript, path.join(copy, 'manifest.json')]
+        const manifest = JSON.parse(execFileSync('node', args, {encoding: 'utf8'}))
         assert(manifest.files.some((item: {path: string}) => item.path.includes('blobs/')), 'байты исходного файла попали в копию')
 
         assert.throws(() => run('restore.mjs', [copy, restored, '--data-version=docs-2']), /Формат данных/)

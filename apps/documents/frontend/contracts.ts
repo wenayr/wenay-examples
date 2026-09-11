@@ -9,7 +9,16 @@ export type Commands = ReturnType<typeof useCommandAction<ServiceClient<Document
 export type DocumentMetadata = DocumentWorkspace['documents'][number]
 export type DocumentDetail = Awaited<ReturnType<ProcessorRemote['control']['detail']>>
 export const roleLabels = {owner: 'Владелец', reviewer: 'Проверяющий', uploader: 'Загрузка документов'}
-export const statusLabels = {uploaded: 'Загружен', processing: 'Обработка', review: 'На проверке', approved: 'Подтверждён', failed: 'Нужна проверка', cancelled: 'Отменён', uncertain: 'Нужна сверка', deleted: 'Удалён'}
+export const statusLabels = {
+    uploaded: 'Загружен',
+    processing: 'Обработка',
+    review: 'На проверке',
+    approved: 'Подтверждён',
+    failed: 'Нужна проверка',
+    cancelled: 'Отменён',
+    uncertain: 'Нужна сверка',
+    deleted: 'Удалён'
+}
 export function formatDate(at: number) {return new Intl.DateTimeFormat('ru', {day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'}).format(at)}
 
 export function downloadFile(file: {name: string, bytes: Uint8Array}) {

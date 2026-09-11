@@ -4,13 +4,37 @@ export type FieldOrigin = {row: number, column: number, page: number, line: numb
 export type ModelExtraction = {table: ParsedTable, fields: FieldOrigin[], provider: string, demo: boolean}
 export type ExtractionProvider = {extract(input: {name: string, bytes: Uint8Array, sourceVersion: number, signal: AbortSignal}): Promise<ModelExtraction>}
 
+type SourceField = {row: number, column: number, page: number, line: number, quote: string}
+
+function inRange(value: number, limit: number) {
+    return Number.isInteger(value) && value >= 0 && value < limit
+}
+
+// Поле обязано указывать на существующую ячейку и на страницу либо строку источника.
+function placedField(field: SourceField, table: {headers: unknown[], rows: unknown[]}) {
+    if (!inRange(field.row, table.rows.length)) return false
+    if (!inRange(field.column, table.headers.length)) return false
+    if (!inRange(field.page, 11) || !inRange(field.line, 10001)) return false
+    if (!field.page && !field.line) return false
+    if (typeof field.quote != 'string' || !field.quote.trim()) return false
+    return field.quote.length <= 1000
+}
+
 export function validateExtraction(value: ModelExtraction) {
     const table = validateTable(value.table)
-    if (typeof value.provider != 'string' || !value.provider.trim() || value.provider.length > 80 || typeof value.demo != 'boolean') throw new Error('Некорректный источник извлечения')
-    if (!Array.isArray(value.fields) || value.fields.length != table.rows.length * table.headers.length) throw new Error('Каждое извлечённое поле требует источник')
+    const named = typeof value.provider == 'string' && value.provider.trim()
+    if (!named || value.provider.length > 80 || typeof value.demo != 'boolean') {
+        throw new Error('Некорректный источник извлечения')
+    }
+    const expected = table.rows.length * table.headers.length
+    if (!Array.isArray(value.fields) || value.fields.length != expected) {
+        throw new Error('Каждое извлечённое поле требует источник')
+    }
     const seen = new Set<string>()
     const fields = value.fields.map(field => {
-        if (!Number.isInteger(field.row) || field.row < 0 || field.row >= table.rows.length || !Number.isInteger(field.column) || field.column < 0 || field.column >= table.headers.length || !Number.isInteger(field.page) || field.page < 0 || field.page > 10 || !Number.isInteger(field.line) || field.line < 0 || field.line > 10000 || !field.page && !field.line || typeof field.quote != 'string' || !field.quote.trim() || field.quote.length > 1000) throw new Error('Некорректная ссылка на страницу/строку источника')
+        if (!placedField(field, table)) {
+            throw new Error('Некорректная ссылка на страницу/строку источника')
+        }
         const id = field.row + ':' + field.column
         if (seen.has(id)) throw new Error('Источник поля повторяется')
         seen.add(id)

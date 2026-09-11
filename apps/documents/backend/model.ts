@@ -22,10 +22,17 @@ export type DocumentState = {
 }
 export const DEMO_LOGINS = {owner: 'owner-pass', reviewer: 'reviewer-pass', customer: 'customer-pass', outsider: 'outsider-pass'} as const
 
+const DEMO_NAMES: Record<string, string> = {
+    owner: 'Алексей · владелец',
+    reviewer: 'Мария · проверка',
+    customer: 'Илья · загрузка',
+    outsider: 'Никита · другая команда'
+}
+
 export function createDocumentState(): DocumentState {
     return {
         accounts: Object.fromEntries(Object.keys(DEMO_LOGINS).map(account => [account, {account,
-            name: ({owner: 'Алексей · владелец', reviewer: 'Мария · проверка', customer: 'Илья · загрузка', outsider: 'Никита · другая команда'} as Record<string, string>)[account], secret: hashSecret(account + '-pass')} ])),
+            name: DEMO_NAMES[account], secret: hashSecret(account + '-pass')} ])),
         organizations: {
             northstar: {id: 'northstar', name: 'Northstar Studio', members: {owner: 'owner', reviewer: 'reviewer', customer: 'uploader'}},
             harbor: {id: 'harbor', name: 'Harbor Labs', members: {outsider: 'owner'}}

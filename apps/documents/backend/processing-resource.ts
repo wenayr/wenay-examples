@@ -18,20 +18,54 @@ import {openAiCheckpoint} from './ai-checkpoint'
 import {UsageError, type UsageGate} from './metered-execution'
 
 export type DocumentExecutor = ReturnType<typeof createServiceLeader<typeof documentsDefinition>>['corridor']['system']
-export type DocumentProcessor = {extract(input: {name: string, bytes: Uint8Array, processor: string, signal: AbortSignal, sourceVersion?: number}): Promise<ParsedTable & {provenance?: Provenance}>}
+export type ExtractInput = {
+    name: string,
+    bytes: Uint8Array,
+    processor: string,
+    signal: AbortSignal,
+    sourceVersion?: number
+}
+
+export type DocumentProcessor = {
+    extract(input: ExtractInput): Promise<ParsedTable & {provenance?: Provenance}>
+}
 class DocumentProcessingError extends Error {}
 
-export function createDocumentProcessor(deps: {directory: string, python?: string, extractor?: ExtractionProvider, processFactory?: typeof createProcessResource}): DocumentProcessor {
+type ProcessorDeps = {
+    directory: string,
+    python?: string,
+    extractor?: ExtractionProvider,
+    processFactory?: typeof createProcessResource
+}
+
+// Сообщения обработчика PDF: ключ ошибки от дочернего процесса — понятный текст человеку.
+const PDF_ERRORS: Record<string, string> = {
+    pdf_empty: 'В PDF нет текстового слоя. Для скана нужен отдельный OCR-обработчик',
+    pdf_password: 'Защищённый паролем PDF не поддерживается',
+    pdf_limit: 'PDF превышает лимит: 10 страниц, 200 строк или 200000 символов',
+    pdf_invalid: 'PDF повреждён или не поддерживается'
+}
+
+export function createDocumentProcessor(deps: ProcessorDeps): DocumentProcessor {
     return {async extract(input) {
         input.signal.throwIfAborted()
         if (input.processor == 'model') {
-            const result = validateExtraction(await (deps.extractor ?? createTestExtractionProvider()).extract({...input, sourceVersion: input.sourceVersion ?? 1}))
+            const provider = deps.extractor ?? createTestExtractionProvider()
+            const sourceVersion = input.sourceVersion ?? 1
+            const result = validateExtraction(await provider.extract({...input, sourceVersion}))
             input.signal.throwIfAborted()
-            return {...result.table, provenance: {sourceVersion: input.sourceVersion ?? 1, provider: result.provider, demo: result.demo, fields: result.fields}}
+            const provenance = {
+                sourceVersion,
+                provider: result.provider,
+                demo: result.demo,
+                fields: result.fields
+            }
+            return {...result.table, provenance}
         }
         const pdf = input.processor == 'node' && /\.pdf$/i.test(input.name)
         if (input.processor == 'node' && !pdf) return parseText(input.name, input.bytes)
-        if (!pdf && (input.processor != 'python' || !/\.csv$/i.test(input.name))) throw new DocumentProcessingError('Python-обработчик принимает CSV')
+        const csv = input.processor == 'python' && /\.csv$/i.test(input.name)
+        if (!pdf && !csv) throw new DocumentProcessingError('Python-обработчик принимает CSV')
         const directory = path.join(deps.directory, 'temporary')
         await mkdir(directory, {recursive: true})
         const file = path.join(directory, randomUUID() + (pdf ? '.pdf' : '.csv'))
@@ -40,19 +74,29 @@ export function createDocumentProcessor(deps: {directory: string, python?: strin
         let child: ReturnType<typeof createProcessResource<ParsedTable>> | undefined
         try {
             input.signal.throwIfAborted()
-            child = (deps.processFactory ?? createProcessResource)({command: pdf ? process.execPath : deps.python ?? process.env.DOCUMENT_PYTHON ?? 'python',
-                args: pdf ? ['--max-old-space-size=256', path.resolve(__dirname, 'pdf-processor.mjs'), file] : ['-u', path.resolve(__dirname, 'processor.py'), file], signal: input.signal,
-                startTimeoutMs: 10000, stopTimeoutMs: 1000, tailChars: 1000,
+            const python = deps.python ?? process.env.DOCUMENT_PYTHON ?? 'python'
+            const nodeArgs = ['--max-old-space-size=256', path.resolve(__dirname, 'pdf-processor.mjs'), file]
+            const pythonArgs = ['-u', path.resolve(__dirname, 'processor.py'), file]
+            child = (deps.processFactory ?? createProcessResource)({
+                command: pdf ? process.execPath : python,
+                args: pdf ? nodeArgs : pythonArgs,
+                signal: input.signal,
+                startTimeoutMs: 10000,
+                stopTimeoutMs: 1000,
+                tailChars: 1000,
                 ready(fact) {
                     if (fact.type != 'stdout') return
                     output += fact.value
                     if (output.length > 3200000) throw new Error('Ответ обработчика превышает лимит')
                     if (!output.endsWith('\n')) return
                     if (pdf && !output.includes('DOCUMENT_RESULT ')) return
-                    const result = JSON.parse(pdf ? output.slice(output.lastIndexOf('DOCUMENT_RESULT ') + 16) : output) as {headers?: unknown, rows?: unknown, error?: unknown}
+                    const payload = pdf
+                        ? output.slice(output.lastIndexOf('DOCUMENT_RESULT ') + 16)
+                        : output
+                    const result = JSON.parse(payload) as {headers?: unknown, rows?: unknown, error?: unknown}
                     if (result.error) {
-                        const messages: Record<string, string> = {pdf_empty: 'В PDF нет текстового слоя. Для скана нужен отдельный OCR-обработчик', pdf_password: 'Защищённый паролем PDF не поддерживается', pdf_limit: 'PDF превышает лимит: 10 страниц, 200 строк или 200000 символов', pdf_invalid: 'PDF повреждён или не поддерживается'}
-                        throw new DocumentProcessingError(messages[String(result.error)] ?? 'Python не смог прочитать CSV')
+                        const message = PDF_ERRORS[String(result.error)] ?? 'Python не смог прочитать CSV'
+                        throw new DocumentProcessingError(message)
                     }
                     return validateTable(result as ParsedTable)
                 }
@@ -60,12 +104,60 @@ export function createDocumentProcessor(deps: {directory: string, python?: strin
             return await child.ready
         } finally {
             await child?.close()
-            await unlink(file).catch(function missing(error: NodeJS.ErrnoException) {if (error.code != 'ENOENT') throw error})
+            await unlink(file).catch(function missing(error: NodeJS.ErrnoException) {
+                if (error.code != 'ENOENT') throw error
+            })
         }
     }}
 }
 
-export function createDocumentProcessing(deps: {directory?: string, processor?: DocumentProcessor, python?: string, usage?: UsageGate, extractor?: ExtractionProvider} = {}) {
+type ProcessingDeps = {
+    directory?: string,
+    processor?: DocumentProcessor,
+    python?: string,
+    usage?: UsageGate,
+    extractor?: ExtractionProvider
+}
+
+type Transfer = {
+    orgId: string,
+    controller: AbortController,
+    createdAt: number,
+    phase: 'pending' | 'committing' | 'completed' | 'cancelled',
+    documentId: string
+}
+
+type ProcessingRequest = {orgId: string, documentId: string, revision: number, processor: string}
+
+function validRequest(input: ProcessingRequest | null): input is ProcessingRequest {
+    if (!input || typeof input.orgId != 'string' || typeof input.documentId != 'string') return false
+    if (!Number.isSafeInteger(input.revision)) return false
+    return ['node', 'python', 'model'].includes(input.processor)
+}
+
+// Имя файла приходит от клиента: без управляющих символов и только известных расширений.
+function acceptedName(name: string) {
+    if (typeof name != 'string' || !name.trim() || name.length > 160) return false
+    if (/[\x00-\x1f]/.test(name)) return false
+    return /\.(csv|txt|pdf)$/i.test(name)
+}
+
+// PDF показываем как файл, текстовый исходник — расшифрованной строкой.
+function pdfNotice(name: string, bytes: Uint8Array) {
+    if (/\.pdf$/i.test(name)) {
+        return 'Исходный PDF доступен для просмотра и скачивания.'
+            + ' Страницы извлечённого текста указаны в таблице.'
+    }
+    return new TextDecoder('utf-8', {fatal: true}).decode(bytes)
+}
+
+function failureMessage(error: unknown, aborted: boolean, cancelled: boolean) {
+    if (aborted && !cancelled) return 'Обработка прервана: время ожидания или доступ изменились'
+    if (error instanceof DocumentProcessingError || error instanceof UsageError) return error.message
+    return 'Не удалось обработать документ. Проверьте формат и повторите попытку'
+}
+
+export function createDocumentProcessing(deps: ProcessingDeps = {}) {
     let store: Store<DocumentState> | null = null
     let execute: DocumentExecutor | null = null
     let ready = Promise.resolve()
@@ -76,7 +168,10 @@ export function createDocumentProcessing(deps: {directory?: string, processor?: 
     const deleted = new Set<string>()
     const filesQueue = createAsyncQueue(1)
     let closing = false
-    function state() {if (!store || closing) throw new Error('Обработчик не подключён'); return store.state}
+    function state() {
+        if (!store || closing) throw new Error('Обработчик не подключён')
+        return store.state
+    }
     function item(account: string, orgId: string, id: string) {return documentAccess(state(), account, orgId, id)}
     function matches(account: string, input: {orgId: string, id: string, revision: number}) {
         const document = item(account, input.orgId, input.id)
@@ -96,41 +191,65 @@ export function createDocumentProcessing(deps: {directory?: string, processor?: 
         }
     }) : null
     async function cleanup() {
-        if (!directory || !blobs || !store || uploads.size) return
-        const referenced = new Set(Object.values(store.state.documents).filter(document => document.status != 'deleted').map(document => document.blobId))
-        const filenames = await readdir(path.join(directory, 'blobs')).catch(function absent(error: NodeJS.ErrnoException) {if (error.code == 'ENOENT') return []; throw error})
+        if (!directory || !blobs || !store) return
+        if (uploads.size) return
+        const live = Object.values(store.state.documents).filter(item => item.status != 'deleted')
+        const referenced = new Set(live.map(document => document.blobId))
+        const filenames = await readdir(path.join(directory, 'blobs')).catch(function absent(error: NodeJS.ErrnoException) {
+            if (error.code == 'ENOENT') return []
+            throw error
+        })
         for (const id of filenames) if (/^[a-f0-9]{64}$/.test(id) && !referenced.has(id) && !uploads.size) {
             await blobs.control.remove({account: 'system', orgId: '', cleanup: true}, id)
         }
     }
     function inputOf(value: unknown) {
         const input = value as {orgId: string, documentId: string, revision: number, processor: string} | null
-        if (!input || typeof input.orgId != 'string' || typeof input.documentId != 'string' || !Number.isSafeInteger(input.revision) || !['node', 'python', 'model'].includes(input.processor)) throw new Error('Некорректный запрос обработки')
+        if (!validRequest(input)) throw new Error('Некорректный запрос обработки')
         return input
     }
     async function failed(run: AiRun, status: 'failed' | 'cancelled' | 'uncertain', error: string) {
         if (!execute || !store) return
         const document = store.state.documents[run.resourceIds[0]]
         if (!document) return
-        await execute.processingFailure(run.id + '-' + status, {actor: run.owner, orgId: document.orgId, id: document.id, runId: run.id, status, error})
+        await execute.processingFailure(run.id + '-' + status, {
+            actor: run.owner,
+            orgId: document.orgId,
+            id: document.id,
+            runId: run.id,
+            status,
+            error
+        })
     }
     const runner: AiRunRunner = {async run(ctx) {
         await ready
         const input = inputOf(ctx.input)
         const controller = new AbortController()
         pending.set(ctx.run.id, controller)
-        const timeout = setTimeout(function expired() {controller.abort(new Error('Обработка заняла больше 10 секунд'))}, 10000)
+        const timeout = setTimeout(function expired() {
+            controller.abort(new Error('Обработка заняла больше 10 секунд'))
+        }, 10000)
         try {
             if (!processing || !blobs || !execute) throw new Error('Обработчик не подключён')
             controller.signal.throwIfAborted()
             if (ctx.cancelled()) return
             const original = matches(ctx.run.owner, {orgId: input.orgId, id: input.documentId, revision: input.revision})
-            const name = original.name, blobId = original.blobId, sourceVersion = original.sourceVersion
-            const began = await execute.processingBegin(ctx.run.id + '-begin', {orgId: input.orgId, id: input.documentId, actor: ctx.run.owner, runId: ctx.run.id, revision: input.revision, processor: input.processor})
+            const name = original.name
+            const blobId = original.blobId
+            const sourceVersion = original.sourceVersion
+            const began = await execute.processingBegin(ctx.run.id + '-begin', {
+                orgId: input.orgId,
+                id: input.documentId,
+                actor: ctx.run.owner,
+                runId: ctx.run.id,
+                revision: input.revision,
+                processor: input.processor
+            })
             ctx.report({progress: 0.2, message: 'Чтение исходного файла'})
             const bytes = await blobs.resource.read({account: ctx.run.owner, orgId: input.orgId, id: input.documentId, signal: controller.signal}, blobId)
             controller.signal.throwIfAborted()
-            ctx.report({progress: 0.5, message: input.processor == 'python' ? 'CSV обрабатывается Python' : 'Извлечение строк в Node'})
+            const stage = input.processor == 'python' ? 'CSV обрабатывается Python' : 'Извлечение строк в Node'
+            ctx.report({progress: 0.5, message: stage})
             let offAbort = () => {}
             let parsed: ParsedTable & {provenance?: Provenance}
             async function extract() {
@@ -140,30 +259,67 @@ export function createDocumentProcessing(deps: {directory?: string, processor?: 
                     controller.signal.addEventListener('abort', abort, {once: true})
                     offAbort = () => controller.signal.removeEventListener('abort', abort)
                 })
-                return Promise.race([processing!.extract({name, bytes, processor: input.processor, signal: controller.signal, sourceVersion}), cancelled])
+                const running = processing!.extract({
+                    name,
+                    bytes,
+                    processor: input.processor,
+                    signal: controller.signal,
+                    sourceVersion
+                })
+                return Promise.race([running, cancelled])
             }
-            try {parsed = deps.usage ? await deps.usage.run({orgId: input.orgId, eventId: 'documents-' + ctx.run.id,
-                metric: 'document', units: 1, reference: input.documentId, signal: controller.signal}, extract) : await extract()}
-            finally {offAbort()}
+            const usageEvent = {
+                orgId: input.orgId,
+                eventId: 'documents-' + ctx.run.id,
+                metric: 'document' as const,
+                units: 1,
+                reference: input.documentId,
+                signal: controller.signal
+            }
+            try {
+                parsed = deps.usage ? await deps.usage.run(usageEvent, extract) : await extract()
+            } finally {
+                offAbort()
+            }
             controller.signal.throwIfAborted()
             if (ctx.cancelled()) return
             const table = validateTable(parsed)
-            await execute.processingResult(ctx.run.id + '-result', {orgId: input.orgId, id: input.documentId, actor: ctx.run.owner, runId: ctx.run.id, attempt: began.attempt, ...table,
-                ...(parsed.provenance ? {provenance: parsed.provenance} : {})})
+            const provenance = parsed.provenance ? {provenance: parsed.provenance} : {}
+            await execute.processingResult(ctx.run.id + '-result', {
+                orgId: input.orgId,
+                id: input.documentId,
+                actor: ctx.run.owner,
+                runId: ctx.run.id,
+                attempt: began.attempt,
+                ...table,
+                ...provenance
+            })
             ctx.report({progress: 1, message: 'Данные готовы к проверке человеком'})
             return {result: {available: true}}
         } catch (error) {
             const status = ctx.cancelled() ? 'cancelled' : 'failed'
-            const message = controller.signal.aborted && !ctx.cancelled() ? 'Обработка прервана: время ожидания или доступ изменились' : error instanceof DocumentProcessingError || error instanceof UsageError ? error.message : 'Не удалось обработать документ. Проверьте формат и повторите попытку'
-            await failed(ctx.run, status, message)
-            throw new Error(message, {cause: error})
-        } finally {clearTimeout(timeout); pending.delete(ctx.run.id)}
+            await failed(ctx.run, status, failureMessage(error, controller.signal.aborted, ctx.cancelled()))
+            throw new Error(failureMessage(error, controller.signal.aborted, ctx.cancelled()), {cause: error})
+        } finally {
+            clearTimeout(timeout)
+            pending.delete(ctx.run.id)
+        }
     }, async cancel({run}) {
         pending.get(run.id)?.abort()
         await failed(run, 'cancelled', 'Обработка отменена')
     }}
-    const host = createAiRunHost({...openAiCheckpoint({directory: directory ? path.join(directory, 'runs') : undefined}), runner, history: 3,
-        capabilities: [{kind: 'extract', label: 'Извлечь строки CSV / TXT / текстового PDF', acceptsResources: true}],
+    const checkpoint = openAiCheckpoint({
+        directory: directory ? path.join(directory, 'runs') : undefined
+    })
+    const host = createAiRunHost({
+        ...checkpoint,
+        runner,
+        history: 3,
+        capabilities: [{
+            kind: 'extract',
+            label: 'Извлечь строки CSV / TXT / текстового PDF',
+            acceptsResources: true
+        }],
         policy: {
             canRead: (account, run) => run.owner == account,
             canWrite: (account, run) => run.owner == account,
@@ -171,12 +327,20 @@ export function createDocumentProcessing(deps: {directory?: string, processor?: 
                 try {
                     const input = inputOf(request.input)
                     const document = item(account, input.orgId, input.documentId)
-                    if (request.kind != 'extract' || request.resourceIds?.length != 1 || request.resourceIds[0] != document.id) return false
+                    if (request.kind != 'extract' || request.resourceIds?.length != 1) return false
+                    if (request.resourceIds[0] != document.id) return false
                     const runs = Object.values(host.store.state.runs)
-                    if (runs.some(run => run.owner == account && run.requestId == request.requestId)) return true
-                    return document.revision == input.revision && ['uploaded', 'failed', 'cancelled', 'uncertain'].includes(document.status) && runs.length < 50 &&
-                        runs.filter(run => ['queued', 'running'].includes(run.state)).length < 2 &&
-                        !runs.some(run => ['queued', 'running'].includes(run.state) && run.resourceIds.includes(document.id))
+                    // Повтор того же requestId возвращает прежний запуск и лимитами не ограничен.
+                    const repeat = runs.some(function same(run) {
+                        return run.owner == account && run.requestId == request.requestId
+                    })
+                    if (repeat) return true
+                    const startable = ['uploaded', 'failed', 'cancelled', 'uncertain']
+                    if (document.revision != input.revision) return false
+                    if (!startable.includes(document.status) || runs.length >= 50) return false
+                    const active = runs.filter(run => ['queued', 'running'].includes(run.state))
+                    if (active.length >= 2) return false
+                    return !active.some(run => run.resourceIds.includes(document.id))
                 } catch {return false}
             }
         }
@@ -184,14 +348,31 @@ export function createDocumentProcessing(deps: {directory?: string, processor?: 
     const resource = {allow: ['signedIn'], placement: 'authority' as const, open(ctx: ServiceResourceContext) {
         const account = ctx.principal.account
         const connection = host.connection(account)
-        const transfers = new Map<string, {orgId: string, controller: AbortController, createdAt: number, phase: 'pending' | 'committing' | 'completed' | 'cancelled', documentId: string}>()
-        function active() {ctx.signal.throwIfAborted(); state(); if (!blobs || !execute) throw new Error('Хранилище не подключено')}
+        const transfers = new Map<string, Transfer>()
+        function active() {
+            ctx.signal.throwIfAborted()
+            state()
+            if (!blobs || !execute) throw new Error('Хранилище не подключено')
+        }
         function beginUpload(orgId: string) {
-            active(); organizationAccess(state(), account, orgId)
-            for (const [id, transfer] of transfers) if (['completed', 'cancelled'].includes(transfer.phase) || transfer.phase != 'committing' && Date.now() - transfer.createdAt >= 60000) {transfer.controller.abort(); transfers.delete(id)}
+            active()
+            organizationAccess(state(), account, orgId)
+            for (const [id, transfer] of transfers) {
+                const done = ['completed', 'cancelled'].includes(transfer.phase)
+                const stale = transfer.phase != 'committing' && Date.now() - transfer.createdAt >= 60000
+                if (!done && !stale) continue
+                transfer.controller.abort()
+                transfers.delete(id)
+            }
             if (transfers.size >= 8) throw new Error('Завершите текущие загрузки или подождите минуту')
             const uploadId = randomUUID()
-            transfers.set(uploadId, {orgId, controller: new AbortController(), createdAt: Date.now(), phase: 'pending', documentId: ''})
+            transfers.set(uploadId, {
+                orgId,
+                controller: new AbortController(),
+                createdAt: Date.now(),
+                phase: 'pending',
+                documentId: ''
+            })
             return {uploadId}
         }
         function cancelUpload(uploadId: string) {
@@ -200,13 +381,17 @@ export function createDocumentProcessing(deps: {directory?: string, processor?: 
             if (!transfer) throw new Error('Загрузка недоступна в этом подключении')
             organizationAccess(state(), account, transfer.orgId)
             if (transfer.phase == 'committing' || transfer.phase == 'completed') return {status: transfer.phase, documentId: transfer.documentId}
-            transfer.controller.abort(new Error('Загрузка отменена')); transfer.phase = 'cancelled'
+            transfer.controller.abort(new Error('Загрузка отменена'))
+            transfer.phase = 'cancelled'
             return {status: 'cancelled' as const, documentId: ''}
         }
         async function upload(input: {orgId: string, name: string, bytes: Uint8Array, uploadId?: string}) {
             const transfer = input.uploadId ? transfers.get(input.uploadId) : null
-            if (input.uploadId && (!transfer || transfer.orgId != input.orgId || transfer.phase != 'pending')) throw new Error('Загрузка отменена или завершена')
-            const signal = AbortSignal.any([ctx.signal, ...(transfer ? [transfer.controller.signal, AbortSignal.timeout(Math.max(1, 60000 - (Date.now() - transfer.createdAt)))] : [])])
+            const usable = transfer && transfer.orgId == input.orgId && transfer.phase == 'pending'
+            if (input.uploadId && !usable) throw new Error('Загрузка отменена или завершена')
+            const left = transfer ? Math.max(1, 60000 - (Date.now() - transfer.createdAt)) : 0
+            const limits = transfer ? [transfer.controller.signal, AbortSignal.timeout(left)] : []
+            const signal = AbortSignal.any([ctx.signal, ...limits])
             signal.throwIfAborted()
             await ready
             if (filesQueue.size >= 4) throw new Error('Очередь загрузки заполнена. Повторите позже')
@@ -214,13 +399,22 @@ export function createDocumentProcessing(deps: {directory?: string, processor?: 
             signal.throwIfAborted()
             active()
             organizationAccess(state(), account, input.orgId)
-            if (typeof input.name != 'string' || !input.name.trim() || input.name.length > 160 || /[\x00-\x1f]/.test(input.name) || !/\.(csv|txt|pdf)$/i.test(input.name)) throw new Error('Загрузите CSV, TXT или PDF с именем до 160 символов')
+            if (!acceptedName(input.name)) {
+                throw new Error('Загрузите CSV, TXT или PDF с именем до 160 символов')
+            }
             if (!(input.bytes instanceof Uint8Array) || !input.bytes.length || input.bytes.length > 512 * 1024) throw new Error('Файл от 1 байта до 512 КиБ')
             if (!/\.pdf$/i.test(input.name)) new TextDecoder('utf-8', {fatal: true}).decode(input.bytes)
             const name = path.basename(input.name)
             const id = createHash('sha256').update(JSON.stringify([input.orgId, account, name])).update(input.bytes).digest('hex')
             const old = state().documents[id]
-            if (old && old.status != 'deleted') {item(account, input.orgId, id); if (transfer) {transfer.phase = 'completed'; transfer.documentId = id}; return {id, revision: old.revision}}
+            if (old && old.status != 'deleted') {
+                item(account, input.orgId, id)
+                if (transfer) {
+                    transfer.phase = 'completed'
+                    transfer.documentId = id
+                }
+                return {id, revision: old.revision}
+            }
             if (!old && Object.keys(state().documents).length + uploads.size >= 50) throw new Error('На стенде допускается 50 документов')
             if (uploads.has(id)) throw new Error('Этот файл уже загружается')
             uploads.add(id)
@@ -230,13 +424,30 @@ export function createDocumentProcessing(deps: {directory?: string, processor?: 
                 active()
                 organizationAccess(state(), account, input.orgId)
                 // Cancellation can stop byte IO/queue work. Once metadata is committing, report that boundary honestly.
-                if (transfer) {transfer.phase = 'committing'; transfer.documentId = id}
-                const imported = await execute!.documentImport('upload-' + id + '-source-' + ((old?.sourceVersion ?? 0) + 1), {id, orgId: input.orgId, actor: account, name, blobId: stored.id, size: stored.size})
+                if (transfer) {
+                    transfer.phase = 'committing'
+                    transfer.documentId = id
+                }
+                const request = 'upload-' + id + '-source-' + ((old?.sourceVersion ?? 0) + 1)
+                const imported = await execute!.documentImport(request, {
+                    id,
+                    orgId: input.orgId,
+                    actor: account,
+                    name,
+                    blobId: stored.id,
+                    size: stored.size
+                })
                 deleted.delete(id)
                 if (transfer) transfer.phase = 'completed'
                 return imported
-            } catch (error) {if (transfer && transfer.phase != 'completed') transfer.phase = 'cancelled'; throw error}
-            finally {uploads.delete(id); await cleanup()}
+            } catch (error) {
+                if (transfer && transfer.phase != 'completed') transfer.phase = 'cancelled'
+                throw error
+            }
+            finally {
+                uploads.delete(id)
+                await cleanup()
+            }
             })
         }
         async function download(input: {orgId: string, id: string}) {
@@ -261,35 +472,84 @@ export function createDocumentProcessing(deps: {directory?: string, processor?: 
                 approvals: document.approvals.map(({table, ...approval}) => ({...approval})),
                 provenance: document.provenance ? {...document.provenance, fields: document.provenance.fields.map(field => ({...field}))} : null,
                 sourceType: /\.pdf$/i.test(document.name) ? 'pdf' as const : 'text' as const,
-                originalText: /\.pdf$/i.test(document.name) ? 'Исходный PDF доступен для просмотра и скачивания. Страницы извлечённого текста указаны в таблице.' : new TextDecoder('utf-8', {fatal: true}).decode(original.bytes)}
+                originalText: pdfNotice(document.name, original.bytes)
+            }
         }
         async function status(input: {orgId: string, id: string}) {
-            await ready; active()
+            await ready
+            active()
             const document = item(account, input.orgId, input.id)
-            return {id: document.id, orgId: document.orgId, name: document.name, revision: document.revision, sourceVersion: document.sourceVersion, status: document.status, attempt: document.attempt, processor: document.processor, rowCount: document.table.rows.length, error: document.error, approvedRevision: document.approvals.at(-1)?.revision ?? 0}
+            return {
+                id: document.id,
+                orgId: document.orgId,
+                name: document.name,
+                revision: document.revision,
+                sourceVersion: document.sourceVersion,
+                status: document.status,
+                attempt: document.attempt,
+                processor: document.processor,
+                rowCount: document.table.rows.length,
+                error: document.error,
+                approvedRevision: document.approvals.at(-1)?.revision ?? 0
+            }
         }
         async function compare(input: {orgId: string, id: string, revision: number, approvedRevision: number}) {
-            await ready; active()
-            const document = matches(account, input), approved = document.approvals.find(value => value.revision == input.approvedRevision)
+            await ready
+            active()
+            const document = matches(account, input)
+            const approved = document.approvals.find(value => value.revision == input.approvedRevision)
             if (!approved) throw new Error('Утверждённая версия недоступна')
-            return {current: {revision: document.revision, sourceVersion: document.sourceVersion, table: validateTable(document.table)}, previous: {...approved, table: validateTable(approved.table)}}
+            const current = {
+                revision: document.revision,
+                sourceVersion: document.sourceVersion,
+                table: validateTable(document.table)
+            }
+            return {current, previous: {...approved, table: validateTable(approved.table)}}
         }
         async function exportDocument(input: {orgId: string, id: string, revision: number, format: 'csv' | 'json'}) {
             await ready
             active()
             const document = matches(account, input)
             const approved = document.approvals.at(-1)
-            if (document.status != 'approved' || !approved || approved.revision != document.revision) throw new Error('Экспорт доступен после утверждения текущей версии')
+            const current = approved && approved.revision == document.revision
+            if (document.status != 'approved' || !current) {
+                throw new Error('Экспорт доступен после утверждения текущей версии')
+            }
             if (!['csv', 'json'].includes(input.format)) throw new Error('Выберите CSV или JSON')
             function cell(value: string) {
                 const safe = /^[=+\-@\t\r]/.test(value) ? "'" + value : value
                 return '"' + safe.replaceAll('"', '""') + '"'
             }
-            const text = input.format == 'json' ? JSON.stringify({sourceVersion: approved.sourceVersion, approvedRevision: approved.revision, ...approved.table, ...(approved.provenance ? {provenance: approved.provenance} : {})}, null, 2) :
-                [approved.table.headers, ...approved.table.rows].map(row => row.map(cell).join(',')).join('\r\n')
-            return {name: document.name.replace(/\.[^.]+$/, '') + '-approved.' + input.format, bytes: new Uint8Array(Buffer.from(text))}
+            const provenance = approved.provenance ? {provenance: approved.provenance} : {}
+            const document_json = {
+                sourceVersion: approved.sourceVersion,
+                approvedRevision: approved.revision,
+                ...approved.table,
+                ...provenance
+            }
+            const lines = [approved.table.headers, ...approved.table.rows]
+            const text = input.format == 'json'
+                ? JSON.stringify(document_json, null, 2)
+                : lines.map(row => row.map(cell).join(',')).join('\r\n')
+            const name = document.name.replace(/\.[^.]+$/, '') + '-approved.' + input.format
+            return {name, bytes: new Uint8Array(Buffer.from(text))}
         }
-        return {facade: {ai: connection.fragment, control: {beginUpload, cancelUpload, upload, download, detail, status, compare, export: exportDocument}}, close() {for (const transfer of transfers.values()) transfer.controller.abort(); transfers.clear(); connection.close()}}
+        const control = {
+            beginUpload,
+            cancelUpload,
+            upload,
+            download,
+            detail,
+            status,
+            compare,
+            export: exportDocument
+        }
+        function close() {
+            for (const transfer of transfers.values()) transfer.controller.abort()
+            transfers.clear()
+            connection.close()
+        }
+        return {facade: {ai: connection.fragment, control}, close}
     }}
     function mount(deps: {store: Store<DocumentState>, execute: DocumentExecutor}) {
         store = deps.store
@@ -297,12 +557,25 @@ export function createDocumentProcessing(deps: {directory?: string, processor?: 
         ready = filesQueue.add(async function recover() {
             for (const document of Object.values(store!.state.documents)) if (document.status == 'processing') {
                 const run = host.store.state.runs[document.activeRun]
-                await execute!.processingFailure(document.activeRun + '-recovery', {orgId: document.orgId, id: document.id, actor: run?.owner ?? document.owner, runId: document.activeRun, status: 'uncertain', error: 'Сервис перезапущен. Начните новую попытку после проверки исходного файла'})
+                await execute!.processingFailure(document.activeRun + '-recovery', {
+                    orgId: document.orgId,
+                    id: document.id,
+                    actor: run?.owner ?? document.owner,
+                    runId: document.activeRun,
+                    status: 'uncertain',
+                    error: 'Сервис перезапущен. Начните новую попытку после проверки исходного файла'
+                })
             }
             for (const run of Object.values(host.store.state.runs)) if (run.recovery) {
                 const document = store!.state.documents[run.resourceIds[0]]
-                if (document && document.activeRun == run.id && ['review', 'approved'].includes(document.status)) host.recovery.settle(run.id, {state: 'completed', output: {result: {available: true}}})
-                else host.recovery.settle(run.id, {state: 'failed', error: 'Работа прервана перезапуском. Разрешена новая попытка после проверки документа'})
+                const mine = document && document.activeRun == run.id
+                if (mine && ['review', 'approved'].includes(document.status)) {
+                    host.recovery.settle(run.id, {state: 'completed', output: {result: {available: true}}})
+                    continue
+                }
+                const error = 'Работа прервана перезапуском.'
+                    + ' Разрешена новая попытка после проверки документа'
+                host.recovery.settle(run.id, {state: 'failed', error})
             }
             await cleanup()
         })
@@ -318,7 +591,12 @@ export function createDocumentProcessing(deps: {directory?: string, processor?: 
                 void filesQueue.add(cleanup).catch(function retryLater() {deleted.delete(document.id)})
             }
         })
-        return function close() {closing = true; off(); for (const controller of pending.values()) controller.abort(); host.close()}
+        return function close() {
+            closing = true
+            off()
+            for (const controller of pending.values()) controller.abort()
+            host.close()
+        }
     }
     return {resource, mount, view: {ready: () => ready}}
 }

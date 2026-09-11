@@ -35,7 +35,12 @@ function pdfFixture(text: string, pages = 1, password = false) {
     const xref = Buffer.byteLength(value)
     value += 'xref\n0 ' + (objects.length + 1) + '\n0000000000 65535 f \n'
     value += offsets.slice(1).map(offset => String(offset).padStart(10, '0') + ' 00000 n \n').join('')
-    value += 'trailer\n<< /Size ' + (objects.length + 1) + ' /Root 1 0 R' + (password ? ' /Encrypt ' + objects.length + ' 0 R /ID [<00112233445566778899aabbccddeeff><00112233445566778899aabbccddeeff>]' : '') + ' >>\nstartxref\n' + xref + '\n%%EOF\n'
+    const identifier = '<00112233445566778899aabbccddeeff>'
+    const encryption = password
+        ? ' /Encrypt ' + objects.length + ' 0 R /ID [' + identifier + identifier + ']'
+        : ''
+    value += 'trailer\n<< /Size ' + (objects.length + 1) + ' /Root 1 0 R' + encryption
+    value += ' >>\nstartxref\n' + xref + '\n%%EOF\n'
     return Buffer.from(value)
 }
 
@@ -54,23 +59,36 @@ async function main() {
     await runtime.view.ready()
     const signal = new AbortController()
     function session(account: string) {
-        return runtime.definition.resources.processor.open({principal: {account, roles: documentRoles(leader.line.control.store.state, account)}, sessionId: account, resourceId: 'processor', signal: signal.signal})
+        const roles = documentRoles(leader.line.control.store.state, account)
+        return runtime.definition.resources.processor.open({
+            principal: {account, roles},
+            sessionId: account,
+            resourceId: 'processor',
+            signal: signal.signal
+        })
     }
     const customer = session('customer'), reviewer = session('reviewer'), outsider = session('outsider')
-    const customerCommands = leader.corridor.fragment('customer'), reviewerCommands = leader.corridor.fragment('reviewer'), ownerCommands = leader.corridor.fragment('owner')
+    const customerCommands = leader.corridor.fragment('customer')
+    const reviewerCommands = leader.corridor.fragment('reviewer')
+    const ownerCommands = leader.corridor.fragment('owner')
     const state = () => leader.line.control.store.snapshot()
     const doc = (id: string) => state().documents[id]
     const orgId = 'northstar'
     const bytes = Buffer.from('name,amount,note\r\n"Анна, Мария",12,"строка 1\nстрока 2"\r\nИлья,7,"Он сказал ""да"""\r\n')
     function run(id: string, processor: 'node' | 'python', requestId: string) {
-        return customer.facade.ai.createRun({kind: 'extract', requestId, resourceIds: [id], input: {orgId, documentId: id, revision: doc(id).revision, processor}})
+        const input = {orgId, documentId: id, revision: doc(id).revision, processor}
+        return customer.facade.ai.createRun({kind: 'extract', requestId, resourceIds: [id], input})
     }
     try {
         assert.deepEqual(parseCsv('a,b\n"x,y","he said ""ok"""'), {headers: ['a', 'b'], rows: [['x,y', 'he said "ok"']]})
         assert.throws(() => parseCsv('a,b\n"unfinished'), /кавычки/)
         assert.throws(() => parseCsv('a,a\nx,y'), /уникальными/)
         assert.deepEqual(parseText('notes.txt', Buffer.from('Первое\nВторое')), {headers: ['Строка', 'Текст'], rows: [['1', 'Первое'], ['2', 'Второе']]})
-        await assert.rejects(ownerCommands.documentImport('forged-internal', {orgId, id: 'a'.repeat(64), actor: 'customer', name: 'forged.csv', blobId: 'b'.repeat(64), size: 10}), /forbidden/)
+        const forged = {
+            orgId, id: 'a'.repeat(64), actor: 'customer',
+            name: 'forged.csv', blobId: 'b'.repeat(64), size: 10
+        }
+        await assert.rejects(ownerCommands.documentImport('forged-internal', forged), /forbidden/)
         await assert.rejects(customer.facade.control.upload({orgId: 'harbor', name: 'other.csv', bytes}), /доступа/)
         await assert.rejects(customer.facade.control.upload({orgId, name: 'huge.csv', bytes: new Uint8Array(512 * 1024 + 1)}), /512/)
         await assert.rejects(customer.facade.control.upload({orgId, name: 'malware.exe', bytes}), /CSV/)
@@ -89,8 +107,14 @@ async function main() {
         await assert.rejects(customerCommands.documentApprove('customer-approve', {orgId, id: imported.id, revision: doc(imported.id).revision}), /forbidden/)
         const firstRevision = doc(imported.id).revision
         const competing = await Promise.allSettled([
-            reviewerCommands.documentRow('edit-a', {orgId, id: imported.id, revision: firstRevision, index: 0, values: ['Анна', '13', 'Проверено'], comment: 'Уточнили сумму'}),
-            ownerCommands.documentRow('edit-b', {orgId, id: imported.id, revision: firstRevision, index: 0, values: ['Анна', '14', 'Проверено'], comment: 'Конкурентная правка'})
+            reviewerCommands.documentRow('edit-a', {
+                orgId, id: imported.id, revision: firstRevision, index: 0,
+                values: ['Анна', '13', 'Проверено'], comment: 'Уточнили сумму'
+            }),
+            ownerCommands.documentRow('edit-b', {
+                orgId, id: imported.id, revision: firstRevision, index: 0,
+                values: ['Анна', '14', 'Проверено'], comment: 'Конкурентная правка'
+            })
         ])
         assert.equal(competing.filter(result => result.status == 'fulfilled').length, 1)
         await assert.rejects(reviewer.facade.control.detail({orgId, id: imported.id, revision: firstRevision}), /изменён/)
@@ -104,7 +128,14 @@ async function main() {
         const csv = await customer.facade.control.export({orgId, id: imported.id, revision: approved.revision, format: 'csv'})
         assert.equal(parseCsv(Buffer.from(csv.bytes).toString()).rows[0][1], '13')
         await reviewerCommands.documentReopen('reopen', {orgId, id: imported.id, revision: approved.revision})
-        await reviewerCommands.documentRow('edit-after-approve', {orgId, id: imported.id, revision: doc(imported.id).revision, index: 0, values: ['Анна', '99', 'Другая редакция'], comment: ''})
+        await reviewerCommands.documentRow('edit-after-approve', {
+            orgId,
+            id: imported.id,
+            revision: doc(imported.id).revision,
+            index: 0,
+            values: ['Анна', '99', 'Другая редакция'],
+            comment: ''
+        })
         assert.equal(doc(imported.id).approvals[0].table.rows[0][1], '13', 'approved snapshot immutable under later review changes')
 
         const slow = await customer.facade.control.upload({orgId, name: 'slow-a.csv', bytes})
@@ -138,7 +169,13 @@ async function main() {
             assert.equal(doc(python.id).status, 'review', doc(python.id).error)
             assert.deepEqual(doc(python.id).table, parseCsv(bytes.toString()))
         } else console.log('SKIP real Python: set DOCUMENT_PYTHON to the installed interpreter')
-        assert((await real.extract({name: 'invoice.pdf', bytes: pdfFixture('Invoice total 42'), processor: 'node', signal: signal.signal})).rows[0][1].includes('Invoice total 42'))
+        const parsed = await real.extract({
+            name: 'invoice.pdf',
+            bytes: pdfFixture('Invoice total 42'),
+            processor: 'node',
+            signal: signal.signal
+        })
+        assert(parsed.rows[0][1].includes('Invoice total 42'))
         const pdf = await customer.facade.control.upload({orgId, name: 'invoice.pdf', bytes: pdfFixture('Invoice total 42')})
         run(pdf.id, 'node', 'pdf-text')
         await until('PDF text extraction', () => ['review', 'failed'].includes(doc(pdf.id).status))
@@ -186,7 +223,9 @@ async function main() {
         console.log('PASS documents: CSV quoting/UTF-8/Python, real PDF text + empty/encrypted/oversized-pages/malformed rejection, internal command boundary, 512KiB limit, dedup, tenant/private detail, concurrent review, immutable approval/export, two processors, cancel/late result/retry/timeout, revoke, physical delete/reimport')
     } finally {
         signal.abort()
-        customer.close(); reviewer.close(); outsider.close()
+        customer.close()
+        reviewer.close()
+        outsider.close()
         close()
         leader.control.close()
         await new Promise(resolve => setTimeout(resolve, 100))
@@ -195,4 +234,7 @@ async function main() {
     }
 }
 
-main().catch(function failed(error) {console.error(error); process.exitCode = 1})
+main().catch(function failed(error) {
+    console.error(error)
+    process.exitCode = 1
+})

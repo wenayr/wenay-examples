@@ -5,7 +5,15 @@ import type {DocumentState} from './model'
 import type {UsageGate} from './metered-execution'
 import type {ExtractionProvider} from './model-extraction'
 
-export function createDocumentRuntime(deps: {directory?: string, processor?: DocumentProcessor, python?: string, usage?: UsageGate, extractor?: ExtractionProvider} = {}) {
+type RuntimeOptions = {
+    directory?: string,
+    processor?: DocumentProcessor,
+    python?: string,
+    usage?: UsageGate,
+    extractor?: ExtractionProvider
+}
+
+export function createDocumentRuntime(deps: RuntimeOptions = {}) {
     const processing = createDocumentProcessing(deps)
     return {definition: {...documentsDefinition, resources: {processor: processing.resource}},
         mount(input: {store: Store<DocumentState>, execute: DocumentExecutor}) {return processing.mount(input)},
