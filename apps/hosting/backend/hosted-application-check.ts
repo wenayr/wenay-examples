@@ -16,7 +16,7 @@ export async function waitForHosted(label: string, predicate: () => boolean | Pr
 }
 
 // Acceptance-only fixture shared by two independent products, not a deployment SDK.
-export async function checkHostedApplication(deps: {name: 'booking' | 'crm' | 'forms' | 'monitoring', verify: (context: {url: string, release: string, iteration: number}) => Promise<void>, close: () => Promise<void>}) {
+export async function checkHostedApplication(deps: {name: 'booking' | 'crm' | 'forms' | 'monitoring' | 'approvals', verify: (context: {url: string, release: string, iteration: number}) => Promise<void>, close: () => Promise<void>}) {
     const images = Object.fromEntries(['first', 'second'].map(release => [release, execFileSync('docker', ['image', 'inspect', 'wenay-examples.local/' + deps.name + ':' + release, '--format', '{{index .RepoDigests 0}}'], {windowsHide: true, encoding: 'utf8'}).trim()]))
     for (const image of Object.values(images)) assert(/@sha256:[a-f0-9]{64}$/.test(image), 'Build pinned images before acceptance')
     const temporary = await realpath(os.tmpdir()), directory = await mkdtemp(path.join(temporary, deps.name + '-hosting-'))

@@ -17,6 +17,12 @@ const manifests = {
         'frontend/assistant.tsx', 'frontend/contracts.ts', 'frontend/env.d.ts', 'frontend/index.html', 'frontend/main.tsx',
         'frontend/style.css', 'frontend/tasks.tsx', 'frontend/tasks.css', 'frontend/vite.config.ts', 'organizer/task-domain.ts', 'organizer/task-model.ts'
     ]),
+    approvals: ['check.ts', 'domain.ts', 'domain-check.ts', 'identity.ts', 'model.ts', 'node.ts',
+        'process-resource.ts', 'questions.ts', 'runtime.ts', 'server.ts', 'service.ts'
+    ].map(file => 'backend/' + file).concat(shared, [
+        'frontend/env.d.ts', 'frontend/index.html', 'frontend/main.tsx', 'frontend/questions.tsx',
+        'frontend/style.css', 'frontend/vite.config.ts'
+    ]),
     forms: ['ai-checkpoint.ts', 'archive.ts', 'browser-policy.ts', 'check.ts', 'domain.ts', 'domain-check.ts',
         'exports-resource.ts', 'grouping-resource.ts', 'grouping-check.ts', 'identity.ts', 'model.ts', 'node.ts',
         'process-resource.ts', 'resource-check.ts', 'runtime.ts', 'server.ts', 'service.ts'
@@ -152,7 +158,7 @@ ${sourceReadme ? '## Документация исходного примера\
 
 export async function createSaasExample(deps) {
     const {template, destination, name} = deps
-    if (!Object.hasOwn(manifests, template)) throw new Error('Выберите support, documents, metering, crm, booking, forms или monitoring')
+    if (!Object.hasOwn(manifests, template)) throw new Error('Выберите support, documents, metering, crm, booking, forms, monitoring или approvals')
     if (typeof destination != 'string' || !destination.trim()) throw new Error('Укажите новый пустой каталог назначения')
     const root = path.resolve(deps.repository ?? repository)
     const sourceRoot = path.join(root, 'apps', template)
@@ -222,10 +228,10 @@ export async function createSaasExample(deps) {
 
 async function main(args) {
     if (args.length == 1 && ['--help', '-h'].includes(args[0])) {
-        console.log('node scripts/create-saas-example.mjs <support|documents|metering|crm|booking|forms|monitoring> <empty-directory> [--name npm-name]')
+        console.log('node scripts/create-saas-example.mjs <support|documents|metering|crm|booking|forms|monitoring|approvals> <empty-directory> [--name npm-name]')
         return
     }
-    if (args.length != 2 && !(args.length == 4 && args[2] == '--name')) throw new Error('Использование: node scripts/create-saas-example.mjs <support|documents|metering|crm|booking|forms|monitoring> <empty-directory> [--name npm-name]')
+    if (args.length != 2 && !(args.length == 4 && args[2] == '--name')) throw new Error('Использование: node scripts/create-saas-example.mjs <support|documents|metering|crm|booking|forms|monitoring|approvals> <empty-directory> [--name npm-name]')
     const result = await createSaasExample({template: args[0], destination: args[1], name: args[3]})
     console.log('Создан ' + result.name + ': ' + result.destination + ' (' + result.files + ' файлов). Дальше: npm ci, npm run typecheck, npm test, npm run build.')
 }

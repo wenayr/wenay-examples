@@ -24,7 +24,8 @@
     "test:crm": "tsx backend/crm-live-check.ts",
     "test:booking": "tsx backend/booking-live-check.ts",
     "test:forms": "tsx backend/forms-live-check.ts",
-    "test:monitoring": "tsx backend/monitoring-live-check.ts"
+    "test:monitoring": "tsx backend/monitoring-live-check.ts",
+    "test:approvals": "tsx backend/approvals-live-check.ts"
   },
   "dependencies": {
     "express": "5.2.1",

@@ -105,6 +105,14 @@ async function check() {
         assert.equal(crmPackage.name, 'crm-copy')
         for (const file of ['backend/imports.ts', 'backend/import-check.ts', 'backend/assistant-resource.ts', 'backend/check.ts', 'organizer/task-domain.ts', 'frontend/imports.tsx', 'frontend/assistant.tsx']) assert((await lstat(path.join(crm, file))).isFile())
         assert((await readFile(path.join(crm, 'README.md'), 'utf8')).includes('3813'))
+        const approvals = path.join(temporary, 'approvals-copy')
+        await createSaasExample({template: 'approvals', destination: approvals, name: 'approvals-copy'})
+        const approvalFiles = ['backend/domain.ts', 'backend/domain-check.ts', 'backend/check.ts', 'backend/questions.ts', 'frontend/questions.tsx', 'frontend/main.tsx']
+        for (const file of approvalFiles) assert((await lstat(path.join(approvals, file))).isFile())
+        const approvalSource = await readFile(path.join(approvals, 'backend', 'domain.ts'), 'utf8')
+        assert(approvalSource.includes('requestDecide'), 'копия согласований содержит решение по версии')
+        assert(!approvalSource.includes('formSave'), 'в копии согласований не осталось команд forms')
+        assert((await readFile(path.join(approvals, 'README.md'), 'utf8')).includes('3818'))
         const docs = await createSaasExample({template: 'documents', destination: documents, name: 'documents-copy'})
         assert(docs.files >= 20)
         assert((await readFile(path.join(documents, 'backend', 'processor.py'), 'utf8')).includes('csv'))
@@ -172,7 +180,7 @@ async function check() {
         const monitoringClean = path.join(temporary, 'monitoring-clean')
         await createSaasExample({template: 'monitoring', repository: fixture, destination: monitoringClean})
         for (const file of await allFiles(monitoringClean)) assert(!(await readFile(file, 'utf8')).includes(marker))
-        console.log('Scaffold checks passed: seven apps, exact lock/name, monitoring HTTP workers/AI/organizer, forms archive/grouping/public sources, booking DST/AI/runtime sources, metering repo-only integration omitted, no secrets/data/build/deps, no overwrite, collision guards, no symlink/junction following, no cross-app or missing local imports')
+        console.log('Scaffold checks passed: eight apps, exact lock/name, monitoring HTTP workers/AI/organizer, forms archive/grouping/public sources, booking DST/AI/runtime sources, metering repo-only integration omitted, no secrets/data/build/deps, no overwrite, collision guards, no symlink/junction following, approvals decision domain without forms commands, no cross-app or missing local imports')
     } finally {
         await remove(temporary)
     }
