@@ -26,3 +26,4 @@
 - P03 — 2026-09-11 — живые проверки копии для metering и forms, включены в npm test; в STATUS колонка «Копия» — a16f8b7
 - P04 — 2026-09-11 — общая проверка копии для crm, booking, monitoring, content, approvals; колонка «Копия» заполнена у десяти приложений — 3f4c635
 - P05 — 2026-09-11 — в STATUS колонки «Тест, с» и «Сборка, КБ»; размер считается по ссылкам index.html, а не по всему public — b82ee73
+- C01 — 2026-09-11 — pizzeria возвращена в CI, добавлены кэш npm и concurrency; локально RUN_ALL_SKIP=hosting check:all — 33 проверки, 0 ошибок — 26f330a
