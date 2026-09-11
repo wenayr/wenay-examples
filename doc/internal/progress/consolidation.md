@@ -15,3 +15,4 @@
 - L01 — 2026-09-11 — реестр WORKAROUNDS.md: 4 места обхода трёх открытых задач common2 размечены в коде; support и forms прошли — коммит ниже
 - Q01 — 2026-09-11 — раздел «Плотность» в CODE-RULES и копии approvals — коммит ниже
 - Q02 — 2026-09-11 — style-check.mjs: 6 правил, распознавание литералов/комментариев/регулярных выражений, исключения и флаги --app/--path. scripts/ и shared/ приведены к правилам: 126 нарушений → 0. Канон shared разослан в 90 копий. Замер по приложениям для Q03-Q05 (всего нарушений): pizzeria 1175, crm 463, content 425, hosting 411, forms 394, support 376, booking 330, monitoring 254, documents 244, metering 185, approvals 131. В backend/domain.ts: content 65, booking 57, forms 54, crm 51, monitoring 46, support 17, metering 16, documents 15.
+- A01 — 2026-09-11 — исходное состояние approvals зафиксировано: 34 ошибки typecheck, падение теста, 29 файлов, 627 строк, 131 нарушение стиля — коммит ниже
