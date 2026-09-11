@@ -10,3 +10,4 @@
 - R03 — 2026-09-11 — рецепты знают все восемь шаблонов, история проверок копий перенесена в changes, добавлены рецепты monitoring и forms — 8b27a7f
 - Попутно — 2026-09-11 — scaffold-check падал на support и documents: npm test копии звал backup-check.ts, которого в копии нет; копировщик убирает этот шаг — d85dac6
 - R04 support — 2026-09-11 — README 137 -> 65 строк, справочник в API.md, приёмка в SUPPORT-HISTORY — 5074fe1
+- R04 documents — 2026-09-11 — README 166 -> 64 строки, справочник в API.md, приёмка в DOCUMENTS-HISTORY — e062ba4
