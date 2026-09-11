@@ -1,3 +1,5 @@
+// Канон: shared/backend/published-contract.ts. Копии в приложениях синхронизируются scripts/sync.mjs;
+// правьте здесь или поднимите правку из приложения: sync.mjs --from=<приложение>.
 import type {ServiceResourceContext, tServiceDefinition} from 'wenay-common2/service'
 
 // Copyable consumer contract, checked by the publishing authority with satisfies.

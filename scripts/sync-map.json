@@ -124,7 +124,8 @@
             "apps/forms/backend/identity.ts",
             "apps/metering/backend/identity.ts",
             "apps/monitoring/backend/identity.ts",
-            "apps/support/backend/identity.ts"
+            "apps/support/backend/identity.ts",
+            "apps/pizzeria/backend/identity.ts"
         ]
     },
     {
@@ -147,6 +148,22 @@
         "copies": [
             "apps/documents/backend/http-auth.ts",
             "apps/support/backend/http-auth.ts"
+        ]
+    },
+    {
+        "canon": "shared/organizer/task-domain.ts",
+        "copies": [
+            "apps/pizzeria/organizer/task-domain.ts",
+            "apps/support/organizer/task-domain.ts",
+            "apps/crm/organizer/task-domain.ts",
+            "apps/monitoring/organizer/task-domain.ts"
+        ]
+    },
+    {
+        "canon": "shared/backend/published-contract.ts",
+        "copies": [
+            "apps/support/backend/published-contract.ts",
+            "apps/content/backend/published-contract.ts"
         ]
     }
 ]

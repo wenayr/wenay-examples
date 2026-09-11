@@ -16,3 +16,5 @@
 - R04 booking — 2026-09-11 — README 117 -> 60 строк, справочник в API.md, приёмка в BOOKING-HISTORY — 54aab39
 - R04 forms — 2026-09-11 — README 137 -> 62 строки, справочник в API.md, приёмка в FORMS-HISTORY — 75592ff
 - R04 monitoring — 2026-09-11 — README 110 -> 69 строк, справочник в API.md, приёмка в MONITORING-HISTORY — 883daee
+- R04 content — 2026-09-11 — README 106 -> 63 строки, справочник в API.md, приёмка в CONTENT-HISTORY; R04 завершён, восемь README по 60-69 строк — 539d9d5
+- U01 — 2026-09-11 — task-domain, published-contract и identity пиццерии в каноне; sync-check держит 97 копий по 14 файлам

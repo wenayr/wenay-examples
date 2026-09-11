@@ -177,6 +177,9 @@ const pizzeriaDefinition = {
             validate(input) {
                 if (!ACCOUNT_SHAPE.test(input.account)) throw new Error('account must match ' + ACCOUNT_SHAPE)
                 if (input.password.length < 6) throw new Error('password must be at least 6 characters')
+                // Проверка секрета отклоняет пароль длиннее 256 символов: не даём создать
+                // аккаунт, которым потом нельзя будет войти.
+                if (input.password.length > 256) throw new Error('password must be at most 256 characters')
             },
             apply(ctx: ServiceCommandCtx<PizzeriaState>, input) {
                 if (ctx.state.accounts[input.account]) throw new Error(`account ${input.account} already exists`)

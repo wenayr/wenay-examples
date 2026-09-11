@@ -1,3 +1,5 @@
+// Канон: shared/organizer/task-domain.ts. Копии в приложениях синхронизируются scripts/sync.mjs;
+// правьте здесь или поднимите правку из приложения: sync.mjs --from=<приложение>.
 import {createHash} from 'node:crypto'
 import {Command} from 'wenay-common2'
 import {schemaCommand, type ServiceCommandCtx} from 'wenay-common2/service'
