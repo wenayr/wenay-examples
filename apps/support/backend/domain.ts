@@ -19,7 +19,9 @@ export function supportRoles(state: SupportState, account: string) {
 export function authorizeOrganization(state: SupportState, account: string, orgId: string, roles: readonly string[] = ROLES) {
     const org = own(state.organizations, orgId)
     const role = org && own(org.members, account)
-    if (!own(state.accounts, account) || !org || !role || !roles.includes(role)) throw new Error('Нет доступа к этой организации')
+    const known = !!own(state.accounts, account)
+    const allowed = !!role && roles.includes(role)
+    if (!known || !org || !allowed) throw new Error('Нет доступа к этой организации')
     return {org, role}
 }
 
@@ -38,7 +40,10 @@ export function workspaceView(state: SupportState, principal: tServicePrincipal 
         organizations,
         people: organizations.flatMap(org => Object.entries(state.organizations[org.id].members).flatMap(([id, role]) => {
             const person = own(state.accounts, id)
-            return person && (staff(org.id) || id == account || role != 'customer') ? [{orgId: org.id, account: id, name: person.name, role}] : []
+            // Клиент видит сотрудников и себя, но не других клиентов организации.
+            const visible = staff(org.id) || id == account || role != 'customer'
+            if (!person || !visible) return []
+            return [{orgId: org.id, account: id, name: person.name, role}]
         })),
         tickets: Object.values(state.tickets).filter(ticket => roles.has(ticket.orgId) && (staff(ticket.orgId) || ticket.customer == account))
             .map(ticket => {
@@ -58,9 +63,22 @@ export function searchWorkspace(state: SupportState, account: string, orgId: str
     authorizeOrganization(state, account, orgId)
     const view = workspaceView(state, {account, roles: supportRoles(state, account)})
     const needle = query.trim().slice(0, 200).toLocaleLowerCase()
+    const role = view.organizations.find(org => org.id == orgId)?.role
+
+    // Клиенту закрытые заметки не видны, значит и искать по ним нельзя.
+    function matched(ticket: {orgId: string, id: string, subject: string}) {
+        if (ticket.orgId != orgId) return false
+        const all = state.tickets[ticket.id].messages
+        const messages = all.filter(message => role != 'customer' || !message.private)
+        const texts = [ticket.subject, ...messages.map(message => message.body)]
+        return texts.some(text => text.toLocaleLowerCase().includes(needle))
+    }
     return {
-        tickets: view.tickets.filter(ticket => ticket.orgId == orgId && [ticket.subject, ...state.tickets[ticket.id].messages.filter(message => view.organizations.find(org => org.id == orgId)?.role != 'customer' || !message.private).map(message => message.body)].some(text => text.toLocaleLowerCase().includes(needle))).slice(0, 50),
-        articles: view.articles.filter(article => article.orgId == orgId && (article.title + '\n' + article.body).toLocaleLowerCase().includes(needle)).slice(0, 50)
+        tickets: view.tickets.filter(matched).slice(0, 50),
+        articles: view.articles.filter(function found(article) {
+            if (article.orgId != orgId) return false
+            return (article.title + '\n' + article.body).toLocaleLowerCase().includes(needle)
+        }).slice(0, 50)
     }
 }
 
@@ -103,7 +121,9 @@ export function createSupportDomain(deps: {now?: () => number} = {}) {
     function ticketFor(ctx: Ctx, input: {orgId: string, id: string, revision: number}, staffOnly = false) {
         const access = authorizeOrganization(ctx.state, ctx.account, input.orgId, staffOnly ? STAFF : ROLES)
         const ticket = own(ctx.state.tickets, input.id)
-        if (!ticket || ticket.orgId != input.orgId || (access.role == 'customer' && ticket.customer != ctx.account)) throw new Error('Обращение недоступно')
+        const inside = !!ticket && ticket.orgId == input.orgId
+        const mine = access.role != 'customer' || ticket?.customer == ctx.account
+        if (!inside || !mine) throw new Error('Обращение недоступно')
         revision(ticket, input.revision)
         return {ticket, role: access.role}
     }
@@ -137,7 +157,10 @@ export function createSupportDomain(deps: {now?: () => number} = {}) {
                     if (role == 'lead' && input.role == 'lead') throw new Error('Руководителя приглашает владелец')
                     if (!Number.isInteger(input.hours) || input.hours < 1 || input.hours > 168) throw new Error('Приглашение действует от 1 до 168 часов')
                     const at = now()
-                    const expired = Object.values(ctx.state.invites).filter(invite => invite.orgId == input.orgId && (invite.expiresAt <= at || invite.revoked || invite.usedBy))
+                    const expired = Object.values(ctx.state.invites).filter(function spent(invite) {
+                        if (invite.orgId != input.orgId) return false
+                        return invite.expiresAt <= at || invite.revoked || !!invite.usedBy
+                    })
                     const active = Object.values(ctx.state.invites).filter(invite => invite.orgId == input.orgId).length - expired.length
                     bound(active, 64, 'активных приглашений')
                     const id = requestId(ctx, 'invite')
@@ -147,7 +170,9 @@ export function createSupportDomain(deps: {now?: () => number} = {}) {
                     for (const invite of expired) delete ctx.state.invites[invite.id]
                     const expiresAt = at + input.hours * 3600_000
                     ctx.state.invites[id] = {
-                        id, orgId: input.orgId, role: input.role, tokenHash: createHash('sha256').update(token).digest('hex'), createdBy: ctx.account, expiresAt, usedBy: '', revoked: false
+                        id, orgId: input.orgId, role: input.role,
+                        tokenHash: createHash('sha256').update(token).digest('hex'),
+                        createdBy: ctx.account, expiresAt, usedBy: '', revoked: false
                     }
                     audit(ctx, input.orgId, 'invite.create', id, at)
                     return {id, token, expiresAt}
@@ -161,7 +186,8 @@ export function createSupportDomain(deps: {now?: () => number} = {}) {
                     const tokenHash = createHash('sha256').update(input.token).digest('hex')
                     const invite = Object.values(ctx.state.invites).find(value => value.tokenHash == tokenHash)
                     const at = now()
-                    if (!invite || invite.usedBy || invite.revoked || invite.expiresAt <= at) throw new Error('Приглашение недоступно или истекло')
+                    const live = !!invite && !invite.usedBy && !invite.revoked
+                    if (!live || invite.expiresAt <= at) throw new Error('Приглашение недоступно или истекло')
                     const org = own(ctx.state.organizations, invite.orgId)
                     if (!org) throw new Error('Организация недоступна')
                     if (own(org.members, ctx.account)) throw new Error('Вы уже участник организации')
@@ -191,14 +217,20 @@ export function createSupportDomain(deps: {now?: () => number} = {}) {
                     const {org} = authorizeOrganization(ctx.state, ctx.account, input.orgId, ['owner'])
                     const previous = own(org.members, input.account)
                     if (!previous) throw new Error('Участник недоступен')
-                    if (previous == 'owner' && input.role != 'owner' && Object.values(org.members).filter(role => role == 'owner').length == 1) throw new Error('Нельзя удалить последнего владельца')
+                    const owners = Object.values(org.members).filter(role => role == 'owner').length
+                    const lastOwner = previous == 'owner' && input.role != 'owner' && owners == 1
+                    if (lastOwner) throw new Error('Нельзя удалить последнего владельца')
                     const at = now()
                     if (input.role == 'revoked') delete org.members[input.account]
                     else org.members[input.account] = input.role
                     org.revision++
+                    // Понижение роли отзывает приглашения, которые она больше не может выдавать.
+                    const manages = MANAGERS.includes(input.role as typeof MANAGERS[number])
+                    const keepsLead = manages && input.role == 'owner'
                     for (const invite of Object.values(ctx.state.invites)) {
-                        if (invite.orgId == org.id && invite.createdBy == input.account &&
-                            (!MANAGERS.includes(input.role as typeof MANAGERS[number]) || (invite.role == 'lead' && input.role != 'owner'))) invite.revoked = true
+                        if (invite.orgId != org.id || invite.createdBy != input.account) continue
+                        if (manages && (invite.role != 'lead' || keepsLead)) continue
+                        invite.revoked = true
                     }
                     if (input.role == 'revoked' || input.role == 'customer') {
                         for (const ticket of Object.values(ctx.state.tickets)) if (ticket.orgId == org.id && ticket.assignee == input.account) {
@@ -223,7 +255,9 @@ export function createSupportDomain(deps: {now?: () => number} = {}) {
                     const at = now()
                     const hours = {normal: 24, high: 4, urgent: 1}[input.priority]
                     const ticket: Ticket = {
-                        id, orgId: input.orgId, customer: ctx.account, subject, priority: input.priority, status: 'open', assignee: '', revision: 1, createdAt: at, updatedAt: at, dueAt: at + hours * 3600_000, messages: [{
+                        id, orgId: input.orgId, customer: ctx.account, subject,
+                        priority: input.priority, status: 'open', assignee: '', revision: 1,
+                        createdAt: at, updatedAt: at, dueAt: at + hours * 3600_000, messages: [{
                             id: requestId(ctx, 'message'), author: ctx.account, body, private: false, at
                         }]
                     }
@@ -236,7 +270,9 @@ export function createSupportDomain(deps: {now?: () => number} = {}) {
                 allow: STAFF,
                 apply(ctx: Ctx, input) {
                     const {ticket, role} = ticketFor(ctx, input, true)
-                    if (role == 'agent' && (input.assignee != ctx.account || (ticket.assignee && ticket.assignee != ctx.account))) throw new Error('Оператор может взять только свободное обращение')
+                    const free = !ticket.assignee || ticket.assignee == ctx.account
+                    const grabbing = input.assignee == ctx.account && free
+                    if (role == 'agent' && !grabbing) throw new Error('Оператор может взять только свободное обращение')
                     if (input.assignee) authorizeOrganization(ctx.state, input.assignee, input.orgId, STAFF)
                     ticket.assignee = input.assignee
                     ticket.revision++
@@ -270,7 +306,8 @@ export function createSupportDomain(deps: {now?: () => number} = {}) {
                     const {ticket} = ticketFor(ctx, input, true)
                     if (ticket.firstResponseAt != undefined) throw new Error('Первый ответ уже отправлен: его срок зафиксирован')
                     const at = now()
-                    if (!Number.isSafeInteger(input.dueAt) || input.dueAt <= at || input.dueAt > at + 30 * 86400_000) throw new Error('Срок ответа должен быть в будущем, в пределах 30 дней')
+                    const soon = input.dueAt > at && input.dueAt <= at + 30 * 86400_000
+                    if (!Number.isSafeInteger(input.dueAt) || !soon) throw new Error('Срок ответа должен быть в будущем, в пределах 30 дней')
                     ticket.dueAt = input.dueAt
                     ticket.revision++
                     ticket.updatedAt = at
@@ -282,7 +319,8 @@ export function createSupportDomain(deps: {now?: () => number} = {}) {
                 allow: ROLES,
                 apply(ctx: Ctx, input) {
                     const {ticket, role} = ticketFor(ctx, input)
-                    if (role == 'customer' && (input.status == 'waiting' || input.priority != ticket.priority)) throw new Error('Клиент может закрыть или переоткрыть своё обращение')
+                    const staffOnly = input.status == 'waiting' || input.priority != ticket.priority
+                    if (role == 'customer' && staffOnly) throw new Error('Клиент может закрыть или переоткрыть своё обращение')
                     ticket.status = input.status
                     ticket.priority = input.priority
                     ticket.revision++
@@ -303,7 +341,9 @@ export function createSupportDomain(deps: {now?: () => number} = {}) {
                     const id = previous?.id ?? requestId(ctx, 'article')
                     if (!previous && own(ctx.state.articles, id)) throw new Error('Запрос создания уже использован')
                     const article: Article = {
-                        id, orgId: input.orgId, title, body, status: 'draft', revision: (previous?.revision ?? 0) + 1, updatedAt: now(), history: previous ? articleHistory(previous) : []
+                        id, orgId: input.orgId, title, body, status: 'draft',
+                        revision: (previous?.revision ?? 0) + 1, updatedAt: now(),
+                        history: previous ? articleHistory(previous) : []
                     }
                     ctx.state.articles[id] = article
                     audit(ctx, input.orgId, 'article.save', id, article.updatedAt)
