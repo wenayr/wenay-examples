@@ -1,0 +1,39 @@
+{
+  "name": "wenay-metering",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "start": "tsx backend/server.ts",
+    "start:node": "tsx backend/node.ts",
+    "dev": "vite frontend --host 127.0.0.1",
+    "build": "vite build frontend --outDir ../public",
+    "typecheck": "tsc --noEmit",
+    "test": "tsx backend/domain-check.ts && tsx backend/webhook-check.ts && tsx backend/check.ts",
+    "test:webhooks": "tsx backend/webhook-check.ts",
+    "test:integration": "tsx backend/integration-check.ts"
+  },
+  "dependencies": {
+    "ag-grid-community": "36.1.0",
+    "ag-grid-react": "36.1.0",
+    "express": "5.2.1",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "socket.io": "4.8.3",
+    "socket.io-client": "4.8.3",
+    "swagger-ui-dist": "5.32.14",
+    "wenay-common2": "2.21.1",
+    "wenay-react2": "3.5.1"
+  },
+  "devDependencies": {
+    "@types/express": "5.0.6",
+    "@types/node": "26.1.2",
+    "@types/react": "19.2.18",
+    "@types/react-dom": "19.2.4",
+    "tsx": "4.23.1",
+    "typescript": "7.0.2",
+    "vite": "8.2.2"
+  },
+  "engines": {
+    "node": ">=22.12"
+  }
+}
