@@ -33,7 +33,8 @@
         "scripts/restore.mjs",
         "apps/metering/frontend/main.tsx",
         "apps/crm/frontend/main.tsx",
-        "apps/hosting/frontend/main.tsx"
+        "apps/hosting/frontend/main.tsx",
+        "apps/pizzeria/frontend/main.tsx"
     ],
     "exclude": [
         "scripts/create-saas-example.mjs",
