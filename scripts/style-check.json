@@ -32,7 +32,8 @@
         "scripts/backup.mjs",
         "scripts/restore.mjs",
         "apps/metering/frontend/main.tsx",
-        "apps/crm/frontend/main.tsx"
+        "apps/crm/frontend/main.tsx",
+        "apps/hosting/frontend/main.tsx"
     ],
     "exclude": [
         "scripts/create-saas-example.mjs",
