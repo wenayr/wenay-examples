@@ -21,6 +21,7 @@
         "apps/metering/backend/domain.ts",
         "apps/monitoring/backend/domain.ts",
         "apps/monitoring/backend/service.ts",
+        "apps/monitoring/frontend/main.tsx",
         "apps/pizzeria/backend/service.ts",
         "apps/support/backend/domain.ts",
         "scripts/backup.mjs",
