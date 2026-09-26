@@ -1,11 +1,10 @@
 import React, {useEffect, useLayoutEffect, useMemo, useRef, useState} from 'react'
 import {createRoot} from 'react-dom/client'
 import {useAsyncAction, useClientStore, useOwnedClient} from 'wenay-react2/react'
-import {createServiceClient, type ServiceClientDefinition} from 'wenay-common2/service/client'
+import type {ServiceClientDefinition} from 'wenay-common2/service/client'
 import type {ConversationCreateInput} from 'wenay-common2/conversation'
 import type {ChatDefinition} from '../backend/service'
 import {authorName, errorText, messageText, type ChatSession, type ChatWorkspace, type tDelivery, type WorkspaceMemberInput} from './contracts'
-import {createConversationOwner} from './conversation-owner'
 import './style.css'
 
 const storageKey = 'nearby-chat-token'
@@ -28,7 +27,10 @@ function App() {
     }, [])
     async function connect(signal: AbortSignal) {
         const connectingEpoch = epoch.current
-        const response = await fetch('/api/client', {signal})
+        const [response, {createServiceClient}] = await Promise.all([
+            fetch('/api/client', {signal}), import('wenay-common2/service/client')
+        ])
+        signal.throwIfAborted()
         if (!response.ok) throw new Error('Сервис недоступен')
         const definition: ServiceClientDefinition<ChatDefinition> = await response.json()
         signal.throwIfAborted()
@@ -147,11 +149,13 @@ function SessionWorkspace({session, closeConversation}: {
     const workspace = workspaces.find(item => item.id == selected)
     useEffect(function chooseInitial() {
         if (!view.ready || initialized.current) return
+        if (!workspaces.length) return
         initialized.current = true
-        setSelected(workspaces[0]?.id ?? '')
+        setSelected(workspaces[0]!.id)
     }, [view.ready, workspaces])
     function chooseWorkspace(event: React.ChangeEvent<HTMLSelectElement>) {
         if (event.target.value == selected) return
+        initialized.current = true
         closeConversation.current?.()
         closeConversation.current = null
         setSelected(event.target.value)
@@ -226,7 +230,12 @@ function Workspace({session, workspace, closeConversation}: {
 }) {
     const identity = useClientStore(useMemo(() => ({store: session.identity.permissions}), [session]))
     const ownerKey = useMemo(() => ({session, workspaceId: workspace.id}), [session, workspace.id])
-    const resource = useOwnedClient({key: ownerKey, create: () => createConversationOwner({session, resourceName: workspace.resourceName})})
+    async function openConversation(signal: AbortSignal) {
+        const {createConversationOwner} = await import('./conversation-owner')
+        signal.throwIfAborted()
+        return createConversationOwner({session, resourceName: workspace.resourceName})
+    }
+    const resource = useOwnedClient({key: ownerKey, create: openConversation})
     const status = useClientStore(useMemo(() => resource.client ? {store: resource.client.status} : null, [resource.client]))
     const conversation = useClientStore(resource.client)
     const current = conversation.state?.ready ? resource.client?.current() : null

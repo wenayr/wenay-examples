@@ -33,3 +33,5 @@ test PASS без внутреннего Python skip. Docker Desktop штатно
 его каталог wenay-browser-network-UoLnqT остался. Закрытый exec session не опрашивать.
 
 C01 сохранён f083593. C03 targeted typecheck/test/build 3/3 PASS, browser account/workspace/revoke/regrant и Chrome 360x500 PASS. Исправлен native view envelope и прокрутка формы; durable report doc/changes/chat-c03-20260926.md. После очередного пользовательского turn browser fixture exec прерван: port 58531 свободен, каталог wenay-browser-pGTU3t остался; штатный stop не подтверждён. C03 repository gate выполняется; Q05 feasibility и C-OPT-CHAT следующие.
+
+C-OPT-CHAT final targeted3/3PASS0.7/5.5/0.7, browser account/workspace/revoke/regrant/logout/savedtokenPASS. InitialJS214594 vs522079 raw, gzip67304 vs162538; total+1921raw/+3293gzip, networktimingnotmeasured. Initialworkspace ready-empty race исправлена. Fixture55192 штатноstop exit0; durable doc/changes/chat-optimization-20260926.md. Repository gate/commit следующие.
