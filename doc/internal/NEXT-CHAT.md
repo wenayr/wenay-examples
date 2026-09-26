@@ -7,10 +7,12 @@
 [стратегия Q01–Q10](../STRATEGY-2026-09.md). Новое поручение пользователя — непрерывно развивать удобство,
 красоту, оптимизацию и проверки; после завершения очереди вернуться к планированию.
 Работа продолжается: [активный журнал](progress/continuous-20260926.md).
-`npm run check:all` прошёл с настроенным Python; live Docker rollback и documents advanced тоже прошли.
+Исторический baseline `npm run check:all` прошёл с настроенным Python; live Docker rollback
+и documents advanced того checkpoint тоже прошли. Это не fresh full gate нынешнего или merged дерева.
 Работа сохранена локально в codex/library-upgrade-20260926, push не выполнялся.
-Графический календарь работ выполняется отдельно в managed worktree ветки `codex/work-calendar`:
-сначала органайзер, затем Booking. Исходный checkout не переключать и его незавершённые изменения не переносить автоматически.
+Графический календарь работ принят отдельно в managed worktree ветки `codex/work-calendar`:
+органайзер, затем Booking. Этот checkout теперь использует codex/unified-chat.
+Исходный checkout не переключать и его незавершённые изменения не переносить автоматически.
 Здесь подготовлен Q04 backend машинного поиска Support; typecheck/test/build Support и hosting повторно прошли,
 UI управления машинными ключами принят: target/runtime/browser проверки прошли,
 Q04 сохранён коммитом `2e159e2` ([отчёт](../changes/support-product-keys.md)). Второй validation checkpoint завершён:
@@ -23,8 +25,11 @@ Q07 Metering и Documents сохранены отдельно: `b11a848`, `affe5
 это не полный общий PASS перед main. C03 принят и сохранён e97161a после runtime,
 repository и browser проверок. Оптимизация C-OPT-CHAT принята и сохранена 140d464.
 Единая очередь со всеми зависимостями и остатками — [подробный план](../EXECUTION-PLAN-20260926.md).
-Q03 свежий live Support прошёл deploy/update/rollback: [отчёт](../changes/hosting-live-support-20260926.md).
-Остальные десять продуктовых Docker сценариев ещё не приняты.
+Q03 теперь имеет 11/11 свежих **local product modes** в трёх selected runs:
+`18801fd` [selected3](../changes/hosting-live-selected-20260926.md),
+`0e385c1` [seven](../changes/hosting-live-seven-20260926.md),
+`96828ea` [Documents](../changes/hosting-live-documents-20260926.md).
+Единого current merged gate и внешнего HTTPS это не принимает.
 Подробности проверок и следующие действия — в активном журнале.
 План 3 выполнен 11 сентября: [отчёт](../reports/PLAN3-REPORT.md), журнал — [progress/plan3.md](progress/plan3.md).
 
@@ -44,13 +49,45 @@ checkout `codex/unified-chat`; туда добавлены два conversation r
 C07-F-MATRIX/X-MATRIX installed platform/cross-client proof; C06-P-TYPED/C06-A;
 C05-CANCEL-FILE scoped cancel/artifact и Q08-PIZZERIA/SUPPORT/DOCUMENTS/METERING
 human journeys. Plain C07/C06-P не ждут C02; AI режим ждёт published fix/repro.
-Q05 machine audit подготовлен, реализация/приёмка не заявлена; Q06 остаётся настоящим Counter.
+Q05 backend принят `5755acb`: actual targeted/full/advanced PASS,
+[machine отчёт](../changes/documents-machine-q05-20260926.md).
+Documents owner keys [browser PASS](../changes/documents-product-keys-ui-20260926.md),
+и принят `58d0aeb`: fresh typecheck 0.760 s/build 1.5 s и independent review PASS.
+Это не merged gate. Q06-A `272f704` принят:
+native typed value+Counter receipt, legacy 3.948 s/new machine 2.706 s PASS;
+[отчёт](../changes/usage-q06-typed-handoff-20260926.md).
+Q06 Stage B сейчас реализуется и не принят; parent ждёт durable linkage,
+restart/lost-response/reconciliation и обоих продуктов.
 После C03 выполнен C-OPT-CHAT: начальный JS уменьшен на 58,9% по raw bytes,
 общий JS увеличился на 1 921 байт; targeted и browser повторены. Это размер артефактов,
 не измерение времени загрузки. Отчёт находится в отдельном checkout общего чата.
 Q01 lazy panels сохранён 9fed00b после 9/9 проверок CRM/Metering/Pizzeria.
-Q05 recovery feasibility сохранён 0fb02a1; machine API ещё не принят.
-Docker Engine 29.7.2 снова доступен; свежий live gate выполняется, весь Q03 пока не принят.
+Q05 recovery feasibility `0fb02a1` — исторический checkpoint перед принятым backend `5755acb`.
+Q02 genuine historical сохранён `fffa851`: старый `2345729` с 2.21.1/3.5.1 создал
+два настоящих composed archives, current 3.1.1/5.0.0 restore/cold restart/receipts/revoke PASS;
+[отчёт](../changes/pizzeria-historical-q02-20260926.md). Schema 5→5, не schemas 1–4 migration/hot backup.
+Docker Engine 29.7.2 реально использован для 11/11 local product modes; external host не принят.
+Q08 accounting `661a870`: свежие 11 builds/все 12 Vite manifests/check:repo PASS;
+[отчёт](../changes/bundle-accounting-q08-20260926.md). Это не fresh full app gate или human journeys.
+Q11 `b14bece`: origin backend/UI/browser PASS,
+[отчёт](../changes/hosting-public-origin-20260926.md); внешний HTTPS и Linux bootstrap pending.
+В GRAPH C07 desktop skeleton остаётся dirty, installed build/launch не принят.
+
+## Следующий текущий остаток
+
+1. Documents owner keys UI принят 58d0aeb; текущий Q06 Stage B пока реализуется и не принят.
+2. Root создал managed integration от 58d0aeb:
+   `C:/Users/wenay/.codex/worktrees/examples-integration/wenay-examples`,
+   branch `codex/examples-integration-20260926`. Применены все семь graph commits:
+   b627c4e/cf06b6e/25bb12a/9be324a/2bdd6b3/a378d2f/3569bcf.
+   Root package union сохраняет bundle/hosting-live и status-before-verify.
+   Chat manifest добавлен root и pending checks; generated STATUS до fresh tests unknown.
+   Последовательный npm ci 13 приложений выполняется. Integration **не принят**;
+   main/push не выполнялись. Исходные checkout не переключать; dirty C07 skeleton отдельно.
+3. Последовательно повторить targeted/browser critical paths и свежий общий merged gate,
+   включая current Docker product runs. Старые checkpoints не принимают новый объединённый source.
+4. Продолжить полный Q06, Q08 human journeys, Q09/Q10 и внешние/device/platform границы
+   Q11/C07 по зависимостям [плана](../EXECUTION-PLAN-20260926.md). IDs и остатки сохраняются.
 
 ## Главная цель
 
@@ -61,7 +98,7 @@ Docker Engine 29.7.2 снова доступен; свежий live gate вып�
 ## Состояние на сегодня
 
 - **12 приложений**: pizzeria (+ органайзер), hosting, support, documents, metering, crm, booking, forms, monitoring, content, catalog, approvals. Пользовательский untracked `apps/facade-map/TASK.md` сохранён; это пока не тринадцатое принятое приложение.
-- **Одна команда проверки:** `npm run check:all` — typecheck, тесты и сборка всех приложений, регрессия runner/status, scaffold, синхронность, стиль, ссылки и сверка STATUS. 36 шагов приложений; пиццерия собирает оба UI. Логи привязаны к package+lock, старые логи не подтверждают новые версии. Итог последнего прогона — в [отчёте](../changes/common2-3.1.1-react2-5.0.0.md) и [STATUS](../STATUS.md).
+- **Одна команда проверки:** `npm run check:all` — typecheck, тесты и сборка всех приложений, регрессии runner/status и bundle graph, scaffold, синхронность, стиль, ссылки и сверка STATUS. Пиццерия собирает оба UI; Catalog build отсутствует по контракту. Логи привязаны к package+lock, что не доказывает source freshness. [Отчёт миграции](../changes/common2-3.1.1-react2-5.0.0.md) является историческим baseline; [STATUS](../STATUS.md) и fresh merged gate проверяются на окончательном дереве.
 - **Библиотеки:** common2 **3.1.1**, react2 **5.0.0** во всех 11 потребителях, в pizzeria также **wenay-calls 1.0.0**; только точные опубликованные npm версии и lock. Catalog библиотек не использует.
 - **Открыто у common2:** AI-POLICY-INVALIDATION и AI-RESOURCE-LIFECYCLE повторно воспроизведены на 3.1.1, три места обхода сохранены. STORE-NESTED-REPLACEMENT исправлен; два обхода удалены, repro --expect-fixed включён в support test. [Реестр](../library-tasks/WORKAROUNDS.md), [пакет](../library-tasks/CURRENT-HANDOFF.md). Подтверждённых задач react2 нет.
 - **План 2 завершён:** [отчёт](../reports/CONSOLIDATION-REPORT.md) содержит таблицу 36 задач, показатели, что не проверено и открытые вопросы. Ответы на эти вопросы даны в разделе 2 плана 3.
