@@ -5,3 +5,28 @@
 @media(max-width:1150px){.app{grid-template-columns:190px minmax(0,1fr)}.sidebar{padding:25px 12px}.sidebar .brand{font-size:24px;margin-left:7px}.page{padding:28px 22px}.booking-layout{grid-template-columns:190px minmax(0,1fr);gap:17px}.calendar-panel{padding:15px}.page-heading h1{font-size:29px}.login-story{padding:40px}.login-story h1{font-size:39px}.login-form{padding:40px}}
 @media(max-width:700px){.app{display:block}.sidebar{position:static;height:auto;display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:15px}.sidebar .brand{margin:0;font-size:23px}.brand>span:last-child{display:none}.brand>span:first-child{font-size:28px}.org-switch{font-size:0;margin:0;gap:0}.org-switch select{font-size:10px;padding:8px}.sidebar nav{grid-column:1/-1;flex-direction:row;overflow:auto;gap:3px;padding-bottom:3px}.sidebar nav button{white-space:nowrap;font-size:10px;padding:9px 10px;gap:7px}.sidebar nav button>span{font-size:15px}.sidebar-note,.account{display:none}.topbar{height:52px;padding:0 16px;font-size:10px}.topbar>div{display:flex;align-items:center;gap:10px}.connection{font-size:9px}.mobile-exit{display:block;font-size:10px;padding:6px}.page{padding:26px 16px}.page-heading{flex-direction:column;align-items:start;gap:16px}.page-heading h1{font-size:27px}.page-heading>div>p:not(.eyebrow){font-size:12px}.booking-layout{display:block}.service-rail{margin-bottom:20px}.service-rail h2{font-size:12px}.service-option{padding:16px;display:grid;grid-template-columns:40px 1fr;gap:4px 10px}.service-option .service-symbol{grid-row:1/4;margin:0}.service-option strong{font-size:14px}.service-option p{margin:2px 0;font-size:11px}.service-option small{font-size:10px}.service-price{grid-column:2;margin-top:7px;padding-top:8px}.gentle-note{display:none}.calendar-panel{padding:13px;min-width:0}.calendar-toolbar{gap:12px}.calendar-toolbar>div:first-child{flex:1}.calendar-toolbar>label{order:3}.calendar-toolbar>button:last-child{order:4}.calendar-days{grid-template-columns:repeat(7,115px);gap:7px}.calendar-days.single{grid-template-columns:1fr}.calendar-days header strong{font-size:23px}.time-slots{max-height:360px}.reservation-summary h2{font-size:20px}.reservation-card{padding:18px 14px;gap:12px}.reservation-date{width:48px;height:65px}.reservation-date strong{font-size:23px}.reservation-content h2{font-size:17px}.reservation-content>header{align-items:start;gap:5px}.booking-status{font-size:8px;padding:5px 7px}.reservation-content p{font-size:11px}.reservation-actions button{font-size:11px}.reservation-content>.inline{font-size:10px}.wait-card{flex-direction:column;align-items:start}.settings-heading{gap:12px}.settings-heading h2{font-size:17px}.settings-heading button{font-size:10px}.settings-grid{grid-template-columns:1fr}.settings-form{padding:18px 14px}.form-row{grid-template-columns:1fr}.hours-row{flex-wrap:wrap;gap:6px}.hours-row select{min-width:100%;flex-basis:100%}.hours-row input{max-width:125px;flex:1}.exception{padding:11px}.login{display:block}.login-story{padding:27px;min-height:240px}.login-story>.brand{margin-bottom:35px}.login-story h1{font-size:30px}.login-story>p:not(.eyebrow){font-size:12px}.sun-art,.login-story>small{display:none}.login-form{padding:33px 25px}.login-form h2{font-size:25px}}
 .preference-assistant{padding:16px;background:#f4f6ee;border:1px solid #e3e6d6;border-radius:10px;margin-bottom:20px}.preference-assistant summary{font-size:12px;font-weight:600;cursor:pointer;color:#869268}.preference-assistant>p{font-size:10px;color:#9eaa90;margin:12px 0}.preference-assistant form{gap:10px}.preference-assistant label{font-size:11px}.preference-assistant textarea{font-size:12px}.preference-assistant>button{margin-top:12px;font-size:11px}.preference-result{margin-top:15px;padding-top:15px;border-top:1px solid #dce3ce}.preference-result strong{font-size:13px}.preference-result p,.preference-result ul{font-size:11px;line-height:1.7}.preference-result small{display:block;margin-top:12px}
+.booking-transfer {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 16px;
+    padding: 18px;
+    margin-bottom: 24px;
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+}
+.booking-transfer > div {
+    flex: 1 1 230px;
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+.booking-transfer p {
+    margin: 6px 0;
+    color: var(--muted);
+    font-size: 12px;
+}
+.booking-transfer button {
+    max-width: 100%;
+    white-space: normal;
+}

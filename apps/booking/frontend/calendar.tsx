@@ -1,5 +1,5 @@
 import {PreferenceAssistant} from './assistant'
-import React, {useEffect, useMemo, useRef, useState} from 'react'
+import React, {useEffect, useLayoutEffect, useMemo, useRef, useState} from 'react'
 import {Temporal} from '@js-temporal/polyfill'
 import {useClientStore, useOwnedClient} from 'wenay-react2/react'
 import type {BookingWorkspace} from '../backend/domain'
@@ -24,10 +24,11 @@ type CalendarProps = {
     commands: Commands,
     busy: boolean,
     moving: string,
-    done: () => void
+    done: () => void,
+    cancelMove: () => void
 }
 
-export function Calendar({value, org, resources, commands, busy, moving, done}: CalendarProps) {
+export function Calendar({value, org, resources, commands, busy, moving, done, cancelMove}: CalendarProps) {
     const owned = useOwnedClient({
         key: resources,
         create: () => ({...openCalendar(resources), ready: Promise.resolve()})
@@ -42,8 +43,11 @@ export function Calendar({value, org, resources, commands, busy, moving, done}: 
     const service = services.find(item => item.id == serviceId) ?? services[0]
     const resource = value.resources.find(item => item.id == service?.resourceId)
     const zone = resource?.zone ?? 'UTC'
+    const bookingResource = value.resources.find(item => item.id == booking?.resourceId)
+    const bookingZone = bookingResource?.zone ?? zone
 
-    const [from, setFrom] = useState(function tomorrow() {
+    const [from, setFrom] = useState(function initialPeriod() {
+        if (booking) return Temporal.Instant.fromEpochMilliseconds(booking.start).toZonedDateTimeISO(bookingZone).toPlainDate().toString()
         return Temporal.Now.zonedDateTimeISO(zone).toPlainDate().add({days: 1}).toString()
     })
     const [days, setDays] = useState(1)
@@ -81,6 +85,13 @@ export function Calendar({value, org, resources, commands, busy, moving, done}: 
     const calendar = loaded?.key == key && loaded.remote == remote ? loaded.result : null
     const slot = calendar?.slots.find(item => item.start == selected)
     const disabled = busy || action.busy || !remote || !calendar
+    const scope = useRef(0)
+
+    // A completed command belongs to the consumer that submitted it, even if its parent workspace survives a switch.
+    useLayoutEffect(function ownScope() {
+        scope.current++
+        return function closeScope() {scope.current++}
+    }, [resources, org.id, org.role, moving, value.account.account])
 
     // Один и тот же замысел повторяется тем же ключом: сервис не создаст вторую запись.
     function intentKey(signature: string) {
@@ -93,6 +104,7 @@ export function Calendar({value, org, resources, commands, busy, moving, done}: 
     async function reserve(event: React.FormEvent<HTMLFormElement>) {
         event.preventDefault()
         if (!service || !slot) return
+        const submittedScope = scope.current
         const form = new FormData(event.currentTarget)
         let ok = false
         if (booking) {
@@ -110,6 +122,7 @@ export function Calendar({value, org, resources, commands, busy, moving, done}: 
             }
             ok = await commands.run('bookingHold', {...input, key: intentKey('hold' + JSON.stringify(input))})
         }
+        if (scope.current != submittedScope) return
         if (!ok) {
             setRefresh(item => item + 1)
             return
@@ -119,8 +132,10 @@ export function Calendar({value, org, resources, commands, busy, moving, done}: 
     }
     async function wait() {
         if (!service || !slot) return
+        const submittedScope = scope.current
         const input = {orgId: org.id, serviceId: service.id, start: slot.start, partySize}
         const joined = await commands.run('waitJoin', {...input, key: intentKey('wait' + JSON.stringify(input))})
+        if (scope.current != submittedScope) return
         if (!joined) return
         intent.current = null
         done()
@@ -323,6 +338,20 @@ export function Calendar({value, org, resources, commands, busy, moving, done}: 
             </div>
             <span className="zone-badge">◷ {zone}</span>
         </div>
+        {booking && <section className="booking-transfer" aria-label="Перенос встречи">
+            <div>
+                <p className="eyebrow">ТЕКУЩАЯ ВСТРЕЧА</p>
+                <strong>{value.services.find(item => item.id == booking.serviceId)?.name}</strong>
+                <p>{when(booking.start, bookingZone)} · {bookingResource?.name} · {bookingZone}</p>
+            </div>
+            <div aria-live="polite">
+                <p className="eyebrow">НОВОЕ ВРЕМЯ</p>
+                {slot ? <strong>{when(slot.start, zone)} · {zone}</strong> : <p>Выберите свободное время ниже.</p>}
+            </div>
+            <button type="button" disabled={commands.busy || action.busy} onClick={cancelMove}>
+                Отменить перенос и вернуться к встречам
+            </button>
+        </section>}
         <BookingSchedule value={value} org={org} commands={commands} remote={remote} busy={busy}
             from={from} days={days} setFrom={setFrom} setDays={setDays} zone={zone}/>
         <details className="booking-slot-picker" open={!!booking}>
