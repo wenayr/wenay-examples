@@ -20,8 +20,8 @@ Q07 Metering и Documents сохранены отдельно: `b11a848`, `affe5
 веткой `codex/unified-chat` для C01. Исходный checkout не переключать.
 Новый чат C01 локально принят и сохранён `f083593`; targeted checks/reconnect/browser прошли.
 Итог 37 PASS / 39 шагов, hosting SKIP, Catalog build отсутствует по контракту;
-это не полный общий PASS перед main. C03 runtime runner 3/3 PASS, browser выполняется,
-этап C03 ещё не принят. Следующая точка — закончить его browser/final current-code gate.
+это не полный общий PASS перед main. C03 принят и сохранён e97161a после runtime,
+repository и browser проверок. Оптимизация C-OPT-CHAT принята и сохранена 140d464.
 Единая очередь со всеми зависимостями и остатками — [подробный план](../EXECUTION-PLAN-20260926.md).
 Q03 свежий live Support прошёл deploy/update/rollback: [отчёт](../changes/hosting-live-support-20260926.md).
 Остальные десять продуктовых Docker сценариев ещё не приняты.
@@ -45,7 +45,12 @@ C07-F-MATRIX/X-MATRIX installed platform/cross-client proof; C06-P-TYPED/C06-A;
 C05-CANCEL-FILE scoped cancel/artifact и Q08-PIZZERIA/SUPPORT/DOCUMENTS/METERING
 human journeys. Plain C07/C06-P не ждут C02; AI режим ждёт published fix/repro.
 Q05 machine audit подготовлен, реализация/приёмка не заявлена; Q06 остаётся настоящим Counter.
-После C03 — C-OPT-CHAT с сохранением смысла и повтором current checks.
+После C03 выполнен C-OPT-CHAT: начальный JS уменьшен на 58,9% по raw bytes,
+общий JS увеличился на 1 921 байт; targeted и browser повторены. Это размер артефактов,
+не измерение времени загрузки. Отчёт находится в отдельном checkout общего чата.
+Q01 lazy panels сохранён 9fed00b после 9/9 проверок CRM/Metering/Pizzeria.
+Q05 recovery feasibility сохранён 0fb02a1; machine API ещё не принят.
+Docker Engine 29.7.2 снова доступен; свежий live gate выполняется, весь Q03 пока не принят.
 
 ## Главная цель
 

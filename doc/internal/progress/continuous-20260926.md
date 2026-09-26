@@ -118,3 +118,18 @@ Documents machine audit подготовлен отдельно, реализа�
 затем независимые Q05/C07-F/Q03 по доступной среде без скрытой зависимости plain chat от всей очереди.
 
 C03 локально принят в managed graph checkout и сохранён e97161a: targeted3/3, repository checks, browseraccount/workspace/revoke/regrant/360x500PASS. Original план дополнен cleanbootstrap/platformmatrix/typedremote/scopedfile/humanjourneys. Q05 design выявил recovery/receipts/lifecycle ограничения; publicfixture готовится до machine реализации. C-OPT-CHAT отложенная native загрузка выполняется отдельно с измерением. Main/push нет, Docker skip не принят.
+
+Следующая контрольная точка: C-OPT-CHAT принят и сохранён 140d464 в managed checkout;
+targeted и browser повторены, начальный JS меньше на 58,9% raw bytes, общий JS больше на 1 921 байт.
+Это размеры сборки, не время загрузки. Q01 сохранён 9fed00b после 9/9 проверок;
+Q02 current cold backup сохранён 5584ea8, настоящий старый архив отдельно ожидает приёмки.
+Q05 public recovery probe сохранён 0fb02a1; machine API реализован, но runtime ещё ожидает.
+Docker Engine 29.7.2 доступен: свежие organizer/pizzeria/support deploy/update/rollback прошли
+3/3, отчёт и runner сохранены 96828ea. Следующие семь свежих образов собраны и проходят live gate;
+Documents будет собран после финальной проверки нового API. Полный Q03 ещё не принят.
+Q11 publicOrigin backend/UI прошли проверки и реальные browser owner/admin/negative roles,
+retry после потерянного ответа, два клиента и смену контекста. Последнее устранение дублирующей ACL
+через hasProject требует повторного targeted gate; DNS/TLS/внешний deployment не заявляются.
+Случай временного remount формы наблюдался, причина не установлена: reconnect draft UX не принят.
+Windows Electron каркас общего чата подготовлен и прошёл source review; runtime/installed ещё нет.
+Все результаты остаются на отдельных ветках; main/push/платный ИИ не выполнялись.
