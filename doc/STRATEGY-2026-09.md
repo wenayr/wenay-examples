@@ -4,6 +4,24 @@
 она задаёт следующую очередь, а не объявляет перечисленные доработки выполненными.
 Текущие результаты обновления — [отчёт](changes/common2-3.1.1-react2-5.0.0.md) и [STATUS](STATUS.md).
 
+Текущий bounded checkpoint: Documents producer `53f3a8d`→`9d47359` принят — два production
+archives с общей Counter org/ключом дают distinct UUID events/cost2; same-checkpoint restart
+сохраняет exact receipt, legacy ai-1 terminal snapshot неизменен. ORIGINAL proof0dd006
+PASS3.9421s и type/test/build9254 PASS0.9/45.7/1.9с; INTEGRATION e18bd3 EXIT0 5.8218s.
+[Отчёт](changes/documents-producer-id-q06-20260926.md). Parent Q06 Support handoff,
+lost-settle/crash gap и data-reset semantics остаются открытыми до paid usage.
+Metering quota UX report34b2195 принят в границе owner save/discard/reopen, auditor readonly
+и actual360px: [отчёт](changes/metering-human-browser-20260926.md); whole Q08 не закрыт,
+Forms bounded browser v1/v2/old history/auditor/actual360px принят `c0fa1c2`:
+[отчёт](changes/forms-publication-browser-20260926.md). ORIGINAL three-line copy fix
+type/source review PASS, fresh build/browser pending. Full raw27106 PASS EXIT0 COMPLETE
+source9d47359:38actual/39, Catalog build absent, no environment SKIP,
+scaffold10/sync101/15/style498/0/links852/0; native Python/Docker доступны.
+Intentional runner-regression fake fail/skip не actual app failure/skip.
+Последующий c0fa1c2 docs-only, прежний raw53023 PASS относится к source392170d.
+Support Q06-S-MACHINE ORIGINAL source active/pending, приёмка не заявляется;
+Q06 parent и Q08 parent сохраняют свои остатки.
+
 ## Что мы здесь делаем
 
 Каталог содержит 12 приложений: пиццерию с органайзером, хостинг, девять SaaS-продуктов и витрину.

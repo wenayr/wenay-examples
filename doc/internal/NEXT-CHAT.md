@@ -16,6 +16,21 @@ Fixture completed/gap prefixes не доказывают independent production 
 CRM label slice принят745ba88→e40062a: ORIGINAL target32866 PASS1.2/21.9/1.7с,
 fresh browser89843 completed4/4, status, counters2/1/1, mobile360px scroll345 и cleanup PASS.
 INTEGRATION target99016 PASS EXIT0 type1.2/test23.2/build2.0с. Эти два изменения не входят в raw53023 checkpoint.
+Documents producer subset принят53f3a8d→9d47359: ORIGINAL proof0dd006 PASS3.9421s,
+9254 type/test/build PASS0.9/45.7/1.9с; INTEGRATION e18bd3 EXIT0 5.8218s.
+[Отчёт](../changes/documents-producer-id-q06-20260926.md). Два production archives/shared
+Counter org distinct events/cost2 и restart/legacy snapshot доказаны отдельно от data reset/crash.
+Full raw27106 PASS EXIT0 COMPLETE source9d47359:38actual/39, Catalog build absent,
+no environment SKIP, scaffold10/sync101/15/style498/0/links852/0; native Python/Docker доступны.
+Intentional fake fail/skip runner regression не actual app failure/skip.
+Metering quota owner save/discard,
+auditor readonly/actual360 PASS report34b2195: [отчёт](../changes/metering-human-browser-20260926.md).
+Forms browser c0fa1c2 bounded v1/v2/old history/auditor/actual360 PASS:
+[отчёт](../changes/forms-publication-browser-20260926.md). Этот commit docs-only после
+source9d47359; новый ORIGINAL three-line respondent copy type/review PASS,
+fresh build/browser pending. Q08 parent не закрыт.
+Support Q06-S-MACHINE ORIGINAL source active/pending, только preliminary review;
+final source/runtime acceptance не заявлена. Parent Q06 Support/lost-settle/crash open.
 
 Integration `codex/examples-integration-20260926` объединяет графики, Chat и ORIGINAL.
 Полный raw95073 EXIT0 относится к14d0276; subsequent bounded Q11 Linux98ce6a3,
@@ -26,8 +41,7 @@ Support fresh Docker36.666с PASS; baseline merged Docker11 относится �
 Каждая граница и оставшиеся сценарии — в [исполняемом плане](../EXECUTION-PLAN-20260926.md).
 Старые утверждения о pending merged gate ниже относятся к историческим checkpoint.
 
-Следующее: bounded Q06-PRODUCER-D public UUID IDs и два independent Documents host
-с одним Counter org/cost2/restart/no reexecution (source/runtime pending), затем Support machine receipt handoff,
+Следующее: после accepted Q06-PRODUCER-D — Support machine receipt handoff,
 lost reserve/settle response и reconciliation/crash gap после bounded native proof.
 Paid provider не добавлять до полного контракта. Параллельно read-only Q08 bundle audit
 выбирает изменение с измеримым эффектом; Q09 реальные product screenshots и Q10

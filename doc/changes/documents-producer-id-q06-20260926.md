@@ -93,3 +93,13 @@ Root Documents regression `9254` **EXIT0**: typecheck0.9s/test45.7s/build1.9s,
 Root подтвердил: own ports50376/50383/50394/50402/50406 listen count0,
 own producer-id-proof directories отсутствуют. Final independent source review PASS;
 repository style471files/0. Full merged gate после переноса ещё pending; parent Q06 не закрыт.
+
+Перенос: ORIGINAL `53f3a8d` → INTEGRATION `9d47359`. Exact transferred fixture
+root `e18bd3` **EXIT0 5.8218s**; own ports60925/60932/60943/60951/60955 listen0,
+producer-id-proof directories отсутствуют. Full raw27106 запущен на этой source basis;
+пока active, не PASS. Последующие browser reports не меняют app source.
+
+Последующий raw27106 завершился **EXIT0** на source9d47359: все38 actual app checks,
+style498/0/links852/0 и generated status verify PASS. Documents type/test/build
+0.8/45.3/2.0с. [Полный отчёт](examples-post-transfer-gate-20260926.md).
+Родительский Q06 сохраняет отдельные непроверенные Support/lost-settle/crash границы.
