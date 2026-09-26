@@ -1,7 +1,7 @@
 import {existsSync, readFileSync, readdirSync, statSync, writeFileSync} from 'node:fs'
 import path from 'node:path'
 import {fileURLToPath} from 'node:url'
-import {APPS, SCRIPTS, manifest} from './run-all.mjs'
+import {APPS, SCRIPTS, manifest, fingerprint} from './run-all.mjs'
 
 const repository = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const logDirectory = path.join(repository, 'work', 'run-all')
@@ -12,9 +12,15 @@ function readLog(app, script) {
     const file = path.join(logDirectory, app + '-' + script + '.log')
     if (!existsSync(file)) return null
     const header = readFileSync(file, 'utf8').split('\n', 1)[0]
-    const parts = header.split(' ')
-    if (parts[0] != '#' || parts[1] != 'exit') return null
-    return {code: Number(parts[2]), at: parts[3], seconds: Number(parts[4])}
+    if (!header.startsWith('# result ')) return null
+    try {
+        const result = JSON.parse(header.slice('# result '.length))
+        if (result.fingerprint != fingerprint(app)) return null
+        if (typeof result.status != 'string' || typeof result.at != 'string') return null
+        return result
+    } catch {
+        return null
+    }
 }
 
 // Порт объявлен в точке входа приложения как SERVICE_PORT ?? '<номер>'.
@@ -48,7 +54,7 @@ export function libraryImports(app) {
             }
             if (!/\.(ts|tsx)$/.test(entry.name)) continue
             const text = readFileSync(full, 'utf8')
-            for (const match of text.matchAll(/from '(wenay-(?:common2|react2)[^']*)'/g)) found.add(match[1])
+            for (const match of text.matchAll(/from '(wenay-(?:common2|react2|calls)[^']*)'/g)) found.add(match[1])
         }
     }
     for (const root of roots) walk(path.join(repository, 'apps', app, root))
@@ -91,7 +97,9 @@ export function collect() {
                 results[script] = declared ? '?' : MARKS.missing
                 continue
             }
-            results[script] = log.code == 0 ? MARKS.ok : MARKS.fail
+            if (log.status.startsWith('пропущено:')) results[script] = log.status
+            else if (log.status == 'нет') results[script] = MARKS.missing
+            else results[script] = log.status == 'ok' && log.code == 0 ? MARKS.ok : MARKS.fail
         }
         const requires = pkg?.wenayExamples?.requires ?? []
         // Живая проверка копии и восстановления есть не у всех приложений.
@@ -108,7 +116,7 @@ export function collect() {
             data: readDataDirectory(app),
             requires: requires.length > 0 ? requires.join(', ') : 'нет',
             backup: backup ? MARKS.ok : MARKS.missing,
-            seconds: test ? Math.round(test.seconds) : 0,
+            seconds: test?.status == 'ok' ? Math.round(test.seconds) : 0,
             bundle,
             results,
             checked: checked ? checked.slice(0, 16).replace('T', ' ') : 'не запускалось'
@@ -204,7 +212,7 @@ function render(rows, stamp) {
         '',
         versionLine(rows),
         '',
-        '`✓` прошло, `✗` упало, `—` скрипта нет, `?` не запускалось. Результат берётся из последнего прогона `npm run check:all`.',
+        '`✓` прошло, `✗` упало, `—` скрипта нет, `?` нет результата для текущих package.json и lock. Пропуски указаны явно.',
         'Колонка «Копия» — есть ли у приложения живая проверка холодной копии и восстановления (`npm run test:backup`).',
         'Колонки «Тест, с» и «Сборка, КБ» — длительность последнего `npm test` и размер js и css текущей сборки, на которые ссылается `index.html`, без сжатия.',
         bundleNote(rows),
@@ -215,8 +223,18 @@ function render(rows, stamp) {
 }
 
 // Отметка времени меняется при каждом запуске, поэтому сравнению не подлежит.
-function withoutStamp(text) {
+export function withoutStamp(text) {
     return text.replace(/^Сгенерировано .*$/m, '')
+        .replace(/^Самый большой файл сборки сейчас .*$/m, '')
+        .replace(/^Сборок нет: .*$/m, '')
+        .split('\n').map(function stableRow(line) {
+            if (!line.startsWith('| ') || line.startsWith('| ---') || line.startsWith('| Приложение')) return line
+            const cells = line.split('|')
+            if (cells.length != 14) return line
+            // Время, текущий размер сборки и дата запуска не определяют результат проверки.
+            for (const index of [9, 10, 12]) cells[index] = ''
+            return cells.join('|')
+        }).join('\n')
 }
 
 export function write() {

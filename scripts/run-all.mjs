@@ -2,6 +2,7 @@ import {spawn} from 'node:child_process'
 import {existsSync, mkdirSync, readFileSync, writeFileSync} from 'node:fs'
 import path from 'node:path'
 import {fileURLToPath} from 'node:url'
+import {createHash} from 'node:crypto'
 
 const repository = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const logDirectory = path.join(repository, 'work', 'run-all')
@@ -52,7 +53,8 @@ async function hasTool(name) {
     return available
 }
 
-async function missingTool(app) {
+async function missingTool(app, script) {
+    if (script != 'test') return ''
     const required = manifest(app)?.wenayExamples?.requires ?? []
     for (const name of required) {
         if (!await hasTool(name)) return name
@@ -60,10 +62,20 @@ async function missingTool(app) {
     return ''
 }
 
-function writeLog(app, script, code, seconds, output) {
+export function fingerprint(app) {
+    const hash = createHash('sha256')
+    for (const name of ['package.json', 'package-lock.json']) {
+        const file = path.join(repository, 'apps', app, name)
+        hash.update(name + '\n')
+        hash.update(existsSync(file) ? readFileSync(file) : 'missing')
+    }
+    return hash.digest('hex')
+}
+
+function writeLog(app, script, code, seconds, output, status, checkedFingerprint) {
     mkdirSync(logDirectory, {recursive: true})
     const file = path.join(logDirectory, app + '-' + script + '.log')
-    const header = '# exit ' + code + ' ' + new Date().toISOString() + ' ' + seconds.toFixed(1)
+    const header = '# result ' + JSON.stringify({code, at: new Date().toISOString(), seconds, status, fingerprint: checkedFingerprint})
     writeFileSync(file, header + '\n' + output, 'utf8')
     return path.relative(repository, file)
 }
@@ -71,14 +83,23 @@ function writeLog(app, script, code, seconds, output) {
 async function execute(app, script) {
     const started = Date.now()
     const declared = manifest(app)?.scripts?.[script]
-    if (!declared) return {status: 'нет', seconds: 0, log: ''}
-    const blocked = await missingTool(app)
-    if (blocked) return {status: 'пропущено: нет ' + blocked, seconds: 0, log: ''}
+    const checkedFingerprint = fingerprint(app)
+    if (!declared) {
+        const log = writeLog(app, script, null, 0, '', 'нет', checkedFingerprint)
+        return {status: 'нет', seconds: 0, log}
+    }
+    const blocked = await missingTool(app, script)
+    if (blocked) {
+        const status = 'пропущено: нет ' + blocked
+        const log = writeLog(app, script, null, 0, '', status, checkedFingerprint)
+        return {status, seconds: 0, log}
+    }
     const cwd = path.join(repository, 'apps', app)
     const result = await run('npm', ['run', script], {cwd})
     const seconds = (Date.now() - started) / 1000
-    const log = writeLog(app, script, result.code, seconds, result.output)
-    return {status: result.code == 0 ? 'ok' : 'fail(' + result.code + ')', seconds, log}
+    const status = result.code == 0 ? 'ok' : 'fail(' + result.code + ')'
+    const log = writeLog(app, script, result.code, seconds, result.output, status, checkedFingerprint)
+    return {status, seconds, log}
 }
 
 function parse(argv) {
@@ -96,13 +117,18 @@ export async function runAll(argv) {
     const options = parse(argv)
     const selected = APPS.filter(function chosen(app) {
         if (options.only.length > 0 && !options.only.includes(app)) return false
-        return !options.skip.includes(app)
+        return true
     })
     const rows = []
     let failed = 0
     for (const app of selected) {
         for (const script of options.scripts) {
-            const result = await execute(app, script)
+            let result
+            if (options.skip.includes(app)) {
+                const status = 'пропущено: --skip'
+                const log = writeLog(app, script, null, 0, '', status, fingerprint(app))
+                result = {status, seconds: 0, log}
+            } else result = await execute(app, script)
             rows.push({app, script, ...result})
             if (result.status.startsWith('fail')) failed++
             console.log([app, script, result.status, result.seconds.toFixed(1) + ' c'].join(' · '))
