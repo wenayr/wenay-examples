@@ -6,10 +6,16 @@
 
 Root final raw `npm run check:all`, session53023, source392170d, завершился PASS EXIT0:
 38 actual checks/39 шагов, no environment SKIP, scaffold10/sync101/15/style496/0/links835/0.
-Q06 isolated proof85242 в ORIGINAL завершился EXIT1 на ожидании controlled persistence
-refusal, причина исследуется; cleanup confirmed, своего порта61219 и fixture directories нет.
-CRM desktop Imports journey и cleanup приняты отдельно; label fix в ORIGINAL проходит
-target32866, не входит в raw53023. Не путать последующие changes с этим full checkpoint.
+Q06 first isolated proof85242 в ORIGINAL завершился EXIT1: native run IDs host-local,
+два checkpoint host использовали ai-1 в одном Counter event namespace. Fixture исправлен:
+stable checkpoint name + run ID; root repeat PASS2.489s, port52920=0/own fixture absent.
+Bounded native proof принят7264bfd→b2b447b; Support handoff/crash/lost response не приняты.
+INTEGRATION repeat chunkd42aa7 PASS EXIT0 6.158s; root подтвердил port56153=0
+и отсутствие собственных usage-ai-proof directories.
+Fixture completed/gap prefixes не доказывают independent production producers.
+CRM label slice принят745ba88→e40062a: ORIGINAL target32866 PASS1.2/21.9/1.7с,
+fresh browser89843 completed4/4, status, counters2/1/1, mobile360px scroll345 и cleanup PASS.
+INTEGRATION target99016 PASS EXIT0 type1.2/test23.2/build2.0с. Эти два изменения не входят в raw53023 checkpoint.
 
 Integration `codex/examples-integration-20260926` объединяет графики, Chat и ORIGINAL.
 Полный raw95073 EXIT0 относится к14d0276; subsequent bounded Q11 Linux98ce6a3,
@@ -20,8 +26,10 @@ Support fresh Docker36.666с PASS; baseline merged Docker11 относится �
 Каждая граница и оставшиеся сценарии — в [исполняемом плане](../EXECUTION-PLAN-20260926.md).
 Старые утверждения о pending merged gate ниже относятся к историческим checkpoint.
 
-Следующее: Q06 native durable result/receipt checkpoint proof без paid provider,
-затем Support handoff после доказательства. Параллельно read-only Q08 bundle audit
+Следующее: bounded Q06-PRODUCER-D public UUID IDs и два independent Documents host
+с одним Counter org/cost2/restart/no reexecution (source/runtime pending), затем Support machine receipt handoff,
+lost reserve/settle response и reconciliation/crash gap после bounded native proof.
+Paid provider не добавлять до полного контракта. Параллельно read-only Q08 bundle audit
 выбирает изменение с измеримым эффектом; Q09 реальные product screenshots и Q10
 human customization остаются в очереди. Q11 внешний сервер/HTTPS/systemd и C07
 installed desktop/mobile требуют отдельных реальных сред; локальный Linux proof их не заменяет.

@@ -109,3 +109,9 @@ own directory absence inspection root подтвердил: listening52920 ра�
 собственных usage-ai-proof directories не осталось; supervised exit0 подтверждён.
 Whole Support product, real credential RPC lifecycle и crash/lost-response recovery
 по-прежнему не accepted этим bounded direct-host proof.
+
+Перенос7264bfd→INTEGRATIONb2b447b отдельно проверен exact native command:
+root chunkd42aa7 EXIT0,6.158с, те же Counter/result/restart/refusal assertions PASS.
+После завершения root подтвердил listening56153=0 и отсутствие собственных
+usage-ai-proof directories. Это проверка объединённой композиции, не production
+machine endpoint, credential replay lifecycle или атомарная транзакция двух сервисов.

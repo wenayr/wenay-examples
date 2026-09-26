@@ -40,3 +40,7 @@ existing native checks PASS не заменяют их browser matrix.
 
 Следующее: перенести проверенный source slice в INTEGRATION и проверить объединённый
 CRM. До этого raw53023 остаётся отдельным прежним checkpoint; main/push нет.
+
+Перенос745ba88→INTEGRATIONe40062a выполнен после raw53023. Roottarget99016
+на объединённом source EXIT0: type1.2/test23.2/build2.0с. Новый source имеет
+свой scoped proof; прежний общий raw53023 не переименовывается в его acceptance.
