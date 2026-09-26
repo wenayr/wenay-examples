@@ -35,7 +35,7 @@ typecheck/test/build: 9/9 PASS. Общий свежий `npm run check:all` за
 явно, ссылки переведены во внутренний контекст. Повтор `npm run check:repo`
 PASS, exit 0: scaffold 10, sync 101/15, style 491/0, links 807/0 и STATUS verify.
 Первый `check:all` exit 1 из-за этих ссылок не переименовывается в exit 0;
-перед main нужен завершающий успешный запуск общей команды.
+последующий итоговый запуск общей команды записан отдельным checkpoint ниже.
 
 Отдельный actual Counter/Documents machine fixture повторён именно в этом checkout:
 exit 0, 2.782 с. Typed receipt, current revoke, same-archive Documents restart и
@@ -70,7 +70,35 @@ Root использовал отдельные native серверы с собс
 [Booking](../reports/integrated-booking-20260926.png),
 [Chat](../reports/integrated-chat-20260926.png).
 
-После текущего общего gate нужны fresh actual Counter/Docs composition и Docker
-images/live gate объединённого дерева. Старые 11/11 selected Docker outcomes
-не принимают новый Pizzeria/Booking/Docs runtime. C07 desktop skeleton и отдельный
-Q11 installation artifact пока находятся в работе и не входят в этот checkpoint.
+## Итоговый baseline checkpoint e4944c3
+
+26 сентября 2026. Root подтвердил завершение raw `npm run check:all`, session4956:
+**PASS, EXIT 0** на target tree `e4944c34ecc8659d0071d9405820c53c61f135a5`.
+Выполнены 38 app checks из 39 шагов; Catalog build отсутствует по контракту.
+Пропусков app checks из-за среды нет. `check:repo` также PASS: scaffold10,
+sync101/15, style491/0, links807/0. Generated STATUS и Catalog обновлены штатным
+генератором для этого checkpoint; данный report их не редактирует.
+
+Intentional fake failure/skip в runner regression проверяют поведение самого runner
+и не являются провалами/пропусками приложений этого gate. Первый raw EXIT1 выше
+остаётся самостоятельным историческим фактом; новый успешный запуск его не стирает.
+
+Свежий actual Counter/Documents native composition уже прошёл в этом checkout:
+exit0, 2.782с, в пределах записанного выше Q06-B proof. Затем root выполнил единый
+merged **11/11 local product modes Docker gate**, complete=true/code0,
+`2026-09-26T19:26:40.573Z`: first deploy → second deploy → rollback,
+stable gateway и соответствующие durable product assertions. Это новое merged
+доказательство, а не перенос старых ORIGINAL selected outcomes. Все11 timings,
+package+lock fingerprints и22 inspected image RepoDigests/IDs/dependency labels
+сохранены в [отдельном live report](examples-integration-live-20260926.md).
+Generic runtime scenario не выбран; external HTTPS/TLS/SSH/bootstrap и peak memory
+этим Docker результатом не принимаются.
+
+Таким образом, baseline этого конкретного объединённого дерева имеет успешный
+общий app/repository gate, ранее записанный integration browser и fresh local Docker
+product gate. Main/push/внешнее размещение не выполнялись. Последующие изменения
+требуют своих проверок: Support history `b16c0da`, C07 `e1669c1` и отдельный Q11
+artifact с snapshot fix root переносит **после** данного baseline. Они не входили
+в проверенное дерево e4944c3 и не получают acceptance от session4956 или Docker11.
+C07 installed/product runtime и Q11 Linux installation/external readiness остаются
+отдельными непринятыми границами, даже при собственных узких технических proofs.
