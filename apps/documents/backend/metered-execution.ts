@@ -2,7 +2,7 @@
 // правьте здесь или поднимите правку из приложения: sync.mjs --from=<приложение>.
 import {randomUUID} from 'node:crypto'
 import {createServiceClient, type ServiceClient, type ServiceClientDefinition} from 'wenay-common2/service/client'
-import type {MeteringUsageDefinition} from './metering-contract'
+import type {MeteringUsageDefinition, UsageReceipt} from './metering-contract'
 
 type Target = {url: string, account: string, secret: string}
 export type UsageInput = {orgId: string, eventId: string, metric: 'search' | 'document', reference: string, units: number, signal: AbortSignal}
@@ -85,7 +85,8 @@ export function createMeteredExecution(deps: {targets: Record<string, Target>, t
         }
         return sessions.get(orgId)!
     }
-    async function run<T>(input: UsageInput, operation: () => Promise<T>) {
+    async function settled<T>(input: UsageInput, operation: () => Promise<T>) {
+        input = Object.freeze({...input})
         input.signal.throwIfAborted()
         function unavailable(error: unknown): never {
             if (error instanceof UsageError) throw error
@@ -113,8 +114,10 @@ export function createMeteredExecution(deps: {targets: Record<string, Target>, t
         }
         input.signal.throwIfAborted()
         // Новый receipt команды позволяет журналу событий отличить вторую попытку исполнения.
-        const request = {eventId: input.eventId, metric: input.metric, reference: input.reference, units: input.units}
+        const request = Object.freeze({eventId: input.eventId, metric: input.metric, reference: input.reference, units: input.units})
         const reserved = await bounded(session.commands.usageReserve('reserve-' + randomUUID(), request))
+        const target = reserved.orgId == input.orgId && reserved.eventId == input.eventId && !!reserved.id
+        if (!target) throw new UsageError('Ответ резерва не принадлежит запрошенной операции')
         const accepted = reserved.fresh && reserved.status == 'reserved' && reserved.orgId == input.orgId
         if (!accepted) throw new UsageError('Операция уже зарегистрирована; повторное выполнение требует проверки её результата')
         if (input.signal.aborted) {
@@ -122,17 +125,27 @@ export function createMeteredExecution(deps: {targets: Record<string, Target>, t
             await bounded(session.commands.usageRelease('release-' + input.eventId, cancelled))
             input.signal.throwIfAborted()
         }
+        let value: T
+        let receipt: UsageReceipt
         try {
-            const result = await operation()
+            value = await operation()
             input.signal.throwIfAborted()
-            await bounded(session.commands.usageSettle('settle-' + input.eventId, {eventId: input.eventId, units: input.units}))
-            return result
+            receipt = await bounded(session.commands.usageSettle('settle-' + input.eventId, {eventId: input.eventId, units: input.units}))
         } catch (error) {
             // Неудачный ответ IO не доказывает, что внешняя работа ничего не стоила.
             const unclear = {eventId: input.eventId, reason: 'Исполнение или подтверждение прервано; требуется сверка'}
             await bounded(session.commands.usageUncertain('unknown-' + input.eventId, unclear)).catch(() => {})
             throw error
         }
+        // A confirmed reply is no longer uncertain IO; later checks must never mark its commit unknown.
+        const matched = receipt.id == reserved.id && receipt.orgId == input.orgId && receipt.eventId == input.eventId
+        const committed = receipt.status == 'committed' && receipt.units == input.units && receipt.period == reserved.period
+        if (!matched || !committed) throw new UsageError('Ответ завершения не подтверждает запрошенный расход')
+        input.signal.throwIfAborted()
+        return {value, receipt}
+    }
+    async function run<T>(input: UsageInput, operation: () => Promise<T>) {
+        return (await settled(input, operation)).value
     }
     function close() {
         closed = true
@@ -140,5 +153,5 @@ export function createMeteredExecution(deps: {targets: Record<string, Target>, t
         live.clear()
         sessions.clear()
     }
-    return {run, close}
+    return {run, settled, close}
 }

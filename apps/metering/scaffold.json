@@ -41,6 +41,7 @@
         ".env.example"
     ],
     "skip": {
+        "backend/documents-machine-integration-check.ts": "cross-app fixture исходного репозитория: поднимает настоящий Documents и Counter, не экспортируется standalone",
         "backend/integration-check.ts": "поднимает соседние support и documents исходного репозитория",
         "PASSPORT.md": "паспорт каталога примеров: ссылается на STATUS и отчёты репозитория",
         "backend/backup-check.ts": "запускает scripts/backup.mjs и restore.mjs из корня каталога примеров"

@@ -33,7 +33,14 @@ async function main() {
     })
     try {
         const read = (file: string) => readFileSync(path.resolve(file), 'utf8')
-        assert.equal(read('backend/client-contract.ts'), read('../support/backend/metering-contract.ts'))
+        const syncBanner = [
+            '// Канон: shared/backend/metering-contract.ts. Копии в приложениях синхронизируются scripts/sync.mjs;',
+            '// правьте здесь или поднимите правку из приложения: sync.mjs --from=<приложение>.',
+            ''
+        ].join('\n')
+        const consumerContract = read('../support/backend/metering-contract.ts')
+        assert(consumerContract.startsWith(syncBanner), 'consumer contract must contain the exact canonical sync banner')
+        assert.equal(read('backend/client-contract.ts'), consumerContract.slice(syncBanner.length))
         assert.equal(read('../support/backend/metered-execution.ts'),
             read('../documents/backend/metered-execution.ts'))
         const billing = await createServiceLeaderHost({
