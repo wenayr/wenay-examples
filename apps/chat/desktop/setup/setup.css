@@ -1,0 +1,8 @@
+:root{font:16px/1.5 'Segoe UI',sans-serif;color:#24334a;background:#f4f5f8;color-scheme:light}
+*{box-sizing:border-box}body{margin:0}main{max-width:620px;margin:auto;padding:28px}
+h1{font-size:26px;line-height:1.2}form{display:grid;gap:10px}label{font-weight:600}
+input,button{font:inherit;padding:12px;border:1px solid #bbc6d8;border-radius:8px;min-width:0;width:100%}
+button{background:#3268df;color:white;cursor:pointer}button:disabled{opacity:.6;cursor:wait}
+input:focus-visible,button:focus-visible{outline:3px solid #91b9ff;outline-offset:2px}
+p{font-size:14px;overflow-wrap:anywhere}#message{color:#9b3434;min-height:21px}
+@media(max-width:400px){main{padding:18px}h1{font-size:23px}}
