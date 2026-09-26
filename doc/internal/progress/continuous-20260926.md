@@ -119,7 +119,7 @@ Documents machine audit подготовлен отдельно, реализа�
 
 C03 локально принят в managed graph checkout и сохранён e97161a: targeted3/3, repository checks, browseraccount/workspace/revoke/regrant/360x500PASS. Original план дополнен cleanbootstrap/platformmatrix/typedremote/scopedfile/humanjourneys. Q05 design выявил recovery/receipts/lifecycle ограничения; publicfixture готовится до machine реализации. C-OPT-CHAT отложенная native загрузка выполняется отдельно с измерением. Main/push нет, Docker skip не принят.
 
-Следующая контрольная точка: C-OPT-CHAT принят и сохранён 140d464 в managed checkout;
+Историческая промежуточная контрольная точка до Q05/Q06-B/integration: C-OPT-CHAT принят и сохранён 140d464 в managed checkout;
 targeted и browser повторены, начальный JS меньше на 58,9% raw bytes, общий JS больше на 1 921 байт.
 Это размеры сборки, не время загрузки. Q01 сохранён 9fed00b после 9/9 проверок;
 Q02 current cold backup сохранён 5584ea8, настоящий старый архив отдельно ожидает приёмки.
@@ -133,3 +133,52 @@ retry после потерянного ответа, два клиента и �
 Случай временного remount формы наблюдался, причина не установлена: reconnect draft UX не принят.
 Windows Electron каркас общего чата подготовлен и прошёл source review; runtime/installed ещё нет.
 Все результаты остаются на отдельных ветках; main/push/платный ИИ не выполнялись.
+
+## Актуальное продолжение после Q06-B и merged Docker gate
+
+Q06-B принят и сохранён 71c9d8c в ORIGINAL: actual Counter/Documents machine fixture
+PASS exit0 5.5255 s, native receipt/status/result переживают Documents restart без
+reexecution. Documents npm test/full и отдельный advanced PASS с настоящим Python
+pythoncore-3.14-64; overall elapsed не замерялся. Q06-A 272f704 сохранён ранее.
+Parent Q06 остаётся pending Support machine receipt handoff, lost reserve/settle response
+и reconciliation/crash gap. Null не доказывает no-cost; rerun/refund не добавлены.
+
+C07 technical slice сохранён GRAPH e1669c1: actual Electron 44.4.5 технический PASS
+2.192 s. Это уже не dirty skeleton; installed HTTPS/backend/menu/mobile/platform matrix
+не приняты. Source/runtime proof не заменяет installed product/device acceptance.
+
+Managed integration codex/examples-integration-20260926 baseline e4944c3 включает
+Q06-B/GRAPH union. npm ci 13 приложений PASS; 38 app checks PASS. Первый raw check:all
+завершился exit1 только на трёх doc links errors, исправленных затем; check:repo PASS,
+807 links/0 errors. Raw check:all session4956 завершился PASS exit0 38/39 на e4944c3;
+Catalog build отсутствует по контракту, environment SKIP нет. Acceptance сохранена
+98146ad в INTEGRATION. npm views19:32UTC подтвердил latest3.1.1/5.0.0 без новых версий.
+Original/GRAPH checkout не переключать, main/push не выполнены.
+
+All-11 merged Docker gate exact source e4944c3 завершился PASS exit0 в 19:26:40.573Z.
+Generic runtime исключён; actual product deployment matrix не принимает external
+TLS/DNS/bootstrap/Linux host. Baseline raw gate принят отдельно своей evidence.
+
+Support history browser owner/customer/outsider/append PASS; UX сохранён ORIGINAL
+b16c0da→integration53f5224. Q11 artifact foundation source/assets + separate SHA/target verify
+прошли snapshot TOCTOU fix/review: все tar reads идут по private checked bytes,
+controlled original replacement и cleanup success/failure PASS. Root повтор fixture
+PASS exit0 5.543 s. Default fresh Vite pack actualPASS exit0 4.195s + separate CLI verify:
+manifest freshness=true/installed=false/source2163a0f, own work artifact
+work/hosting-installation/hosting-2163a0f.tar.gz, SHA256
+2db1137cbb77ca2819ac07a9629cb548587c842d988f29be8dffae901b9ae0a7.
+Q11artifact сохранён a6f7201→integration19f4487. Linux npm/install/readiness не приняты,
+OS/SSH/TLS/publish действий не было.
+
+После baseline full gate перенесены три отдельных stage: SupportUX53f5224,
+Q11artifact19f4487 и C07 e1669c1→b1ac4f2. Последний — текущий integration HEAD.
+Новый final raw check:all на post-transfer source ещё НЕ ЗАПУЩЕН; запланирован root
+после freeze/сохранения этих трёх continuation docs и копирования их в integration.
+Это не running4956 и не новый PASS; сохранить exact source/evidence после actual выполнения.
+
+Следующие шаги сохраняют ID/deps: planned post-transfer final integration raw gate;
+далее independent Linux preflight/install после принятого fresh Q11 pack;
+Q06 Support handoff и lost-response design до paid usage. Q08 human journeys/Q09/Q10,
+C02 release-bound stream и installed C07-D/M/X остаются самостоятельными границами.
+
+Root: post-transfer raw check:all session18952 запущен на integration b1ac4f2; пока RUNNING, не PASS. Затронутый Support Docker frontend будет пересобран после gate; старые11 images относятся к e4944c3.
