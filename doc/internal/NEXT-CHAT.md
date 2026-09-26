@@ -18,8 +18,10 @@ Q04 сохранён коммитом `2e159e2` ([отчёт](../changes/support
 Q07 Metering и Documents сохранены отдельно: `b11a848`, `affe595`.
 Графики G01–G04 приняты в `codex/work-calendar`; её свободный managed checkout теперь используется
 веткой `codex/unified-chat` для C01. Исходный checkout не переключать.
-Новый чат реализован; targeted typecheck/test/build, automatic reconnect тех же клиентов
-и desktop/Chrome narrow-width browser прошли. Итоговый gate C01 выполняется отдельно.
+Новый чат C01 локально принят и сохранён `f083593`; targeted checks/reconnect/browser прошли.
+Итог 37 PASS / 39 шагов, hosting SKIP, Catalog build отсутствует по контракту;
+это не полный общий PASS перед main. C03 runtime runner 3/3 PASS, browser выполняется,
+этап C03 ещё не принят. Следующая точка — закончить его browser/final current-code gate.
 Единая очередь со всеми зависимостями и остатками — [подробный план](../EXECUTION-PLAN-20260926.md).
 Q03 свежий live Support прошёл deploy/update/rollback: [отчёт](../changes/hosting-live-support-20260926.md).
 Остальные десять продуктовых Docker сценариев ещё не приняты.
@@ -31,12 +33,19 @@ Q03 свежий live Support прошёл deploy/update/rollback: [отчёт](
 Пользователь поручил синхронный чат-продукт: web + desktop + установленный mobile, аккаунты,
 plain/remote режимы и специализированные дизайн/сайты-размещение/видео/приложения.
 Долговечный [план C01–C08](../AI-CHAT-PRODUCT-PLAN.md) содержит реальные критерии каждой платформы,
-capabilities агента и checkpoints упрощения. После текущей приёмки графиков/Support — C01 plain web
-с тестовым provider, двумя клиентами и restart/receipts, затем C03 изоляция аккаунтов.
+capabilities агента и checkpoints упрощения. C01 plain web f083593 уже локально принят;
+C03 изоляция аккаунтов сохранена `e97161a`: runtime 3/3, repository и browser PASS;
+Team/Personal, две Alice sessions, A→B→logout, revoke/regrant и 360×500 проверены.
 C02 streaming остаётся зависимым от опубликованного исправления AI policy/lifecycle и repro;
 state-only workaround не заменяет semantic events. Реализация C01 находится в managed
 checkout `codex/unified-chat`; туда добавлены два conversation repro на common2 3.1.1.
-Не переносить сюда устаревший Support из графической базы. Следующий продуктовый этап — C03.
+Не переносить сюда устаревший Support из графической базы: Q04 `2e159e2` сохраняется.
+План уточнён суффиксами без смены ID: Q11-P prepared host/Q11-B clean bootstrap;
+C07-F-MATRIX/X-MATRIX installed platform/cross-client proof; C06-P-TYPED/C06-A;
+C05-CANCEL-FILE scoped cancel/artifact и Q08-PIZZERIA/SUPPORT/DOCUMENTS/METERING
+human journeys. Plain C07/C06-P не ждут C02; AI режим ждёт published fix/repro.
+Q05 machine audit подготовлен, реализация/приёмка не заявлена; Q06 остаётся настоящим Counter.
+После C03 — C-OPT-CHAT с сохранением смысла и повтором current checks.
 
 ## Главная цель
 

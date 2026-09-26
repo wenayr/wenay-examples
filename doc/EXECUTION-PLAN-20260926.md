@@ -16,9 +16,11 @@ Skipped, прерванный запуск, fixture и read-only review не з�
 
 Исходный checkout — `codex/library-upgrade-20260926`; графики приняты отдельно.
 Свободный managed checkout `C:/Users/wenay/.codex/worktrees/work-calendar/wenay-examples`
-теперь используется `codex/unified-chat`, где C01 находится в незакоммиченном состоянии.
-Изменения checkout не переносятся автоматически. Историческое «новый продукт не написан» уже устарело,
-но runtime/build/browser desktop и narrow-width нового chat ещё не означают полной приёмки C01.
+теперь используется `codex/unified-chat`: C01 локально принят и сохранён `f083593`.
+Итог C01: 37 PASS / 39 шагов, hosting SKIP; Catalog build отсутствует по контракту.
+Это не полный общий PASS перед main. C03 локально принят и сохранён `e97161a`:
+runtime runner 3/3, repository checks и browser account/workspace/revoke/regrant,
+Chrome 360×500 PASS. Изменения checkout не переносятся автоматически.
 Q04 принят только в исходной ветке: графический checkout основан на более раннем committed состоянии;
 перенос актуального Support вместе с графиками/chat ещё не выполнен.
 
@@ -37,14 +39,14 @@ Q04 принят только в исходной ветке: графическ
 | Q08 | Эксплуатационный сценарий каждого оставшегося продукта | B00, профильные Q/G | Bundle/lazy частично проверены; продуктовые сценарии ожидают |
 | Q09 | Свежесть Catalog и настоящие screenshots | B00, G03 | Ожидает snapshot/fallback/skip приёмки |
 | Q10 | Чистый scaffold с предметным расширением | Q04–Q08 | Ожидает автономной копии, ролей, restore и замера затрат |
-| Q11 | Проект → сервер → HTTPS → update/rollback | Q03 | Механизмы есть отдельно; законченный внешний путь не принят |
-| Q12 | Общий chat web/desktop/installed mobile | B00, C01–C08 | C01 реализуется; остальные границы самостоятельны |
+| Q11 | Проект → сервер → HTTPS → update/rollback | Q03 | Q11-P prepared host, затем Q11-B bootstrap; внешний путь не принят |
+| Q12 | Общий chat web/desktop/installed mobile | B00, C01–C08 | C01 f083593 и C03 e97161a локально приняты; остальные границы самостоятельны |
 | G01 | Графический Organizer | B00 | b03eabf локально принят; touch/два физических устройства не приняты |
 | G02 | Графический Booking | G01 | e9dae43 локально принят; browser DST и physical touch остаются |
 | G03 | Общая проверка графиков | G01, G02, OPT-G | 1fa38a2, check:all 35/36 PASS; Catalog build отсутствует по контракту |
 | G04 | Документирование графического этапа | G03 | 4ff49d2 локально принят; main/push не выполнялись |
-| C01 | Plain web, два клиента, durable receipts/restart | B00 | Runtime/build, automatic reconnect тех же клиентов, desktop и Chrome narrow-width PASS; итоговый gate и сохранение остаются |
-| C03 | Account/workspace и владение ресурсами | Принятый C01 | Следующий продуктовый этап; не ждёт полного C02 |
+| C01 | Plain web, два клиента, durable receipts/restart | B00 | f083593 локально принят; 37 PASS / 39 шагов, hosting SKIP, Catalog build отсутствует; не полный gate main |
+| C03 | Account/workspace и владение ресурсами | Принятый C01 | e97161a: runtime 3/3, repository и browser PASS; fixed workspace registry, installed clients не приняты |
 | C02 | Semantic AI stream/cancel/approval/checkpoints | C01, published AI fix | Требует repro→release→повтор; старые AI обходы не принимают stream |
 | C04 | Chat ↔ Support knowledge | C03, Q04 | Ожидает настоящего адаптера tenant/expiry/revoke |
 | C05 | Chat ↔ Documents jobs/files | C03, Q05 | Ожидает файла, job/cancel/restart и отрицательных прав |
@@ -106,7 +108,7 @@ Organizer calendar minutes и Booking epoch/IANA сохраняют разные
 G03 1fa38a2/G04 4ff49d2 подтверждают локальный этап, не физическую приёмку и не итоговую интеграцию.
 При переносе повторить общий gate и browser критичных отказов, записать точный код и пропуски среды.
 
-### C01 — приёмка реализуемого plain chat
+### C01 — локально принятый plain chat
 
 Триггер: Алиса/Боб открывают общий разговор; сообщение отправляется, ответ теряется и запрос повторяется;
 сервер фактически останавливается/запускается на том же журнале. Помощник вызывается отдельно.
@@ -123,9 +125,9 @@ payload/capacity race; повторный RPC тест root PASS. Version/rootTi
 Отправленное сообщение появилось у Bob в независимом IAB табе; logout убрал историю; console errors [].
 IAB viewport override сам оставил innerWidth 1280 — он не является narrow-width доказательством;
 узкий экран подтверждён отдельным Chrome сценарием. Физическая мобильная клавиатура и установленный
-mobile-клиент не проверены. Остаток C01: browser retry/reconnect/loading/error и финальный review/gate
-актуального кода; ширина экрана не подменяет C07 installed mobile.
-Затем typecheck/test/build/check:repo финального состояния, integration check:all и отчёт C01.
+mobile-клиент не проверены. C01 локально принят и сохранён `f083593`, включая финальную
+проверку plain сценария; 37 PASS / 39 шагов, hosting SKIP, Catalog build отсутствует.
+Перед main остаётся полный gate итогового интегрированного дерева; ширина экрана не подменяет C07 installed mobile.
 Application guard не закрывает библиотечный receipt defect; C01 не принимает полноценный C03 workspace.
 Python/Documents не являются зависимостью обычного web chat и тестового помощника.
 
@@ -203,6 +205,22 @@ Metering: valid ID принят, invalid отклонён реальной HTML 
 Documents: разные approved revisions по умолчанию, смена document сбрасывает выбор,
 late response не рисует старый diff; affe595, browser v4/v7 с изменением цены PASS.
 На объединённом коде повторить форму/выбор/late response и целевые typecheck/build.
+
+### Q08-HUMAN — полезность четырёх существующих продуктов
+
+Это отдельные суффиксные срезы Q08, сначала проверяющие существующий контракт,
+а не требующие нового engine. Machine API/backup/diff не заменяют human user journey.
+
+| Срез | Пользовательский путь | Приёмка |
+| --- | --- | --- |
+| Q08-PIZZERIA | Заказ → кухня/курьер → конечный исход, отмена/повтор | Несколько ролей, atomic stock/order limits, понятный отказ, формы/очередь/карточка, reconnect/restart; Q02 backup отдельно |
+| Q08-SUPPORT | Customer ticket+attachment → staff answer/private note → customer outcome | Private/foreign ticket denied, attachment current ACL после IO, retry/reconnect/restart; Q04 machine search и Q03 deployment отдельно |
+| Q08-DOCUMENTS | Upload → extraction terminal → reviewer edit/approve → immutable revision/export | Failed/cancelled/uncertain видимы, старое approval неизменно, uploader не approve, stale revision/revoke/download; Q05/Q07 отдельно |
+| Q08-METERING | Owner quotas/keys → reserve/settle/outbox → uncertain/retry delivery | Remaining quota/uncertain честные, hash-only secret once, explicit retry без второго списания; Q06 интеграция и Q07 форма отдельно |
+
+Для каждого — current-code runtime и browser нескольких ролей, console errors,
+targeted typecheck/test/build, отдельный отчёт/коммит на приложение.
+При полезном существующем outcome достаточно свежей приёмки и исправления конкретных находок.
 
 ### Q08-CRM
 
@@ -283,6 +301,16 @@ route/data сохранены, error видима, retry не создаёт в�
 Секреты вне repo. Чистый сервер bootstrap — следующий срез; domain purchase/HA не обещаются.
 C08-SITE переиспользует этот путь после creation/preview/конкретного разрешения публикации.
 
+Q11-P — этот первый срез prepared host: новый пользователь проходит UI/инструкцию
+без незадокументированных ручных поправок; invalid image/domain, agent offline,
+lost response и restart agent/control plane дают понятный исход без второго deploy/writer.
+Q11-B — следующий срез bootstrap чистого согласованного Linux-хоста после Q11-P:
+поддерживаемые distro/architecture/permissions/network проверены preflight,
+reviewable план установки → агент/зависимости → readiness → тот же Q11-P путь.
+Приёмка: идемпотентный повтор, occupied port/unsupported host/failed install,
+секреты вне repo/logs, чужие сервисы/тома сохранены. Внешний host не предоставлен —
+external gate skipped; universal installer, domain purchase и HA не заявляются.
+
 ## Волна 5: Q12 — аккаунты, plain/remote и платформы
 
 ### C03 — после принятого C01, перед полным C02
@@ -294,6 +322,9 @@ C08-SITE переиспользует этот путь после creation/prev
 selectors/account switch/cleanup/logout/reacquire после reconnect.
 Приёмка: две сессии аккаунта, membership/revoke during IO, retained bearer/resource,
 late callback/restart/browser back; A→B→logout. Demo accounts не принимают внешний OIDC.
+C03 `e97161a` локально принят: runner 3/3, repository checks и browser прошли.
+Team/Personal изолированы; A→B→logout, revoke/regrant и 360×500 проверены.
+Динамический workspace registry, внешний OIDC и installed clients в этот срез не входят.
 
 ### C02 — semantic AI stream
 
@@ -318,6 +349,14 @@ download файла/terminal UI/receipt без второй работы — п�
 Python нужен только соответствующему Documents executor.
 Общую service orchestration выделять после двух настоящих адаптеров.
 
+C05-CANCEL-FILE: до consumer уточнить scoped cancel и downloadable result artifact.
+Минимальные Q05 upload/start/status/result сами по себе этого контракта не принимают.
+Добавить явную service capability/метод, сохраняя один native job/receipt host;
+не выдавать raw human processor/AI fragment. Приёмка: настоящее вложение → job →
+usable файл с MIME/size/revision/current workspace ACL, cancel/revoke/expiry во время IO,
+late provider и retry/restart без второй работы. Закрытие request прекращает его IO,
+accepted durable job живёт до terminal по отдельному контракту отмены.
+
 ### C06 — настоящий remote agent
 
 Триггер: явно выбрать remote/project/agent, выдать ограниченный grant, отменить/revoke либо потерять lease.
@@ -328,6 +367,16 @@ typed read/edit/run, operation/approval/result UI.
 Приёмка: allowed/denied path, expired lease, disconnected agent/restart,
 cancel/revoke/late callback/lost response retry и фактический эффект в test project.
 Screenshare вспомогателен; workspace/grant выбирается отдельно от переключателя plain/remote.
+
+C06-P — plain typed executor до C02; C06-A — AI orchestration после C02.
+C06-P-TYPED: минимальные read/edit/run с явными project/agent/account/workspace,
+bounded operations/roots/expiry, revision для edit и реальным file/exit/output результатом.
+Переключатель remote не разрешает произвольный процесс. Отрицательная приёмка:
+foreign account/workspace/project/agent; read-only grant против edit/run;
+absolute/relative traversal/symlink escape; concurrent edit revision;
+expired/revoked grant во время IO/process; stale lease/attempt перед эффектом;
+closed resource/late output; lost response/restart с одним эффектом/receipt.
+Отдельная remote машина и local fixture имеют разные доказательства.
 
 ### C07 — installed desktop/mobile
 
@@ -341,6 +390,16 @@ keyboard/background/suspend/reconnect/session/logout/files.
 Adaptive web/PWA shortcut не закрывает installed mobile.
 C07-X: web↔desktop↔mobile одна история, retry/cancel/logout/revoke без дублей,
 update/reconnect сохраняют контракт, cache не второй writer; режимы проверяются после C02/C06.
+
+C07-F-MATRIX: отчёт feasibility фиксирует target desktop OS/architecture и mobile OS/device,
+точные published imports, secure session storage, prototype build→install→launch→update→uninstall.
+C07-D/M сохраняют package version, backend endpoint, installation commands и реальные outcomes:
+desktop X/minimize/tray/quit/relaunch без orphan processes; mobile keyboard/background/
+suspend/resume/network switch/files/denied permission/logout. Build без install не PASS.
+C07-X-MATRIX: три настоящих клиента одного journal, post из каждого виден двум другим
+один раз; независимые workspace, lost response/reconnect/restart и retained payload retry,
+A→B/logout/revoke очищают history/draft/pending/results. Plain matrix не ждёт C02/C06;
+AI/remote matrix повторяется после их gates. LAN proof и production HTTPS отмечаются отдельно.
 
 Отдельная эксплуатационная проверка установленного Codex: X прерывал local run.
 Code capability close-to-tray существует и требует ready tray; причина на этой установке пока не доказана.
@@ -408,9 +467,9 @@ C-OPT-PLATFORMS после C07-X: общие модели/client и явные l
 
 ## Ближайший порядок и продолжение
 
-1. Закончить C01 retry/reconnect/error и финальный review/gate на `codex/unified-chat`, сохранить оба conversation repro; narrow-width Chrome уже PASS.
+1. C01 f083593 и C03 e97161a локально приняты; выполнить C-OPT-CHAT и Q05 public feasibility. Hosting SKIP не полный gate main.
 2. Сверить и интегрировать Q04/Q07/G01–G04; проверить итоговый объединённый код.
-3. C03; независимо завершать Q02 historical и полный Q03 live с отдельными доказательствами.
+3. После принятого C03 выполнить C-OPT-CHAT с повтором receipts/account switch/two clients; независимо Q02 historical и полный Q03 live.
 4. Q05→Q06; профильные Q08 и оставшийся Q01/device по доступной среде.
 5. Q09/Q10/Q11 после gates; C02 после release, C04/C05 по API, C06 по правам/режиму.
 6. C07-F до framework, реальные C07-D/M/X; C08 по отдельным настоящим выходам.

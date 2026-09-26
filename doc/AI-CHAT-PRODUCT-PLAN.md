@@ -7,9 +7,11 @@
 wenay-common2 и wenay-react2, а не новая транспортная инфраструктура.
 
 Это план нового продукта Q12 из [стратегии](STRATEGY-2026-09.md), не отчёт о готовом приложении.
-C01 реализован в managed checkout `codex/unified-chat`: targeted typecheck/test/build,
-real RPC, автоматический reconnect после restart и desktop/narrow-width browser прошли.
-Итоговая проверка ветки выполняется отдельно; C02–C08 ожидают. Готовность существующего
+C01 локально принят в managed checkout `codex/unified-chat`, сохранён `f083593`:
+targeted typecheck/test/build, real RPC, reconnect и desktop/narrow-width browser прошли.
+Итог: 37 PASS / 39 шагов, hosting SKIP, Catalog build отсутствует по контракту;
+это не полный общий gate перед main. C03 runtime runner 3/3 PASS, browser выполняется,
+этап ещё не принят. C02/C04–C08 ожидают. Готовность существующего
 примера подтверждает его собственный сценарий, а не весь новый продукт.
 
 ## Пользовательский результат
@@ -86,8 +88,8 @@ fragment, revoke во время delta/tool, close до позднего рез�
 
 ID C01–C08 устойчивы: отчёт, журнал, задача и коммит ссылаются на тот же ID.
 «Проверено» означает выполненные проверки текущего кода; «принято» — все критерии данной границы.
-Пропуск среды фиксируется как skipped. C01 имеет проверенную реализацию и ожидает итогового
-gate/сохранения; остальные C-этапы не объявлены выполненными.
+Пропуск среды фиксируется как skipped. C01 f083593 локально принят с явно указанными
+hosting skips; C03 runtime PASS не закрывает browser. Остальные C-этапы не объявлены выполненными.
 
 | ID | Предшественники | Результат | Приёмка и доказательства |
 | --- | --- | --- | --- |
@@ -121,6 +123,39 @@ C08 делится на C08-DESIGN, C08-SITE, C08-APP, C08-VIDEO; у каждо�
 Video runner отсутствует как принятый механизм нового продукта: нужен настоящий исполнитель,
 контракт, файл и приёмка. Fixture, заглушка или текст «видео готово» этого этапа не закрывают.
 
+### Исполняемые суффиксные срезы
+
+- C05-CANCEL-FILE: four-method Q05 не обещает cancel/downloadable artifact.
+  До chat consumer согласовать scoped capability/метод отмены и результат-файл,
+  не выдавая human processor/raw AI fragment. Attachment→job→usable file принимает
+  MIME/size/revision/current ACL, cancel/revoke/expiry during IO/late provider,
+  native retry/restart без второй работы. Request close прекращает его IO;
+  accepted durable job живёт до terminal по отдельному cancel contract.
+- C06-P — plain deterministic typed read/edit/run; C06-A — AI после C02.
+  C06-P-TYPED принимает реальные file/exit/output и bounded project/agent/account/workspace
+  grant с operations/roots/expiry/edit revision. Negative paths: foreign scope,
+  read-only edit/run, traversal/symlink escape, stale revision/lease/attempt,
+  revoke/expiry в IO/process, closed resource/late output/lost response/restart.
+  Local fixture не заменяет агент на отдельной машине.
+- C07-F-MATRIX фиксирует target desktop OS/architecture + mobile OS/device,
+  published imports, secure session и prototype build→install→launch→update→uninstall.
+  C07-D/M доказательства привязаны к installed package version/backend/device:
+  desktop X/tray/quit/relaunch без orphan processes; mobile keyboard/background/
+  suspend/network switch/files/denied permission/logout. Build без install не PASS.
+- C07-X-MATRIX: web + установленный desktop + установленный mobile одного journal;
+  post каждого приходит двум другим один раз; workspace независимы;
+  lost response/reconnect/restart сохраняют retry payload/requestId;
+  A→B/logout/revoke очищают history/draft/pending/result. Plain matrix не ждёт C02/C06;
+  AI/remote повторяется после соответствующих gates. LAN и production HTTPS разделены.
+- Q11-P принимает prepared host HTTPS/update/rollback; Q11-B отдельно принимает
+  preflight и идемпотентный bootstrap поддерживаемого clean Linux host без повреждения
+  чужих services/volumes, с unsupported/occupied-port/install-error outcomes.
+  C08-SITE использует тот же accepted deploy; external environment отсутствие — skipped.
+
+Полезность старых примеров дополнена Q08-PIZZERIA/SUPPORT/DOCUMENTS/METERING
+human journeys в [исполняемом плане](EXECUTION-PLAN-20260926.md): machine/backup/diff
+не заменяют пользовательскую приёмку. Эти Q08 не скрытые предусловия ordinary chat.
+
 ## Checkpoints упрощения
 
 После принятого поведения/UX этапа провести небольшой аудит, сохранить смысл и повторить
@@ -140,7 +175,9 @@ Video runner отсутствует как принятый механизм н�
 
 ## Ближайшее действие
 
-Завершить общий gate и сохранение C01, затем перейти к C03 account/workspace.
+C01 f083593 и C03 e97161a локально приняты; C03 runtime 3/3, repository и browser PASS.
+Далее C-OPT-CHAT и Q05 public processing feasibility. Hosting SKIP остаётся ограничением gate main.
 Подробная общая очередь — [план всех поручений](EXECUTION-PLAN-20260926.md).
-Одновременно документировать требования C03 и repro C02;
+Дизайн Q05 уточняет [native recovery/receipts/lifecycle](changes/documents-q05-design-20260926.md);
+он не является реализацией или PASS. Repro C02 остаются открытыми;
 выбор desktop/mobile framework и платных провайдеров не опережает соответствующие gates.

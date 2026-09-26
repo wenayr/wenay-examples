@@ -101,3 +101,20 @@ Backend/UI агенты реализуют apps/chat на native public conversa
 Обычный web и тестовый помощник не принимают C02 stream/C07 installed mobile; paid requests нет.
 
 Актуальное продолжение: составлен единый EXECUTION-PLAN-20260926 с устойчивыми Q/G/C ID, зависимостями и приёмкой каждого продукта. Три Sol high подагента проверили план, concurrent payload/capacity и native ownership/reconnect. C01 targeted 3/3 PASS, те же клиенты автоматически reconnect после restart, Chrome 390/360 browser PASS; общий gate выполняется в отдельной ветке. Два common2 conversation defects с public repro там документированы, библиотека не объявлена исправленной. Q03 Support fresh images live 33,925 s PASS сохранён в долговечном отчёте; остальные десять сценариев ещё требуют свежих образов.
+
+Актуальное продолжение 26 сентября: C01 локально принят и сохранён f083593 в codex/unified-chat.
+Итог 37 PASS / 39 шагов, hosting SKIP, Catalog build отсутствует по контракту;
+это не полный общий PASS перед main. C03 runtime runner 3/3 PASS, browser выполняется,
+этап ещё не принят. Q04 Support 2e159e2 и исходный checkout сохранены без подмены.
+Read-only полнота поручений перенесена в EXECUTION-PLAN/AI-CHAT-PRODUCT-PLAN/NEXT:
+Q11-P prepared host и Q11-B clean bootstrap; C07-F-MATRIX/X-MATRIX installed platforms;
+C06-P-TYPED/C06-A remote operations/negative paths; C05-CANCEL-FILE scoped cancel/artifact;
+Q08-PIZZERIA/SUPPORT/DOCUMENTS/METERING human acceptance отдельно от machine/backup/diff.
+IDs не перенумерованы, смыслосохраняющая оптимизация и current-code повторные checks обязательны.
+Временный doc/progress/plan-completeness-review.md оставлен до root review;
+Documents machine audit подготовлен отдельно, реализация и Q05 PASS не заявлены.
+Изменены только четыре долговечных doc файла, apps/STATUS не тронуты; heavy tests/CUA/commit не выполнялись.
+Следующее действие: root review docs и закончить pending C03 browser/final evidence;
+затем независимые Q05/C07-F/Q03 по доступной среде без скрытой зависимости plain chat от всей очереди.
+
+C03 локально принят в managed graph checkout и сохранён e97161a: targeted3/3, repository checks, browseraccount/workspace/revoke/regrant/360x500PASS. Original план дополнен cleanbootstrap/platformmatrix/typedremote/scopedfile/humanjourneys. Q05 design выявил recovery/receipts/lifecycle ограничения; publicfixture готовится до machine реализации. C-OPT-CHAT отложенная native загрузка выполняется отдельно с измерением. Main/push нет, Docker skip не принят.
