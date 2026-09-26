@@ -42,7 +42,7 @@ export function ConversationHistory({resources, orgId, ticketId, firstId, count,
     // Дозагрузка продолжает уже применённый запрос, новая — начинается с поля ввода.
     function termOf(search: boolean, more: boolean) {
         if (!search) return ''
-        return more ? appliedQuery : query
+        return more ? appliedQuery : query.trim()
     }
     function cursorOf(search: boolean, more: boolean) {
         if (more) return page?.nextBeforeId ?? ''
@@ -72,15 +72,25 @@ export function ConversationHistory({resources, orgId, ticketId, firstId, count,
     function collapse() {
         setPage(null)
         setSearching(false)
+        setAppliedQuery('')
+    }
+    function clearSearch() {
+        setQuery('')
+        action.clearError()
+        if (searching) collapse()
     }
 
+    const pendingQuery = !!query.trim() && query.trim() != appliedQuery
+    const canClear = !!query || searching
     const results = page && <>
-        <p className="muted">
-            {searching ? 'Результаты поиска: ' + page.total : 'Ранее в переписке'}
+        <p className="muted" role="status">
+            {searching
+                ? 'Поиск «' + appliedQuery + '»: показано ' + page.messages.length + ' из ' + page.total
+                : 'Ранее в переписке · показано сообщений: ' + page.messages.length}
         </p>
         {page.nextBeforeId && (
             <button disabled={!remote || action.busy} onClick={() => void load(searching, true)}>
-                Ещё предыдущие сообщения
+                {searching ? 'Ещё результаты поиска' : 'Ещё предыдущие сообщения'}
             </button>
         )}
         {!page.messages.length && <p>Подходящих сообщений нет.</p>}
@@ -95,7 +105,7 @@ export function ConversationHistory({resources, orgId, ticketId, firstId, count,
                 <p>{message.body}</p>
             </article>
         ))}
-        <button onClick={collapse}>Свернуть историю</button>
+        <button disabled={action.busy} onClick={collapse}>Свернуть историю</button>
     </>
 
     return <section className="history-panel" aria-label="Архив переписки">
@@ -109,7 +119,10 @@ export function ConversationHistory({resources, orgId, ticketId, firstId, count,
                 />
             </label>
             <button disabled={!remote || action.busy || !query.trim()}>Найти в переписке</button>
+            {canClear && <button type="button" disabled={action.busy} onClick={clearSearch}>Очистить поиск</button>}
         </form>
+        {pendingQuery && !action.busy && <p className="muted">Нажмите «Найти в переписке», чтобы применить введённый запрос.</p>}
+        {action.busy && <p className="muted" role="status">Загружаем сообщения…</p>}
         {!page && count > 20 && (
             <button disabled={!remote || action.busy} onClick={() => void load(false)}>
                 Показать предыдущие сообщения · {count - 20}
