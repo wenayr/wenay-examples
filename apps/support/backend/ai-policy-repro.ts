@@ -55,7 +55,7 @@ async function main() {
         } else {
             assert.equal(observation.newClientFromOldFragmentReceivesResult, true)
             assert.equal(observation.oldFragmentKeyframeContainsResult, true)
-            console.log('Confirmed common2 2.21.1 external-policy projection invalidation gap; no paid calls or network used')
+            console.log('Confirmed common2 3.1.1 external-policy projection invalidation gap; no paid calls or network used')
         }
     } finally {
         freshClient?.close()

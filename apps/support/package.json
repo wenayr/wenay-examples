@@ -8,7 +8,7 @@
     "dev": "vite frontend --host 127.0.0.1",
     "build": "vite build frontend --outDir ../public",
     "typecheck": "tsc --noEmit",
-    "test": "tsx backend/product-check.ts && tsx backend/conversation-check.ts && tsx backend/article-index-check.ts && tsx backend/domain-check.ts && tsx backend/organizer-check.ts && tsx backend/notifications-check.ts && tsx backend/resource-check.ts && tsx backend/check.ts && tsx backend/ai-resource-lifecycle-repro.ts --safe-state && tsx backend/oidc-check.ts && tsx backend/identity-check.ts && tsx backend/backup-check.ts",
+    "test": "tsx backend/store-nested-replacement-repro.ts --expect-fixed && tsx backend/product-check.ts && tsx backend/conversation-check.ts && tsx backend/article-index-check.ts && tsx backend/domain-check.ts && tsx backend/organizer-check.ts && tsx backend/notifications-check.ts && tsx backend/resource-check.ts && tsx backend/check.ts && tsx backend/ai-resource-lifecycle-repro.ts --safe-state && tsx backend/oidc-check.ts && tsx backend/identity-check.ts && tsx backend/backup-check.ts",
     "test:backup": "tsx backend/backup-check.ts"
   },
   "dependencies": {
@@ -19,8 +19,8 @@
     "socket.io": "4.8.3",
     "socket.io-client": "4.8.3",
     "swagger-ui-dist": "5.32.14",
-    "wenay-common2": "2.21.1",
-    "wenay-react2": "3.5.1"
+    "wenay-common2": "3.1.1",
+    "wenay-react2": "5.0.0"
   },
   "devDependencies": {
     "@types/express": "5.0.6",

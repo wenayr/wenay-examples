@@ -99,12 +99,9 @@ function bound(count: number, maximum: number, label: string) {
     if (count >= maximum) throw new Error('Достигнут лимит примера: ' + label + ' (' + maximum + ')')
 }
 
-// Обход common2: STORE-NESTED-REPLACEMENT. Элементы истории копируются поверхностно
-// перед заменой родителя, иначе snapshot() уходит в рекурсию.
-// Удалить после исправления, см. doc/library-tasks/WORKAROUNDS.md
 function articleHistory(article: Article) {
     const {title, body, status, revision, updatedAt} = article
-    return [...(article.history ?? []).map(version => ({...version})), {title, body, status, revision, updatedAt}].slice(-20)
+    return [...(article.history ?? []), {title, body, status, revision, updatedAt}].slice(-20)
 }
 
 export function createSupportDomain(deps: {now?: () => number} = {}) {
