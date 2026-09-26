@@ -16,7 +16,10 @@ import {documentsDefinition} from './service'
 import type {DocumentState, ParsedTable, Provenance} from './model'
 import {createTestExtractionProvider, validateExtraction, type ExtractionProvider} from './model-extraction'
 import {openAiCheckpoint} from './ai-checkpoint'
-import {UsageError, type UsageGate} from './metered-execution'
+import {UsageError, type createMeteredExecution} from './metered-execution'
+import type {UsageReceipt} from './metering-contract'
+
+export type DocumentUsage = Pick<ReturnType<typeof createMeteredExecution>, 'settled'>
 
 export type DocumentExecutor = ReturnType<typeof createServiceLeader<typeof documentsDefinition>>['corridor']['system']
 export type ExtractInput = {
@@ -117,7 +120,7 @@ type ProcessingDeps = {
     directory?: string,
     processor?: DocumentProcessor,
     python?: string,
-    usage?: UsageGate,
+    usage?: DocumentUsage,
     extractor?: ExtractionProvider
 }
 
@@ -279,6 +282,7 @@ export function createDocumentProcessing(deps: ProcessingDeps = {}) {
             ctx.report({progress: 0.5, message: stage})
             let offAbort = () => {}
             let parsed: ParsedTable & {provenance?: Provenance}
+            let usageReceipt: UsageReceipt | undefined
             async function extract() {
                 current()
                 const cancelled = new Promise<never>(function onAbort(_resolve, reject) {
@@ -304,7 +308,11 @@ export function createDocumentProcessing(deps: ProcessingDeps = {}) {
                 signal: controller.signal
             }
             try {
-                parsed = deps.usage ? await deps.usage.run(usageEvent, extract) : await extract()
+                if (deps.usage) {
+                    const outcome = await deps.usage.settled(usageEvent, extract)
+                    parsed = outcome.value
+                    usageReceipt = outcome.receipt
+                } else parsed = await extract()
             } finally {
                 offAbort()
             }
@@ -312,16 +320,22 @@ export function createDocumentProcessing(deps: ProcessingDeps = {}) {
             if (ctx.cancelled()) return
             const table = validateTable(parsed)
             const provenance = parsed.provenance ? {provenance: parsed.provenance} : {}
-            await execute.processingResult(ctx.run.id + '-result', {
+            const receipt = usageReceipt ? {usageReceipt} : {}
+            const saved = await execute.processingResult(ctx.run.id + '-result', {
                 orgId: input.orgId,
                 id: input.documentId,
                 actor: ctx.run.owner,
                 runId: ctx.run.id,
                 attempt: began.attempt,
+                sourceVersion,
                 ...table,
-                ...provenance
+                ...provenance,
+                ...receipt
             })
             current()
+            const completed = item(ctx.run.owner, input.orgId, saved.id)
+            const mine = completed.activeRun == ctx.run.id && completed.attempt == began.attempt && completed.sourceVersion == sourceVersion
+            if (!mine || saved.id != input.documentId) throw new Error('Подтверждение результата относится к другой попытке')
             ctx.report({progress: 1, message: 'Данные готовы к проверке человеком'})
             return {result: {available: true}}
         } catch (error) {
@@ -633,7 +647,7 @@ export function createDocumentProcessing(deps: ProcessingDeps = {}) {
             const run = host.store.state.runs[document.activeRun]
             return {id: document.id, revision: document.revision, sourceVersion: document.sourceVersion, status: document.status,
                 attempt: document.attempt, processor: document.processor, rowCount: document.table.rows.length, error: document.error,
-                runId: run?.id ?? '', runState: run?.state ?? null}
+                runId: run?.id ?? '', runState: run?.state ?? null, usageReceipt: document.usageReceipt ? {...document.usageReceipt} : null}
         }
         async function result(input: {orgId: string, id: string, revision: number}) {
             const deadline = AbortSignal.timeout(12000)
@@ -644,6 +658,7 @@ export function createDocumentProcessing(deps: ProcessingDeps = {}) {
             active()
             const document = matches(account, input)
             return {id: document.id, revision: document.revision, sourceVersion: document.sourceVersion, status: document.status,
+                usageReceipt: document.usageReceipt ? {...document.usageReceipt} : null,
                 table: {headers: [...document.table.headers], rows: document.table.rows.map(row => [...row])},
                 provenance: document.provenance ? {...document.provenance, fields: document.provenance.fields.map(field => ({...field}))} : null}
         }

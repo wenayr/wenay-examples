@@ -76,19 +76,28 @@ async function main() {
         usage = createMeteredExecution({targets})
         const processingDirectory = path.join(directory, 'processing')
         const processor = createDocumentProcessor({directory: processingDirectory})
-        const documentRuntime = createDocumentRuntime({directory: processingDirectory, usage,
-            processor: {async extract(input) {
+        function createDocuments() {
+            return createDocumentRuntime({directory: processingDirectory, usage, processor: {async extract(input) {
                 executions++
                 return processor.extract(input)
             }}})
-        const documents = await createServiceLeaderHost({definition: documentRuntime.definition, env: env('documents'), mount({leader}) {
-            return documentRuntime.mount({store: leader.line.control.store, execute: leader.corridor.system})
-        }})
-        hosts.push(documents)
+        }
+        let documentRuntime = createDocuments()
+        async function startDocuments() {
+            const ownedRuntime = documentRuntime
+            const host = await createServiceLeaderHost({definition: ownedRuntime.definition, env: env('documents'), mount({leader}) {
+                return ownedRuntime.mount({store: leader.line.control.store, execute: leader.corridor.system})
+            }})
+            hosts.push(host)
+            return host
+        }
+        let documents = await startDocuments()
+        const documentSessions: {close(): void}[] = []
         async function documentClient(account: string, password: string) {
             const client = createServiceClient({definition: describeService(documentRuntime.definition), url: documents.url,
                 auth: {credentials: {account, password}}, log() {}})
             sessions.push(client)
+            documentSessions.push(client)
             await client.ready()
             return client
         }
@@ -96,7 +105,7 @@ async function main() {
         const documentKeys = documentOwner.resources.open('productKeys')
         resources.push(documentKeys)
         await until('Documents owner keys', () => !!documentKeys.current())
-        const ownerKeys = documentKeys.current()!.remote.control
+        let ownerKeys = documentKeys.current()!.remote.control
         const issued = await ownerKeys.issue({requestId: 'counter-document-machine', orgId: 'northstar', label: 'CSV consumer',
             scopes: ['documents:extract'], days: 1})
         assert(issued.secret)
@@ -104,10 +113,11 @@ async function main() {
         const resource = machine.resources.open('productDocuments')
         resources.push(resource)
         await until('Documents machine resource', () => !!resource.current())
-        const product = resource.current()!.remote.control
+        let product = resource.current()!.remote.control
         const orgId = 'northstar'
         const bytes = Buffer.from('name,amount\nActual Counter,42')
         const file = await product.upload({orgId, name: 'counter.csv', bytes})
+        assert.equal((await product.status({orgId, id: file.id})).usageReceipt, null)
         const request = Object.freeze({orgId, ...file, processor: 'node', requestId: 'counter-native-start'})
         const started = await product.start(request)
         const reference = {orgId, id: file.id}
@@ -145,8 +155,32 @@ async function main() {
         await assert.rejects(product.start({...request, processor: 'model'}))
         await assert.rejects(writer.commands.usageReserve('conflicting-event-content', {...counterInput, units: 2}))
         assert.equal(executions, 1)
-        assert(!Object.hasOwn(result, 'receipt') && !Object.hasOwn(result, 'accounting'), 'Q05 product receipt linkage is still absent')
-        assert(!Object.hasOwn(status, 'receipt') && !Object.hasOwn(status, 'accounting'))
+        const originalSettlement = await writer.commands.usageSettle('settle-' + eventId, {eventId, units: 1})
+        assert.deepEqual(status.usageReceipt, originalSettlement)
+        assert.deepEqual(result.usageReceipt, originalSettlement)
+        assert.deepEqual(documents.leader.line.control.store.state.documents[file.id].usageReceipt, originalSettlement)
+        await resource.close()
+        await documentKeys.close()
+        for (const session of documentSessions) session.close()
+        await documents.close()
+        documentRuntime = createDocuments()
+        documents = await startDocuments()
+        await documentRuntime.view.ready()
+        const restoredMachine = await documentClient(issued.account, issued.secret)
+        const restoredProduct = restoredMachine.resources.open('productDocuments')
+        resources.push(restoredProduct)
+        await until('restored receipt resource', () => !!restoredProduct.current())
+        product = restoredProduct.current()!.remote.control
+        const restoredStatus = await product.status(reference)
+        assert.deepEqual(restoredStatus.usageReceipt, originalSettlement)
+        assert.deepEqual((await product.result({...reference, revision: restoredStatus.revision})).usageReceipt, originalSettlement)
+        assert.equal((await product.start(request)).runId, started.runId)
+        assert.equal(executions, 1, 'persisted receipt/repeated native run never repeats extraction after restart')
+        const restoredOwner = await documentClient('owner', 'owner-pass')
+        const restoredKeys = restoredOwner.resources.open('productKeys')
+        resources.push(restoredKeys)
+        await until('restored owner resource', () => !!restoredKeys.current())
+        ownerKeys = restoredKeys.current()!.remote.control
         const beforeRevoke = await counterRead.read({period, limit: 100})
         assert.equal(beforeRevoke.events.length, 1)
         assert.equal(beforeRevoke.totals.used, 1)
@@ -217,7 +251,8 @@ async function main() {
         assert.equal(totals.active, 0)
         console.log('PASS Q06-0 bounded proof: real Counter + Documents machine CSV, one actual event/receipt, totals, dedup and current revoke')
         console.log('PASS Q06-A typed handoff: settled value + actual native receipt, repeated event prevents IO; late abort after commit never calls uncertain')
-        console.log('GAP CONFIRMED: product status/result contain no Counter receipt; no Q06 acceptance, restart/lost-response/Support proof yet')
+        console.log('PASS Q06-B receipt persistence: machine status/result match actual native settlement and survive Documents restart without reexecution')
+        console.log('LIMIT: Counter lost-response/crash-after-settle reconciliation and Support machine receipt handoff remain outside this bounded proof')
     } finally {
         for (const resource of resources) await resource.close().catch(function closed() {})
         usage?.close()

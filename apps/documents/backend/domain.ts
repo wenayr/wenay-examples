@@ -65,7 +65,7 @@ export function documentWorkspace(state: DocumentState, principal: tServicePrinc
             if (!roles.has(item.orgId) || item.status == 'deleted') return false
             return roles.get(item.orgId) != 'uploader' || item.owner == account
         })
-            .map(({table, comments, approvals, blobId, provenance, ...item}) => ({
+            .map(({table, comments, approvals, blobId, provenance, usageReceipt, ...item}) => ({
                 ...item, rowCount: table.rows.length, columnCount: table.headers.length, approvedRevision: approvals.at(-1)?.revision ?? 0
             })),
         audit: state.audit.filter(entry => roles.has(entry.orgId) && roles.get(entry.orgId) != 'uploader').map(entry => ({...entry}))
@@ -124,6 +124,8 @@ export function createDocumentDomain(deps: {now?: () => number} = {}) {
                     document.attempt++
                     document.processor = input.processor
                     document.error = ''
+                    delete document.usageReceipt
+                    delete document.provenance
                     document.revision++
                     document.updatedAt = now()
                     audit(ctx, document, 'processing.begin', input.actor)
@@ -131,7 +133,12 @@ export function createDocumentDomain(deps: {now?: () => number} = {}) {
                 }
             }),
             processingResult: schemaCommand({
-                ...execution, attempt: 'number', headers: {array: 'string'}, rows: {array: {array: 'string'}},
+                ...execution, attempt: 'number', sourceVersion: 'number?',
+                headers: {array: 'string'}, rows: {array: {array: 'string'}},
+                usageReceipt: {optional: true, object: {
+                    id: 'string', eventId: 'string', orgId: 'string', status: {enum: ['reserved', 'committed', 'released', 'unknown']},
+                    period: 'string', units: 'number', reservedUnits: 'number', fresh: 'boolean'
+                }},
                 provenance: {optional: true, object: {
                     sourceVersion: 'number', provider: 'string', demo: 'boolean',
                     fields: {array: {object: {row: 'number', column: 'number', page: 'number', line: 'number', quote: 'string'}}}
@@ -142,6 +149,14 @@ export function createDocumentDomain(deps: {now?: () => number} = {}) {
                     const document = processingDocumentAccess(ctx.state, input.actor, input.orgId, input.id, now())
                     const current = document.activeRun == input.runId && document.attempt == input.attempt
                     if (document.status != 'processing' || !current) throw new Error('Результат устаревшей попытки отклонён')
+                    if (input.usageReceipt) {
+                        const receipt = input.usageReceipt
+                        const linked = receipt.orgId == input.orgId && receipt.eventId == 'documents-' + input.runId
+                        const confirmed = receipt.status == 'committed' && receipt.units == 1 && receipt.reservedUnits == 1
+                        const shaped = /^[a-f0-9]{64}$/.test(receipt.id) && /^\d{4}-(0[1-9]|1[0-2])$/.test(receipt.period)
+                        if (!linked || !confirmed || !shaped) throw new Error('Receipt не подтверждает текущую обработку')
+                        if (input.sourceVersion != document.sourceVersion) throw new Error('Receipt относится к другой версии исходника')
+                    }
                     const table = validateTable(input)
                     if (input.provenance) {
                         if (input.provenance.sourceVersion != document.sourceVersion) throw new Error('Происхождение относится к другой версии исходника')
@@ -150,6 +165,8 @@ export function createDocumentDomain(deps: {now?: () => number} = {}) {
                     document.table = table
                     if (input.provenance) document.provenance = {...input.provenance, fields: input.provenance.fields.map(field => ({...field}))}
                     else delete document.provenance
+                    if (input.usageReceipt) document.usageReceipt = {...input.usageReceipt}
+                    else delete document.usageReceipt
                     document.status = 'review'
                     document.error = ''
                     document.revision++
@@ -230,6 +247,7 @@ export function createDocumentDomain(deps: {now?: () => number} = {}) {
                     document.approvals = []
                     document.comments = []
                     delete document.provenance
+                    delete document.usageReceipt
                     document.revision++
                     document.updatedAt = now()
                     audit(ctx, document, 'document.delete')

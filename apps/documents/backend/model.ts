@@ -5,6 +5,7 @@ export type tRole = typeof ROLES[number]
 import type {ParsedTable} from './csv-table'
 export type {ParsedTable} from './csv-table'
 import type {FieldOrigin} from './model-extraction'
+import type {UsageReceipt} from './metering-contract'
 export type Provenance = {sourceVersion: number, provider: string, demo: boolean, fields: FieldOrigin[]}
 export const PRODUCT_SCOPES = ['documents:extract'] as const
 export type ProductKey = {
@@ -15,7 +16,7 @@ export type DocumentItem = {
     id: string, orgId: string, owner: string, name: string, blobId: string, size: number,
     revision: number, sourceVersion: number, createdAt: number, updatedAt: number,
     status: 'uploaded' | 'processing' | 'review' | 'approved' | 'failed' | 'cancelled' | 'uncertain' | 'deleted',
-    processor: string, activeRun: string, attempt: number, error: string,
+    processor: string, activeRun: string, attempt: number, error: string, usageReceipt?: UsageReceipt,
     table: ParsedTable, provenance?: Provenance, comments: {row: number, text: string, by: string, at: number}[],
     approvals: {revision: number, by: string, at: number, table: ParsedTable, sourceVersion: number, provenance?: Provenance}[]
 }

@@ -1,10 +1,9 @@
 import {createDocumentService} from './service'
 import {createProductCredentials} from './product-credentials'
 import {organizationAccess} from './domain'
-import {createDocumentProcessing, type DocumentProcessor, type DocumentExecutor} from './processing-resource'
+import {createDocumentProcessing, type DocumentProcessor, type DocumentExecutor, type DocumentUsage} from './processing-resource'
 import type {Store} from 'wenay-common2/observe'
 import type {DocumentState} from './model'
-import type {UsageGate} from './metered-execution'
 import type {ExtractionProvider} from './model-extraction'
 
 type RuntimeOptions = {
@@ -12,7 +11,7 @@ type RuntimeOptions = {
     directory?: string,
     processor?: DocumentProcessor,
     python?: string,
-    usage?: UsageGate,
+    usage?: DocumentUsage,
     extractor?: ExtractionProvider
 }
 
