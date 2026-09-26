@@ -16,6 +16,7 @@
         "backend/http-auth.ts",
         "backend/identity-check.ts",
         "backend/identity.ts",
+        "backend/machine-search.ts",
         "backend/metered-execution.ts",
         "backend/metering-contract.ts",
         "backend/model.ts",
