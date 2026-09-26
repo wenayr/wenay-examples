@@ -36,8 +36,8 @@ runLeaderProcess({definition: service.definition,
         })
         app.get('/api/client', function descriptor(_req, res) {res.json(describeService(service.definition))})
         app.use(express.static(path.resolve('public')))
-        const closeService = service.mount(leader.line.control.store)
-        createSearchProductHttp({app, search: service.search, usage, account: token => leader.access.principalOf(leader.identity.principal(token)).account})
+        const closeService = service.mount(leader.line.control.store, leader.corridor.system)
+        createSearchProductHttp({app, published: service.product, account: token => leader.access.principalOf(leader.identity.principal(token)).account})
         return function close() {
             oidc.close()
             closeService()

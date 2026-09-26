@@ -4,7 +4,7 @@ import {authorizeOrganization} from './domain'
 import type {SupportState, Article} from './model'
 
 // A rebuildable version index. Source records remain the authority for access and text.
-export function createArticleIndex() {
+export function createArticleIndex(deps: {authorizeSearch?: (state: SupportState, account: string, orgId: string) => unknown} = {}) {
     let store: Store<SupportState> | null = null
     const index = new Map<string, {orgId: string, revision: number, text: string}>()
     function entry(article: Article) {
@@ -17,7 +17,8 @@ export function createArticleIndex() {
     }
     function search(account: string, orgId: string, query: string, limit = 3) {
         if (!store) throw new Error('Поиск закрыт')
-        authorizeOrganization(store.state, account, orgId)
+        const authorize = deps.authorizeSearch ?? authorizeOrganization
+        authorize(store.state, account, orgId)
         const text = typeof query == 'string' && query.length <= 8000
         const size = Number.isInteger(limit) && limit >= 1 && limit <= 50
         if (!text || !size) throw new Error('Некорректный запрос поиска')

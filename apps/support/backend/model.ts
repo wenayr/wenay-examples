@@ -25,9 +25,15 @@ export type Invitation = {
     id: string, orgId: string, role: Exclude<tRole, 'owner'>, tokenHash: string, createdBy: string,
     expiresAt: number, usedBy: string, revoked: boolean
 }
+export const PRODUCT_SCOPES = ['knowledge:search'] as const
+export type ProductKey = {
+    id: string, orgId: string, label: string, hash: string, scopes: (typeof PRODUCT_SCOPES[number])[],
+    createdBy: string, createdAt: number, expiresAt: number, revokedAt: number
+}
 export type SupportState = NotificationState & {
     accounts: Record<string, Account>, organizations: Record<string, Organization>, tickets: Record<string, Ticket>,
-    articles: Record<string, Article>, invites: Record<string, Invitation>, audit: AuditEntry[], workspaces?: Record<string, TaskState>
+    articles: Record<string, Article>, invites: Record<string, Invitation>, audit: AuditEntry[], workspaces?: Record<string, TaskState>,
+    productKeys?: Record<string, ProductKey>
 }
 
 export const DEMO_LOGINS = {owner: 'owner-pass', lead: 'lead-pass', agent: 'agent-pass', customer: 'customer-pass', outsider: 'outsider-pass'} as const

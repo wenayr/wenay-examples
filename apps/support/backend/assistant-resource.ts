@@ -37,8 +37,11 @@ export type DraftProvider = {draft(input: DraftInput): Promise<{text: string}>}
 // может отдать данные после внешней смены policy.
 // Удалить после исправления, см. doc/library-tasks/WORKAROUNDS.md
 // Private outputs are fetched through a current ACL check, never embedded in AI replay history.
-export function createSupportAssistant(deps: {directory?: string, provider?: DraftProvider, timeoutMs?: number, usage?: UsageGate}) {
-    const index = createArticleIndex()
+export function createSupportAssistant(deps: {
+    directory?: string, provider?: DraftProvider, timeoutMs?: number, usage?: UsageGate,
+    authorizeSearch?: NonNullable<Parameters<typeof createArticleIndex>[0]>['authorizeSearch']
+}) {
+    const index = createArticleIndex({authorizeSearch: deps.authorizeSearch})
     let state: Store<SupportState> | null = null
     const pending = new Map<string, AbortController>()
     const journal = deps.directory ? openDrafts(deps.directory) : null

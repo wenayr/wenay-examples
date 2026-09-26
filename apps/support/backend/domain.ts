@@ -2,6 +2,7 @@ import {createHash, createHmac} from 'node:crypto'
 import {Command} from 'wenay-common2'
 import {schemaCommand, type ServiceCommandCtx, type tServicePrincipal} from 'wenay-common2/service'
 import {ROLES, STATUSES, PRIORITIES, type SupportState, type tRole, type Ticket, type Article, type AuditEntry} from './model'
+import {productRoles} from './product-credentials'
 
 const STAFF = ['owner', 'lead', 'agent'] as const
 const MANAGERS = ['owner', 'lead'] as const
@@ -11,7 +12,8 @@ function own<T>(values: Record<string, T>, key: string) {
     return Object.hasOwn(values, key) ? values[key] : undefined
 }
 
-export function supportRoles(state: SupportState, account: string) {
+export function supportRoles(state: SupportState, account: string, at = Date.now()) {
+    if (account.startsWith('product:')) return productRoles(state, account, at)
     if (!own(state.accounts, account)) return []
     return ['signedIn', ...new Set(Object.values(state.organizations).flatMap(org => own(org.members, account) ?? []))]
 }

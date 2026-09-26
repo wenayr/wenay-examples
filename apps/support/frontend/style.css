@@ -397,3 +397,11 @@ td select {font-size: 11px; padding: 8px}
 .content-knowledge{margin:0 34px 34px;padding:28px;border:1px solid #dce2dc;border-radius:20px;background:#fffdf7}.content-knowledge .section-heading h2{margin:8px 0}.content-knowledge .article-card{text-align:left}.content-knowledge blockquote{border-left:3px solid #16816d;margin:20px 0;padding-left:18px;color:#45645a}.content-knowledge .article-reader p{white-space:pre-wrap;overflow-wrap:anywhere}.content-knowledge a{overflow-wrap:anywhere}@media(max-width:640px){.content-knowledge{margin:0 14px 22px;padding:18px}.content-knowledge .section-heading{align-items:flex-start;gap:14px;flex-direction:column}}
 .history-panel{border-bottom:1px solid var(--line,#dce2e6);padding-bottom:18px;margin-bottom:18px}.history-search{display:flex;align-items:end;gap:8px;margin-bottom:12px}.history-search label{display:grid;gap:6px;flex:1;min-width:0;font-size:12px}.history-search input{min-width:0;width:100%;padding:9px;border:1px solid #dce2e6;border-radius:8px}.history-search button{max-width:150px}@media(max-width:500px){.history-search{align-items:stretch;flex-direction:column}.history-search button{max-width:none}}
 
+
+.product-keys {display: grid; gap: 24px}
+.product-keys .panel-form {max-width: 600px}
+.product-key-result {display: grid; gap: 12px; padding: 22px; border: 1px solid var(--line); border-radius: 10px; background: #fff}
+.product-key-result input {width: 100%; font-family: monospace}
+.product-key-account {display: block; max-width: 260px; overflow-wrap: anywhere; color: var(--muted)}
+.product-keys caption {text-align: left; padding: 14px; font-weight: 600}
+.product-keys .table-wrap > p {padding: 18px}

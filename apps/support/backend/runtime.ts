@@ -1,4 +1,4 @@
-import {supportDefinition} from './service'
+import {createSupportService} from './service'
 import {createSupportAssistant, type DraftProvider} from './assistant-resource'
 import {createSupportFiles} from './files-resource'
 import path from 'node:path'
@@ -10,8 +10,13 @@ import {createTenantOrganizer} from './organizer'
 import {createNotifications, withNotification} from './notifications'
 import {createContentKnowledge} from './content-resource'
 import {createConversationHistory} from './conversation-resource'
+import {authorizeOrganization} from './domain'
+import {createProductCredentials, requireProductKey, verifyProductSecret} from './product-credentials'
+import {createPublishedSearch} from './product-search'
+import type {ServiceResourceContext} from 'wenay-common2/service'
 
 type RuntimeOptions = {
+    now?: () => number,
     directory?: string,
     provider?: DraftProvider,
     demo?: boolean,
@@ -21,7 +26,23 @@ type RuntimeOptions = {
 }
 
 export function createSupportRuntime(deps: RuntimeOptions = {}) {
-    const assistant = createSupportAssistant(deps)
+    const now = deps.now ?? Date.now
+    const supportDefinition = createSupportService(deps).definition
+    function authorizeSearch(state: SupportState, account: string, orgId: string) {
+        if (account.startsWith('product:')) return requireProductKey(state, account, orgId, now())
+        return authorizeOrganization(state, account, orgId)
+    }
+    const assistant = createSupportAssistant({...deps, authorizeSearch})
+    const product = createPublishedSearch({search: assistant.search, usage: deps.usage})
+    const credentials = createProductCredentials({now, authorizeOwner(state, account, orgId) {
+        return authorizeOrganization(state, account, orgId, ['owner'])
+    }})
+    const productSearch = {allow: ['knowledge:search'], placement: 'authority' as const, open(ctx: ServiceResourceContext) {
+        function published(input: Parameters<typeof product.published>[1]) {
+            return product.published(ctx.principal.account, input, ctx.signal)
+        }
+        return {facade: {control: {published}}, close() {}}
+    }}
     const files = createSupportFiles({directory: deps.directory ? path.join(deps.directory, 'files') : undefined})
     const organizer = createTenantOrganizer()
     const notifications = createNotifications()
@@ -46,7 +67,11 @@ export function createSupportRuntime(deps: RuntimeOptions = {}) {
         initial: {accounts: {}, organizations: {}, tickets: {}, articles: {}, invites: {}, audit: []} as SupportState,
         access: {...supportDefinition.access, login: {...supportDefinition.access.login, resolve() {return null}}}
     } : supportDefinition
-    return {definition: {...base, commands: {...supportDefinition.commands, ...organizer.commands, ...notifications.commands,
+    const access = {...base.access, login: {...base.access.login, resolve(state: SupportState, input: {account: string, password: string}) {
+        if (input.account.startsWith('product:')) return verifyProductSecret(state, input.account, input.password, now()) ? input.account : null
+        return base.access.login.resolve(state, input)
+    }}}
+    return {definition: {...base, access, commands: {...supportDefinition.commands, ...organizer.commands, ...notifications.commands, ...credentials.commands,
         ticketCreate: withNotification(supportDefinition.commands.ticketCreate, 'Новое обращение'),
         ticketReply: withNotification(supportDefinition.commands.ticketReply, 'Новое сообщение'),
         ticketAssign: withNotification(supportDefinition.commands.ticketAssign, 'Назначен исполнитель'),
@@ -56,16 +81,21 @@ export function createSupportRuntime(deps: RuntimeOptions = {}) {
             assistant: assistant.resource,
             files: files.resource,
             content: content.resource,
-            conversation: conversation.resource
+            conversation: conversation.resource,
+            productKeys: credentials.resource,
+            productSearch
         }
     },
         search: assistant.search,
-        mount(store: Parameters<typeof assistant.mount>[0]) {
+        product: product.published,
+        mount(store: Parameters<typeof assistant.mount>[0], system?: {productKeyRegister: Parameters<typeof credentials.mount>[0]['register']}) {
+            const closeCredentials = credentials.mount({store, register: system?.productKeyRegister})
             const closeAssistant = assistant.mount(store)
             const closeFiles = files.mount(store)
             const closeContent = content.mount(store)
             const closeConversation = conversation.mount(store)
             return function close() {
+                closeCredentials()
                 closeConversation()
                 closeContent()
                 closeFiles()

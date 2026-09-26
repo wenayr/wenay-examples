@@ -17,6 +17,7 @@ import {Avatar, roleLabels, type CommandController, type SupportResources} from 
 import './style.css'
 import {OidcLogin} from './oidc-login'
 import {ContentKnowledge} from './content-knowledge'
+import {ProductKeys} from './product-keys'
 
 const sections = [
     {id: 'inbox', title: 'Обращения', icon: '▤'},
@@ -24,6 +25,7 @@ const sections = [
     {id: 'notifications', title: 'Уведомления', icon: '♧'},
     {id: 'knowledge', title: 'База знаний', icon: '▥'},
     {id: 'team', title: 'Команда', icon: '◉'},
+    {id: 'keys', title: 'Машинные ключи', icon: '⚿'},
     {id: 'audit', title: 'История действий', icon: '◷'}
 ] as const
 
@@ -175,13 +177,15 @@ function Workspace({value, commands, resources, taskBoards, notifications, conne
     const manage = organization && (organization.role == 'owner' || organization.role == 'lead')
     const staff = !!organization && organization.role != 'customer'
     // Роль могли понизить при открытом разделе: возвращаем в общий inbox.
-    const closedForRole = (section == 'audit' && !manage) || (section == 'tasks' && !staff)
+    const owner = organization?.role == 'owner'
+    const closedForRole = (section == 'audit' && !manage) || (section == 'tasks' && !staff) || (section == 'keys' && !owner)
     const activeSection = closedForRole ? 'inbox' : section
     useEffect(function revokeSection() {
         if (activeSection != section) setSection(activeSection)
     }, [activeSection, section])
     const busy = commands.busy || !connected
     const visibleSections = sections.filter(function shown(item) {
+        if (item.id == 'keys') return owner
         if (item.id == 'audit') return !!manage
         if (item.id == 'tasks') return staff
         return true
@@ -265,6 +269,9 @@ function Workspace({value, commands, resources, taskBoards, notifications, conne
                     <ContentKnowledge resources={resources} orgId={scope} disabled={busy}/>
                 </>}
                 {activeSection == 'team' && <Team value={value} org={organization} commands={commands} busy={busy}/>}
+                {activeSection == 'keys' && owner && <ProductKeys
+                    resources={resources} commands={commands} orgId={scope} orgName={organization.name} disabled={busy}
+                />}
                 {activeSection == 'audit' && manage && <Audit value={value} orgId={scope}/>}
             </React.Fragment> : <section className="page-content">
                 <h1>Присоединитесь к команде</h1>
@@ -276,4 +283,3 @@ function Workspace({value, commands, resources, taskBoards, notifications, conne
 }
 
 createRoot(document.getElementById('root')!).render(<App/>)
-
