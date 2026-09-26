@@ -144,6 +144,7 @@ async function main() {
             assert.equal(denied.current(), null)
         }
         const uploaded = await control.upload({orgId, name: 'main.csv', bytes})
+        assert.equal((await control.status({orgId, id: uploaded.id})).usageReceipt, null)
         await assert.rejects(async function unavailableReview() {
             await Reflect.get(control, 'approve')({orgId, id: uploaded.id})
         })
@@ -165,6 +166,7 @@ async function main() {
         await assert.rejects(restoredResource.control.start({...startInput, processor: 'model'}))
         const detail = await restoredResource.control.result({orgId, id: uploaded.id, revision: state.documents[uploaded.id].revision})
         assert.deepEqual(detail.table.rows, [['Machine', '42']])
+        assert.equal(detail.usageReceipt, null, 'unmetered processing cannot invent a confirmed usage receipt')
         assert(!JSON.stringify(detail).includes('blobId'))
         assert(!JSON.stringify(detail).includes('approvals'))
         const other = await ownerKeys.issue({...issue, requestId: 'other-machine'})
@@ -283,6 +285,7 @@ async function main() {
         assert.equal((await restoredOwnerKeys.issue({...issue, requestId: 'machine-main'})).secret, null)
         const restoredMachine = await documents(await connect(issued.account, issued.secret))
         assert.equal((await restoredMachine.control.start(startInput)).runId, accepted.runId)
+        assert.equal((await restoredMachine.control.status({orgId, id: uploaded.id})).usageReceipt, null)
         const generationKeys = createProductCredentials({authorizeOwner(state, account, orgId) {
             return organizationAccess(state, account, orgId, ['owner'])
         }})

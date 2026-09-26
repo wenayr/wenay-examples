@@ -5,8 +5,9 @@ import path from 'node:path'
 import {createServiceLeader} from 'wenay-common2/service/server'
 import {createDocumentRuntime} from './runtime'
 import {createDocumentProcessor, parseCsv, parseText} from './processing-resource'
-import {documentRoles, documentWorkspace} from './domain'
+import {createDocumentDomain, documentRoles, documentWorkspace} from './domain'
 import type {ParsedTable} from './model'
+import type {UsageReceipt} from './metering-contract'
 
 async function until(label: string, check: () => boolean) {
     const end = Date.now() + 12000
@@ -141,6 +142,43 @@ async function main() {
         const slow = await customer.facade.control.upload({orgId, name: 'slow-a.csv', bytes})
         const slowRun = run(slow.id, 'node', 'slow-cancel')
         await until('first slow execution', () => delayed.has('slow-a.csv'))
+        // Forged negative input is never accepted as a real Counter settlement.
+        const forgedReceipt: UsageReceipt = {id: 'a'.repeat(64), eventId: 'documents-' + slowRun.id, orgId,
+            status: 'committed', period: '2026-09', units: 1, reservedUnits: 1, fresh: true}
+        const negativeReceipts = [
+            {...forgedReceipt, orgId: 'harbor'}, {...forgedReceipt, eventId: 'documents-other-run'},
+            {...forgedReceipt, status: 'reserved' as const}, {...forgedReceipt, units: 2},
+            {...forgedReceipt, reservedUnits: 2}, {...forgedReceipt, id: 'invalid'}, {...forgedReceipt, period: '2026-13'}
+        ]
+        const resultInput = {orgId, id: slow.id, actor: 'customer', runId: slowRun.id, attempt: doc(slow.id).attempt,
+            sourceVersion: doc(slow.id).sourceVersion, headers: ['rejected'], rows: [['forged']]}
+        for (const [index, usageReceipt] of negativeReceipts.entries()) {
+            await assert.rejects(leader.corridor.system.processingResult('negative-receipt-' + index, {...resultInput, usageReceipt}))
+        }
+        for (const sourceVersion of [undefined, resultInput.sourceVersion + 1]) {
+            await assert.rejects(leader.corridor.system.processingResult('negative-source-' + sourceVersion,
+                {...resultInput, sourceVersion, usageReceipt: forgedReceipt}))
+        }
+        assert.equal(doc(slow.id).status, 'processing')
+        assert.equal(doc(slow.id).usageReceipt, undefined)
+        assert.equal(doc(slow.id).table.rows.length, 0)
+        // Seed stale metadata only in an isolated domain snapshot to prove clearing, not settlement validity.
+        for (const command of ['processingBegin', 'documentImport'] as const) {
+            const isolated = state()
+            const previous = isolated.documents[slow.id]
+            previous.status = command == 'processingBegin' ? 'failed' : 'deleted'
+            previous.usageReceipt = {...forgedReceipt}
+            previous.provenance = {sourceVersion: previous.sourceVersion, provider: 'stale-fixture', demo: true, fields: []}
+            const ctx = {state: isolated, account: 'system', roles: ['system'], requestId: 'isolated-clear', command}
+            const commands = createDocumentDomain().commands
+            if (command == 'processingBegin') commands.processingBegin.apply(ctx, {
+                orgId, id: slow.id, actor: 'customer', runId: 'new-attempt', revision: previous.revision, processor: 'node'
+            })
+            else commands.documentImport.apply(ctx, {orgId, id: slow.id, actor: 'customer', name: previous.name,
+                blobId: previous.blobId, size: previous.size})
+            assert.equal(isolated.documents[slow.id].usageReceipt, undefined)
+            assert.equal(isolated.documents[slow.id].provenance, undefined)
+        }
         customer.facade.ai.cancelRun(slowRun.id)
         await until('cancelled document', () => doc(slow.id).status == 'cancelled')
         hold = false

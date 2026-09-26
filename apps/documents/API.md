@@ -12,8 +12,8 @@ Authority предоставляет `/api/product/openapi.json` и четыре
 | --- | --- |
 | upload | `{orgId,name,base64}`; canonical Base64, decoded 1..512КиБ, CSV/TXT/PDF |
 | start | `{orgId,id,revision,processor:'node'|'python'|'model',requestId}` |
-| status | `{orgId,id}` → метаданные текущей попытки/версии, без исходных байтов |
-| result | `{orgId,id,revision}` → table/provenance текущей разрешённой версии |
+| status | `{orgId,id}` → метаданные текущей попытки/версии и `usageReceipt`, без исходных байтов |
+| result | `{orgId,id,revision}` → table/provenance и `usageReceipt` текущей разрешённой версии |
 
 Успех `{ok:true,value}`, ошибки используют библиотечный envelope; отсутствие/невалидность сессии даёт401. Для start повторите прежний requestId с прежним содержанием после потерянного ответа; AI run не создаётся повторно. Upload имеет существующую дедупликацию файла. Утверждение новой таблицы остаётся отдельным действием reviewer через сервисный фасад; HTTP result не означает, что извлечение проверено человеком.
 
@@ -28,6 +28,10 @@ Machine principal не создаётся в accounts/members и получае�
 Отзыв ключа или наступление expiresAt прерывает его выполняющееся задание независимо от открытого HTTP/RPC ресурса. Late executor result не сохраняет таблицу. Терминальный сбой отзыва/expiry имеет state `failed`; обычное resource.close не означает `cancelled`. Private job authority отделена от credential ACL: машинная native AI connection не выдаётся наружу, её persisted owner/tenant/document привязка позволяет восстановлению завершить старый run после expiry/revoke. Human policy сохраняет прежнюю текущую membership ACL. One-use policy permit, второй журнал работ и собственные receipts не используются.
 
 После аварийного рестарта метаданные незавершённого документа становятся `uncertain`, native recovery — terminal `failed`, без повторного запуска executor. Если таблица уже зафиксирована основной записью, native recovery отмечает run completed. Ошибка recovery сохраняет rejected readiness и блокирует операции, а не маскируется как готовность. Это две записи с явным reconciliation, не единая транзакция.
+
+При настроенном Metering `status` и `result` возвращают `usageReceipt:null` либо копию настоящего native Counter settlement: `{id,eventId,orgId,status,period,units,reservedUnits,fresh}`. Подтверждённый receipt имеет `status:'committed'`, `eventId:'documents-'+runId` и одну единицу `document`; `fresh` сохраняет исходный ответ Counter. Он записывается вместе с таблицей через системную `processingResult`, привязан к текущим tenant/run/attempt/sourceVersion и сохраняется после рестарта. Из входа machine API receipt не принимается. Перед возвратом тела проверяются текущий ключ, документ, closed/signal; receipt не даёт новых прав доступа.
+
+Новая попытка, удаление и новый исходник очищают текущий receipt вместе с provenance. Старый архив либо работа без Metering возвращают `null`; это отсутствие сохранённого подтверждения, а не доказательство нулевого расхода. Между Counter settle и записью Documents остаётся crash/revoke gap: Counter может уже списать единицу, когда Documents ещё не сохранил receipt. Автоматического reconciliation, повторного платного вызова, refund или второго ledger нет; расход проверяется отдельно по настоящему Counter event. Это узкий Q06 stage B, а не приёмка Q06 целиком.
 
 `npm run test:machine` проверяет native RPC/HTTP login и четыре метода, hash-only keys, scoped permissions, retry payload, resource/context close, live revoke/expiry, поздний executor, ответ upload после отзыва, cleanup и восстановление. Эти проверки добавлены в общий `npm test`; факт runtime приёмки фиксируется отдельным отчётом.
 
