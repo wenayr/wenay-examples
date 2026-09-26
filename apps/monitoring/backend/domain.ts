@@ -196,10 +196,7 @@ export function createMonitoringDomain(deps: DomainDeps = {}) {
             const id = old?.id ?? idOf(ctx.account, ctx.requestId)
             if (!old && ctx.state.monitors[id]) throw new Error('Идентификатор уже использован')
             if (old?.claim) abandon(old, old.claim.attempt, 'Настройки изменены во время проверки')
-            // Обход common2: STORE-NESTED-REPLACEMENT. Элементы истории копируются
-            // поверхностно перед заменой родителя, иначе snapshot() уходит в рекурсию.
-            // Удалить после исправления, см. doc/library-tasks/WORKAROUNDS.md
-            const history = old?.history.map(point => ({...point})) ?? []
+            const history = [...(old?.history ?? [])]
             ctx.state.monitors[id] = {
                 ...input, id, name, history,
                 revision: (old?.revision ?? 0) + 1,
