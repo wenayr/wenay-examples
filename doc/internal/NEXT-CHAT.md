@@ -2,6 +2,24 @@
 
 Обновлено 26 сентября 2026. Эта сводка актуальнее исторических статусов в старых отчётах и контрольных точках.
 
+## Сначала читать: текущая контрольная точка
+
+Integration `codex/examples-integration-20260926` объединяет графики, Chat и ORIGINAL.
+Полный raw95073 EXIT0 относится к14d0276; subsequent bounded Q11 Linux98ce6a3,
+Q10 autonomous copy27eb75b и Booking UX5f8a2c1 проверены отдельно.
+Booking type/test/build0.7/20.4/0.9с, browser cancellation/real move/reopen Oct4,
+responsive360px и fresh Docker deploy/update/rollback39.528с PASS.
+Support fresh Docker36.666с PASS; baseline merged Docker11 относится кe4944c3.
+Каждая граница и оставшиеся сценарии — в [исполняемом плане](../EXECUTION-PLAN-20260926.md).
+Старые утверждения о pending merged gate ниже относятся к историческим checkpoint.
+
+Следующее: Q06 native durable result/receipt checkpoint proof без paid provider,
+затем Support handoff после доказательства. Параллельно read-only Q08 bundle audit
+выбирает изменение с измеримым эффектом; Q09 реальные product screenshots и Q10
+human customization остаются в очереди. Q11 внешний сервер/HTTPS/systemd и C07
+installed desktop/mobile требуют отдельных реальных сред; локальный Linux proof их не заменяет.
+Все ORIGINAL/GRAPH ветки и пользовательский TASK сохраняются. Main/push нет.
+
 Библиотеки обновлены во всём каталоге, дальнейшая стратегия подготовлена.
 [Отчёт обновления](../changes/common2-3.1.1-react2-5.0.0.md),
 [стратегия Q01–Q10](../STRATEGY-2026-09.md). Новое поручение пользователя — непрерывно развивать удобство,
@@ -90,8 +108,17 @@ style494/0/links814/0. Fake fail/skip runner regression не является ap
 Support fresh live36.666s покрывает новые assets:
 [отчёт](../changes/support-history-live-20260926.md). Остальной Docker11 basis e4944c3 сохранён.
 Catalog footer c6390f1 INTEGRATION/9ea82f7 ORIGINAL изменён до Catalog checks.
-Новые ORIGINAL Q10 own Support-copy driver и Q11 Ubuntu candidate driver source-reviewed;
-actual execution/install/native/cleanup proof pending, они не входят в принятие raw95073.
+Q10 own Support-copy repeat15011 EXIT0 после первого55452 type FAIL: explicit dueAt guards/
+disconnect?.() прошли quick re-review; install/type/build/currentroles/failover/restart/cold
+directory restore и own cleanup PASS. de64a4a→27eb75b;
+[subset report](../changes/scaffold-runtime-q10-20260926.md), full journey/browser/backup-format pending.
+Q11 Ubuntu candidate repeat25390 EXIT0 после63344 tmp failure/TMPDIRfix: actual Ubuntu24.04/
+amd64/Node24.18.0/glibc2.39/npmci/native authority/static/cleanup PASS, 80327be→98ce6a3;
+[subset report](../changes/hosting-linux-runtime-q11-20260926.md). Clean-host/SSH/systemd/agent/TLS pending.
+Booking transfer targeted20383 0.7/20.4/0.9с и browser cancel→realmove→reopen/cancel PASS,
+console[], measured360×640 без horizontal overflow; desktop/mobile снимки и cleanup в
+[отчёте](../changes/booking-transfer-ux-20260926.md). Held-response org/role/logout, browser
+conflict/retry/DST и installed mobile не приняты. Эти новые subsets не входили в raw95073.
 
 ## Следующий текущий остаток
 
@@ -111,7 +138,8 @@ actual execution/install/native/cleanup proof pending, они не входят 
 3. Merged all-11 Docker gate exact source e4944c3 PASS exit0 в 19:26:40.573Z;
    generic runtime исключён, external TLS/bootstrap отдельно. Сохранить baseline evidence,
    post-transfer raw95073 принят самостоятельно; прежние EXIT1 не переименовывать в PASS.
-4. Продолжить полный Q06, Q08 human journeys, Q09/Q10 и внешние/device/platform границы
+4. Следующий bounded Q06 research: current Support receipt handoff/lost-settle/reconciliation
+   gaps до paid usage. Затем Q08 human journeys, Q09/Q10 и внешние/device/platform границы
    Q11/C07 по зависимостям [плана](../EXECUTION-PLAN-20260926.md). IDs и остатки сохраняются.
    Support history browser owner/customer/outsider/append PASS, UX сохранён b16c0da→53f5224.
    Fresh Q11 pack принят, Linux install не заявлен. npm views в19:32UTC подтвердил latest

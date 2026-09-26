@@ -67,3 +67,18 @@ own temp gX6F3S/aRXZL6 отсутствуют, listening56568/51820 равно0.
 повтор submit с тем же ключом и отдельный DST переход **ещё не пройдены** этим journey.
 Существующие domain/runtime tests passed и native payload не менялся; эти факты не
 заменяют перечисленные browser проверки. 360px — responsive web, не installed mobile.
+
+После сохранения UX5f8a2c1 root пересобрал только Booking first/second, session77226
+EXIT0, затем selected hosting-live97387 **PASS EXIT0,39.528с**, complete=true,
+2026-09-26T20:02:04.012Z. Реальные first/second/rollback через stable gateway сохранили
+durable product state. Лимит каждого product256MiB; наблюдения64.12/59.7/58.86MiB
+не являются замером пика или load acceptance.
+
+- First: `wenay-examples.local/booking@sha256:2104d15bf3170043f1f12399a70c41d5825118ec884ffbb8031852bda7588a6c`.
+- Second: `wenay-examples.local/booking@sha256:0677b36de3b28f0c696a1dcbac639b60ad3be318a7beb394b0b8884d15a06821`.
+- Booking package+lock fingerprint: `a5da7988315aefa8d353d7b29ca750e6c44e2cb78defd2f5af022e8bfaa02b2d`.
+- Hosting package+lock fingerprint: `9f8e0dc7498f490528a43a7c0ad5831222dc9d9b1f9bfd64cc667b6a65da2d01`.
+
+Это новое доказательство новых assets; прежний Docker11 e4944c3 сохранён отдельно.
+External HTTPS/DNS/SSH этим local live gate не принимаются. Fresh check:repo после UX
+и новых driver source PASS: scaffold10/sync101/15/style496/0/links824/0.

@@ -204,6 +204,39 @@ Q10 phase/IPC/npm config и Q11 canonical extraction fixes внесены до f
 Actual drivers/npmci/build/generated TS/native Ubuntu/copy/timeout cleanup ещё pending root;
 source-review не runtime proof, они не входили в raw95073. Donor full-suite/browser/backup-format,
 agent/socket/SSH/systemd/TLS/clean-server acceptance не заявляются.
-Next: root сохраняет/копирует только continuation docs, затем выполняет новые drivers
-последовательно по свободной среде. Q06 Support/lost-settle/reconciliation и Q09/product
+На том checkpoint next был actual driver run; его последующие outcomes записаны ниже.
+Q06 Support/lost-settle/reconciliation и Q09/product
 screenshots остаются самостоятельными IDs; main/push/paid usage не выполнялись.
+
+## Actual bounded Q10/Q11 и Booking UX subsets
+
+Q11 первый63344 EXIT1 после successful Ubuntu/npmci: native tsx cache /tmp absent на
+readonly root. Узкий TMPDIR=/run-fixture сохранил own tmpfs/nonroot/ROroot limits.
+Root repeat25390 EXIT0: actual Ubuntu24.04/amd64/glibc2.39/Node24.18.0/npmci,
+authenticated native authority/project receipt repeat/dashboard/static assets PASS;
+own labels containers/volume/directories absent. ORIGINAL80327be→INTEGRATION98ce6a3,
+[report](../../changes/hosting-linux-runtime-q11-20260926.md). Clean-server install/SSH/
+systemd/agent/socket/TLS/external URL/Q11 parent остаются непринятыми.
+
+Q10 первый55452 EXIT1: independent npmci PASS, generated TS optional dueAt/disconnect
+type errors до native run. Explicit assert dueAt!=undefined и disconnect?.() под connected
+guard сохраняют смысл; quick source re-review новыхP1/P2 не нашёл. Root repeat15011 EXIT0,
+npmci7575/type631/build1347/domain3065/conversation2150/native11895ms PASS.
+Urgent30min/currentroles/private/history/receipt retry/sameStore failover/restart/cold
+directory restore подтверждены; обе own temp absent/user TASK unchanged. de64a4a→27eb75b,
+[report](../../changes/scaffold-runtime-q10-20260926.md). Full donor/browser/backup format/
+machine/paid processing и timeout escalation runtime branch этим subset не приняты.
+
+Booking targeted20383 all3 PASS type0.7/test20.4/build0.9с после source freeze.
+Root browser70919: cancel оставил27сент10:00; realmove4окт09:00→Reservations, reopen
+обе даты периода4октября; следующий cancel сохранил4окт09:00, console[].
+Measured360×640: document scroll345/panel312.8/cancel264.98px. Два finalactual screenshots
+desktop/mobile сохранены в [report](../../changes/booking-transfer-ux-20260926.md).
+Оба own70919/18468 fixtures stop EXIT0, own temps/ports отсутствуют. Source UX subset
+принят; held-response org/role/logout browser matrix, occupied/revision/retry/DST и
+installed mobile остаются pending. Эти subsets выполнены после raw95073, не расширяют
+его исторический source scope; whole Q08/Q10/Q11 не объявлены завершёнными.
+
+Next сохраняет IDs/deps: bounded Q06 research существующих current receipt handoff,
+lost reserve/settle response и reconciliation/crash gaps. До доказательства не добавлять
+paid usage или автоматический rerun/refund. Root сохраняет docs отдельно; main/push нет.
