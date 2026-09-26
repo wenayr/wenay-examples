@@ -356,6 +356,7 @@ export function createDocumentProcessing(deps: ProcessingDeps = {}) {
     })
     const host = createAiRunHost({
         ...checkpoint,
+        id: randomUUID,
         runner,
         history: 3,
         capabilities: [{
