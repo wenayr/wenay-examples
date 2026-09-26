@@ -28,6 +28,7 @@
         "frontend/env.d.ts",
         "frontend/index.html",
         "frontend/main.tsx",
+        "frontend/product-keys.tsx",
         "frontend/studio.tsx",
         "frontend/style.css",
         "frontend/version-comparison.tsx",

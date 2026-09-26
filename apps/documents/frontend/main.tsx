@@ -7,6 +7,7 @@ import {useServiceSession} from '../shared/react/service-session'
 import {useCommandAction} from '../shared/react/command-action'
 import {useServiceAction} from '../shared/react/service-action'
 import {Studio} from './studio'
+import {ProductKeys} from './product-keys'
 import {type Commands, type Resources, formatDate, roleLabels} from './contracts'
 import './style.css'
 
@@ -216,6 +217,8 @@ function Workspace({value, resources, commands, connected, logout}: WorkspacePro
                 </tbody>
             </table>
         </div>
+        {organization?.role == 'owner' && <ProductKeys key={organization.id} resources={resources}
+            orgId={organization.id} orgName={organization.name}/>}
     </div>
 
     const history = <div className="page">
