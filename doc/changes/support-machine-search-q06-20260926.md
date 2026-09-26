@@ -130,3 +130,9 @@ real fixture37d462 EXIT0 5.0608s. Own57777/57797/58210/58218/58224 listener0,
 machine-search-proof directories отсутствуют. Первый repo gate0dd605 EXIT1 на scaffold:
 новый backend/machine-search.ts не перечислен. Q06-S-MACHINE-SCAFFOLD добавляет его
 в required files, без skip/ослабления проверок. Полнота копии должна пройти повторный repo gate.
+
+Metadata repair482390e→faa3e3f сохранён. Root repeat repo936304 **EXIT0 7.6433s**:
+scaffold10, sync101/15, style500/0, links869/0, generated status verify PASS.
+Новый source slice прошёл merged targeted/real fixture/repository acceptance.
+Последний полный raw27106 остаётся checkpoint source9d47359, до Forms/Support additions;
+перед main нужен новый полный raw. Эти проверки не закрывают parent crash/lost-response/recovery matrix.

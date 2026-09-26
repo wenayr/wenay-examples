@@ -7,6 +7,19 @@
 [аудит прежних задач](changes/previous-tasks-audit-20260926.md), [правила](CODE-RULES.md).
 ID B00, Q01–Q12, G01–G04, C01–C08 сохраняются; суффикс уточняет срез, не перенумеровывает задачу.
 
+Текущий полный checkpoint — raw27106 PASS EXIT0 source9d47359:38actual/39,
+Catalog build absent, no environment SKIP, scaffold10/sync101/15/style498/0/links852/0.
+Исторические raw53023/95073 ниже имеют свои source basis. После27106 приняты Forms
+copy abef339→5616e92 и ORIGINAL Support machine019268b→11e9de0; INTEGRATION Support
+target64391 PASS type0.8/test33.6/build1.6с; proof37d462 EXIT0 5.0608с. Этот перенос не новый full PASS.
+Performance baseline0645a89 — actual initial/dynamic bytes, не runtime acceleration.
+Support bounded merged subset принят: target64391 EXIT0 type0.8/test33.6/build1.6с,
+proof37d462 EXIT0 5.0608с; ports57777/57797/58210/58218/58224 listener0/own dirs absent.
+Repo0dd605 EXIT1 только missing Support scaffold entry; metadata482390e→faa3e3f,
+repo936304 EXIT0 7.643с scaffold10/sync101/15/style500/0/links869/0/generated status verify.
+Latest full raw27106 не покрывает later Forms5616e92/Support11e9de0/faa3e3f;
+fresh full raw перед main pending. Parent Q06 не закрыт.
+
 ## Готовность и доказательства
 
 «Реализовано» — есть код; «проверено» — названные проверки завершены на данном состоянии;
@@ -279,9 +292,13 @@ Documents9254 type/test/build PASS0.9/45.7/1.9с; INTEGRATION e18bd3 EXIT0 5.821
 не принимается за restart или exactly-once; Support code этим slice не изменён.
 Parent Q06 остаётся pending: Support machine handoff, lost reserve/settle response и
 reconciliation/crash gap. Null не означает no-cost, rerun/refund запрещены без доказанного исхода.
-Q06-S-MACHINE ORIGINAL source active/pending: новый guarded durable search resource,
-native private checkpoint/UUID/actual settled receipt; preliminary review не final
-source/runtime acceptance. Старые published array и human assistant не меняются этим scope.
+Q06-S-MACHINE ORIGINAL принят019268b→11e9de0: guarded durable search resource,
+native private checkpoint/UUID/actual settled receipt; strengthened proof4c11ef EXIT0
+4.0141с, target41567 type0.8/test30.5/build1.8с, source review/5ports0/own directories absent.
+[Отчёт](changes/support-machine-search-q06-20260926.md). INTEGRATION target64391 EXIT0 type0.8/test33.6/build1.6с,
+repo936304 EXIT0; bounded merged acceptance подтверждена. Старые published
+array и human assistant не менялись; human UUID/old published namespace unresolved.
+Pending-restart runtime и postcommit race matrix, lost reserve/settle/crash gap не приняты.
 Q04→Q05→Q06 обязательно; полный контракт требуется до paid provider usage.
 
 ## Волна 3: отдельный UX/lifecycle контракт для каждого продукта
@@ -338,8 +355,9 @@ allchecked status/no resume, counters2/1/1 и mobile360px scroll345/cleanup PASS
 
 Bounded Forms browser принят `c0fa1c2`: v1/v2/publication/old response history,
 auditor и actual360px; [отчёт](changes/forms-publication-browser-20260926.md).
-Новый ORIGINAL respondent copy slice (три строки) source frozen, type/review PASS,
-fresh build/browser pending; он не входит в raw27106. Whole Q08-FORMS не закрыт.
+Respondent copy slice принят abef339→5616e92: ORIGINAL type1.18/build1.884с и fresh
+closed-link browser/staff error preserved; INTEGRATION56033e EXIT0 type0.7/build1.0с.
+[Отчёт](changes/forms-public-link-copy-20260926.md). Он после raw27106; whole Q08-FORMS не закрыт.
 
 Триггер: old version link, export и retention/compaction. Результат: старая ссылка имеет явный исход,
 export проверяет текущие права, данные не удаляются до срока и ответы не переписываются.
@@ -627,7 +645,7 @@ C-OPT-PLATFORMS после C07-X: общие модели/client и явные l
 1. Q06-B 71c9d8c и Documents owner keys 58d0aeb приняты; следующий Q06 срез — Support handoff/lost-settle/reconciliation.
 2. Integration baseline e4944c3: npmci13/13, raw4956 PASS38/39, Docker11 PASS, acceptance98146ad. Post-transfer raw18952 EXIT1 только Chat desktop metadata; repair14d0276 и actual raw95073 PASS38/39, scaffold10/sync101/15/style494/0/links814/0. ORIGINAL/GRAPH checkout не переключать.
 3. Fresh Support live36.666s покрывает новые Support assets отдельно от baseline Docker11. Q10repeat15011/Q11repeat25390 bounded native runtime proofs приняты, parent stages pending; Booking targeted/browser UX subset принят после raw95073. npm views19:32UTC подтвердил3.1.1/5.0.0 без новых версий; generic runtime/external HTTPS отдельно.
-4. Следующий Q06 research по current gaps: Support machine receipt handoff, lost reserve/settle response и reconciliation/crash gap, до paid usage. Затем профильные Q08 human journeys/Q01/device; accounting661a870 не закрывает эти пути.
+4. После принятого Support merged subset — Q06 lost reserve/settle response и reconciliation/crash fault boundary, до paid usage. Performance baseline0645a89 задаёт один candidate с measured before/after, не общий rewrite; профильные Q08 journeys/Q01/device остаются отдельно.
 5. Q09/Q10/Q11 после gates; C02 после release, C04/C05 по API, C06 по правам/режиму.
 6. C07 technical e1669c1→b1ac4f2 не закрывает installed HTTPS/menu/mobile/matrix; продолжить реальные C07-D/M/X и C08 по самостоятельным выходам. Q11 fresh pack и bounded Linux runtime приняты; установка чистого host/systemd/HTTPS pending. Support history browser owner/customer/outsider/append PASS, UX сохранён b16c0da→53f5224.
 

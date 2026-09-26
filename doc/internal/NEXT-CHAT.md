@@ -4,7 +4,29 @@
 
 ## Сначала читать: текущая контрольная точка
 
-Root final raw `npm run check:all`, session53023, source392170d, завершился PASS EXIT0:
+Последний полный raw `npm run check:all`27106 PASS EXIT0 COMPLETE source9d47359:
+38actual/39, Catalog build absent, no environment SKIP,
+scaffold10/sync101/15/style498/0/links852/0. Intentional runner-regression fake fail/skip
+не является app failure/skip. Python/Docker доступны. Последующие изменения ниже
+не выдаются за этот full gate; main/push нет.
+
+После него Forms copy принят abef339→5616e92: ORIGINAL type1.18/build1.884с,
+fresh closed-link browser с сохранением staff error, INTEGRATION56033e EXIT0 type0.7/build1.0с.
+[Отчёт](../changes/forms-public-link-copy-20260926.md).
+Support Q06-S-MACHINE ORIGINAL принят019268b→11e9de0: strengthened proof4c11ef EXIT0
+4.0141с, target41567 type0.8/test30.5/build1.8с, source review/5ports0/own directories absent.
+[Отчёт](../changes/support-machine-search-q06-20260926.md). INTEGRATION64391 EXIT0 type0.8/test33.6/build1.6с;
+proof37d462 EXIT0 5.0608с и repo936304 EXIT0; bounded merged acceptance подтверждена.
+Own ports57777/57797/58210/58218/58224 listener0, own directories absent.
+Первый repo0dd605 EXIT1 только missing Support scaffold entry; required metadata
+482390e→faa3e3f исправила его. Repo936304 EXIT0 7.643с:
+scaffold10/sync101/15/style500/0/links869/0/generated status verify.
+Full raw27106 НЕ покрывает later Forms5616e92/Support11e9de0/faa3e3f metadata;
+перед main fresh full raw pending, сейчас broad повтор не заявляется.
+Performance baseline0645a89 фиксирует actual initial/dynamic bundle sizes:
+[отчёт](../changes/performance-bundle-baseline-20260926.md), не runtime acceleration.
+
+Исторический raw53023 source392170d завершился PASS EXIT0:
 38 actual checks/39 шагов, no environment SKIP, scaffold10/sync101/15/style496/0/links835/0.
 Q06 first isolated proof85242 в ORIGINAL завершился EXIT1: native run IDs host-local,
 два checkpoint host использовали ai-1 в одном Counter event namespace. Fixture исправлен:
@@ -27,10 +49,9 @@ Metering quota owner save/discard,
 auditor readonly/actual360 PASS report34b2195: [отчёт](../changes/metering-human-browser-20260926.md).
 Forms browser c0fa1c2 bounded v1/v2/old history/auditor/actual360 PASS:
 [отчёт](../changes/forms-publication-browser-20260926.md). Этот commit docs-only после
-source9d47359; новый ORIGINAL three-line respondent copy type/review PASS,
-fresh build/browser pending. Q08 parent не закрыт.
-Support Q06-S-MACHINE ORIGINAL source active/pending, только preliminary review;
-final source/runtime acceptance не заявлена. Parent Q06 Support/lost-settle/crash open.
+source9d47359; subsequent Forms copy checkpoint принят отдельно выше. Q08 parent не закрыт.
+Parent Q06 lost reserve/settle/crash, pending-restart runtime/postcommit race matrix open;
+human assistant UUID и old published namespace остаются отдельными unresolved контрактами.
 
 Integration `codex/examples-integration-20260926` объединяет графики, Chat и ORIGINAL.
 Полный raw95073 EXIT0 относится к14d0276; subsequent bounded Q11 Linux98ce6a3,
@@ -41,10 +62,10 @@ Support fresh Docker36.666с PASS; baseline merged Docker11 относится �
 Каждая граница и оставшиеся сценарии — в [исполняемом плане](../EXECUTION-PLAN-20260926.md).
 Старые утверждения о pending merged gate ниже относятся к историческим checkpoint.
 
-Следующее: после accepted Q06-PRODUCER-D — Support machine receipt handoff,
-lost reserve/settle response и reconciliation/crash gap после bounded native proof.
+Следующее: Q06 lost reserve/settle response и reconciliation/crash fault boundary.
 Paid provider не добавлять до полного контракта. Параллельно read-only Q08 bundle audit
-выбирает изменение с измеримым эффектом; Q09 реальные product screenshots и Q10
+выбирает один candidate с before/after measurement, без переписывания всех проектов;
+Q09 реальные product screenshots и Q10
 human customization остаются в очереди. Q11 внешний сервер/HTTPS/systemd и C07
 installed desktop/mobile требуют отдельных реальных сред; локальный Linux proof их не заменяет.
 Все ORIGINAL/GRAPH ветки и пользовательский TASK сохраняются. Main/push нет.
