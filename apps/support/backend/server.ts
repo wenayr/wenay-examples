@@ -16,6 +16,7 @@ const service = createSupportRuntime({
     directory: path.join(directory, 'assistant'),
     demo: process.env.SERVICE_DEMO != '0',
     usage,
+    machineUsage: usage,
     content: {targets: contentTargets(process.env.CONTENT_CONNECTIONS_JSON)}
 })
 runLeaderProcess({definition: service.definition,

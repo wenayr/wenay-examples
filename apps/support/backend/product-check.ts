@@ -145,7 +145,8 @@ async function main() {
         assert.deepEqual(permissions.roles, ['knowledge:search'])
         assert.deepEqual(permissions.views, [])
         assert.deepEqual(permissions.commands, [])
-        assert.deepEqual(permissions.resources, ['productSearch'])
+        assert(permissions.resources)
+        assert.deepEqual([...permissions.resources].sort(), ['productSearch', 'productSearchJobs'])
         const resource = machine.resources.open('productSearch')
         await waitFor(() => !!resource.current())
         const saved = resource.current()!.remote

@@ -13,6 +13,7 @@ import {createConversationHistory} from './conversation-resource'
 import {authorizeOrganization} from './domain'
 import {createProductCredentials, requireProductKey, verifyProductSecret} from './product-credentials'
 import {createPublishedSearch} from './product-search'
+import {createMachineSearch, type MachineSearchUsage} from './machine-search'
 import type {ServiceResourceContext} from 'wenay-common2/service'
 
 type RuntimeOptions = {
@@ -22,6 +23,8 @@ type RuntimeOptions = {
     demo?: boolean,
     timeoutMs?: number,
     usage?: UsageGate,
+    machineUsage?: MachineSearchUsage,
+    machineLimits?: Parameters<typeof createMachineSearch>[0]['limits'],
     content?: Parameters<typeof createContentKnowledge>[0]
 }
 
@@ -34,6 +37,8 @@ export function createSupportRuntime(deps: RuntimeOptions = {}) {
     }
     const assistant = createSupportAssistant({...deps, authorizeSearch})
     const product = createPublishedSearch({search: assistant.search, usage: deps.usage})
+    const machine = createMachineSearch({directory: deps.directory, now, search: assistant.search,
+        usage: deps.machineUsage, configuredUsage: !!deps.usage, limits: deps.machineLimits})
     const credentials = createProductCredentials({now, authorizeOwner(state, account, orgId) {
         return authorizeOrganization(state, account, orgId, ['owner'])
     }})
@@ -79,6 +84,7 @@ export function createSupportRuntime(deps: RuntimeOptions = {}) {
         views: {...base.views, ...organizer.views, ...notifications.views},
         resources: {
             assistant: assistant.resource,
+            productSearchJobs: machine.resource,
             files: files.resource,
             content: content.resource,
             conversation: conversation.resource,
@@ -91,11 +97,13 @@ export function createSupportRuntime(deps: RuntimeOptions = {}) {
         mount(store: Parameters<typeof assistant.mount>[0], system?: {productKeyRegister: Parameters<typeof credentials.mount>[0]['register']}) {
             const closeCredentials = credentials.mount({store, register: system?.productKeyRegister})
             const closeAssistant = assistant.mount(store)
+            const closeMachine = machine.mount(store)
             const closeFiles = files.mount(store)
             const closeContent = content.mount(store)
             const closeConversation = conversation.mount(store)
             return function close() {
                 closeCredentials()
+                closeMachine()
                 closeConversation()
                 closeContent()
                 closeFiles()
