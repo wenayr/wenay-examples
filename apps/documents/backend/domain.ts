@@ -3,6 +3,7 @@ export {validateTable} from './csv-table'
 import {schemaCommand, type ServiceCommandCtx, type tServicePrincipal} from 'wenay-common2/service'
 import {ROLES, type DocumentState, type DocumentItem, type ParsedTable} from './model'
 import {validateExtraction} from './model-extraction'
+import {requireProductKey} from './product-credentials'
 
 type Ctx = ServiceCommandCtx<DocumentState>
 const REVIEW = ['owner', 'reviewer'] as const
@@ -29,6 +30,20 @@ export function documentAccess(state: DocumentState, account: string, orgId: str
     const visible = !!document && document.orgId == orgId && document.status != 'deleted'
     const mine = access.role != 'uploader' || document?.owner == account
     if (!visible || !mine) throw new Error('Документ недоступен')
+    return document
+}
+
+export function processingOrganizationAccess(state: DocumentState, account: string, orgId: string, at = Date.now()) {
+    if (account.startsWith('product:')) return requireProductKey(state, account, orgId, at)
+    return organizationAccess(state, account, orgId)
+}
+
+export function processingDocumentAccess(state: DocumentState, account: string, orgId: string, id: string, at = Date.now()) {
+    if (!account.startsWith('product:')) return documentAccess(state, account, orgId, id)
+    requireProductKey(state, account, orgId, at)
+    const document = own(state.documents, id)
+    const mine = document && document.orgId == orgId && document.owner == account && document.status != 'deleted'
+    if (!mine) throw new Error('Документ ключа недоступен')
     return document
 }
 
@@ -76,7 +91,7 @@ export function createDocumentDomain(deps: {now?: () => number} = {}) {
             documentImport: schemaCommand({orgId: 'string', id: 'string', actor: 'string', name: 'string', blobId: 'string', size: 'number'}, {
                 allow: ['system'], apply(ctx: Ctx, input) {
                     internal(ctx)
-                    organizationAccess(ctx.state, input.actor, input.orgId)
+                    processingOrganizationAccess(ctx.state, input.actor, input.orgId, now())
                     const hashed = /^[a-f0-9]{64}$/.test(input.id) && /^[a-f0-9]{64}$/.test(input.blobId)
                     const named = !!input.name.trim() && input.name.length <= 160
                     const sized = Number.isInteger(input.size) && input.size >= 1 && input.size <= 512 * 1024
@@ -101,7 +116,7 @@ export function createDocumentDomain(deps: {now?: () => number} = {}) {
             processingBegin: schemaCommand({...execution, revision: 'number', processor: 'string'}, {
                 allow: ['system'], apply(ctx: Ctx, input) {
                     internal(ctx)
-                    const document = documentAccess(ctx.state, input.actor, input.orgId, input.id)
+                    const document = processingDocumentAccess(ctx.state, input.actor, input.orgId, input.id, now())
                     expected(document, input.revision)
                     if (!['uploaded', 'failed', 'cancelled', 'uncertain'].includes(document.status)) throw new Error('Обработка недоступна в текущем состоянии')
                     document.status = 'processing'
@@ -124,7 +139,7 @@ export function createDocumentDomain(deps: {now?: () => number} = {}) {
             }, {
                 allow: ['system'], apply(ctx: Ctx, input) {
                     internal(ctx)
-                    const document = documentAccess(ctx.state, input.actor, input.orgId, input.id)
+                    const document = processingDocumentAccess(ctx.state, input.actor, input.orgId, input.id, now())
                     const current = document.activeRun == input.runId && document.attempt == input.attempt
                     if (document.status != 'processing' || !current) throw new Error('Результат устаревшей попытки отклонён')
                     const table = validateTable(input)

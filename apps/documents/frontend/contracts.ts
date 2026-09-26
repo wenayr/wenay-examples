@@ -4,7 +4,8 @@ import type {DocumentWorkspace} from '../backend/domain'
 import {useCommandAction} from '../shared/react/command-action'
 
 export type Resources = ServiceClient<DocumentDefinition>['resources']
-export type ProcessorRemote = NonNullable<ReturnType<ReturnType<Resources['open']>['current']>>['remote']
+declare const processorResources: Resources
+export type ProcessorRemote = NonNullable<ReturnType<ReturnType<typeof processorResources.open<'processor'>>['current']>>['remote']
 export type Commands = ReturnType<typeof useCommandAction<ServiceClient<DocumentDefinition>['commands']>>
 export type DocumentMetadata = DocumentWorkspace['documents'][number]
 export type DocumentDetail = Awaited<ReturnType<ProcessorRemote['control']['detail']>>

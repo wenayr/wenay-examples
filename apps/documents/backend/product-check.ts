@@ -15,7 +15,7 @@ async function main() {
     const host = await createServiceLeaderHost({definition: runtime.definition, env: {SERVICE_PORT: '0'}, mount({app, leader}) {
         createDocumentProductHttp({
             app,
-            resource: runtime.definition.resources.processor,
+            resource: runtime.definition.resources.productDocuments,
         account: token => leader.access.principalOf(leader.identity.principal(token)).account
         })
         return runtime.mount({store: leader.line.control.store, execute: leader.corridor.system})

@@ -1,4 +1,5 @@
 import express, {type Express} from 'express'
+import {AsyncLocalStorage} from 'node:async_hooks'
 import {createHttpFacadeServer, createHttpFacadeOpenApi} from 'wenay-common2/server'
 import {buildInputValidate, inputJsonSchema, type InferInput} from 'wenay-common2/service'
 import type {createDocumentProcessing} from './processing-resource'
@@ -21,19 +22,33 @@ const checks = {
 type ProductHttpDeps = {
     app: Express,
     account: (token: string) => string,
-    resource: ReturnType<typeof createDocumentProcessing>['resource']
+    resource: ReturnType<typeof createDocumentProcessing>['productResource']
 }
 
 export function createDocumentProductHttp(deps: ProductHttpDeps) {
+    const requestScope = new AsyncLocalStorage<AbortSignal>()
     type Facade = ReturnType<typeof deps.resource.open>['facade']
     async function use<T>(account: string, operation: (facade: Facade) => Promise<T> | T) {
+        const signal = requestScope.getStore() ?? AbortSignal.timeout(12000)
         const connection = deps.resource.open({
             principal: {account, roles: []},
             sessionId: 'product-' + crypto.randomUUID(),
-            resourceId: 'processor',
-            signal: AbortSignal.timeout(12000)
+            resourceId: 'productDocuments', signal
         })
-        try {return await operation(connection.facade)} finally {connection.close()}
+        let offAbort = () => {}
+        const interrupted = new Promise<never>(function waitForAbort(_resolve, reject) {
+            function aborted() {reject(signal.reason ?? new Error('Запрос прерван'))}
+            signal.addEventListener('abort', aborted, {once: true})
+            offAbort = () => signal.removeEventListener('abort', aborted)
+            if (signal.aborted) aborted()
+        })
+        try {
+            signal.throwIfAborted()
+            return await Promise.race([operation(connection.facade), interrupted])
+        } finally {
+            offAbort()
+            connection.close()
+        }
     }
     const object = {documents: {
         async upload(account: string, input: InferInput<typeof DOCUMENT_PRODUCT_INPUTS.upload>) {
@@ -46,20 +61,7 @@ export function createDocumentProductHttp(deps: ProductHttpDeps) {
         async start(account: string, input: InferInput<typeof DOCUMENT_PRODUCT_INPUTS.start>) {
             checks.start(input)
             if (!/^[\w.-]{1,100}$/.test(input.requestId)) throw new Error('Укажите устойчивый requestId')
-            return use(account, function start(facade) {
-                const run = facade.ai.createRun({
-                    requestId: input.requestId,
-                    kind: 'extract',
-                    resourceIds: [input.id],
-                    input: {
-                        orgId: input.orgId,
-                        documentId: input.id,
-                        revision: input.revision,
-                        processor: input.processor
-                    }
-                })
-                return {runId: run.id, documentId: input.id, state: run.state}
-            })
+            return use(account, facade => facade.control.start(input))
         },
         async status(account: string, input: InferInput<typeof DOCUMENT_PRODUCT_INPUTS.status>) {
             checks.status(input)
@@ -67,17 +69,7 @@ export function createDocumentProductHttp(deps: ProductHttpDeps) {
         },
         async result(account: string, input: InferInput<typeof DOCUMENT_PRODUCT_INPUTS.result>) {
             checks.result(input)
-            return use(account, async function result(facade) {
-                const value = await facade.control.detail(input)
-                return {
-                    id: value.id,
-                    revision: value.revision,
-                    sourceVersion: value.sourceVersion,
-                    status: value.status,
-                    table: value.table,
-                    provenance: value.provenance
-                }
-            })
+            return use(account, facade => facade.control.result(input))
         }
     }}
     const basePath = '/api/product', limits = {maxArgs: 2, maxDepth: 8, maxArrayLen: 5000, maxKeys: 100, maxStringLen: 720000}
@@ -87,7 +79,22 @@ export function createDocumentProductHttp(deps: ProductHttpDeps) {
         method: 'post',
         basePath,
         limits,
-        middleware: [express.json({limit: '750kb'}), authenticatedArgs(deps)]
+        middleware: [express.json({limit: '750kb'}), authenticatedArgs(deps), function requestLifetime(request, response, next) {
+            const controller = new AbortController()
+            const timer = setTimeout(function timedOut() {controller.abort(new Error('Запрос занял больше 12 секунд'))}, 12000)
+            function disconnected() {
+                if (!response.writableFinished) controller.abort(new Error('Клиент отключился'))
+                finished()
+            }
+            function finished() {
+                clearTimeout(timer)
+                response.removeListener('close', disconnected)
+            }
+            response.once('close', disconnected)
+            response.once('finish', finished)
+            // Request IO lifetime is local metadata; it must not pass through the public argument codec.
+            requestScope.run(controller.signal, next)
+        }]
     })
     const spec = createHttpFacadeOpenApi({object, methods: ['post'], basePath, limits, bearerAuth: true,
         info: {title: 'Document extraction', version: '1.0.0', description: 'Upload and process your authorized documents; review and administration are separate service roles.'},

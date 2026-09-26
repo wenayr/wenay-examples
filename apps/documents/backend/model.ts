@@ -6,6 +6,11 @@ import type {ParsedTable} from './csv-table'
 export type {ParsedTable} from './csv-table'
 import type {FieldOrigin} from './model-extraction'
 export type Provenance = {sourceVersion: number, provider: string, demo: boolean, fields: FieldOrigin[]}
+export const PRODUCT_SCOPES = ['documents:extract'] as const
+export type ProductKey = {
+    id: string, orgId: string, label: string, hash: string, scopes: typeof PRODUCT_SCOPES[number][],
+    createdBy: string, createdAt: number, expiresAt: number, revokedAt: number
+}
 export type DocumentItem = {
     id: string, orgId: string, owner: string, name: string, blobId: string, size: number,
     revision: number, sourceVersion: number, createdAt: number, updatedAt: number,
@@ -15,6 +20,7 @@ export type DocumentItem = {
     approvals: {revision: number, by: string, at: number, table: ParsedTable, sourceVersion: number, provenance?: Provenance}[]
 }
 export type DocumentState = {
+    productKeys?: Record<string, ProductKey>,
     accounts: Record<string, {account: string, name: string, secret: tSecret}>,
     organizations: Record<string, {id: string, name: string, members: Record<string, tRole>}>,
     documents: Record<string, DocumentItem>,

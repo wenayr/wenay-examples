@@ -8,9 +8,10 @@ import {createLocalBlobStorage} from 'wenay-common2/server/blob'
 import {createProcessResource} from 'wenay-common2/server/process'
 import {createAiRunHost, type AiRunRunner, type AiRun} from 'wenay-common2/ai'
 import type {Store} from 'wenay-common2/observe'
-import type {ServiceResourceContext} from 'wenay-common2/service'
+import {buildInputValidate, type ServiceResourceContext} from 'wenay-common2/service'
 import type {createServiceLeader} from 'wenay-common2/service/server'
-import {documentAccess, organizationAccess, validateTable} from './domain'
+import {documentAccess, processingDocumentAccess, processingOrganizationAccess, validateTable} from './domain'
+import {requireProductKey} from './product-credentials'
 import {documentsDefinition} from './service'
 import type {DocumentState, ParsedTable, Provenance} from './model'
 import {createTestExtractionProvider, validateExtraction, type ExtractionProvider} from './model-extraction'
@@ -112,6 +113,7 @@ export function createDocumentProcessor(deps: ProcessorDeps): DocumentProcessor 
 }
 
 type ProcessingDeps = {
+    now?: () => number,
     directory?: string,
     processor?: DocumentProcessor,
     python?: string,
@@ -158,6 +160,7 @@ function failureMessage(error: unknown, aborted: boolean, cancelled: boolean) {
 }
 
 export function createDocumentProcessing(deps: ProcessingDeps = {}) {
+    const now = deps.now ?? Date.now
     let store: Store<DocumentState> | null = null
     let execute: DocumentExecutor | null = null
     let ready = Promise.resolve()
@@ -172,7 +175,18 @@ export function createDocumentProcessing(deps: ProcessingDeps = {}) {
         if (!store || closing) throw new Error('Обработчик не подключён')
         return store.state
     }
-    function item(account: string, orgId: string, id: string) {return documentAccess(state(), account, orgId, id)}
+    function item(account: string, orgId: string, id: string) {return processingDocumentAccess(state(), account, orgId, id, now())}
+    function organization(account: string, orgId: string) {return processingOrganizationAccess(state(), account, orgId, now())}
+    // Machine connections are private. Job authority can reconcile its own persisted run after its credential expires.
+    function authorityItem(account: string, orgId: string, id: string) {
+        if (!account.startsWith('product:')) return documentAccess(state(), account, orgId, id)
+        const key = state().productKeys?.[account.slice(8)]
+        const document = state().documents[id]
+        const scoped = key && key.orgId == orgId && Object.hasOwn(state().organizations, orgId)
+        const mine = document && document.orgId == orgId && document.owner == account
+        if (!scoped || !mine) throw new Error('Работа ключа недоступна')
+        return document
+    }
     function matches(account: string, input: {orgId: string, id: string, revision: number}) {
         const document = item(account, input.orgId, input.id)
         if (document.revision != input.revision) throw new Error('Документ уже изменён. Обновите карточку')
@@ -183,7 +197,7 @@ export function createDocumentProcessing(deps: ProcessingDeps = {}) {
         authorize({context, operation, id}) {
             if (context.cleanup && operation == 'remove') return
             context.signal?.throwIfAborted()
-            organizationAccess(state(), context.account, context.orgId)
+            organization(context.account, context.orgId)
             if (operation != 'upload') {
                 const document = item(context.account, context.orgId, context.id ?? '')
                 if (document.blobId != id) throw new Error('Файл не принадлежит документу')
@@ -229,11 +243,23 @@ export function createDocumentProcessing(deps: ProcessingDeps = {}) {
         const timeout = setTimeout(function expired() {
             controller.abort(new Error('Обработка заняла больше 10 секунд'))
         }, 10000)
+        let expiry: ReturnType<typeof setTimeout> | undefined
+        function current() {
+            controller.signal.throwIfAborted()
+            return item(ctx.run.owner, input.orgId, input.documentId)
+        }
         try {
             if (!processing || !blobs || !execute) throw new Error('Обработчик не подключён')
             controller.signal.throwIfAborted()
             if (ctx.cancelled()) return
             const original = matches(ctx.run.owner, {orgId: input.orgId, id: input.documentId, revision: input.revision})
+            if (ctx.run.owner.startsWith('product:')) {
+                const key = requireProductKey(state(), ctx.run.owner, input.orgId, now())
+                const remaining = key.expiresAt - now()
+                if (remaining <= 10000) {
+                    expiry = setTimeout(function keyExpired() {controller.abort(new Error('Срок ключа истёк'))}, Math.max(1, remaining))
+                }
+            }
             const name = original.name
             const blobId = original.blobId
             const sourceVersion = original.sourceVersion
@@ -245,15 +271,16 @@ export function createDocumentProcessing(deps: ProcessingDeps = {}) {
                 revision: input.revision,
                 processor: input.processor
             })
+            current()
             ctx.report({progress: 0.2, message: 'Чтение исходного файла'})
             const bytes = await blobs.resource.read({account: ctx.run.owner, orgId: input.orgId, id: input.documentId, signal: controller.signal}, blobId)
-            controller.signal.throwIfAborted()
+            current()
             const stage = input.processor == 'python' ? 'CSV обрабатывается Python' : 'Извлечение строк в Node'
             ctx.report({progress: 0.5, message: stage})
             let offAbort = () => {}
             let parsed: ParsedTable & {provenance?: Provenance}
             async function extract() {
-                controller.signal.throwIfAborted()
+                current()
                 const cancelled = new Promise<never>(function onAbort(_resolve, reject) {
                     function abort() {reject(controller.signal.reason ?? new Error('Обработка отменена'))}
                     controller.signal.addEventListener('abort', abort, {once: true})
@@ -281,7 +308,7 @@ export function createDocumentProcessing(deps: ProcessingDeps = {}) {
             } finally {
                 offAbort()
             }
-            controller.signal.throwIfAborted()
+            current()
             if (ctx.cancelled()) return
             const table = validateTable(parsed)
             const provenance = parsed.provenance ? {provenance: parsed.provenance} : {}
@@ -294,19 +321,21 @@ export function createDocumentProcessing(deps: ProcessingDeps = {}) {
                 ...table,
                 ...provenance
             })
+            current()
             ctx.report({progress: 1, message: 'Данные готовы к проверке человеком'})
             return {result: {available: true}}
         } catch (error) {
             const status = ctx.cancelled() ? 'cancelled' : 'failed'
-            await failed(ctx.run, status, failureMessage(error, controller.signal.aborted, ctx.cancelled()))
+            if (!closing) await failed(ctx.run, status, failureMessage(error, controller.signal.aborted, ctx.cancelled()))
             throw new Error(failureMessage(error, controller.signal.aborted, ctx.cancelled()), {cause: error})
         } finally {
             clearTimeout(timeout)
+            clearTimeout(expiry)
             pending.delete(ctx.run.id)
         }
     }, async cancel({run}) {
         pending.get(run.id)?.abort()
-        await failed(run, 'cancelled', 'Обработка отменена')
+        if (!closing) await failed(run, 'cancelled', 'Обработка отменена')
     }}
     const checkpoint = openAiCheckpoint({
         directory: directory ? path.join(directory, 'runs') : undefined
@@ -326,7 +355,7 @@ export function createDocumentProcessing(deps: ProcessingDeps = {}) {
             canCreate(account, request) {
                 try {
                     const input = inputOf(request.input)
-                    const document = item(account, input.orgId, input.documentId)
+                    const document = authorityItem(account, input.orgId, input.documentId)
                     if (request.kind != 'extract' || request.resourceIds?.length != 1) return false
                     if (request.resourceIds[0] != document.id) return false
                     const runs = Object.values(host.store.state.runs)
@@ -345,18 +374,27 @@ export function createDocumentProcessing(deps: ProcessingDeps = {}) {
             }
         }
     })
-    const resource = {allow: ['signedIn'], placement: 'authority' as const, open(ctx: ServiceResourceContext) {
+    function openProcessing(ctx: ServiceResourceContext) {
+        ctx.signal.throwIfAborted()
         const account = ctx.principal.account
         const connection = host.connection(account)
+        const controller = new AbortController()
+        const signal = AbortSignal.any([ctx.signal, controller.signal])
+        let closed = false
+        let expiry: ReturnType<typeof setTimeout> | undefined
+        let off = () => {}
         const transfers = new Map<string, Transfer>()
         function active() {
-            ctx.signal.throwIfAborted()
+            signal.throwIfAborted()
+            if (closed) throw new Error('Подключение обработчика закрыто')
             state()
+            if (account.startsWith('product:')) requireProductKey(state(), account, undefined, now())
+            else if (!Object.hasOwn(state().accounts, account)) throw new Error('Аккаунт недоступен')
             if (!blobs || !execute) throw new Error('Хранилище не подключено')
         }
         function beginUpload(orgId: string) {
             active()
-            organizationAccess(state(), account, orgId)
+            organization(account, orgId)
             for (const [id, transfer] of transfers) {
                 const done = ['completed', 'cancelled'].includes(transfer.phase)
                 const stale = transfer.phase != 'committing' && Date.now() - transfer.createdAt >= 60000
@@ -379,26 +417,26 @@ export function createDocumentProcessing(deps: ProcessingDeps = {}) {
             active()
             const transfer = transfers.get(uploadId)
             if (!transfer) throw new Error('Загрузка недоступна в этом подключении')
-            organizationAccess(state(), account, transfer.orgId)
+            organization(account, transfer.orgId)
             if (transfer.phase == 'committing' || transfer.phase == 'completed') return {status: transfer.phase, documentId: transfer.documentId}
             transfer.controller.abort(new Error('Загрузка отменена'))
             transfer.phase = 'cancelled'
             return {status: 'cancelled' as const, documentId: ''}
         }
-        async function upload(input: {orgId: string, name: string, bytes: Uint8Array, uploadId?: string}) {
+        async function upload(input: {orgId: string, name: string, bytes: Uint8Array, uploadId?: string}, operationSignal = signal) {
             const transfer = input.uploadId ? transfers.get(input.uploadId) : null
             const usable = transfer && transfer.orgId == input.orgId && transfer.phase == 'pending'
             if (input.uploadId && !usable) throw new Error('Загрузка отменена или завершена')
             const left = transfer ? Math.max(1, 60000 - (Date.now() - transfer.createdAt)) : 0
             const limits = transfer ? [transfer.controller.signal, AbortSignal.timeout(left)] : []
-            const signal = AbortSignal.any([ctx.signal, ...limits])
-            signal.throwIfAborted()
+            const uploadSignal = AbortSignal.any([signal, operationSignal, ...limits])
+            uploadSignal.throwIfAborted()
             await ready
             if (filesQueue.size >= 4) throw new Error('Очередь загрузки заполнена. Повторите позже')
-            return filesQueue.add(async function commitUpload() {
-            signal.throwIfAborted()
+            const uploaded = await filesQueue.add(async function commitUpload() {
+            uploadSignal.throwIfAborted()
             active()
-            organizationAccess(state(), account, input.orgId)
+            organization(account, input.orgId)
             if (!acceptedName(input.name)) {
                 throw new Error('Загрузите CSV, TXT или PDF с именем до 160 символов')
             }
@@ -419,10 +457,10 @@ export function createDocumentProcessing(deps: ProcessingDeps = {}) {
             if (uploads.has(id)) throw new Error('Этот файл уже загружается')
             uploads.add(id)
             try {
-                const stored = await blobs!.control.upload({account, orgId: input.orgId, signal}, input.bytes)
-                signal.throwIfAborted()
+                const stored = await blobs!.control.upload({account, orgId: input.orgId, signal: uploadSignal}, input.bytes)
+                uploadSignal.throwIfAborted()
                 active()
-                organizationAccess(state(), account, input.orgId)
+                organization(account, input.orgId)
                 // Cancellation can stop byte IO/queue work. Once metadata is committing, report that boundary honestly.
                 if (transfer) {
                     transfer.phase = 'committing'
@@ -437,6 +475,10 @@ export function createDocumentProcessing(deps: ProcessingDeps = {}) {
                     blobId: stored.id,
                     size: stored.size
                 })
+                uploadSignal.throwIfAborted()
+                active()
+                const created = item(account, input.orgId, imported.id)
+                if (created.owner != account || created.blobId != stored.id) throw new Error('Ответ импорта не принадлежит этой загрузке')
                 deleted.delete(id)
                 if (transfer) transfer.phase = 'completed'
                 return imported
@@ -449,13 +491,17 @@ export function createDocumentProcessing(deps: ProcessingDeps = {}) {
                 await cleanup()
             }
             })
+            uploadSignal.throwIfAborted()
+            active()
+            item(account, input.orgId, uploaded.id)
+            return uploaded
         }
         async function download(input: {orgId: string, id: string}) {
             await ready
             active()
             const document = item(account, input.orgId, input.id)
             const name = document.name
-            const bytes = await blobs!.resource.read({account, orgId: input.orgId, id: input.id, signal: ctx.signal}, document.blobId)
+            const bytes = await blobs!.resource.read({account, orgId: input.orgId, id: input.id, signal}, document.blobId)
             active()
             item(account, input.orgId, input.id)
             return {name, bytes: new Uint8Array(bytes)}
@@ -544,12 +590,109 @@ export function createDocumentProcessing(deps: ProcessingDeps = {}) {
             compare,
             export: exportDocument
         }
+        const reference = {orgId: 'string', id: 'string'} as const
+        const validateUpload = buildInputValidate({orgId: 'string', name: 'string', bytes: {array: 'number'}})
+        const validateStart = buildInputValidate({...reference, revision: 'number', processor: {enum: ['node', 'python', 'model']}, requestId: 'string'})
+        const validateStatus = buildInputValidate(reference)
+        const validateResult = buildInputValidate({...reference, revision: 'number'})
+        async function productUpload(input: {orgId: string, name: string, bytes: Uint8Array}) {
+            const deadline = AbortSignal.timeout(12000)
+            if (!(input.bytes instanceof Uint8Array) || input.bytes.length > 512 * 1024) throw new Error('Нужны bytes файла до 512 КиБ')
+            validateUpload({...input, bytes: [...input.bytes]})
+            input = Object.freeze({...input, bytes: new Uint8Array(input.bytes)})
+            const result = await upload(input, deadline)
+            deadline.throwIfAborted()
+            active()
+            item(account, input.orgId, result.id)
+            return result
+        }
+        async function start(input: {orgId: string, id: string, revision: number, processor: string, requestId: string}) {
+            const deadline = AbortSignal.timeout(12000)
+            validateStart(input)
+            input = Object.freeze({...input})
+            if (!/^[\w.-]{1,100}$/.test(input.requestId)) throw new Error('Укажите устойчивый requestId')
+            await ready
+            deadline.throwIfAborted()
+            active()
+            item(account, input.orgId, input.id)
+            const run = connection.fragment.createRun({requestId: input.requestId, kind: 'extract', resourceIds: [input.id],
+                input: {orgId: input.orgId, documentId: input.id, revision: input.revision, processor: input.processor}})
+            active()
+            const target = item(account, input.orgId, run.resourceIds[0])
+            if (run.owner != account || target.id != input.id) throw new Error('Ответ запуска не принадлежит этому документу')
+            return {runId: run.id, documentId: target.id, state: run.state}
+        }
+        async function productStatus(input: {orgId: string, id: string}) {
+            const deadline = AbortSignal.timeout(12000)
+            validateStatus(input)
+            input = Object.freeze({...input})
+            await ready
+            deadline.throwIfAborted()
+            active()
+            const document = item(account, input.orgId, input.id)
+            const run = host.store.state.runs[document.activeRun]
+            return {id: document.id, revision: document.revision, sourceVersion: document.sourceVersion, status: document.status,
+                attempt: document.attempt, processor: document.processor, rowCount: document.table.rows.length, error: document.error,
+                runId: run?.id ?? '', runState: run?.state ?? null}
+        }
+        async function result(input: {orgId: string, id: string, revision: number}) {
+            const deadline = AbortSignal.timeout(12000)
+            validateResult(input)
+            input = Object.freeze({...input})
+            await ready
+            deadline.throwIfAborted()
+            active()
+            const document = matches(account, input)
+            return {id: document.id, revision: document.revision, sourceVersion: document.sourceVersion, status: document.status,
+                table: {headers: [...document.table.headers], rows: document.table.rows.map(row => [...row])},
+                provenance: document.provenance ? {...document.provenance, fields: document.provenance.fields.map(field => ({...field}))} : null}
+        }
         function close() {
+            if (closed) return
+            closed = true
+            controller.abort(new Error('Подключение обработчика закрыто'))
+            clearTimeout(expiry)
+            off()
+            ctx.signal.removeEventListener('abort', close)
             for (const transfer of transfers.values()) transfer.controller.abort()
             transfers.clear()
             connection.close()
         }
-        return {facade: {ai: connection.fragment, control}, close}
+        ctx.signal.addEventListener('abort', close, {once: true})
+        if (account.startsWith('product:')) {
+            try {
+                function scheduleExpiry() {
+                    const key = requireProductKey(state(), account, undefined, now())
+                    // Node timers cannot represent the full allowed 90-day credential lifetime.
+                    const remaining = Math.min(2147483647, Math.max(1, key.expiresAt - now()))
+                    expiry = setTimeout(function checkExpiry() {
+                        try {scheduleExpiry()} catch {close()}
+                    }, remaining)
+                }
+                scheduleExpiry()
+                off = store!.on(function keyChanged() {
+                    try {active()} catch {close()}
+                })
+            } catch (error) {
+                close()
+                throw error
+            }
+        }
+        function createRun(input: Parameters<typeof connection.fragment.createRun>[0]) {
+            active()
+            const run = connection.fragment.createRun(input)
+            active()
+            return run
+        }
+        return {facade: {ai: {...connection.fragment, createRun}, control}, product: {upload: productUpload, start, status: productStatus, result}, close}
+    }
+    const resource = {allow: ['signedIn'], placement: 'authority' as const, open(ctx: ServiceResourceContext) {
+        if (ctx.principal.account.startsWith('product:')) throw new Error('Машинный ключ не является участником')
+        return openProcessing(ctx)
+    }}
+    const productResource = {allow: ['documents:extract'], placement: 'authority' as const, open(ctx: ServiceResourceContext) {
+        const connection = openProcessing(ctx)
+        return {facade: {control: connection.product}, close: connection.close}
     }}
     function mount(deps: {store: Store<DocumentState>, execute: DocumentExecutor}) {
         store = deps.store
@@ -598,6 +741,6 @@ export function createDocumentProcessing(deps: ProcessingDeps = {}) {
             host.close()
         }
     }
-    return {resource, mount, view: {ready: () => ready}}
+    return {resource, productResource, mount, view: {ready: () => ready}}
 }
 

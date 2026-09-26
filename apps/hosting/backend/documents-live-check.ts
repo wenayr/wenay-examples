@@ -13,7 +13,9 @@ import {createDockerResource, type Deployment} from './docker'
 import type {DocumentDefinition} from '../../documents/backend/runtime'
 import type {DocumentWorkspace} from '../../documents/backend/domain'
 
-type ProcessorRemote = NonNullable<ReturnType<ReturnType<ServiceClient<DocumentDefinition>['resources']['open']>['current']>>['remote']
+declare const documentResources: ServiceClient<DocumentDefinition>['resources']
+type ProcessorResource = ReturnType<typeof documentResources.open<'processor'>>
+type ProcessorRemote = NonNullable<ReturnType<ProcessorResource['current']>>['remote']
 
 function textPdf(text: string) {
     const content = 'BT /F1 12 Tf 20 100 Td (' + text + ') Tj ET'
@@ -62,8 +64,8 @@ async function main() {
     let agent: Awaited<ReturnType<typeof startDockerAgent>> | undefined
     let customer: ServiceClient<DocumentDefinition> | undefined
     let reviewer: ServiceClient<DocumentDefinition> | undefined
-    let resource: ReturnType<ServiceClient<DocumentDefinition>['resources']['open']> | undefined
-    let reviewResource: ReturnType<ServiceClient<DocumentDefinition>['resources']['open']> | undefined
+    let resource: ProcessorResource | undefined
+    let reviewResource: ProcessorResource | undefined
     const profile = {port: 8080, healthPath: '/health', memoryMiB: 256, cpus: 0.5, dataVersion: 'documents-1'}
     async function wait(label: string, predicate: () => boolean | Promise<boolean>, timeout = 40000) {
         const until = Date.now() + timeout

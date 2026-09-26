@@ -8,7 +8,8 @@
     "dev": "vite frontend --host 127.0.0.1",
     "build": "vite build frontend --outDir ../public",
     "typecheck": "tsc --noEmit",
-    "test": "tsx backend/domain-check.ts && tsx backend/check.ts && tsx backend/product-check.ts && tsx backend/backup-check.ts",
+    "test": "tsx backend/domain-check.ts && tsx backend/check.ts && tsx backend/product-check.ts && tsx backend/machine-check.ts && tsx backend/backup-check.ts",
+    "test:machine": "tsx backend/machine-check.ts",
     "test:advanced": "tsx backend/advanced-check.ts",
     "test:backup": "tsx backend/backup-check.ts"
   },

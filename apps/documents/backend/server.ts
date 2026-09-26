@@ -25,7 +25,7 @@ runLeaderProcess({definition: service.definition,
         app.get('/api/client', function descriptor(_request, response) {response.json(describeService(service.definition))})
         createDocumentProductHttp({
             app,
-            resource: service.definition.resources.processor,
+            resource: service.definition.resources.productDocuments,
         account: token => leader.access.principalOf(leader.identity.principal(token)).account
         })
         app.use(express.static(path.resolve('public')))
