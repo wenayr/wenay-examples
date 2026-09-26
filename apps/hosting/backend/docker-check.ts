@@ -16,6 +16,7 @@ async function main() {
     await new Promise<void>(function start(resolve) {application.listen(0, '127.0.0.1', resolve)})
     const port = (application.address() as {port: number}).port
     let container: any = null
+    function observedConfig() {return container.Config}
     let creates = 0
     let starts = 0
     let loseCreateReply = true
@@ -69,7 +70,9 @@ async function main() {
         response.end('{}')
     })
     await new Promise<void>(function start(resolve) {daemon.listen(socketPath, resolve)})
-    const docker = createDockerResource({socketPath, owner: 'test-agent', readinessMs: 250})
+    const docker = createDockerResource({socketPath, owner: 'test-agent', readinessMs: 250,
+        runtime: async () => ['SERVICE_PUBLIC_URL=http://127.0.0.1:1', 'SERVICE_CORS_ORIGINS=*']
+    })
     const deployment = {operation, environment: 'staging', artifact: 'test/image@sha256:'+'a'.repeat(64)}
     const signal = new AbortController().signal
     try {
@@ -77,6 +80,7 @@ async function main() {
         const result = await docker.control.deploy(deployment, signal)
         assert.equal(result.endpoint, 'http://127.0.0.1:'+port)
         assert.equal(creates, 1, 'lost create reply reuses the existing deterministic container')
+        assert.equal(container.Config.Env, undefined, 'legacy stateless deployment keeps its previous environment contract')
         await docker.control.deploy(deployment, signal)
         assert.equal(starts, 1, 'a healthy running candidate is not restarted')
         container.Config.Labels['wenay.owner'] = 'someone-else'
@@ -86,6 +90,15 @@ async function main() {
         await assert.rejects(docker.control.deploy(deployment, signal), DeploymentRejected)
         await docker.control.remove(deployment)
         assert.equal(container, null)
+        healthy = true
+        const publicDeployment = {...deployment, publicOrigin: 'https://app.example.test'}
+        await docker.control.deploy(publicDeployment, signal)
+        const config = observedConfig()
+        const env = config.Env as string[]
+        assert.deepEqual(env.filter(value => value.startsWith('SERVICE_PUBLIC_URL=')), ['SERVICE_PUBLIC_URL=https://app.example.test'])
+        assert.deepEqual(env.filter(value => value.startsWith('SERVICE_CORS_ORIGINS=')), ['SERVICE_CORS_ORIGINS=https://app.example.test'])
+        assert.equal(config.HostConfig.PortBindings['8080/tcp'][0].HostIp, '127.0.0.1', 'public origin keeps loopback binding')
+        await docker.control.remove(publicDeployment)
         console.log('PASS Docker adapter contract: lost reply recovery, readiness, limits, ownership and targeted removal (HTTP fixture, not a real daemon)')
     } finally {
         application.closeAllConnections()

@@ -19,7 +19,7 @@
     "test:public-address": "tsx backend/stateful-live-check.ts",
     "test:gateway-ws": "tsx backend/gateway-ws-check.ts",
     "typecheck": "tsc --noEmit",
-    "test": "tsx backend/check.ts && tsx backend/docker-check.ts && tsx backend/gateway-check.ts && tsx backend/agent-check.ts && tsx backend/lxd-check.ts && npm run test:orchestration && npm run test:gateway-ws",
+    "test": "tsx backend/check.ts && tsx backend/public-origin-check.ts && tsx backend/docker-check.ts && tsx backend/gateway-check.ts && tsx backend/agent-check.ts && tsx backend/lxd-check.ts && npm run test:orchestration && npm run test:gateway-ws",
     "test:orchestration": "tsx backend/orchestration-check.ts",
     "test:crm": "tsx backend/crm-live-check.ts",
     "test:booking": "tsx backend/booking-live-check.ts",

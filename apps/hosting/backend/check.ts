@@ -5,7 +5,9 @@ import {tmpdir} from 'node:os'
 import path from 'node:path'
 import {createServiceLeaderHost} from 'wenay-common2/service/host'
 import {createServiceClient, describeService, type ServiceClient} from 'wenay-common2/service/client'
-import {createHostingDefinition, type AccountConfig, type HostingDefinition} from './service'
+import {createHostingDefinition, type AccountConfig} from './service'
+import {createHostingRuntime, type HostingRuntimeDefinition} from './runtime'
+import {checkPublicOriginGuards} from './public-origin-check'
 
 async function waitFor(check: () => boolean) {
     const deadline = Date.now()+5000
@@ -27,7 +29,8 @@ async function main() {
         {account: 'agent', role: 'agent', projects: ['shop']},
         {account: 'other-agent', role: 'agent', projects: ['other']},
     ].map(account => ({...account, role: account.role as AccountConfig['role'], password: randomBytes(24).toString('hex')}))
-    const definition = createHostingDefinition({accounts})
+    let runtime = createHostingRuntime({accounts})
+    const definition = runtime.definition
     assert.throws(() => createHostingDefinition({accounts: [{...accounts[0], password: 'REPLACE-WITH-A-UNIQUE-ADMIN-SECRET'}]}), /replace example passwords/)
     const descriptor = describeService(definition)
     assert(!JSON.stringify(descriptor).includes(accounts[0].password), 'public descriptor excludes credentials')
@@ -37,8 +40,10 @@ async function main() {
         SERVICE_TOKEN_SECRET: randomBytes(32).toString('hex'),
         SERVICE_NODE_TOKEN: randomBytes(32).toString('hex')
     }
-    let host = await createServiceLeaderHost({definition, env})
-    const clients: ServiceClient<HostingDefinition>[] = []
+    let host = await createServiceLeaderHost({definition, env, mount({leader}) {
+        return runtime.mount(leader.line.control.store, leader.corridor.system)
+    }})
+    const clients: ServiceClient<HostingRuntimeDefinition>[] = []
     async function login(account: string) {
         const entry = accounts.find(item => item.account == account)!
         const client = createServiceClient({definition: descriptor, url: host.url, auth: {credentials: {account, password: entry.password}}})
@@ -46,14 +51,25 @@ async function main() {
         await client.ready()
         return client
     }
-    async function deniedRest(command: string, args: unknown[], client: ServiceClient<HostingDefinition>) {
+    async function setOrigin(client: ServiceClient<HostingRuntimeDefinition>, requestId: string, input: {
+        environment: string, revision: number, publicOrigin: string
+    }) {
+        const resource = client.resources.open('publicOrigin')
+        try {
+            await waitFor(() => !!resource.current() || ['denied', 'failed'].includes(resource.status.state.phase))
+            if (!resource.current()) throw new Error('environment unavailable')
+            return await resource.current()!.remote.control.set({requestId, ...input})
+        } finally {resource.close()}
+    }
+    async function deniedRest(command: string, args: unknown[], client: ServiceClient<HostingRuntimeDefinition>) {
         const response = await fetch(host.url+'/api/hosting/commands/'+command, {
             method: 'POST',
             headers: {'content-type': 'application/json', authorization: 'Bearer '+client.identity.token()},
             body: JSON.stringify({args})
         })
-        const body = await response.json()
-        assert.equal(body.ok, false, 'server must refuse '+command)
+        const text = await response.text()
+        if (response.status == 404) return
+        assert.equal(JSON.parse(text).ok, false, 'server must refuse '+command)
     }
     try {
         const admin = await login('admin')
@@ -67,6 +83,41 @@ async function main() {
         await admin.commands.createProject('other', {id: 'other', title: 'Other tenant'})
         await assert.rejects(admin.commands.createProject('reserved', {id: 'constructor', title: 'Reserved'}))
         await owner.commands.createEnvironment('staging', {id: 'staging', project: 'shop', kind: 'virtual-machine', agent: 'agent'})
+        await owner.commands.createEnvironment('public-app', {id: 'public-app', project: 'shop', kind: 'docker', agent: 'agent'})
+        const publicInput = {environment: 'public-app', revision: 0, publicOrigin: 'https://app.example.test'}
+        const invalidOrigins = [
+            'http://app.example.test', 'https://user:secret@app.example.test', 'https://app.example.test/',
+            'https://app.example.test/path', 'https://app.example.test?x=1', 'https://app.example.test#fragment',
+            'https://app.example.test:65536', 'https://app.example.test https://other.example.test', 'https://*.example.test',
+            'https://app.example.test,other.example.test'
+        ]
+        for (const [index, origin] of invalidOrigins.entries()) {
+            await assert.rejects(setOrigin(owner, 'invalid-origin-' + index, {...publicInput, publicOrigin: origin}), /HTTPS origin/)
+        }
+        await assert.rejects(setOrigin(outsider, 'foreign-origin', publicInput), /unavailable/)
+        await deniedRest('publicOriginSet', ['observer-origin', publicInput], observer)
+        await deniedRest('publicOriginSet', ['operator-origin', publicInput], operator)
+        await deniedRest('publicOriginSet', ['agent-origin', publicInput], agent)
+        const publicConfigured = await setOrigin(owner, 'public-origin', publicInput)
+        assert.equal(publicConfigured.revision, 1)
+        assert.deepEqual(await setOrigin(owner, 'public-origin', publicInput), publicConfigured, 'native receipt preserves origin revision')
+        await assert.rejects(setOrigin(owner, 'stale-origin', publicInput), /stale/)
+        await setOrigin(owner, 'clear-origin', {...publicInput, revision: 1, publicOrigin: ''})
+        await setOrigin(owner, 'restore-origin', {...publicInput, revision: 2})
+        await agent.commands.registerRoute('public-route', {environment: 'public-app', endpoint: 'http://127.0.0.1:45678'})
+        await assert.rejects(agent.commands.registerRoute('public-not-upstream', {
+            environment: 'public-app', endpoint: publicInput.publicOrigin
+        }), /loopback/)
+        await outsider.commands.createEnvironment('other-public-app', {
+            id: 'other-public-app', project: 'other', kind: 'docker', agent: 'other-agent'
+        })
+        await assert.rejects(setOrigin(outsider, 'duplicate-public-origin', {
+            environment: 'other-public-app', revision: 0, publicOrigin: publicInput.publicOrigin
+        }), /already assigned/)
+        await checkPublicOriginGuards(host.leader.line.control.store, host.leader.corridor.system.publicOriginSet)
+        await deniedRest('publicOriginSet', ['public-origin', {...publicInput, actor: 'owner'}], owner)
+        await deniedRest('setPublicOrigin', ['public-origin', publicInput], owner)
+        assert(!Object.hasOwn(descriptor.commands, 'setPublicOrigin'), 'legacy owner/admin origin alias is absent')
         await assert.rejects(owner.commands.createEnvironment('foreign-agent', {
             id: 'bad',
             project: 'shop',
@@ -160,10 +211,18 @@ async function main() {
 
         for (const client of clients.splice(0)) client.close()
         await host.close()
-        host = await createServiceLeaderHost({definition: createHostingDefinition({accounts}), env})
+        runtime = createHostingRuntime({accounts})
+        host = await createServiceLeaderHost({definition: runtime.definition, env, mount({leader}) {
+            return runtime.mount(leader.line.control.store, leader.corridor.system)
+        }})
         const restored = await login('owner')
         await restored.views.dashboard.ready
         const snapshot = restored.views.dashboard.store.state
+        const restoredPublic = snapshot.environments.find(item => item.id == 'public-app')!
+        assert.equal(restoredPublic.publicOrigin, publicInput.publicOrigin, 'public origin persists through native archive restart')
+        assert.equal(restoredPublic.route, 'http://127.0.0.1:45678', 'public origin never rewrites internal route')
+        assert.deepEqual(await setOrigin(restored, 'public-origin', publicInput), publicConfigured, 'guarded native receipt survives restart')
+        assert.equal(snapshot.environments.find(item => item.id == 'staging')?.publicOrigin, undefined, 'legacy missing origin is preserved')
         assert.equal(snapshot.operations.length, 4)
         assert.equal(snapshot.environments[0].active, 'v-two')
         assert.equal(snapshot.environments[0].pending, rollback.id)
@@ -192,6 +251,10 @@ async function main() {
         ])
         assert.equal(competing.filter(item => item.status == 'fulfilled').length, 1, 'only one concurrent deployment wins')
         assert.equal(competing.filter(item => item.status == 'rejected').length, 1)
+        await restored.commands.deploy('public-first-deploy', {environment: 'public-app', release: 'v-one', revision: 3})
+        await assert.rejects(setOrigin(restored, 'deployed-domain-change', {
+            ...publicInput, revision: 4, publicOrigin: 'https://new.example.test'
+        }), /before the first deployment/)
         console.log('PASS simulated version rollback and two concurrent RPC writers')
         console.log('Hosting control check: ALL GREEN. No VM or Kubernetes was created.')
     } finally {

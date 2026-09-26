@@ -6,7 +6,7 @@ import {tmpdir} from 'node:os'
 import path from 'node:path'
 import {createServiceLeaderHost} from 'wenay-common2/service/host'
 import {createServiceClient, describeService} from 'wenay-common2/service/client'
-import {createHostingDefinition} from './service'
+import {createHostingRuntime} from './runtime'
 import {startDockerAgent} from './agent'
 
 async function main() {
@@ -68,18 +68,22 @@ async function main() {
     })
     await new Promise<void>(resolve => fixture.listen(socketPath, resolve))
     const password = randomBytes(24).toString('hex')
-    const definition = createHostingDefinition({accounts: [
+    const runtime = createHostingRuntime({accounts: [
         {account: 'admin', role: 'admin', projects: [], password},
         {account: 'agent', role: 'agent', projects: ['demo'], password},
         {account: 'other-agent', role: 'agent', projects: ['demo'], password},
     ]})
+    const definition = runtime.definition
     const env = {
         SERVICE_PORT: '0',
         SERVICE_DATA_DIR: path.join(directory, 'control'),
         SERVICE_TOKEN_SECRET: randomBytes(32).toString('hex'),
         SERVICE_NODE_TOKEN: randomBytes(32).toString('hex')
     }
-    function mount({app}: {app: import('express').Express}) {app.get('/api/client', (_request, response) => response.json(describeService(definition)))}
+    function mount({app, leader}: Parameters<NonNullable<Parameters<typeof createServiceLeaderHost<typeof definition>>[0]['mount']>>[0]) {
+        app.get('/api/client', (_request, response) => response.json(describeService(definition)))
+        return runtime.mount(leader.line.control.store, leader.corridor.system)
+    }
     let host = await createServiceLeaderHost({definition, env, mount})
     let client = createServiceClient({definition: describeService(definition), url: host.url, auth: {credentials: {account: 'admin', password}}})
     const agentDeps = {url: host.url, account: 'agent', password, socketPath, directory: path.join(directory, 'agent')}
@@ -95,8 +99,13 @@ async function main() {
         await client.ready()
         await client.commands.createProject('project', {id: 'demo', title: 'Demo'})
         await client.commands.createEnvironment('environment', {id: 'app', project: 'demo', kind: 'docker', agent: 'agent'})
+        const publicOrigin = 'https://app.example.test'
+        const originResource = client.resources.open('publicOrigin')
+        await waitFor(() => !!originResource.current())
+        await originResource.current()!.remote.control.set({requestId: 'public-origin', environment: 'app', revision: 0, publicOrigin})
+        originResource.close()
         await client.commands.publishRelease('release', {id: 'one', project: 'demo', version: '1', artifact: 'demo/app@sha256:'+'a'.repeat(64)})
-        const operation = await client.commands.deploy('deploy', {environment: 'app', release: 'one', revision: 0})
+        const operation = await client.commands.deploy('deploy', {environment: 'app', release: 'one', revision: 1})
         agent = await startDockerAgent(agentDeps)
         await assert.rejects(startDockerAgent(agentDeps), /EEXIST/, 'second agent cannot share the same local lock')
         await client.views.dashboard.ready
@@ -104,10 +113,14 @@ async function main() {
         assert.equal(client.views.dashboard.store.state.environments[0].endpoint, 'http://127.0.0.1:'+port)
         assert.equal(client.views.dashboard.store.state.operations.find(item => item.id == operation.id)?.status, 'succeeded')
         const stable = client.views.dashboard.store.state.environments[0].route!
+        const deployedEnv = containers.get('wenay-' + operation.id).Config.Env as string[]
+        assert.deepEqual(deployedEnv.filter(value => value.startsWith('SERVICE_PUBLIC_URL=')), ['SERVICE_PUBLIC_URL=' + publicOrigin])
+        assert.deepEqual(deployedEnv.filter(value => value.startsWith('SERVICE_CORS_ORIGINS=')), ['SERVICE_CORS_ORIGINS=' + publicOrigin])
+        assert(stable.startsWith('http://127.0.0.1:'), 'configured public origin does not expose the internal gateway')
         await waitFor(async () => (await fetch(stable)).status == 200)
         assert.equal(await fetch(stable).then(response => response.text()), 'healthy')
         await Promise.all([agent.close(), agent.close()])
-        const next = await client.commands.deploy('deploy-again', {environment: 'app', release: 'one', revision: 2})
+        const next = await client.commands.deploy('deploy-again', {environment: 'app', release: 'one', revision: 3})
         // Represents recovery after an earlier executor created the candidate and lost its reply.
         const previous = containers.get('wenay-'+operation.id)
         const labels = {...previous.Config.Labels, 'wenay.operation': next.id}
@@ -133,6 +146,7 @@ async function main() {
         await client.ready()
         await client.views.dashboard.ready
         assert.equal(client.views.dashboard.store.state.environments[0].route, stable, 'route persists in the control archive')
+        assert.equal(client.views.dashboard.store.state.environments[0].publicOrigin, publicOrigin, 'public origin survives control restart')
         agent = await startDockerAgent({...agentDeps, url: host.url})
         await waitFor(async () => (await fetch(stable)).status == 200)
         assert.equal(creates, before, 'control restart restores routing without redeploying')

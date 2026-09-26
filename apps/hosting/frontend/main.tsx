@@ -1,9 +1,10 @@
-import React, {useMemo, useState} from 'react'
+import React, {useEffect, useMemo, useRef, useState} from 'react'
 import {createRoot} from 'react-dom/client'
 import {useOwnedClient, useClientStore, useAsyncAction, useServiceCommands} from 'wenay-react2/react'
 import {createServiceClient, type ServiceClientDefinition, type ServiceClient} from 'wenay-common2/service/client'
-import type {HostingDefinition} from '../backend/service'
+import type {HostingRuntimeDefinition as HostingDefinition} from '../backend/runtime'
 import {Machines} from './machines'
+import {PublicOrigin} from './public-origin'
 import './style.css'
 
 function message(error: unknown) {
@@ -21,13 +22,17 @@ const statuses = {
 
 function App() {
     const [token, setToken] = useState(sessionStorage.getItem('hosting-token') ?? '')
+    const epoch = useRef(0)
 
     function authenticate(value: string) {
+        epoch.current++
+        owned.close()
         if (value) sessionStorage.setItem('hosting-token', value)
         else sessionStorage.removeItem('hosting-token')
         setToken(value)
     }
     async function connect(signal: AbortSignal) {
+        const generation = epoch.current
         const response = await fetch('/api/client', {signal})
         if (!response.ok) throw new Error('Сервис недоступен')
         const definition: ServiceClientDefinition<HostingDefinition> = await response.json()
@@ -35,7 +40,9 @@ function App() {
             definition,
             url: window.location.origin,
             auth: {token},
-            onToken: value => sessionStorage.setItem('hosting-token', value)
+            onToken: value => {
+                if (!signal.aborted && generation == epoch.current) sessionStorage.setItem('hosting-token', value)
+            }
         })
     }
 
@@ -60,6 +67,8 @@ function App() {
 
 function Login({authenticate}: {authenticate: (token: string) => void}) {
     const action = useAsyncAction()
+    const abort = useMemo(() => new AbortController(), [])
+    useEffect(() => () => {abort.abort()}, [abort])
 
     async function submit(event: React.FormEvent<HTMLFormElement>) {
         event.preventDefault()
@@ -69,11 +78,13 @@ function Login({authenticate}: {authenticate: (token: string) => void}) {
                 const credentials = {account: data.get('account'), password: data.get('password')}
                 const response = await fetch('/api/hosting/login', {
                     method: 'POST',
+                    signal: abort.signal,
                     headers: {'content-type': 'application/json'},
                     body: JSON.stringify({args: [credentials]})
                 })
                 const body = await response.json()
                 if (!body.ok) throw new Error('Проверьте логин и пароль')
+                abort.signal.throwIfAborted()
                 authenticate(body.value.token)
             })
         } catch {}
@@ -129,7 +140,8 @@ function Dashboard({client}: {client: ServiceClient<HostingDefinition>}) {
                 {state.projects.map(item => <option key={item.id} value={item.id}>{item.title}</option>)}
             </select>
         </label>
-        <Project key={selected.id} client={client} project={selected.id} state={state} allowed={allowed}/>
+        <Project key={selected.id} client={client} project={selected.id} state={state} allowed={allowed}
+            canSetOrigin={permissions.state?.roles.some(role => role == 'admin' || role == 'owner') ?? false}/>
         {permissions.state?.views.includes('machineDashboard') && (
             <Machines key={'machines-' + selected.id} client={client} project={selected.id} allowed={allowed}/>
         )}
@@ -162,9 +174,10 @@ type ProjectProps = {
     project: string,
     state: DashboardState,
     allowed: string[]
+    canSetOrigin: boolean
 }
 
-function Project({client, project, state, allowed}: ProjectProps) {
+function Project({client, project, state, allowed, canSetOrigin}: ProjectProps) {
     const commands = useServiceCommands(client.commands)
 
     const releases = state.releases.filter(item => item.project == project)
@@ -296,6 +309,7 @@ function Project({client, project, state, allowed}: ProjectProps) {
         <section>
             <h2>Окружения</h2>
             {cards}
+            {canSetOrigin && <PublicOrigin client={client} environments={environments} operations={operations}/>}
             {allowed.includes('createEnvironment') && (
                 <details>
                     <summary>Добавить окружение</summary>

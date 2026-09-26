@@ -26,6 +26,45 @@
 
 Заявка без агента остаётся `queued`. Только агент может подтвердить результат. Проверка digest — проверка согласованности отчёта доверенного агента, а не независимое доказательство работающего приложения. Docker-агент проверяет HTTP readiness и сверяет контейнер при повторе. Распределённые lease/fencing и provider operation ID для LXD/Kubernetes входят в следующие этапы.
 
+## Q11-P-Origin: объявляемый HTTPS origin
+
+Native owner/admin resource `session.resources.open('publicOrigin')` предоставляет
+`current().remote.control.set({requestId, environment, revision, publicOrigin})`
+настраивает Docker-окружение только до первой deployment operation.
+Значение — canonical HTTPS origin вроде `https://app.example.test`, без credentials,
+path/trailing slash, query, fragment или wildcard; пустая строка снимает настройку.
+Origin уникален среди окружений. Revision и повтор обслуживают существующие native commands/receipts.
+Resource проверяет текущую role/project до команды и после receipt, включая environment самого receipt.
+Закрытый/отменённый resource и старая runtime generation не возвращают результат.
+Внутренняя `publicOriginSet` доступна только system account; прямой owner/admin HTTP alias отсутствует.
+Operator/observer/agent и owner чужого проекта настройку не выполняют.
+
+В панели owner/admin раздел «Публичный адрес приложения» предлагает только Docker окружения
+без предыдущих deployment operations. Значение и revision берутся из dashboard view.
+Кнопки сохраняют адрес или снимают настройку; при ошибке повтор использует исходные requestId,
+revision и origin. «Отменить повтор и редактировать» начинает новое изменение с текущей revision.
+Переход между проектами/окружениями, потеря роли и выход закрывают принадлежащий форме resource.
+UI не вызывает внутреннюю system command. Подсказка явно отмечает, что DNS/TLS/proxy не настроены.
+
+Resource input: `{requestId: string, environment: string, revision: number, publicOrigin: string}`.
+RequestId непустой, до 120 символов; schema использует native input validation, revision должна
+совпасть с текущей revision окружения. Origin — canonical HTTPS без credentials/path/query/fragment,
+wildcard или запятой; пустое значение снимает настройку. Output:
+`{environment: string, revision: number, publicOrigin: string}`. Новый вызов увеличивает revision,
+повтор native receipt возвращает исходный результат после проверки текущего доступа.
+Смена адреса после первой deployment operation отклоняется явно; automatic deployment/TLS здесь нет.
+
+Optional `environment.publicOrigin` сохраняется отдельно от internal loopback route.
+Agent/Docker передают ровно его в `SERVICE_PUBLIC_URL` и `SERVICE_CORS_ORIGINS`,
+включая stateless workload; внутренний gateway/port bind остаётся loopback.
+Старые данные без поля сохраняют прежнее поведение. Уже deployed окружение отклоняет
+изменение домена понятной API ошибкой: reconfiguration/redeploy/migration этого среза не реализованы.
+Нельзя считать настройку origin установкой proxy/TLS/DNS или готовым внешним deployment.
+Owner/admin UI использует публичный native resource; descriptor публикует его доступность.
+Internal system command не является owner/admin HTTP API. Targeted Hosting tests/build и перечисленные
+browser сценарии прошли; reconnect UX и внешняя DNS/TLS/deployment приёмка остаются отдельными.
+[Текущий scope, evidence и ограничения](../../doc/changes/hosting-public-origin-20260926.md).
+
 ## Установка и проверки
 
 Node.js 22.12+:

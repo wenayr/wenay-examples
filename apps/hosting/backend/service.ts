@@ -14,7 +14,7 @@ type Release = {id: string, project: string, version: string, artifact: string, 
 type Environment = {
     id: string, project: string, kind: tTargetKind, agent: string, revision: number,
     desired: string, active: string, pending: string,
-    endpoint?: string, route?: string, activeOperation?: string
+    endpoint?: string, route?: string, activeOperation?: string, publicOrigin?: string
 }
 type Operation = {
     id: string, environment: string, project: string, release: string, previous: string,
@@ -39,7 +39,7 @@ function identifier(value: string) {
     }
 }
 
-function hasProject(state: HostingState, account: string, project: string) {
+export function hasProject(state: HostingState, account: string, project: string) {
     const member = state.accounts[account]
     return member?.role == 'admin' || !!member?.projects.includes(project)
 }

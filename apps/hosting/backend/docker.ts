@@ -1,6 +1,7 @@
 import http from 'node:http'
 import {createHash} from 'node:crypto'
 import {workload, type Workload} from './workload'
+import {publicOrigin} from './endpoint'
 
 type PortBinding = {HostIp: string, HostPort: string}
 
@@ -10,7 +11,7 @@ type Container = {
     State: {Running: boolean},
     NetworkSettings: {Ports: Record<string, PortBinding[] | null>}
 }
-export type Deployment = {operation: string, environment: string, artifact: string, workload?: Workload}
+export type Deployment = {operation: string, environment: string, artifact: string, workload?: Workload, publicOrigin?: string}
 
 export class DeploymentRejected extends Error {}
 
@@ -78,6 +79,7 @@ export function createDockerResource(deps: {socketPath: string, owner: string, r
 
     async function deploy(deployment: Deployment, signal: AbortSignal) {
         if (!/^[a-f0-9]{64}$/.test(deployment.operation)) throw new Error('invalid operation id')
+        if (deployment.publicOrigin) publicOrigin(deployment.publicOrigin)
         const profile = workload(deployment.workload ?? {})
         const name = nameOf(deployment)
         let container = await inspect(name, signal)
@@ -88,11 +90,17 @@ export function createDockerResource(deps: {socketPath: string, owner: string, r
                 throw error
             })
             const runtimeEnv = await deps.runtime?.(deployment.environment) ?? []
-            const environmentValues = ['SERVICE_PORT=' + profile.port, 'SERVICE_DATA_DIR=/data', ...runtimeEnv]
+            const advertised = deployment.publicOrigin
+                ? ['SERVICE_PUBLIC_URL=' + deployment.publicOrigin, 'SERVICE_CORS_ORIGINS=' + deployment.publicOrigin]
+                : []
+            const configured = deployment.publicOrigin ? runtimeEnv.filter(function withoutOrigins(value) {
+                return !value.startsWith('SERVICE_PUBLIC_URL=') && !value.startsWith('SERVICE_CORS_ORIGINS=')
+            }) : runtimeEnv
+            const environmentValues = ['SERVICE_PORT=' + profile.port, 'SERVICE_DATA_DIR=/data', ...configured, ...advertised]
             try {
                 await request('POST', '/containers/create?name=' + name, {
                     Image: deployment.artifact,
-                    ...(profile.dataVersion ? {Env: environmentValues} : {}),
+                    ...(profile.dataVersion || deployment.publicOrigin ? {Env: environmentValues} : {}),
                     Labels: {'wenay.owner': deps.owner, 'wenay.operation': deployment.operation, 'wenay.environment': deployment.environment},
                     ExposedPorts: {[profile.port+'/tcp']: {}},
                     HostConfig: {Memory: profile.memoryMiB*1024*1024, NanoCpus: Math.round(profile.cpus*1e9),

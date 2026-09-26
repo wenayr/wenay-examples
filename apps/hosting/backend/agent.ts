@@ -30,8 +30,9 @@ export async function startDockerAgent(deps: {url: string, account: string, pass
         })
         const closeClient = scope.resource.own(client.close)
         async function runtime(environment: string) {
-            const route = client.views.assignments.store.state.environments.find(item => item.id == environment)?.route
-            const origins = route ? ['SERVICE_CORS_ORIGINS=' + new URL(route).origin, 'SERVICE_PUBLIC_URL=' + new URL(route).origin] : []
+            const target = client.views.assignments.store.state.environments.find(item => item.id == environment)
+            const origin = target?.publicOrigin ?? (target?.route ? new URL(target.route).origin : '')
+            const origins = origin ? ['SERVICE_CORS_ORIGINS=' + origin, 'SERVICE_PUBLIC_URL=' + origin] : []
             const file = path.join(deps.directory, 'runtime-' + createHash('sha256').update(environment).digest('hex') + '.json')
             try {return [...JSON.parse(await readFile(file, 'utf8')) as string[], ...origins]}
             catch (error) {
@@ -113,7 +114,10 @@ export async function startDockerAgent(deps: {url: string, account: string, pass
                     const operation = item.status == 'queued'
                         ? await client.commands.claimOperation('claim-' + item.id, claim)
                         : {...item}
-                    const deployment = {operation: operation.id, environment: environment.id, artifact: release.artifact, workload: release.workload}
+                    const deployment = {
+                        operation: operation.id, environment: environment.id, artifact: release.artifact,
+                        workload: release.workload, publicOrigin: environment.publicOrigin
+                    }
                     const previousOperation = snapshot.retained.find(old => old.id == environment.activeOperation)
                     const previousRelease = snapshot.releases.find(old => old.id == previousOperation?.release)
                     let previous = null
@@ -122,7 +126,8 @@ export async function startDockerAgent(deps: {url: string, account: string, pass
                             operation: previousOperation.id,
                             environment: environment.id,
                             artifact: previousRelease.artifact,
-                            workload: previousRelease.workload
+                            workload: previousRelease.workload,
+                            publicOrigin: environment.publicOrigin
                         }
                     }
                     try {
