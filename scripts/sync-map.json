@@ -1,5 +1,13 @@
 [
     {
+        "canon": "shared/react/deferred-panel.tsx",
+        "copies": [
+            "apps/crm/shared/react/deferred-panel.tsx",
+            "apps/pizzeria/shared/react/deferred-panel.tsx",
+            "apps/metering/shared/react/deferred-panel.tsx"
+        ]
+    },
+    {
         "canon": "shared/react/command-action.ts",
         "copies": [
             "apps/pizzeria/shared/react/command-action.ts",

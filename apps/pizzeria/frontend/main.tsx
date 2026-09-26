@@ -1,20 +1,22 @@
-import React, {useState} from 'react'
+import React, {lazy, useState} from 'react'
 import {createRoot} from 'react-dom/client'
 import type {ServiceClient} from 'wenay-common2/service/client'
 import {ServiceView as Live} from '../shared/react/service-view'
 import {useServiceSession} from '../shared/react/service-session'
 import {useCommandAction, type tCommandCall} from '../shared/react/command-action'
 import {useServiceAction} from '../shared/react/service-action'
+import {DeferredPanel} from '../shared/react/deferred-panel'
 import {Locations, NetworkOwner, OwnerOverview, type Location} from './locations'
 import type {serviceDefinition} from '../backend/service'
 import './style.css'
 import {Stock} from './stock'
 import {Catalog} from './catalog'
 import {DishCardView} from './dish-card'
-import {Organizer} from '../organizer/board'
 import {WorkloadPanel} from '../organizer/workload'
 
 type Session = ServiceClient<typeof serviceDefinition>
+
+const Organizer = lazy(() => import('../organizer/board').then(module => ({default: module.Organizer})))
 
 const labels: Record<string, string> = {
     placed: 'Принят', cooking: 'В печи', ready: 'Готов', delivering: 'В пути',
@@ -446,7 +448,9 @@ function App({location, network}: {location: Location, network: boolean}) {
             {!token && loginPanel}
             {views && me?.views.includes('work') && <>
                 {workNav}
-                {workOpen && organizer}
+                {workOpen && <DeferredPanel className="notice" loadingLabel="Загружаем команду и задачи…">
+                    {organizer}
+                </DeferredPanel>}
             </>}
             <div hidden={workOpen && staffMode}>
                 {staffMode && workload}

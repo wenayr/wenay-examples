@@ -1,9 +1,10 @@
-import React, {lazy, Suspense, useState} from 'react'
+import React, {lazy, useState} from 'react'
 import {createRoot} from 'react-dom/client'
 import type {MeteringDefinition} from '../backend/runtime'
 import type {MeteringWorkspace} from './contracts'
 import {useServiceSession} from '../shared/react/service-session'
 import {useServiceAction} from '../shared/react/service-action'
+import {DeferredPanel} from '../shared/react/deferred-panel'
 import {useCommandAction} from '../shared/react/command-action'
 import {ServiceView} from '../shared/react/service-view'
 import {Keys} from './keys'
@@ -267,9 +268,9 @@ function Workspace({value, commands, resources, connected, logout}: WorkspacePro
                         />
                     </label>
                 </div>
-                <Suspense fallback={<p className="empty">Загружаем таблицу…</p>}>
+                <DeferredPanel className="empty" loadingLabel="Загружаем таблицу…">
                     <Ledger events={events}/>
-                </Suspense>
+                </DeferredPanel>
             </>}
                 {tab == 'audit' && <Audit entries={value.audit.filter(entry => entry.orgId == org.id)}/>}
                 {tab == 'webhooks' && (

@@ -62,6 +62,9 @@ HTML pattern совместим с Unicode Sets; ошибок регулярно
 
 ## Дальше
 
+Журнал операций загружается при открытии его вкладки. Во время загрузки виден статус;
+при ошибке раздел предлагает обновить страницу, сохраняя остальные вкладки и навигацию.
+
 - [Паспорт примера](PASSPORT.md) · [интерфейсы учёта](API.md) · [подключение поддержки и документов](../../doc/SAAS-METERING-INTEGRATION.md)
 - Приёмка и история: [METERING-HISTORY](../../doc/internal/acceptance/METERING-HISTORY.md)
 - Своя копия: `node scripts/create-saas-example.mjs metering work/usage-console --name usage-console`, дальше [рецепты](../../doc/SAAS-RECIPES.md)

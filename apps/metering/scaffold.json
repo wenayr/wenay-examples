@@ -27,6 +27,7 @@
         "frontend/vite.config.ts",
         "frontend/webhooks.tsx",
         "shared/react/command-action.ts",
+        "shared/react/deferred-panel.tsx",
         "shared/react/replay-view.ts",
         "shared/react/service-action.ts",
         "shared/react/service-session.ts",
