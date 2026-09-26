@@ -62,27 +62,66 @@ export function libraryImports(app) {
 }
 
 
-// Размер собранного интерфейса: только файлы, на которые ссылается index.html.
-// В public/ накапливаются прежние сборки (Vite не чистит каталог за пределами root),
-// поэтому сумма всего каталога измеряла бы историю, а не текущую сборку.
+// Manifest identifies the current graph even when obsolete output files remain nearby.
+export function measureBundle(roots) {
+    const initialFiles = new Set()
+    const allFiles = new Set()
+    let complete = true
+    for (const root of roots) {
+        const page = path.join(root, 'index.html')
+        if (!existsSync(page)) {
+            complete = false
+            continue
+        }
+        const html = readFileSync(page, 'utf8')
+        const direct = [...html.matchAll(/(?:src|href)=["']\/?([\w./-]+\.(?:js|css))["']/g)].map(match => match[1])
+        function asset(file) {
+            const resolved = path.resolve(root, file)
+            const relative = path.relative(root, resolved)
+            if (relative == '..' || relative.startsWith('..' + path.sep) || path.isAbsolute(relative)) {
+                throw new Error('Bundle path escapes output: ' + file)
+            }
+            if (!existsSync(resolved)) throw new Error('Bundle asset missing: ' + resolved)
+            return resolved
+        }
+        const manifestFile = path.join(root, '.vite', 'manifest.json')
+        for (const file of direct) initialFiles.add(asset(file))
+        if (!existsSync(manifestFile)) {
+            complete = false
+            continue
+        }
+        const graph = JSON.parse(readFileSync(manifestFile, 'utf8'))
+        const entries = Object.keys(graph).filter(key => direct.includes(graph[key].file))
+        if (direct.some(file => file.endsWith('.js') && !entries.some(key => graph[key].file == file))) {
+            throw new Error('HTML entry missing from bundle manifest: ' + manifestFile)
+        }
+        function walk(includeDynamic, files) {
+            const visited = new Set()
+            function visit(key) {
+                if (visited.has(key)) return
+                visited.add(key)
+                const chunk = graph[key]
+                if (!chunk) throw new Error('Bundle manifest references missing chunk: ' + key)
+                if (/\.(js|css)$/.test(chunk.file)) files.add(asset(chunk.file))
+                for (const css of chunk.css ?? []) files.add(asset(css))
+                for (const imported of chunk.imports ?? []) visit(imported)
+                if (includeDynamic) for (const imported of chunk.dynamicImports ?? []) visit(imported)
+            }
+            for (const entry of entries) visit(entry)
+        }
+        walk(false, initialFiles)
+        for (const file of direct) allFiles.add(asset(file))
+        walk(true, allFiles)
+    }
+    function bytes(files) {return [...files].reduce((sum, file) => sum + statSync(file).size, 0)}
+    const largest = complete ? Math.max(0, ...[...allFiles].map(file => statSync(file).size)) : 0
+    return {total: complete ? bytes(allFiles) : 0, initial: bytes(initialFiles), largest, complete}
+}
+
 function readBundle(app) {
     const roots = [path.join(repository, 'apps', app, 'public')]
     if (app == 'pizzeria') roots.push(path.join(repository, 'apps', app, 'organizer-public'))
-    let total = 0
-    let largest = 0
-    for (const root of roots) {
-        const page = path.join(root, 'index.html')
-        if (!existsSync(page)) continue
-        const html = readFileSync(page, 'utf8')
-        for (const match of html.matchAll(/(?:src|href)="\/?([\w./-]+\.(?:js|css))"/g)) {
-            const asset = path.join(root, match[1].split('/').join(path.sep))
-            if (!existsSync(asset)) continue
-            const size = statSync(asset).size
-            total += size
-            largest = Math.max(largest, size)
-        }
-    }
-    return {total, largest}
+    return measureBundle(roots)
 }
 
 export function collect() {
@@ -194,13 +233,12 @@ function updateMarkers(rows, apply) {
 
 const statusFile = path.join(repository, 'doc', 'STATUS.md')
 
-// Предупреждение Vite про чанк больше 500 КБ штатное: код-сплиттинг сознательно не настроен.
-// Строка называет текущий максимум, чтобы рост был виден в diff, а не на глаз.
+// Максимум относится к отдельному файлу: отложенная загрузка не уменьшает полный граф.
 function bundleNote(rows) {
     const largest = rows.map(row => row.bundle.largest).sort((a, b) => b - a)[0] ?? 0
     if (largest == 0) return 'Сборок нет: столбец размера заполнится после `npm run build:all`.'
     const value = Math.round(largest / 1024)
-    const warning = value > 500 ? ' Предупреждение Vite о чанке больше 500 КБ штатное: код-сплиттинг не настроен.' : ''
+    const warning = value > 500 ? ' Vite предупреждает о файлах больше 500 КБ; начальный и полный вес сравниваются через `npm run status:bundles`.' : ''
     return 'Самый большой файл сборки сейчас ' + value + ' КБ.' + warning
 }
 
@@ -214,7 +252,8 @@ function render(rows, stamp) {
         '',
         '`✓` прошло, `✗` упало, `—` скрипта нет, `?` нет результата для текущих package.json и lock. Пропуски указаны явно.',
         'Колонка «Копия» — есть ли у приложения живая проверка холодной копии и восстановления (`npm run test:backup`).',
-        'Колонки «Тест, с» и «Сборка, КБ» — длительность последнего `npm test` и размер js и css текущей сборки, на которые ссылается `index.html`, без сжатия.',
+        'Колонки «Тест, с» и «Сборка, КБ» — длительность последнего `npm test` и полный достижимый JS/CSS граф текущего HTML по Vite manifest, без сжатия.',
+        'Граф включает static и dynamic imports и их CSS; старые и недостижимые файлы исключены. У пиццерии суммируются два UI. Без manifest вес неизвестен (—).',
         bundleNote(rows),
         '',
         ''
@@ -259,7 +298,19 @@ function verify() {
 }
 
 if (process.argv[1] && import.meta.url.endsWith(path.basename(process.argv[1]))) {
-    if (process.argv.includes('--verify')) {
+    if (process.argv.includes('--bundles')) {
+        console.log('Приложение/UI · начальный JS/CSS, КиБ · полный JS/CSS, КиБ')
+        for (const app of APPS) {
+            if (!manifest(app)?.scripts?.build) continue
+            const names = app == 'pizzeria' ? ['public', 'organizer-public'] : ['public']
+            for (const name of names) {
+                const bundle = measureBundle([path.join(repository, 'apps', app, name)])
+                const initial = (bundle.initial / 1024).toFixed(1) + (bundle.complete ? '' : ' (неполный граф)')
+                const total = bundle.complete ? (bundle.total / 1024).toFixed(1) : '— (нужна сборка с manifest)'
+                console.log(app + '/' + name + ' · ' + initial + ' · ' + total)
+            }
+        }
+    } else if (process.argv.includes('--verify')) {
         process.exitCode = verify()
     } else {
         const {rows, changed} = write()

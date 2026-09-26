@@ -7,13 +7,14 @@
     "test:all": "node scripts/run-all.mjs test",
     "build:all": "node scripts/run-all.mjs build",
     "check:apps": "node scripts/run-all.mjs typecheck test build",
-    "check:repo": "node scripts/run-all-status-check.mjs && node scripts/scaffold-check.mjs && node scripts/sync-check.mjs && node scripts/style-check.mjs && node scripts/links-check.mjs && node scripts/status.mjs --verify",
+    "check:repo": "node scripts/run-all-status-check.mjs && node scripts/bundle-status-check.mjs && node scripts/scaffold-check.mjs && node scripts/sync-check.mjs && node scripts/style-check.mjs && node scripts/links-check.mjs && node scripts/status.mjs --verify",
     "check:all": "npm run check:apps && npm run check:repo",
     "check:hosting-live": "node scripts/hosting-live-gate.mjs",
     "style:check": "node scripts/style-check.mjs",
     "sync:check": "node scripts/sync-check.mjs",
     "sync": "node scripts/sync.mjs --write",
     "links:check": "node scripts/links-check.mjs",
-    "status": "node scripts/status.mjs && node scripts/catalog.mjs"
+    "status": "node scripts/status.mjs && node scripts/catalog.mjs",
+    "status:bundles": "node scripts/status.mjs --bundles"
   }
 }
