@@ -83,6 +83,28 @@ npm test
 Удалить line observer guard только после точного npm-обновления и добавления проверки публичного terminal/error channel.
 Оба native repro должны завершиться без process fatal; terminal consumer error ожидаема и должна быть наблюдаема владельцем.
 
+### SERVICE-COMMAND-RECEIPT-ACL
+
+[Задача](SERVICE-COMMAND-RECEIPT-ACL.md), [public repro](repro/service-command-receipt-acl.ts).
+Подтверждено на npm common2 3.1.1: новый HTTP requestId и retained principal RPC отклонены,
+но HTTP retry старого requestId возвращает приватный fixture marker после утраты owner-прав.
+Обычный repro exit 0; `--expect-fixed` exit 1; finally cleanup завершился в обоих режимах.
+
+| Место | Что делает обход |
+| --- | --- |
+| `apps/chat/backend/workspaces.ts`, `createMembershipCommand` | Bound native commands используют точную current owner-роль workspace; principal RPC проверяет её до receipts |
+| `apps/chat/backend/public-login.ts`, `mountChatLogin`; `backend/server.ts` | Полный native REST отключён, публичный native REST монтируется только для login; HTTP commands не экспортируются |
+
+Проверка после исправления из `apps/chat`:
+
+```text
+node --import tsx ../../doc/library-tasks/repro/service-command-receipt-acl.ts --expect-fixed
+```
+
+Удалить ограничение native REST только после опубликованного исправления, точного npm-обновления
+и отрицательной runtime проверки старого receipt после потери owner при сохранении member.
+Bound workspace-команды остаются предметной границей даже после исправления библиотеки.
+
 ## Порядок принятия исправления
 
 Задача L06 плана 2: обновить точную npm-версию во всех приложениях по очереди, удалить обход по этой таблице, повторить сценарий, записать результат в `doc/changes/common2-<версия>.md` и отметить строку здесь как закрытую.

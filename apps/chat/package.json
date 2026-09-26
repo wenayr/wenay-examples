@@ -7,7 +7,7 @@
     "dev": "vite frontend --host 127.0.0.1",
     "build": "vite build frontend --outDir ../public",
     "typecheck": "tsc --noEmit",
-    "test": "tsx backend/check.ts"
+    "test": "tsx backend/check.ts && tsx backend/workspace-check.ts"
   },
   "dependencies": {
     "express": "5.2.1",

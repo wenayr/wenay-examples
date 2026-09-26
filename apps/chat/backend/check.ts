@@ -140,8 +140,8 @@ async function main() {
         await wait(() => alice.conversation.channelMessages('shared-main').length == 17, 'writer mirror did not converge')
         const beforeRestart = alice.conversation.store.state.conversations.shared.updatedAt
         offEvents()
-        const ownerAlice = createConversationOwner({session: alice.client})
-        const ownerBob = createConversationOwner({session: bob.client})
+        const ownerAlice = createConversationOwner({session: alice.client, resourceName: 'chat'})
+        const ownerBob = createConversationOwner({session: bob.client, resourceName: 'chat'})
         owners.push(ownerAlice, ownerBob)
         await wait(() => ownerAlice.store.state.ready && ownerBob.store.state.ready, 'owned clients not ready before reconnect')
         const oldAlice = ownerAlice.current()!.client

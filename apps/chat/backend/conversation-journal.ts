@@ -3,7 +3,7 @@ import path from 'node:path'
 import type {ConversationInitial, ConversationPersistencePort} from 'wenay-common2/conversation'
 
 function seedConversation(id: string, title: string, participantIds: string[]) {
-    const channelId = id == 'shared' ? 'shared-main' : 'private-alice-main'
+    const channelId = id + '-main'
     return {
         conversation: {id, owner: 'alice', title, participantIds, rootChannelId: channelId, state: 'open' as const, createdAt: 0, updatedAt: 0},
         channel: {id: channelId, conversationId: id, title: 'Основной', createdBy: 'alice', factMode: 'inherit' as const,
@@ -12,8 +12,9 @@ function seedConversation(id: string, title: string, participantIds: string[]) {
 }
 
 // This port stores the library event and receipt together; conversation owns command deduplication.
-export function createConversationJournal(deps: {directory: string}) {
-    const seeds = [seedConversation('shared', 'Общий разговор', ['alice', 'bob']), seedConversation('private-alice', 'Личный разговор', ['alice'])]
+export function createConversationJournal(deps: {directory: string, personal?: boolean}) {
+    const seeds = deps.personal ? [seedConversation('personal-alice', 'Личный разговор', ['alice'])]
+        : [seedConversation('shared', 'Общий разговор', ['alice', 'bob']), seedConversation('private-alice', 'Личный разговор', ['alice'])]
     const initial: ConversationInitial = {store: {
         conversations: Object.fromEntries(seeds.map(item => [item.conversation.id, item.conversation])),
         channels: Object.fromEntries(seeds.map(item => [item.channel.id, item.channel])), messages: {}, facts: {}

@@ -4,6 +4,9 @@ import type {ChatDefinition} from '../backend/service'
 import type {ChatFacade} from '../backend/chat-resource'
 
 export type ChatSession = ServiceClient<ChatDefinition>
+export type ChatWorkspace = ReturnType<ChatDefinition['views']['workspaces']['project']>['workspaces'][number]
+export type tChatResourceName = ChatWorkspace['resourceName']
+export type WorkspaceMemberInput = Parameters<ChatSession['commands'][ChatWorkspace['membershipCommand']]>[1]
 export type tDelivery = {
     kind: 'message',
     title: string,

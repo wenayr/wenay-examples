@@ -31,3 +31,5 @@ test PASS без внутреннего Python skip. Docker Desktop штатно
 вопрос о тексте ошибки задан, независимая работа продолжается.
 Новый network fixture прерван очередным пользовательским turn: port 62294 свободен,
 его каталог wenay-browser-network-UoLnqT остался. Закрытый exec session не опрашивать.
+
+C01 сохранён f083593. C03 targeted typecheck/test/build 3/3 PASS, browser account/workspace/revoke/regrant и Chrome 360x500 PASS. Исправлен native view envelope и прокрутка формы; durable report doc/changes/chat-c03-20260926.md. После очередного пользовательского turn browser fixture exec прерван: port 58531 свободен, каталог wenay-browser-pGTU3t остался; штатный stop не подтверждён. C03 repository gate выполняется; Q05 feasibility и C-OPT-CHAT следующие.

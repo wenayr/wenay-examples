@@ -1,10 +1,10 @@
-import React, {useEffect, useMemo, useRef, useState} from 'react'
+import React, {useEffect, useLayoutEffect, useMemo, useRef, useState} from 'react'
 import {createRoot} from 'react-dom/client'
 import {useAsyncAction, useClientStore, useOwnedClient} from 'wenay-react2/react'
 import {createServiceClient, type ServiceClientDefinition} from 'wenay-common2/service/client'
 import type {ConversationCreateInput} from 'wenay-common2/conversation'
 import type {ChatDefinition} from '../backend/service'
-import {authorName, errorText, messageText, type ChatSession, type tDelivery} from './contracts'
+import {authorName, errorText, messageText, type ChatSession, type ChatWorkspace, type tDelivery, type WorkspaceMemberInput} from './contracts'
 import {createConversationOwner} from './conversation-owner'
 import './style.css'
 
@@ -13,62 +13,102 @@ const storageKey = 'nearby-chat-token'
 function App() {
     const [token, setToken] = useState(() => sessionStorage.getItem(storageKey) ?? '')
     const [attempt, setAttempt] = useState(0)
+    const [sessionEpoch, setSessionEpoch] = useState(0)
+    const epoch = useRef(0)
+    const mounted = useRef(true)
+    const closeConversation = useRef<(() => void) | null>(null)
+    useLayoutEffect(function lifecycle() {
+        mounted.current = true
+        return function close() {
+            mounted.current = false
+            ++epoch.current
+            closeConversation.current?.()
+            closeConversation.current = null
+        }
+    }, [])
     async function connect(signal: AbortSignal) {
+        const connectingEpoch = epoch.current
         const response = await fetch('/api/client', {signal})
         if (!response.ok) throw new Error('Сервис недоступен')
         const definition: ServiceClientDefinition<ChatDefinition> = await response.json()
         signal.throwIfAborted()
         return createServiceClient<ChatDefinition>({definition, url: location.origin, auth: {token}, onToken: function renew(value) {
-            if (!signal.aborted) sessionStorage.setItem(storageKey, value)
+            const current = mounted.current && !signal.aborted && epoch.current == connectingEpoch
+            if (current) sessionStorage.setItem(storageKey, value)
         }})
     }
-    const key = JSON.stringify([token, attempt])
+    const key = JSON.stringify([token, attempt, sessionEpoch])
     const owned = useOwnedClient({key, enabled: !!token, create: connect})
     function authenticate(value: string) {
+        if (!mounted.current || epoch.current != sessionEpoch) return
         if (value) sessionStorage.setItem(storageKey, value)
         else sessionStorage.removeItem(storageKey)
         setToken(value)
+    }
+    function endSession() {
+        ++epoch.current
+        closeConversation.current?.()
+        closeConversation.current = null
+        owned.close()
+        sessionStorage.removeItem(storageKey)
+        setToken('')
+        setSessionEpoch(epoch.current)
     }
     return <div className="app">
         <header className="app-header">
             <a className="brand" href="/" aria-label="Рядом, главная">◌ <span>рядом</span></a>
             <span className="header-note">Место для разговора</span>
-            {token && <button className="quiet" onClick={() => authenticate('')}>Выйти</button>}
+            {token && owned.client && <AccountLabel session={owned.client}/>}
+            {token && <div className="session-actions">
+                <button className="quiet" onClick={endSession}>Сменить аккаунт</button>
+                <button className="quiet" onClick={endSession}>Выйти</button>
+            </div>}
         </header>
-        {!token && <Login authenticate={authenticate}/>}
+        {!token && <Login key={sessionEpoch} authenticate={authenticate}/>}
         {token && !!owned.error && <main className="connection-page">
             <h1>Не удалось подключиться</h1>
             <p role="alert">{errorText(owned.error)}</p>
             <button onClick={() => setAttempt(value => value + 1)}>Попробовать снова</button>
         </main>}
         {token && !owned.error && (!owned.ready || !owned.client) && <main className="connection-page" role="status">Подключаемся…</main>}
-        {token && owned.ready && owned.client && <Workspace key={key} session={owned.client}/>}
+        {token && owned.ready && owned.client && <SessionWorkspace key={key} session={owned.client} closeConversation={closeConversation}/>}
     </div>
+}
+
+function AccountLabel({session}: {session: ChatSession}) {
+    const identity = useClientStore(useMemo(() => ({store: session.identity.permissions}), [session]))
+    return <span className="header-account">Аккаунт: {identity.state?.account ?? '…'}</span>
 }
 
 function Login({authenticate}: {authenticate: (token: string) => void}) {
     const [account, setAccount] = useState('alice')
     const action = useAsyncAction()
     const mounted = useRef(true)
-    useEffect(function lifecycle() {
+    const abort = useRef<AbortController | null>(null)
+    useLayoutEffect(function lifecycle() {
         mounted.current = true
-        return function close() {mounted.current = false}
+        return function close() {
+            mounted.current = false
+            abort.current?.abort()
+        }
     }, [])
     async function submit(event: React.FormEvent<HTMLFormElement>) {
         event.preventDefault()
         const form = new FormData(event.currentTarget)
         try {
             await action.run(async function login() {
+                const controller = new AbortController()
+                abort.current = controller
                 const credentials = {account: form.get('account'), password: form.get('password')}
                 const response = await fetch('/api/chat/login', {
-                    method: 'POST', headers: {'content-type': 'application/json'}, body: JSON.stringify({args: [credentials]})
+                    method: 'POST', headers: {'content-type': 'application/json'}, body: JSON.stringify({args: [credentials]}), signal: controller.signal
                 })
                 const body = await response.json()
                 if (!response.ok || !body.ok) {
                     const reason = body.error?.message
                     throw new Error(reason == 'login refused' ? 'Неверный логин или пароль' : reason ?? 'Не удалось войти')
                 }
-                if (mounted.current) authenticate(body.value.token)
+                if (mounted.current && !controller.signal.aborted) authenticate(body.value.token)
             })
         } catch {}
     }
@@ -97,9 +137,96 @@ function Login({authenticate}: {authenticate: (token: string) => void}) {
     </main>
 }
 
-function Workspace({session}: {session: ChatSession}) {
+function SessionWorkspace({session, closeConversation}: {
+    session: ChatSession, closeConversation: React.RefObject<(() => void) | null>
+}) {
+    const view = useClientStore(session.views.workspaces)
+    const [selected, setSelected] = useState('')
+    const initialized = useRef(false)
+    const workspaces = view.state?.workspaces ?? []
+    const workspace = workspaces.find(item => item.id == selected)
+    useEffect(function chooseInitial() {
+        if (!view.ready || initialized.current) return
+        initialized.current = true
+        setSelected(workspaces[0]?.id ?? '')
+    }, [view.ready, workspaces])
+    function chooseWorkspace(event: React.ChangeEvent<HTMLSelectElement>) {
+        if (event.target.value == selected) return
+        closeConversation.current?.()
+        closeConversation.current = null
+        setSelected(event.target.value)
+    }
+    return <div className="session-workspace">
+        <div className="workspace-picker">
+            <label htmlFor="workspace">Рабочее пространство</label>
+            <select id="workspace" value={workspace ? selected : ''} onChange={chooseWorkspace} disabled={!view.ready}>
+                {!workspace && <option value="">{selected ? 'Доступ к пространству отозван' : 'Выберите пространство'}</option>}
+                {workspaces.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}
+            </select>
+        </div>
+        {workspace && <Workspace key={workspace.id} session={session} workspace={workspace} closeConversation={closeConversation}/>}
+        {!workspace && <main className="connection-page">
+            <h1>{view.ready ? 'Выберите рабочее пространство' : 'Загружаем пространства…'}</h1>
+            {selected && <p role="status">Доступ к прежнему пространству отозван. Его история закрыта.</p>}
+            {view.ready && !workspaces.length && <p>Сейчас у аккаунта нет доступных рабочих пространств.</p>}
+            {!!view.error && <p className="error" role="alert">{errorText(view.error)}</p>}
+        </main>}
+    </div>
+}
+
+function MembershipPanel({session, workspace, account}: {session: ChatSession, workspace: ChatWorkspace, account: string}) {
+    const key = useMemo(() => ({session, workspaceId: workspace.id}), [session, workspace.id])
+    const action = useAsyncAction({key})
+    const [ticket, setTicket] = useState<{
+        requestId: string, input: WorkspaceMemberInput, command: ChatWorkspace['membershipCommand']
+    } | null>(null)
+    const pendingTicket = useRef<typeof ticket>(null)
+    const mounted = useRef(true)
+    useLayoutEffect(function lifecycle() {
+        mounted.current = true
+        return function close() {mounted.current = false}
+    }, [])
+    const ownRole = workspace.members.find(member => member.account == account)?.role
+    if (ownRole != 'owner') return null
+    const bob = workspace.members.find(member => member.account == 'bob')
+    const owners = workspace.members.filter(member => member.role == 'owner')
+    const lastOwner = bob?.role == 'owner' && owners.length == 1
+    async function transmit(payload: NonNullable<typeof ticket>) {
+        try {
+            await action.run(() => session.commands[payload.command](payload.requestId, payload.input))
+            if (!mounted.current || pendingTicket.current != payload) return
+            pendingTicket.current = null
+            setTicket(null)
+        } catch {}
+    }
+    async function changeBob() {
+        if (pendingTicket.current) return
+        const input = Object.freeze({account: 'bob', role: bob ? 'none' as const : 'member' as const})
+        const payload = Object.freeze({requestId: crypto.randomUUID(), input, command: workspace.membershipCommand})
+        pendingTicket.current = payload
+        setTicket(payload)
+        await transmit(payload)
+    }
+    return <details className="membership-panel">
+        <summary>Участники пространства</summary>
+        <ul>{workspace.members.map(member => <li key={member.account}>{member.name}
+            <span>{member.role == 'owner' ? 'Владелец' : 'Участник'}</span></li>)}</ul>
+        {workspace.id == 'team' && <button disabled={action.pending || !!ticket || lastOwner} onClick={() => void changeBob()}>
+            {bob ? 'Отозвать доступ Боба' : 'Добавить Боба'}
+        </button>}
+        {lastOwner && <p>Нельзя удалить последнего владельца.</p>}
+        {ticket && !action.pending && <button onClick={() => void transmit(ticket)}>Повторить изменение</button>}
+        {action.pending && <p role="status">Обновляем доступ…</p>}
+        {!!action.error && <p className="error" role="alert">{errorText(action.error)}</p>}
+    </details>
+}
+
+function Workspace({session, workspace, closeConversation}: {
+    session: ChatSession, workspace: ChatWorkspace, closeConversation: React.RefObject<(() => void) | null>
+}) {
     const identity = useClientStore(useMemo(() => ({store: session.identity.permissions}), [session]))
-    const resource = useOwnedClient({key: session, create: () => createConversationOwner({session})})
+    const ownerKey = useMemo(() => ({session, workspaceId: workspace.id}), [session, workspace.id])
+    const resource = useOwnedClient({key: ownerKey, create: () => createConversationOwner({session, resourceName: workspace.resourceName})})
     const status = useClientStore(useMemo(() => resource.client ? {store: resource.client.status} : null, [resource.client]))
     const conversation = useClientStore(resource.client)
     const current = conversation.state?.ready ? resource.client?.current() : null
@@ -110,7 +237,7 @@ function Workspace({session}: {session: ChatSession}) {
     const connected = status.state?.phase == 'ready'
     const available = connected && !!client && !!remote && view.ready
     const account = identity.state?.account ?? ''
-    const [selected, setSelected] = useState('shared')
+    const [selected, setSelected] = useState('')
     const [showList, setShowList] = useState(true)
     const [drafts, setDrafts] = useState<Record<string, string>>({})
     const [delivery, setDelivery] = useState<tDelivery | null>(null)
@@ -132,6 +259,20 @@ function Workspace({session}: {session: ChatSession}) {
     const messages = room && client ? client.channelMessages(room.rootChannelId) : []
     const lastUser = [...messages].reverse().find(message => message.author.kind == 'account')
     const text = drafts[selected] ?? ''
+    const otherMembers = workspace.members.filter(member => member.account != account)
+    const workspaceOwner = workspace.members.some(member => member.account == account && member.role == 'owner')
+
+    useLayoutEffect(function registerOwner() {
+        function closeScope() {
+            active.current.mounted = false
+            resource.close()
+        }
+        closeConversation.current = closeScope
+        return function unregisterOwner() {
+            closeScope()
+            if (closeConversation.current == closeScope) closeConversation.current = null
+        }
+    }, [resource.close, closeConversation])
 
     useEffect(function lifecycle() {
         active.current.mounted = true
@@ -220,7 +361,7 @@ function Workspace({session}: {session: ChatSession}) {
         event.preventDefault()
         if (!client || !title.trim() || !available) return
         const sendingClient = client
-        const participantIds = shared ? ['alice', 'bob'] : [account]
+        const participantIds = shared ? workspace.members.map(member => member.account) : [account]
         Object.freeze(participantIds)
         const payload = createInput ?? Object.freeze({requestId: crypto.randomUUID(), title: title.trim(), participantIds})
         setCreateInput(payload)
@@ -252,12 +393,16 @@ function Workspace({session}: {session: ChatSession}) {
             <div className="list-heading"><div><p className="eyebrow">ВАШИ РАЗГОВОРЫ</p><h1>Чаты</h1></div>
                 <button className="new-chat" disabled={!available} onClick={() => setCreating(!creating)} aria-expanded={creating}>+ Новый</button>
             </div>
-            <p className="account-label">{account == 'alice' ? 'Алиса' : 'Боб'} <span>· демоаккаунт</span></p>
+            <p className="account-label">{workspace.members.find(member => member.account == account)?.name ?? account}
+                <span> · {workspace.name}</span></p>
+            {workspaceOwner && <MembershipPanel key={workspace.id} session={session} workspace={workspace} account={account}/>}
             {creating && <form className="new-chat-form" onSubmit={create}>
                 <label>Название чата<input required autoFocus maxLength={120} value={title} disabled={creation.pending || !!createInput}
                     onChange={event => setTitle(event.target.value)}/></label>
-                <label className="shared-option"><input type="checkbox" checked={shared} disabled={creation.pending || !!createInput}
-                    onChange={event => setShared(event.target.checked)}/>Общий чат с {account == 'alice' ? 'Бобом' : 'Алисой'}</label>
+                {!!otherMembers.length && <label className="shared-option">
+                    <input type="checkbox" checked={shared} disabled={creation.pending || !!createInput}
+                        onChange={event => setShared(event.target.checked)}/>Общий чат с {otherMembers.map(member => member.name).join(', ')}
+                </label>}
                 <button className="primary" disabled={!available || creation.pending || !title.trim()}>
                     {createLabel}
                 </button>

@@ -282,6 +282,6 @@ export const products = [
         "port": 3819,
         "ready": false,
         "checks": "npm test — реальные сетевые клиенты, receipts, persistence, доступ",
-        "limits": "Две демонстрационные учётные записи, локальный журнал одного писателя. Тестовый ответ\nне вызывает внешнюю модель. Streaming, remote agent, workspace switching, установленный\ndesktop/mobile и реальное размещение относятся к последующим этапам и здесь не приняты."
+        "limits": "Две демонстрационные учётные записи и два статических workspace. Team сохраняет C01\nжурнал целиком, включая private-alice; Personal — новый host, автоматического переноса\nстарой личной истории нет. Native bound owner-команды меняют membership и защищают\nпоследнего owner. Logout локален и не обещает глобального отзыва токенов.\n\nПолный native REST отключён; остаётся native credential login. Ограничение связано с\nSERVICE-COMMAND-RECEIPT-ACL.\nC03 требует собственной runtime/browser приёмки и не наследует PASS C01.\nТестовый ответ не вызывает внешнюю модель. Streaming, remote agent, установленные\ndesktop/mobile и реальное размещение остаются отдельными непринятыми этапами."
     }
 ]

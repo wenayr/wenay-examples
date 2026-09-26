@@ -10,8 +10,10 @@ function bounded(value: string, label: string, max: number) {
     return value
 }
 
-export function createChatResource(deps: {directory: string, member: (account: string) => boolean, maxConversations?: number}) {
-    const journal = createConversationJournal({directory: deps.directory})
+export function createChatResource(deps: {
+    directory: string, member: (account: string) => boolean, maxConversations?: number, allow?: string[], personal?: boolean
+}) {
+    const journal = createConversationJournal({directory: deps.directory, personal: deps.personal})
     const maxConversations = deps.maxConversations ?? 100
     let commandTail = Promise.resolve()
     // Keep current ACL, payload checks and limits in the same operation as the native commit.
@@ -31,12 +33,40 @@ export function createChatResource(deps: {directory: string, member: (account: s
         if (!deps.member(account) || !room?.participantIds.includes(account)) throw new Error('Нет доступа к разговору')
         return room
     }
-    const resource = {allow: ['member'], placement: 'authority' as const, open(ctx: ServiceResourceContext) {
+    const resource = {allow: deps.allow ?? ['member'], placement: 'authority' as const, open(ctx: ServiceResourceContext) {
         const account = ctx.principal.account
         const connection = host.connection(account)
         let closed = false
+        function isActive() {return !closed && !ctx.signal.aborted && deps.member(account)}
         function active() {
-            if (closed || ctx.signal.aborted || !deps.member(account)) throw new Error('Сессия общения закрыта')
+            if (!isActive()) throw new Error('Сессия общения закрыта')
+        }
+        // Proxy retains the native replay/Listen descriptors and symbols; the library still owns every frame and subscription.
+        function guardReplay<T extends object>(native: T, facet = 'replay'): T {
+            return new Proxy(native, {get(target, key, receiver) {
+                const value = Reflect.get(target, key, receiver)
+                const nested = ['line', 'frameLine', 'chunks'].includes(String(key))
+                if (nested) return value && guardReplay(value, String(key))
+                const reader = ['keyframe', 'since', 'frame', 'describe', 'begin', 'pull', 'end'].includes(String(key))
+                const subscribe = (facet == 'line' || facet == 'frameLine') && key == 'on'
+                if (typeof value != 'function' || (!reader && !subscribe)) return value
+                return new Proxy(value, {apply(method, owner, args) {
+                    active()
+                    if (subscribe) {
+                        const callback = args[0]
+                        args = [function deliver(...events: unknown[]) {
+                            if (isActive()) Reflect.apply(callback, undefined, events)
+                        }, ...args.slice(1)]
+                    }
+                    const result = Reflect.apply(method, owner, args)
+                    if (result instanceof Promise) return result.then(function completed(value) {
+                        active()
+                        return value
+                    })
+                    active()
+                    return result
+                }})
+            }})
         }
         function request(value: string) {
             active()
@@ -118,6 +148,7 @@ export function createChatResource(deps: {directory: string, member: (account: s
         async function denied(): Promise<never> {active()
         throw new Error('Факты не доступны в этом примере')}
         const conversation = {...connection.fragment,
+            state: guardReplay(connection.fragment.state), events: guardReplay(connection.fragment.events),
             createConversation(input) {return command(function create() {return performCreateConversation(input)})},
             createChannel(input) {return command(function create() {return performCreateChannel(input)})},
             postMessage(input) {return command(function post() {return performPostMessage(input)})},

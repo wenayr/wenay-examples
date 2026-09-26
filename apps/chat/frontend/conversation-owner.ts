@@ -1,12 +1,12 @@
 import {createStore} from 'wenay-common2/observe'
 import type {ConversationClient} from 'wenay-common2/conversation'
 import {createOwnedConversation} from '../shared/conversation-client'
-import type {ChatSession} from './contracts'
+import type {ChatSession, tChatResourceName} from './contracts'
 import {errorText} from './contracts'
 
 // Потребитель replay закрывается синхронно, раньше закрытия его RPC-ресурса.
-export function createConversationOwner(deps: {session: ChatSession}) {
-    const resource = deps.session.resources.open('chat')
+export function createConversationOwner(deps: {session: ChatSession, resourceName: tChatResourceName}) {
+    const resource = deps.session.resources.open(deps.resourceName)
     const store = createStore({generation: 0, ready: false, error: ''})
     let client: ConversationClient | null = null
     let current: ReturnType<typeof resource.current> = null
