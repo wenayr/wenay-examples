@@ -43,3 +43,35 @@ Q11 Linux runtime и Q10 autonomous copy drivers подготовлены и sou
 но в момент этого gate ещё не запускались. Внешний HTTPS, установка на сервер,
 installed desktop/mobile и Q06 lost-settle этим gate не принимаются.
 Main, push и публикация не выполнялись.
+
+## Следующий полный checkpoint392170d
+
+Root raw `npm run check:all`, session53023, **PASS EXIT0** на приложениях и helpers
+source392170d: includes Q11 Linux98ce6a3/Q10copy27eb75b/Booking UX5f8a2c1.
+38 actual app checks/39 шагов, Catalog build отсутствует по контракту, environment
+SKIP нет. Repository: scaffold10/sync101/15/style496/0/links835/0.
+Во время запуска изменялись только документы и появился отдельный CRM browser report;
+CRM label fix готовился в ORIGINAL и **не входит** в этот gate.
+Q06 native proof также находится отдельно в ORIGINAL и не входит в raw53023.
+Generated STATUS обновлён штатной командой. Actual app timings:
+
+| Приложение | Typecheck, с | Test, с | Build, с |
+| --- | --- | --- | --- |
+| Pizzeria | 0.9 | 73.7 | 2.8 |
+| Hosting | 1.2 | 14.1 | 1.3 |
+| Support | 0.8 | 33.2 | 1.7 |
+| Documents | 0.8 | 45.3 | 1.6 |
+| Metering | 1.0 | 17.5 | 1.4 |
+| CRM | 0.9 | 16.0 | 1.5 |
+| Booking | 0.7 | 22.6 | 1.4 |
+| Forms | 0.7 | 17.8 | 1.5 |
+| Monitoring | 0.7 | 36.8 | 1.9 |
+| Content | 0.9 | 27.5 | 1.8 |
+| Catalog | 1.1 | 0.5 | отсутствует |
+| Approvals | 0.9 | 20.4 | 1.6 |
+| Chat | 0.8 | 8.1 | 1.5 |
+
+Native Linux/Q10 fixture outcomes и Support/Booking fresh Docker сохраняют отдельные
+reports; raw check:all не запускает их вместо требуемого реального сценария.
+Более ранние raw4956/95073 и failed18952 остаются собственными checkpoint,
+а не переименовываются в этот PASS. Main/push/внешняя установка не выполнялись.

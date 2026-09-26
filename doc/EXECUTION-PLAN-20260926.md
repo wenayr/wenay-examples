@@ -1,4 +1,4 @@
-﻿# Исполняемый план всех поручений, 26 сентября 2026
+# Исполняемый план всех поручений, 26 сентября 2026
 
 Единая очередь охватывает миграцию на наши библиотеки, повторную проверку прежней работы,
 календари Organizer/Booking, UX всех приложений, безопасное упрощение, SaaS «хочу сайт, вот сервер»
@@ -56,6 +56,11 @@ Fresh Support-only live после новой истории PASS36.666s:
 [отчёт](changes/support-history-live-20260926.md); прежние остальные images сохраняют e4944c3 basis.
 Root package union сохраняет bundle/hosting-live и status перед verify;
 root Chat manifest включён в свежие repository checks. Main/push не выполнялись.
+Последующий raw53023 **PASS EXIT0** относится к exact source `392170d`: 38 actual/39,
+Catalog build absent, no environment SKIP, scaffold10/sync101/15/style496/0/links835/0.
+Затем перенесены CRM label `745ba88`→`e40062a` и Q06 native proof `7264bfd`→`b2b447b`;
+их bounded evidence записано ниже, INTEGRATION target99016 PASS EXIT0 type1.2/test23.2/build2.0с.
+Raw53023 не выдаётся за full gate этих последующих изменений.
 
 ## Обзор всей очереди
 
@@ -67,7 +72,7 @@ root Chat manifest включён в свежие repository checks. Main/push �
 | Q03 | Последовательный hosting live gate | B00 | Merged all-11 Docker PASS на e4944c3; generic runtime исключён, external HTTPS отдельно |
 | Q04 | Support machine search и owner keys UI | B00 | Принят 2e159e2: runtime/runner/browser; fake usage не закрывает Q06 |
 | Q05 | Documents machine upload/start/status/result | Q04 | Backend 5755acb и owner keys 58d0aeb приняты; merged baseline и post-transfer raw95073 PASS |
-| Q06 | Настоящий Counter для двух продуктовых API | Q04, Q05 | Q06-A 272f704 и Documents receipt Q06-B 71c9d8c приняты; Support/lost-settle/reconciliation pending, до paid usage |
+| Q06 | Настоящий Counter для двух продуктовых API | Q04, Q05 | Q06-A 272f704, Documents receipt Q06-B 71c9d8c и bounded native checkpoint7264bfd→b2b447b приняты; Support/lost-settle/reconciliation pending, до paid usage |
 | Q07 | Metering pattern / Documents diff | B00 | Локально приняты b11a848 / affe595; интеграционный код проверяется заново |
 | Q08 | Эксплуатационный сценарий каждого оставшегося продукта | B00, профильные Q/G | Accounting 661a870: 11 builds/12 Vite manifests/check:repo PASS; human journeys и fresh full app gate отдельно |
 | Q09 | Свежесть Catalog и настоящие screenshots | B00, G03 | Ожидает snapshot/fallback/skip приёмки |
@@ -246,6 +251,18 @@ Q06-B `71c9d8c` принят: actual native Documents receipt сохраняет
 guarded status/result переживают restart без reexecution. Counter/Documents machine fixture
 5.5255 s PASS; Documents npm test/full и отдельный advanced с настоящим Python PASS.
 [Отчёт](changes/usage-q06-documents-receipt-20260926.md).
+Bounded native AI checkpoint + actual Counter receipt proof принят `7264bfd`→`b2b447b`:
+root repeat PASS2.489s, exact retry/restart/full-input conflict/current policy,
+controlled refusal до terminal write после двух distinct committed Counter events.
+Первый85242 EXIT1 сохранён: native run IDs host-local ai-1, fixture event namespace
+исправлен stable checkpoint name + run ID. Port52920=0/own fixture absent после repeat.
+[Отчёт](changes/usage-ai-checkpoint-q06-proof-20260926.md). Это не production identity,
+не atomic commit/crash/lost-response reconciliation и не приёмка всего Q06.
+INTEGRATION repeat chunkd42aa7 PASS EXIT0 6.158s на b2b447b; отдельная root cleanup
+проверка пока pending. Prefixes completed/gap различают fixture checkpoints,
+но не доказывают независимость двух production producers. Следующий bounded
+Q06-PRODUCER-D: public UUID IDs и два независимых Documents host в одном Counter org,
+cost2/restart checkpoint/no reexecution; реализация и actual proof пока pending.
 Parent Q06 остаётся pending: Support machine handoff, lost reserve/settle response и
 reconciliation/crash gap. Null не означает no-cost, rerun/refund запрещены без доказанного исхода.
 Q04→Q05→Q06 обязательно; полный контракт требуется до paid provider usage.
@@ -294,6 +311,11 @@ browser conflict/retry и отдельный DST переход остаются
 Приёмка: restart mid-import/retry/conflicting row, две роли, current/stale accept;
 browser table/search/card/keyboard/Escape/archive. Q01; продуктовый остаток ожидает,
 прежний lazy browser PASS новый import lifecycle не принимает.
+Минимальный progress label subset принят `745ba88`→`e40062a`: ORIGINAL target32866
+PASS type1.2/test21.9/build1.7с; root fresh browser89843 completed «Проверено4/4»,
+allchecked status/no resume, counters2/1/1 и mobile360px scroll345/cleanup PASS.
+[Отчёт](changes/crm-import-progress-ux-20260926.md). INTEGRATION target99016 PASS EXIT0 type1.2/test23.2/build2.0с;
+этот subset после raw53023 не принимает весь import lifecycle/publication scope.
 
 ### Q08-FORMS
 
@@ -569,7 +591,7 @@ C-OPT-PLATFORMS после C07-X: общие модели/client и явные l
 | Шаг | ID и работа | Когда можно переходить дальше |
 | --- | --- | --- |
 | 1 | B00/merged validation: сохранять exact npm/locks и доказательства уже перенесённых изменений | raw95073 PASS; новые изменения имеют свои targeted/runtime/browser gates |
-| 2 | Q06: доказать native durable result + настоящий receipt после restart, затем Support machine handoff | одинаковый request не повторяет работу, другой input конфликтует; lost-settle остаётся явным unknown |
+| 2 | Q06: после bounded native checkpoint proof проверить production identity и Support machine handoff | одинаковый request не повторяет работу, другой input конфликтует; lost-settle/crash gap остаются явным unknown |
 | 3 | Q08: законченные journeys Organizer/Booking/остальных продуктов; оптимизация по фактическому initial/total graph | выбор, отмена, ошибки, роли и narrow UI проверены; уменьшение измерено, поведение сохранено |
 | 4 | Q09/Q10: реальные screenshots, fresh/unknown badges, самостоятельная копия и изменение бизнес-правила | не только structural copy: установка, сборка, native journey и восстановление реально проходят |
 | 5 | Q11-P/B: artifact → Linux runtime → согласованный host → HTTPS → update/rollback | artifact и Linux subset приняты; внешний DNS/TLS/systemd/agent требуют отдельного live proof |

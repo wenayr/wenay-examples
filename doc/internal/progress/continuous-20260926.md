@@ -240,3 +240,51 @@ installed mobile остаются pending. Эти subsets выполнены п�
 Next сохраняет IDs/deps: bounded Q06 research существующих current receipt handoff,
 lost reserve/settle response и reconciliation/crash gaps. До доказательства не добавлять
 paid usage или автоматический rerun/refund. Root сохраняет docs отдельно; main/push нет.
+
+Root: final raw53023 на integration392170d RUNNING после Q11Linux/Q10copy/Booking UX.
+Pizzeria и Hosting actual checks продвигаются; до completion новый PASS не заявлять.
+Booking fresh selected Docker97387 PASS39.528s, exact2digests/source5f8a2c1 сохранены
+в Booking report. Q06 native Counter+AI checkpoint sourceproof в ORIGINAL проходит
+independent review deadlines/cleanup перед serial runtime. UI выполняет bounded CRM
+CSV human journey на собственном local fixture; lazy split без измеримой пользы не принят.
+
+Root53023 завершился PASS EXIT0 source392170d:38actual/39 Catalogbuildabsent,
+noenvSKIP, scaffold10/sync101/15/style496/0/links835/0. Actual timings сохранены в
+examples-post-transfer report, STATUS сгенерирован штатно. Q06 firstactual85242 EXIT1
+на controlledpersistence refusal timeout после terminal/restart части; собственный
+child завершён, port61219=0/ownfixtures absent. Backend исследует причину, fullQ06 не принят.
+CRMbrowser desktop import actual2added/1duplicate/1invalid и singlejob retry PASS;
+SOURCElabel fix в ORIGINAL (4line UI diff), reviewerSOURCEPASS, target32866 RUNNING.
+Этот новый slice не входит в53023; послеactualUX будет свой scopedcheckpoint.
+
+## Current bounded Q06 proof и CRM labels после raw53023
+
+Raw53023 PASS EXIT0 source392170d остаётся неизменным историческим full checkpoint:
+38actual/39, Catalog build absent, no environment SKIP, scaffold10/sync101/15/style496/0/links835/0.
+Последующие два scope перенесены отдельно, INTEGRATION target99016 PASS EXIT0 type1.2/test23.2/build2.0с.
+
+Q06 первый85242 EXIT1 объяснён host-local native IDs ai-1: два checkpoint host попали
+в один Counter eventId. Fixture использует stable checkpoint name + native run ID,
+без synthetic receipt; Counter assertions проверяют ровно два distinct expected events.
+Independent corrected source review новых P1/P2 не нашёл. Root repeat actual PASS2.489s,
+port52920=0/own fixture absent; ORIGINAL7264bfd→INTEGRATIONb2b447b,
+[отчёт](../../changes/usage-ai-checkpoint-q06-proof-20260926.md).
+INTEGRATION native repeat chunkd42aa7 PASS EXIT0 6.158s на b2b447b; root cleanup check
+pending. Completed/gap prefixes — fixture namespace, не independent producer proof.
+Принимается bounded exact receipt/restart/retry/conflict/current-policy и controlled
+before-terminal-write failure после actual committed Counter, не crash/lost-response
+или atomic reconciliation. Parent Q06 Support machine handoff/production identity,
+lost reserve/settle response и reconciliation/crash gap остаётся pending до paid usage.
+
+CRM minimal progress labels ORIGINAL745ba88→INTEGRATIONe40062a: target32866 all3 PASS
+type1.2/test21.9/build1.7с. Root fresh browser89843 confirmed completed «Проверено4/4»,
+allchecked status/no resume, counters2/1/1, mobile360px scroll345 и own cleanup.
+[Отчёт](../../changes/crm-import-progress-ux-20260926.md). Independent source review
+подтвердил сумму disjoint nonpending row statuses и native completed/no-pending guard;
+callbacks/resources/native payload/ACL unchanged. Full Q08-CRM import/publication journey
+не закрыт этим labels subset. INTEGRATION target99016 PASS EXIT0 type1.2/test23.2/build2.0с.
+
+Next: bounded Q06-PRODUCER-D public UUID IDs и два independent Documents host с одним
+Counter org/cost2/restart same checkpoint/no reexecution; source/runtime пока pending.
+Затем scoped Support machine receipt handoff и lost-response/crash-gap contract. Main/push нет;
+два новых subsets не расширяют source basis raw53023 или прежних Docker reports.
