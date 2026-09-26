@@ -5,12 +5,14 @@ import {useClientStore, useOwnedClient} from 'wenay-react2/react'
 import type {BookingWorkspace} from '../backend/domain'
 import {useServiceAction} from '../shared/react/service-action'
 import {when, clock, type Commands, type Resources, type Organization} from './contracts'
+import {BookingSchedule} from './schedule'
+import {validScheduleDate} from './schedule-math'
 
 function openCalendar(resources: Resources) {
     return resources.open('calendar')
 }
 
-type CalendarRemote = NonNullable<ReturnType<ReturnType<typeof openCalendar>['current']>>['remote']
+export type CalendarRemote = NonNullable<ReturnType<ReturnType<typeof openCalendar>['current']>>['remote']
 type Availability = Awaited<ReturnType<CalendarRemote['control']['read']>>
 
 const shortDays = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс']
@@ -44,7 +46,7 @@ export function Calendar({value, org, resources, commands, busy, moving, done}: 
     const [from, setFrom] = useState(function tomorrow() {
         return Temporal.Now.zonedDateTimeISO(zone).toPlainDate().add({days: 1}).toString()
     })
-    const [days, setDays] = useState(7)
+    const [days, setDays] = useState(1)
     const [partySize, setPartySize] = useState(booking?.partySize ?? 1)
     const [selected, setSelected] = useState<number | null>(null)
     const [refresh, setRefresh] = useState(0)
@@ -66,7 +68,7 @@ export function Calendar({value, org, resources, commands, busy, moving, done}: 
         let active = true
         setError('')
         if (!remote || !service) return
-        const request = remote.control.read({orgId: org.id, serviceId: service.id, from, days, partySize})
+        const request = remote.control.read({orgId: org.id, serviceId: service.id, from, days, partySize, bookingId: booking?.id})
         void request.then(function ready(result) {
             if (!active || current.current.key != key || current.current.remote != remote) return
             setLoaded({key, remote, result})
@@ -145,6 +147,7 @@ export function Calendar({value, org, resources, commands, busy, moving, done}: 
     ])
 
     function applySuggestion(result: {serviceId: string, date: string, partySize: number}) {
+        if (!validScheduleDate(result.date)) return
         setServiceId(result.serviceId)
         setFrom(result.date)
         setPartySize(result.partySize)
@@ -191,7 +194,7 @@ export function Calendar({value, org, resources, commands, busy, moving, done}: 
                 aria-label="Начало периода"
                 value={from}
                 onChange={function pick(event) {
-                    if (!event.target.value) return
+                    if (!validScheduleDate(event.target.value)) return
                     setFrom(event.target.value)
                     setSelected(null)
                 }}
@@ -320,6 +323,10 @@ export function Calendar({value, org, resources, commands, busy, moving, done}: 
             </div>
             <span className="zone-badge">◷ {zone}</span>
         </div>
+        <BookingSchedule value={value} org={org} commands={commands} remote={remote} busy={busy}
+            from={from} days={days} setFrom={setFrom} setDays={setDays} zone={zone}/>
+        <details className="booking-slot-picker" open={!!booking}>
+            <summary>{booking ? 'Выбрать новое время из свободных слотов' : 'Записаться: выбрать услугу и свободное время'}</summary>
         <div className="booking-layout">
             {rail}
             <section className="calendar-panel">
@@ -338,5 +345,6 @@ export function Calendar({value, org, resources, commands, busy, moving, done}: 
                 {summary}
             </section>
         </div>
+        </details>
     </>
 }

@@ -133,6 +133,34 @@ export function createBookingDomain(deps: {now?: () => number, holdMs?: number} 
     const now = deps.now ?? Date.now, holdMs = deps.holdMs ?? 300000
     if (!Number.isSafeInteger(holdMs) || holdMs < 10 || holdMs > 900000) throw new Error('Hold TTL must be between 10ms and 15min')
     const bookingInput = {orgId: 'string', id: 'string', revision: 'number', key: 'string'} as const
+    function move(ctx: Ctx, input: {orgId: string, id: string, revision: number, key: string, start: number, serviceId?: string}, preserveTerms: boolean) {
+        const booking = bookingAccess(ctx.state, ctx.account, input.orgId, input.id)
+        const kind = preserveTerms ? 'reschedule' : 'move'
+        return intent(ctx, kind, input, function applyMove() {
+            revision(booking, input.revision)
+            const at = now()
+            if (booking.status != 'confirmed' || booking.start <= at) throw new Error('Перенести можно будущую подтверждённую бронь')
+            const service = serviceAccess(ctx.state, input.orgId, preserveTerms ? input.serviceId ?? '' : booking.serviceId)
+            if (preserveTerms && service.duration * 60000 != booking.end - booking.start) {
+                throw new Error('Длительность новой услуги должна совпадать с сохранённой длительностью брони')
+            }
+            if (preserveTerms && service.depositUnits != booking.depositUnits) {
+                throw new Error('Депозит новой услуги должен совпадать с сохранённым депозитом брони')
+            }
+            const slot = slotFor(ctx.state, service, input.start, booking.partySize, at, booking.id)
+            // Resource, service and interval change together after all target checks.
+            booking.serviceId = service.id
+            booking.resourceId = service.resourceId
+            booking.start = slot.start
+            booking.end = slot.end
+            booking.occupiedFrom = slot.occupiedFrom
+            booking.occupiedTo = slot.occupiedTo
+            change(booking, at)
+            reminders(ctx.state, booking, at)
+            audit(ctx, input.orgId, 'booking.' + kind, booking.id, at)
+            return receipt(booking)
+        })
+    }
     function sweep(ctx: Ctx) {
         if (ctx.account != 'system') throw new Error('Внутренняя операция')
         const at = now()
@@ -292,25 +320,12 @@ export function createBookingDomain(deps: {now?: () => number, holdMs?: number} 
                 return receipt(booking)
             })
         }}),
-        bookingMove: schemaCommand({...bookingInput, start: 'number'}, {allow: ROLES, apply(ctx: Ctx, input) {
-            const booking = bookingAccess(ctx.state, ctx.account, input.orgId, input.id)
-            return intent(ctx, 'move', input, function move() {
-                revision(booking, input.revision)
-                if (booking.status != 'confirmed' || booking.start <= now()) throw new Error('Перенести можно будущую подтверждённую бронь')
-                const service = serviceAccess(ctx.state, input.orgId, booking.serviceId)
-                const slot = slotFor(ctx.state, service, input.start, booking.partySize, now(), booking.id)
-                // All checks finish before the original booking is changed.
-                booking.resourceId = service.resourceId
-                booking.start = slot.start
-                booking.end = slot.end
-                booking.occupiedFrom = slot.occupiedFrom
-                booking.occupiedTo = slot.occupiedTo
-                change(booking, now())
-                reminders(ctx.state, booking, now())
-                audit(ctx, input.orgId, 'booking.move', booking.id, now())
-                return receipt(booking)
-            })
-        }}),
+        bookingMove: schemaCommand({...bookingInput, start: 'number'}, {
+            allow: ROLES, apply(ctx: Ctx, input) {return move(ctx, input, false)}
+        }),
+        bookingReschedule: schemaCommand({...bookingInput, serviceId: 'string', start: 'number'}, {
+            allow: ROLES, apply(ctx: Ctx, input) {return move(ctx, input, true)}
+        }),
         reminderSet: schemaCommand({...bookingInput, enabled: 'boolean'}, {allow: ROLES, apply(ctx: Ctx, input) {
             const booking = bookingAccess(ctx.state, ctx.account, input.orgId, input.id)
             return intent(ctx, 'reminder', input, function settings() {

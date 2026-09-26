@@ -4,8 +4,10 @@ import {createBookingRuntime} from './runtime'
 import {bookingRoles, bookingWorkspace} from './domain'
 import {createBookingState} from './model'
 import {daySlots, remaining, validateResource} from './schedule'
+import {checkBookingReschedule} from './reschedule-check'
 
 async function main() {
+    await checkBookingReschedule()
     const sample = createBookingState(), source = sample.resources.studio, offering = sample.services.consultation
     const sunday = {...source, weekly: [{day: 7, start: '01:00', end: '04:00'}]}
     const short = {...offering, duration: 15, before: 0, after: 0}

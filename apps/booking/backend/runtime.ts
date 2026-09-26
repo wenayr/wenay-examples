@@ -3,7 +3,7 @@ import type {Store} from 'wenay-common2/observe'
 import type {ServiceResourceContext} from 'wenay-common2/service'
 import type {createServiceLeader} from 'wenay-common2/service/server'
 import {createBookingService, bookingDefinition} from './service'
-import {organizationAccess} from './domain'
+import {bookingAccess, organizationAccess} from './domain'
 import {availability} from './schedule'
 import {ROLES, type BookingState} from './model'
 import {createBookingAssistant, type PreferenceProvider} from './assistant-resource'
@@ -14,13 +14,14 @@ export function createBookingRuntime(deps: {now?: () => number, holdMs?: number,
     const assistant = createBookingAssistant({...deps, directory: deps.directory ? path.join(deps.directory, 'assistant') : undefined})
     let store: Store<BookingState> | null = null
     const calendar = {allow: ROLES, placement: 'authority' as const, open(ctx: ServiceResourceContext) {
-        function read(input: {orgId: string, serviceId: string, from: string, days: number, partySize: number}) {
+        function read(input: {orgId: string, serviceId: string, from: string, days: number, partySize: number, bookingId?: string}) {
             ctx.signal.throwIfAborted()
             if (!store) throw new Error('Календарь не подключён')
             organizationAccess(store.state, ctx.principal.account, input.orgId)
             const service = Object.hasOwn(store.state.services, input.serviceId) ? store.state.services[input.serviceId] : undefined
             if (!service || service.orgId != input.orgId) throw new Error('Услуга недоступна')
-            return availability(store.state, service, input, now())
+            const exclude = input.bookingId ? bookingAccess(store.state, ctx.principal.account, input.orgId, input.bookingId).id : ''
+            return availability(store.state, service, input, now(), exclude)
         }
         return {facade: {control: {read}}, close() {}}
     }}
