@@ -1,0 +1,113 @@
+:root {font-family: 'Segoe UI', system-ui, sans-serif; color: #233047; background: #f6f7fb; font-synthesis: none; --accent: #465bd7; --line: #e6e9f1; --muted: #68758a}
+* {box-sizing: border-box}
+body {margin: 0}
+button, input, textarea {font: inherit}
+button {cursor: pointer; border: 1px solid var(--line); border-radius: 11px; padding: 10px 14px; background: white; color: inherit}
+button:hover:not(:disabled) {background: #eef0fb}
+button:disabled {cursor: default; opacity: .48}
+button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visible, .history:focus-visible {outline: 3px solid #798afa; outline-offset: 3px}
+input, textarea {width: 100%; border: 1px solid var(--line); border-radius: 11px; background: white; color: inherit; padding: 12px}
+textarea {resize: vertical; min-height: 64px; max-height: 180px}
+label {display: grid; gap: 7px; font-size: 14px; font-weight: 600}
+h1, h2, h3, p {margin-top: 0}
+.app {height: 100dvh; min-height: 320px; display: grid; grid-template-rows: 72px minmax(0, 1fr)}
+.app-header {display: flex; align-items: center; gap: 24px; padding: 0 32px; border-bottom: 1px solid var(--line); background: white}
+.brand {display: flex; gap: 10px; align-items: center; font-size: 29px; font-weight: 800; text-decoration: none; color: var(--accent); letter-spacing: -1px}
+.brand span {font-size: 23px; color: #233047}
+.header-note {color: var(--muted); font-size: 13px; flex: 1}
+.app-header > button {margin-left: auto}
+.quiet {background: transparent; border-color: transparent; color: var(--muted)}
+.primary {background: var(--accent); color: white; border-color: var(--accent); font-weight: 700}
+.primary:hover:not(:disabled) {background: #364ac1}
+.eyebrow {font-size: 10px; font-weight: 800; letter-spacing: 1.7px; color: var(--muted); margin-bottom: 12px}
+.login {max-width: 1120px; width: 100%; margin: auto; padding: 48px; display: grid; grid-template-columns: 1.2fr 1fr; gap: 80px; align-items: center; overflow: auto; max-height: 100%}
+.login-intro h1 {font-size: clamp(32px, 4vw, 48px); letter-spacing: -2px; line-height: 1.18; margin-bottom: 24px}
+.login-intro > p:not(.eyebrow) {color: var(--muted); line-height: 1.8}
+.login-intro .demo-note {font-size: 13px; border-top: 1px solid var(--line); margin-top: 32px; padding-top: 22px}
+.login-card {padding: 32px; background: white; border: 1px solid var(--line); border-radius: 22px; box-shadow: 0 18px 60px #23304708}
+.login-card h2 {font-size: 24px; letter-spacing: -.6px; margin-bottom: 10px}
+.login-card p, .login-card small {color: var(--muted); line-height: 1.6; font-size: 13px}
+.login-card form {display: grid; gap: 18px; margin: 22px 0}
+.login-card .primary {padding: 13px}
+.account-options {display: flex; gap: 8px; margin-top: 22px}
+.account-options button {flex: 1}
+.account-options button[aria-pressed=true] {background: #eff1ff; color: var(--accent); border-color: #c8d0ff}
+.connection-page {padding: 50px; overflow: auto}
+.workspace {display: grid; grid-template-columns: 300px minmax(0, 1fr); min-height: 0; max-width: 1600px; width: 100%; margin: 0 auto; background: white}
+.chat-list {padding: 28px 18px 18px; display: flex; flex-direction: column; min-height: 0; border-right: 1px solid var(--line); background: #fafbfe}
+.list-heading {display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 0 10px}
+.list-heading h1 {font-size: 26px; letter-spacing: -.8px; margin-bottom: 0}
+.list-heading .eyebrow {margin-bottom: 6px}
+.new-chat {color: var(--accent); font-size: 13px; padding: 8px 10px}
+.account-label {font-weight: 700; font-size: 13px; padding: 18px 10px; margin-bottom: 10px; border-bottom: 1px solid var(--line)}
+.account-label span {color: var(--muted); font-weight: 400}
+.new-chat-form {display: grid; gap: 10px; padding: 0 10px 20px}
+.shared-option {display: flex; align-items: center; font-size: 12px; font-weight: 400}
+.shared-option input {width: 16px; height: 16px; accent-color: var(--accent)}
+.room-buttons {overflow: auto; flex: 1; min-height: 0}
+.room-button {display: flex; align-items: center; gap: 12px; width: 100%; background: transparent; border: 1px solid transparent; text-align: left; padding: 14px 10px; margin-bottom: 6px}
+.room-button.selected {background: #edf0ff; border-color: #e0e5ff}
+.room-icon {display: grid; place-items: center; min-width: 36px; height: 36px; border-radius: 11px; background: white; color: var(--accent); font-size: 22px}
+.room-copy {min-width: 0; display: grid; gap: 5px}
+.room-copy strong, .room-copy small {overflow: hidden; text-overflow: ellipsis; white-space: nowrap}
+.room-copy strong {font-size: 14px}
+.room-copy small {font-size: 12px; color: var(--muted)}
+.list-footnote {font-size: 11px; color: var(--muted); line-height: 1.6; margin: 20px 10px 0}
+.conversation {min-height: 0; min-width: 0; display: grid; grid-template-rows: auto minmax(0, 1fr) auto}
+.conversation-header {display: flex; align-items: center; gap: 16px; padding: 23px 32px; border-bottom: 1px solid var(--line)}
+.conversation-header h2 {font-size: 19px; margin-bottom: 7px; overflow-wrap: anywhere}
+.connection {font-size: 11px; color: var(--muted); margin: 0}
+.connection::before {content: ''; display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #b8bfce; margin-right: 7px}
+.connection.online::before {background: #49a27c}
+.mobile-back {display: none}
+.history {overflow: auto; overscroll-behavior: contain; padding: 28px 32px; background: linear-gradient(#fbfcff, white); min-height: 0}
+.history-empty {display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; height: 100%; min-height: 160px; color: var(--muted)}
+.history-empty > span {font-size: 64px; color: #aeb9f4; margin-bottom: 18px}
+.history-empty h3 {color: #3d4961; font-size: 19px; margin-bottom: 10px}
+.history-empty p {font-size: 13px; max-width: 340px; line-height: 1.6}
+.message {width: fit-content; max-width: min(80%, 680px); margin: 0 0 20px; padding: 14px 18px; background: #f0f2f7; border: 1px solid #e9ecf3; border-radius: 4px 16px 16px; overflow-wrap: anywhere}
+.message.mine {margin-left: auto; background: #eef1ff; border-color: #e0e6ff; border-radius: 16px 4px 16px 16px}
+.message-meta {display: flex; flex-wrap: wrap; gap: 14px; align-items: center; font-size: 11px; color: var(--muted); margin-bottom: 9px}
+.message-meta strong {color: #455271}
+.message p {white-space: pre-wrap; line-height: 1.65; font-size: 14px; margin: 0}
+.receipt {display: block; color: #7a87ab; font-size: 10px; margin-top: 8px; text-align: right}
+.compose-area {padding: 18px 32px max(14px, env(safe-area-inset-bottom)); border-top: 1px solid var(--line); position: relative; background: white}
+.composer {display: flex; gap: 12px; align-items: flex-end}
+.composer textarea {flex: 1; min-width: 0; background: #fafbfe; font-size: 16px}
+.send {min-height: 44px; margin-bottom: 2px; white-space: nowrap; font-size: 13px}
+.send span {margin-left: 8px}
+.composer-footer {display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 10px}
+.composer-footer small {font-size: 10px; color: var(--muted)}
+.composer-footer button {font-size: 11px; padding: 8px}
+.new-messages {position: absolute; top: -42px; left: 50%; transform: translateX(-50%); font-size: 12px; color: var(--accent); box-shadow: 0 4px 20px #23304712}
+.delivery-status {border: 1px solid #dbe2ff; border-radius: 12px; background: #f5f7ff; padding: 10px 14px; margin-bottom: 12px; font-size: 12px}
+.delivery-status p {margin-bottom: 6px}
+.delivery-status button {padding: 7px 10px; font-size: 12px}
+.error {color: #a63a47 !important; font-size: 13px; line-height: 1.5}
+.empty {color: var(--muted); font-size: 13px; padding: 14px}
+.visually-hidden {position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0}
+@media (max-width: 760px) {
+    .app {grid-template-rows: 60px minmax(0, 1fr)}
+    .app-header {padding: 0 18px; gap: 12px}
+    .header-note {display: none}
+    .login {display: block; padding: 24px 18px}
+    .login-intro h1 {font-size: 33px}
+    .login-intro > p:not(.eyebrow) {font-size: 13px}
+    .login-intro .demo-note {margin-top: 16px; padding-top: 12px}
+    .login-card {padding: 24px; margin-top: 28px}
+    .workspace {grid-template-columns: minmax(0, 1fr)}
+    .workspace.show-list .conversation, .workspace.show-chat .chat-list {display: none}
+    .chat-list {border-right: 0; padding-top: 24px}
+    .mobile-back {display: block; padding: 8px 0; min-width: 64px; font-size: 13px}
+    .conversation-header {padding: 13px 16px; gap: 14px}
+    .conversation-header h2 {font-size: 16px}
+    .history {padding: 20px 16px}
+    .message {max-width: 90%; padding: 12px 14px}
+    .compose-area {padding: 12px 16px max(10px, env(safe-area-inset-bottom))}
+    .composer {gap: 8px}
+    .composer textarea {min-height: 56px; max-height: 120px; padding: 10px; resize: none}
+    .send {padding: 10px; font-size: 12px}
+    .send span {display: none}
+    .composer-footer {justify-content: flex-end; margin-top: 3px}
+    .composer-footer small {display: none}
+}

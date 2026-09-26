@@ -41,6 +41,48 @@ cd apps/support && node --import tsx backend/ai-resource-lifecycle-repro.ts --ex
 
 Удаление обхода: заменить state-only зеркало обычным AI-клиентом и прогнать `npm test` в support и forms. Композиция намеренно не подписывается на semantic delta/tool events — примеру, которому они понадобятся, обход не подойдёт и без исправления.
 
+### CONVERSATION-RECEIPT-POLICY
+
+[Задача](CONVERSATION-RECEIPT-POLICY.md), [public repro](repro/conversation-receipt-policy.ts).
+Подтверждено на npm common2 3.1.1: после policy=false новый requestId отклоняется,
+но прежний post/createChannel/createConversation возвращает закрытую entity через receipt.
+Retained и fresh state keyframe фильтруются корректно. Библиотека не исправлена.
+
+| Место | Что делает обход |
+| --- | --- |
+| `apps/chat/backend/chat-resource.ts`, `previous(requestId)` с захваченным account | До вызова native fragment или выдачи прежнего результата находит account-scoped receipt и повторяет `requireRoom` для его entity; `request`/`active` проверяют актуальную membership и lifecycle |
+
+Проверка после опубликованного исправления из `apps/chat`:
+
+```text
+npx tsx ../../doc/library-tasks/repro/conversation-receipt-policy.ts --expect-fixed
+```
+
+Обычный режим на 3.1.1 exit 0; ожидаемое исправление exit 1. Обещание first entity сохраняет
+идемпотентность, но не считается исключением из актуальной ACL; намеренную иную семантику должен подтвердить автор.
+Удалять wrapper guard только после точного npm-обновления и повторной отрицательной приёмки приложения.
+### CONVERSATION-RESOURCE-LIFECYCLE
+
+[Задача](CONVERSATION-RESOURCE-LIFECYCLE.md), [public repro](repro/conversation-resource-lifecycle.ts).
+На npm common2 3.1.1 native conversation consumer не имеет позднего error port;
+завершение живого SC1 remote ставит необработанный timer throw `logical RPC line ended`.
+Тот же механизм ранее подтверждён у AI consumer, но это отдельная проверка conversation.
+
+| Место | Что делает обход |
+| --- | --- |
+| `apps/chat/shared/conversation-client.ts`, `createOwnedConversation`; frontend owner | Сохраняет native client и RPC line handle, первым наблюдает его завершение и закрывает consumer до library callbacks; `onEnded` очищает старое frontend зеркало |
+
+Проверка после опубликованного исправления из `apps/chat`:
+
+```text
+npx tsx ../../doc/library-tasks/repro/conversation-resource-lifecycle.ts
+npx tsx ../../doc/library-tasks/repro/conversation-resource-lifecycle.ts --revoke
+npm test
+```
+
+Удалить line observer guard только после точного npm-обновления и добавления проверки публичного terminal/error channel.
+Оба native repro должны завершиться без process fatal; terminal consumer error ожидаема и должна быть наблюдаема владельцем.
+
 ## Порядок принятия исправления
 
 Задача L06 плана 2: обновить точную npm-версию во всех приложениях по очереди, удалить обход по этой таблице, повторить сценарий, записать результат в `doc/changes/common2-<версия>.md` и отметить строку здесь как закрытую.

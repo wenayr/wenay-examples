@@ -1,0 +1,22 @@
+{
+    "files": [
+        "backend/chat-resource.ts",
+        "backend/check.ts",
+        "backend/conversation-journal.ts",
+        "backend/identity.ts",
+        "backend/server.ts",
+        "backend/service.ts",
+        "frontend/contracts.ts",
+        "frontend/conversation-owner.ts",
+        "frontend/env.d.ts",
+        "frontend/index.html",
+        "frontend/main.tsx",
+        "frontend/style.css",
+        "frontend/vite.config.ts",
+        "shared/conversation-client.ts"
+    ],
+    "optional": ["README.md", "API.md", ".env.example"],
+    "skip": {
+        "PASSPORT.md": "паспорт каталога примеров: ссылается на STATUS и отчёты репозитория"
+    }
+}
