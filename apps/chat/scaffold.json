@@ -20,6 +20,20 @@
     ],
     "optional": ["README.md", "API.md", ".env.example"],
     "skip": {
-        "PASSPORT.md": "паспорт каталога примеров: ссылается на STATUS и отчёты репозитория"
+        "PASSPORT.md": "паспорт каталога примеров: ссылается на STATUS и отчёты репозитория",
+        "desktop/README.md": "отдельный C07 desktop каркас: текущий шаблон создаёт только самостоятельный web Chat",
+        "desktop/main.cjs": "отдельный C07 Electron entrypoint: active package и installed acceptance ещё не подготовлены",
+        "desktop/origin.cjs": "C07 HTTPS origin policy для отдельного Electron приложения, не для web шаблона",
+        "desktop/remote-window.cjs": "C07 sandboxed Electron window для отдельного приложения, не для web шаблона",
+        "desktop/load-window.cjs": "C07 Electron navigation lifecycle для отдельного приложения, не для web шаблона",
+        "desktop/settings.cjs": "C07 local endpoint settings для отдельного Electron приложения, не для web шаблона",
+        "desktop/setup-window.cjs": "C07 Electron setup protocol и IPC для отдельного приложения, не для web шаблона",
+        "desktop/setup-preload.cjs": "C07 local setup preload для отдельного Electron приложения, не для web шаблона",
+        "desktop/source-check.cjs": "проверка отдельного C07 Electron source, не runtime самостоятельного web шаблона",
+        "desktop/runtime-check.cjs": "изолированный C07 Electron probe требует отдельного binary и собственной приёмки",
+        "desktop/package.proposal.json": "неактивный C07 Electron package proposal, не зависимости самостоятельного web шаблона",
+        "desktop/setup/index.html": "локальная C07 Electron setup страница, не public UI самостоятельного web шаблона",
+        "desktop/setup/setup.js": "локальный C07 Electron setup renderer, не public UI самостоятельного web шаблона",
+        "desktop/setup/setup.css": "стиль локальной C07 Electron setup страницы, не public UI самостоятельного web шаблона"
     }
 }
