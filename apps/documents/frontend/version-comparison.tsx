@@ -6,17 +6,25 @@ type Comparison = Awaited<ReturnType<ProcessorRemote['control']['compare']>>
 type ComparisonProps = {detail: DocumentDetail, document: DocumentMetadata, remote: ProcessorRemote}
 
 export function VersionComparison({detail, document, remote}: ComparisonProps) {
-    const [revision, setRevision] = useState(detail.approvals.at(-1)?.revision ?? 0)
+    // Выбор относится к документу, а не к совпадающему номеру версии в другой карточке.
+    return <ComparisonPanel key={JSON.stringify([document.orgId, document.id])} detail={detail} document={document} remote={remote}/>
+}
+
+function ComparisonPanel({detail, document, remote}: ComparisonProps) {
+    const [revision, setRevision] = useState<number | null>(null)
     const last = detail.approvals.at(-1)?.revision ?? 0
-    const selected = detail.approvals.find(value => value.revision == revision)?.revision ?? last
+    const earlier = detail.approvals.findLast(value => value.revision != document.revision)?.revision ?? last
+    const currentApproved = detail.approvals.some(value => value.revision == document.revision)
+    const preferred = currentApproved ? earlier : last
+    const selected = detail.approvals.find(value => value.revision == revision)?.revision ?? preferred
     const [loaded, setLoaded] = useState<{key: string, remote: ProcessorRemote, value: Comparison} | null>(null)
-    const [error, setError] = useState('')
-    const key = [document.id, document.revision, selected].join(':')
+    const [failed, setFailed] = useState<{key: string, remote: ProcessorRemote, message: string} | null>(null)
+    const key = JSON.stringify([document.orgId, document.id, document.revision, selected])
 
     // Ответ приходит асинхронно: применяем его, только пока показан тот же документ и то же соединение.
     useEffect(function compare() {
         let active = true
-        setError('')
+        setFailed(null)
         if (!selected) return
         const request = remote.control.compare({
             orgId: document.orgId,
@@ -27,12 +35,13 @@ export function VersionComparison({detail, document, remote}: ComparisonProps) {
         void request.then(function ready(value) {
             if (active) setLoaded({key, remote, value})
         }, function failed(reason) {
-            if (active) setError(reason instanceof Error ? reason.message : 'Версия недоступна')
+            if (active) setFailed({key, remote, message: reason instanceof Error ? reason.message : 'Версия недоступна'})
         })
         return () => {active = false}
     }, [key, remote])
 
     const result = loaded?.key == key && loaded.remote == remote ? loaded.value : null
+    const error = failed?.key == key && failed.remote == remote ? failed.message : ''
     if (!detail.approvals.length) {
         return <p className="empty">
             Сначала утвердите версию. После исправлений здесь появится сравнение с её неизменной копией.
@@ -59,12 +68,21 @@ export function VersionComparison({detail, document, remote}: ComparisonProps) {
         }))
     }
 
+    const unchanged = result && JSON.stringify(result.previous.table) == JSON.stringify(result.current.table)
+    let emptyMessage = 'В таблице нет изменений по сравнению с выбранной утверждённой версией.'
+    if (result?.previous.revision == result?.current.revision) {
+        emptyMessage = 'Выбрана текущая утверждённая версия: таблица совпадает с её копией.'
+        if (detail.approvals.length == 1) {
+            emptyMessage = 'Это первая утверждённая версия. После исправлений здесь появится сравнение с её неизменной копией.'
+        }
+    }
     const table = result && <>
         <p>
             Слева — утверждённая v{result.previous.revision},
-            справа — текущая v{result.current.revision}. Подсвечены изменённые ячейки.
+            справа — текущая v{result.current.revision}.
+            {!unchanged && ' Подсвечены изменённые ячейки.'}
         </p>
-        <div className="comparison-scroll">
+        {unchanged ? <p className="empty" role="status">{emptyMessage}</p> : <div className="comparison-scroll">
             <table>
                 <thead>
                     <tr>
@@ -75,7 +93,7 @@ export function VersionComparison({detail, document, remote}: ComparisonProps) {
                 </thead>
                 <tbody>{cells(result)}</tbody>
             </table>
-        </div>
+        </div>}
     </>
 
     return <section className="version-comparison">
