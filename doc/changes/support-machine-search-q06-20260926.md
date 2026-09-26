@@ -124,3 +124,9 @@ knowledge:search, не weakened permission test. Specific revoke/expiry matcher 
 Full integration после переноса нового Support ещё pending; raw27106 относится к source9d47359.
 Не проверены actual pending restart recovery, post-commit revocation/source revision race,
 lost network response или crash gap. Ordinary close и pre-billing abort доказаны отдельно.
+
+Перенос019268b→11e9de0: root INTEGRATION target64391 EXIT0 type0.8/test33.6/build1.6с;
+real fixture37d462 EXIT0 5.0608s. Own57777/57797/58210/58218/58224 listener0,
+machine-search-proof directories отсутствуют. Первый repo gate0dd605 EXIT1 на scaffold:
+новый backend/machine-search.ts не перечислен. Q06-S-MACHINE-SCAFFOLD добавляет его
+в required files, без skip/ослабления проверок. Полнота копии должна пройти повторный repo gate.
