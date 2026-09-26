@@ -14,6 +14,9 @@ export async function authenticate(account: string, password: string) {
     })
     const body = await response.json()
     if (!response.ok || !body.ok) {
+        if (account == 'respondent' && body.error?.message == 'login refused') {
+            throw new Error('Ссылка на опрос закрыта, обновлена или недействительна')
+        }
         throw new Error(body.error?.message ?? 'Ссылка закрыта или недействительна')
     }
     return String(body.value.token)
