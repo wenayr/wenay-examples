@@ -1,6 +1,8 @@
 # AI-RESOURCE-LIFECYCLE: управляемое завершение AI-клиента при отзыве SC1
 
-Статус: **открыто, воспроизведено** 10 сентября 2026 на опубликованной **wenay-common2 2.21.1**. React2 3.5.1 установлен в приложении, но минимальное воспроизведение работает без React. Это отдельная задача от [инвалидации внешней policy](AI-POLICY-INVALIDATION.md).
+Статус: **открыто, повторно воспроизведено** 26 сентября 2026 на опубликованной **wenay-common2 3.1.1**. Исходное воспроизведение — 10 сентября на 2.21.1. Текущий переход frontend — react2 5.0.0; минимальное воспроизведение работает без React. Это отдельная задача от [инвалидации внешней policy](AI-POLICY-INVALIDATION.md).
+
+На npm 3.1.1 обычный режим после выполненного `ready` и внешнего revoke снова завершился с кодом 1: `replaySubscribe: live line from seq 2 failed: logical RPC line ended`. Декларация `AiRunClientDeps` по-прежнему содержит только `remote`, `initial`, `drain`; публичного error/lifecycle port нет. Остальные варианты таблицы ниже — историческая проверка 2.21.1, в этом коротком аудите они не повторялись. [Аудит обновления](../reports/LIBRARY-API-AUDIT-2026-09-26.md).
 
 Воспроизведение: [apps/support/backend/ai-resource-lifecycle-repro.ts](../../apps/support/backend/ai-resource-lifecycle-repro.ts).
 
