@@ -4,6 +4,13 @@
 
 ## Сначала читать: текущая контрольная точка
 
+Root final raw `npm run check:all`, session53023, source392170d, завершился PASS EXIT0:
+38 actual checks/39 шагов, no environment SKIP, scaffold10/sync101/15/style496/0/links835/0.
+Q06 isolated proof85242 в ORIGINAL завершился EXIT1 на ожидании controlled persistence
+refusal, причина исследуется; cleanup confirmed, своего порта61219 и fixture directories нет.
+CRM desktop Imports journey и cleanup приняты отдельно; label fix в ORIGINAL проходит
+target32866, не входит в raw53023. Не путать последующие changes с этим full checkpoint.
+
 Integration `codex/examples-integration-20260926` объединяет графики, Chat и ORIGINAL.
 Полный raw95073 EXIT0 относится к14d0276; subsequent bounded Q11 Linux98ce6a3,
 Q10 autonomous copy27eb75b и Booking UX5f8a2c1 проверены отдельно.
