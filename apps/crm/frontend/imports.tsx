@@ -209,9 +209,10 @@ export function Imports({value, workspace, org, resources, commands, busy}: Impo
             {mapping}
             {table}
             <div className="actions">
-                <button className="primary" disabled={disabled || !resumable} onClick={() => void start()}>
+                {job.status == 'completed' && <p className="muted" role="status">Все строки проверены.</p>}
+                {job.status != 'completed' && <button className="primary" disabled={disabled || !resumable} onClick={() => void start()}>
                     {job.status == 'preview' ? 'Начать импорт' : 'Продолжить оставшиеся строки'}
-                </button>
+                </button>}
                 <small>
                     Каждая строка сохраняется отдельно. Завершённые строки не повторяются.
                 </small>
@@ -267,7 +268,7 @@ export function Imports({value, workspace, org, resources, commands, busy}: Impo
                         onClick={() => setSelected(item.id)}
                     >
                         <strong>{item.name}</strong>
-                        <small>{labels[item.status]} · {item.imported}/{item.total}</small>
+                        <small>{labels[item.status]} · Проверено {item.imported + item.duplicate + item.errors}/{item.total}</small>
                     </button>
                 ))}
             </aside>
