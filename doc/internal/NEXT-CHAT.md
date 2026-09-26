@@ -56,8 +56,11 @@ Documents owner keys [browser PASS](../changes/documents-product-keys-ui-2026092
 Это не merged gate. Q06-A `272f704` принят:
 native typed value+Counter receipt, legacy 3.948 s/new machine 2.706 s PASS;
 [отчёт](../changes/usage-q06-typed-handoff-20260926.md).
-Q06 Stage B сейчас реализуется и не принят; parent ждёт durable linkage,
-restart/lost-response/reconciliation и обоих продуктов.
+Q06-B принят `71c9d8c`: actual native Documents receipt/status/result сохраняются после
+restart без reexecution, Counter/Documents fixture 5.5255 s и Documents full/advanced
+с настоящим Python PASS. [Отчёт](../changes/usage-q06-documents-receipt-20260926.md).
+Parent Q06 ждёт Support machine handoff, lost reserve/settle и reconciliation/crash gap;
+null не означает no-cost, автоматические provider rerun/refund не разрешены.
 После C03 выполнен C-OPT-CHAT: начальный JS уменьшен на 58,9% по raw bytes,
 общий JS увеличился на 1 921 байт; targeted и browser повторены. Это размер артефактов,
 не измерение времени загрузки. Отчёт находится в отдельном checkout общего чата.
@@ -71,23 +74,48 @@ Q08 accounting `661a870`: свежие 11 builds/все 12 Vite manifests/check:
 [отчёт](../changes/bundle-accounting-q08-20260926.md). Это не fresh full app gate или human journeys.
 Q11 `b14bece`: origin backend/UI/browser PASS,
 [отчёт](../changes/hosting-public-origin-20260926.md); внешний HTTPS и Linux bootstrap pending.
-В GRAPH C07 desktop skeleton остаётся dirty, installed build/launch не принят.
+Q11 artifact source/assets tar, отдельный SHA/target verifier и checked-byte immutable
+snapshot прошли review/real fixture; root повтор PASS 5.543 s. Q11 artifact сохранён
+a6f7201→integration19f4487: default fresh Vite pack PASS4.195s + отдельный verify,
+manifest freshness=true, installedRuntime=false, source2163a0f. Own artifact
+`work/hosting-installation/hosting-2163a0f.tar.gz`, SHA256
+`2db1137cbb77ca2819ac07a9629cb548587c842d988f29be8dffae901b9ae0a7`.
+Linux npm/installation/readiness pending; [граница](../changes/hosting-q11-artifact-foundation-20260926.md).
+В GRAPH C07 technical slice сохранён `e1669c1`: actual Electron 44.4.5 PASS 2.192 s.
+Installed HTTPS/backend/menu/mobile и C07 platform/history matrix не приняты.
+Этот slice перенесён как b1ac4f2; baseline full gate был раньше переноса. Post-transfer
+raw18952 EXIT1 только Chat desktop scaffold metadata, repair14d0276; следующий raw95073
+PASS EXIT0, 38 actual/39, Catalog build absent/no environment SKIP, scaffold10/sync101/15/
+style494/0/links814/0. Fake fail/skip runner regression не является app outcome.
+Support fresh live36.666s покрывает новые assets:
+[отчёт](../changes/support-history-live-20260926.md). Остальной Docker11 basis e4944c3 сохранён.
+Catalog footer c6390f1 INTEGRATION/9ea82f7 ORIGINAL изменён до Catalog checks.
+Новые ORIGINAL Q10 own Support-copy driver и Q11 Ubuntu candidate driver source-reviewed;
+actual execution/install/native/cleanup proof pending, они не входят в принятие raw95073.
 
 ## Следующий текущий остаток
 
-1. Documents owner keys UI принят 58d0aeb; текущий Q06 Stage B пока реализуется и не принят.
+1. Documents owner keys UI 58d0aeb и Q06-B 71c9d8c приняты. Q06 parent pending Support/lost-settle/reconciliation.
 2. Root создал managed integration от 58d0aeb:
    `C:/Users/wenay/.codex/worktrees/examples-integration/wenay-examples`,
    branch `codex/examples-integration-20260926`. Применены все семь graph commits:
    b627c4e/cf06b6e/25bb12a/9be324a/2bdd6b3/a378d2f/3569bcf.
    Root package union сохраняет bundle/hosting-live и status-before-verify.
-   Chat manifest добавлен root и pending checks; generated STATUS до fresh tests unknown.
-   Последовательный npm ci 13 приложений выполняется. Integration **не принят**;
-   main/push не выполнялись. Исходные checkout не переключать; dirty C07 skeleton отдельно.
-3. Последовательно повторить targeted/browser critical paths и свежий общий merged gate,
-   включая current Docker product runs. Старые checkpoints не принимают новый объединённый source.
+   Baseline e4944c3 включает Q06-B. npm ci 13/13 и 38 app checks PASS.
+   Первый raw check:all exit1 имел только три doc links errors; исправлено, check:repo PASS807/0.
+   Raw check:all session4956 завершился PASS exit0 38/39: Catalog build отсутствует по контракту,
+   environment SKIP нет; baseline acceptance98146ad. Chat manifest прошёл repository checks.
+   Затем SupportUX b16c0da→53f5224, Q11artifact a6f7201→19f4487 и C07 e1669c1→b1ac4f2
+   перенесены после baseline gate. Исторический raw18952 EXIT1 сохранён; Chat metadata
+   repaired14d0276, actual finalraw95073 PASS EXIT0. Main/push нет, исходные checkout не переключать.
+3. Merged all-11 Docker gate exact source e4944c3 PASS exit0 в 19:26:40.573Z;
+   generic runtime исключён, external TLS/bootstrap отдельно. Сохранить baseline evidence,
+   post-transfer raw95073 принят самостоятельно; прежние EXIT1 не переименовывать в PASS.
 4. Продолжить полный Q06, Q08 human journeys, Q09/Q10 и внешние/device/platform границы
    Q11/C07 по зависимостям [плана](../EXECUTION-PLAN-20260926.md). IDs и остатки сохраняются.
+   Support history browser owner/customer/outsider/append PASS, UX сохранён b16c0da→53f5224.
+   Fresh Q11 pack принят, Linux install не заявлен. npm views в19:32UTC подтвердил latest
+   common2 3.1.1/react2 5.0.0 без изменений; B00 новый release gate не требуется.
 
 ## Главная цель
 
@@ -97,10 +125,10 @@ Q11 `b14bece`: origin backend/UI/browser PASS,
 
 ## Состояние на сегодня
 
-- **12 приложений**: pizzeria (+ органайзер), hosting, support, documents, metering, crm, booking, forms, monitoring, content, catalog, approvals. Пользовательский untracked `apps/facade-map/TASK.md` сохранён; это пока не тринадцатое принятое приложение.
+- **13 приложений integration**: pizzeria (+ органайзер), hosting, support, documents, metering, crm, booking, forms, monitoring, content, catalog, approvals, chat. Пользовательский untracked `apps/facade-map/TASK.md` сохранён; он не входит в accepted app registry.
 - **Одна команда проверки:** `npm run check:all` — typecheck, тесты и сборка всех приложений, регрессии runner/status и bundle graph, scaffold, синхронность, стиль, ссылки и сверка STATUS. Пиццерия собирает оба UI; Catalog build отсутствует по контракту. Логи привязаны к package+lock, что не доказывает source freshness. [Отчёт миграции](../changes/common2-3.1.1-react2-5.0.0.md) является историческим baseline; [STATUS](../STATUS.md) и fresh merged gate проверяются на окончательном дереве.
-- **Библиотеки:** common2 **3.1.1**, react2 **5.0.0** во всех 11 потребителях, в pizzeria также **wenay-calls 1.0.0**; только точные опубликованные npm версии и lock. Catalog библиотек не использует.
-- **Открыто у common2:** AI-POLICY-INVALIDATION и AI-RESOURCE-LIFECYCLE повторно воспроизведены на 3.1.1, три места обхода сохранены. STORE-NESTED-REPLACEMENT исправлен; два обхода удалены, repro --expect-fixed включён в support test. [Реестр](../library-tasks/WORKAROUNDS.md), [пакет](../library-tasks/CURRENT-HANDOFF.md). Новых подтверждённых дефектов react2 нет; отдельно [запрос развития графической навигации](../library-tasks/GRAPHICAL-DROP-NAVIGATION.md).
+- **Библиотеки:** common2 **3.1.1**, react2 **5.0.0** во всех 12 integration потребителях, в pizzeria также **wenay-calls 1.0.0**; только точные опубликованные npm версии и lock. Catalog библиотек не использует.
+- **Открыто у common2:** AI-POLICY-INVALIDATION и AI-RESOURCE-LIFECYCLE повторно воспроизведены на 3.1.1, три места обхода сохранены. STORE-NESTED-REPLACEMENT исправлен; два обхода удалены, repro --expect-fixed включён в support test. [Реестр](../library-tasks/WORKAROUNDS.md), [пакет](../library-tasks/CURRENT-HANDOFF.md). Подтверждённых задач react2 нет.
 - **План 2 завершён:** [отчёт](../reports/CONSOLIDATION-REPORT.md) содержит таблицу 36 задач, показатели, что не проверено и открытые вопросы. Ответы на эти вопросы даны в разделе 2 плана 3.
 
 ## Правила и ограничения
