@@ -171,14 +171,39 @@ Q11artifact сохранён a6f7201→integration19f4487. Linux npm/install/rea
 OS/SSH/TLS/publish действий не было.
 
 После baseline full gate перенесены три отдельных stage: SupportUX53f5224,
-Q11artifact19f4487 и C07 e1669c1→b1ac4f2. Последний — текущий integration HEAD.
-Новый final raw check:all на post-transfer source ещё НЕ ЗАПУЩЕН; запланирован root
-после freeze/сохранения этих трёх continuation docs и копирования их в integration.
-Это не running4956 и не новый PASS; сохранить exact source/evidence после actual выполнения.
+Q11artifact19f4487 и C07 e1669c1→b1ac4f2. На том checkpoint новый final raw был
+запланирован после freeze continuation docs; baseline4956 не выдавался за новый PASS.
+Последующие actual outcomes записаны ниже отдельно.
 
-Следующие шаги сохраняют ID/deps: planned post-transfer final integration raw gate;
-далее independent Linux preflight/install после принятого fresh Q11 pack;
+Следующие шаги сохраняют ID/deps: independent Linux preflight/install после fresh Q11 pack;
 Q06 Support handoff и lost-response design до paid usage. Q08 human journeys/Q09/Q10,
 C02 release-bound stream и installed C07-D/M/X остаются самостоятельными границами.
 
-Root: post-transfer raw check:all session18952 запущен на integration b1ac4f2; пока RUNNING, не PASS. Затронутый Support Docker frontend будет пересобран после gate; старые11 images относятся к e4944c3.
+## Final post-transfer checkpoint после Chat metadata repair
+
+Исторический post-transfer raw18952 на b1ac4f2 завершился **EXIT1** только на Chat
+desktop scaffold metadata. Actual app checks проходили; этот EXIT1 не переименован
+в success. Root исправил manifest commit14d0276 и выполнил новый raw check:all95073:
+**PASS EXIT0**, 38 actual app checks/39 шагов, Catalog build absent по контракту,
+environment SKIP нет. Repository: scaffold10, sync101/15, style494/0, links814/0.
+Intentional fake fail/skip runner regression не является настоящим app fail/skip.
+Catalog footer c6390f1 INTEGRATION/9ea82f7 ORIGINAL изменён до Catalog checks.
+
+Root пересобрал затронутый Support first/second и выполнил отдельный fresh live gate:
+PASS36.666s, complete/code0 at2026-09-26T19:44:34.530Z;
+[отчёт](../../changes/support-history-live-20260926.md). Stable gateway/RPC/durable ticket/
+attachment пережили deploy/update/rollback. Этот новый Support asset proof дополняет
+baseline all11 e4944c3, не изменяет его22 image records и не принимает
+external HTTPS/bootstrap/server peak. C07 installed/backend/menu/mobile остаются pending.
+
+В ORIGINAL подготовлены следующие bounded drivers, independent source review PASS:
+Q10 scripts/scaffold-runtime-check.mjs — own Support-copy urgent SLA30/native current roles/
+retry/failover/restart/cold directory restore; Q11 scripts/hosting-linux-runtime-check.mjs —
+Ubuntu24.04/amd64/glibc2.39/Node24.18.0 own Docker candidate authority fixture.
+Q10 phase/IPC/npm config и Q11 canonical extraction fixes внесены до final source freeze.
+Actual drivers/npmci/build/generated TS/native Ubuntu/copy/timeout cleanup ещё pending root;
+source-review не runtime proof, они не входили в raw95073. Donor full-suite/browser/backup-format,
+agent/socket/SSH/systemd/TLS/clean-server acceptance не заявляются.
+Next: root сохраняет/копирует только continuation docs, затем выполняет новые drivers
+последовательно по свободной среде. Q06 Support/lost-settle/reconciliation и Q09/product
+screenshots остаются самостоятельными IDs; main/push/paid usage не выполнялись.

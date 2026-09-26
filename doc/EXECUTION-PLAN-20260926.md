@@ -45,9 +45,15 @@ common2 3.1.1/react2 5.0.0 без изменения версий.
 Merged all-11 Docker gate PASS exit 0 на exact source `e4944c3` в 19:26:40.573Z;
 generic runtime исключён, external TLS/bootstrap не приняты. Затем перенесены
 Support UX `b16c0da`→`53f5224`, Q11 artifact `a6f7201`→`19f4487`, C07
-`e1669c1`→`b1ac4f2`; последний — текущий integration HEAD.
-Эти три изменения появились **после** baseline full gate. Новый final raw gate на
-пост-transfer дереве ещё не запущен; запланирован после сохранения/копирования этих docs.
+`e1669c1`→`b1ac4f2`; эти три изменения появились **после** baseline full gate.
+Post-transfer raw18952 завершился EXIT1 только из-за отсутствующего Chat desktop scaffold
+metadata; repair сохранён `14d0276`. Новый raw95073 после repair завершился **PASS EXIT0**:
+38 actual app checks/39 шагов, Catalog build отсутствует по контракту, environment SKIP нет;
+scaffold10, sync101/15, style494/0, links814/0. Intentional fake fail/skip runner regression
+не является app failure/skip. Catalog footer уточнён `c6390f1` в INTEGRATION
+(`9ea82f7` ORIGINAL) до Catalog checks, без изменения app runtime.
+Fresh Support-only live после новой истории PASS36.666s:
+[отчёт](changes/support-history-live-20260926.md); прежние остальные images сохраняют e4944c3 basis.
 Root package union сохраняет bundle/hosting-live и status перед verify;
 root Chat manifest включён в свежие repository checks. Main/push не выполнялись.
 
@@ -60,12 +66,12 @@ root Chat manifest включён в свежие repository checks. Main/push �
 | Q02 | Составной cold backup и старый архив | B00 | fffa851: два genuine old 2.21.1/3.5.1 архива → current PASS, schema 5→5; schemas 1–4 и hot backup не приняты |
 | Q03 | Последовательный hosting live gate | B00 | Merged all-11 Docker PASS на e4944c3; generic runtime исключён, external HTTPS отдельно |
 | Q04 | Support machine search и owner keys UI | B00 | Принят 2e159e2: runtime/runner/browser; fake usage не закрывает Q06 |
-| Q05 | Documents machine upload/start/status/result | Q04 | Backend 5755acb и owner keys 58d0aeb приняты; baseline merged full PASS, post-transfer final gate planned |
+| Q05 | Documents machine upload/start/status/result | Q04 | Backend 5755acb и owner keys 58d0aeb приняты; merged baseline и post-transfer raw95073 PASS |
 | Q06 | Настоящий Counter для двух продуктовых API | Q04, Q05 | Q06-A 272f704 и Documents receipt Q06-B 71c9d8c приняты; Support/lost-settle/reconciliation pending, до paid usage |
 | Q07 | Metering pattern / Documents diff | B00 | Локально приняты b11a848 / affe595; интеграционный код проверяется заново |
 | Q08 | Эксплуатационный сценарий каждого оставшегося продукта | B00, профильные Q/G | Accounting 661a870: 11 builds/12 Vite manifests/check:repo PASS; human journeys и fresh full app gate отдельно |
 | Q09 | Свежесть Catalog и настоящие screenshots | B00, G03 | Ожидает snapshot/fallback/skip приёмки |
-| Q10 | Чистый scaffold с предметным расширением | Q04–Q08 | Ожидает автономной копии, ролей, restore и замера затрат |
+| Q10 | Чистый scaffold с предметным расширением | Q04–Q08 | Own Support driver source-reviewed; actual copy/install/roles/cold restore и замеры pending |
 | Q11 | Проект → сервер → HTTPS → update/rollback | Q03 | b14bece origin и a6f7201 artifact fresh pack/verify PASS; Linux install/external HTTPS pending |
 | Q12 | Общий chat web/desktop/installed mobile | B00, C01–C08 | C01 f083593 и C03 e97161a локально приняты; остальные границы самостоятельны |
 | G01 | Графический Organizer | B00 | b03eabf локально принят; touch/два физических устройства не приняты |
@@ -339,6 +345,10 @@ B00/G03; ожидает; Catalog build отсутствует по контра�
 После Q04–Q08 создать isolated copy, выполнить конкретное расширение, записать elapsed/files/обвязку/API gaps.
 Приёмка: exact deps, несколько ролей, restart/restore/browser полный путь, исходные data не изменены.
 Ожидает; отчёт затрат не выдаёт количество строк за качество. Затем OPT-REUSE.
+В ORIGINAL подготовлен `scripts/scaffold-runtime-check.mjs`: own Support copy,
+urgent SLA30min, public current-role/private/dedup/failover/restart/cold directory restore.
+Independent SOURCE PASS после bounded phase/IPC/npm config fixes; actual npmci/build/generated
+TS/native smoke/timeout cleanup не выполнялись. Это не full donor/browser/backup-format proof.
 
 ## Волна 4: Q11 — «хочу сайт, вот сервер»
 
@@ -366,6 +376,10 @@ Q11 artifact `a6f7201`→integration `19f4487`: default fresh Vite pack PASS 4.1
 Source `2163a0f`, собственный `work/hosting-installation/hosting-2163a0f.tar.gz`, digest
 `2db1137cbb77ca2819ac07a9629cb548587c842d988f29be8dffae901b9ae0a7`.
 Linux npm/install/readiness не приняты; перенос был после baseline full gate.
+Следующий ORIGINAL `scripts/hosting-linux-runtime-check.mjs` source-reviewed после canonical
+extraction path guard: candidate Ubuntu24.04/amd64/glibc2.39/Node24.18.0, own bounded Docker
+runtime/public authority fixture. Actual Docker/Linux/npmci/native outcome pending root;
+agent/socket/SSH/systemd/TLS/clean host не принимаются prepared source.
 [Граница артефакта](changes/hosting-q11-artifact-foundation-20260926.md).
 Q11-B — следующий срез bootstrap чистого согласованного Linux-хоста после Q11-P:
 поддерживаемые distro/architecture/permissions/network проверены preflight,
@@ -535,8 +549,8 @@ C-OPT-PLATFORMS после C07-X: общие модели/client и явные l
 ## Ближайший порядок и продолжение
 
 1. Q06-B 71c9d8c и Documents owner keys 58d0aeb приняты; следующий Q06 срез — Support handoff/lost-settle/reconciliation.
-2. Integration baseline e4944c3: npm ci 13/13, raw check:all session4956 PASS38/39 и merged Docker11 PASS; acceptance98146ad. Текущий HEAD b1ac4f2 включает поздние SupportUX53f5224/Q11artifact19f4487/C07 transfers; новый final raw ещё не запущен. ORIGINAL/GRAPH checkout не переключать.
-3. После сохранения/копирования этих docs выполнить запланированный final raw check:all на post-transfer дереве, сохранить exact source/evidence и обновить STATUS по actual checks. Baseline PASS не объявлять новым final PASS. npm views19:32UTC подтвердил3.1.1/5.0.0, новых версий нет; generic runtime/external HTTPS отдельно.
+2. Integration baseline e4944c3: npmci13/13, raw4956 PASS38/39, Docker11 PASS, acceptance98146ad. Post-transfer raw18952 EXIT1 только Chat desktop metadata; repair14d0276 и actual raw95073 PASS38/39, scaffold10/sync101/15/style494/0/links814/0. ORIGINAL/GRAPH checkout не переключать.
+3. Fresh Support live36.666s покрывает новые Support assets отдельно от baseline Docker11. После сохранения этих docs следующие Q10/Q11 prepared drivers выполнять последовательно: actual ещё pending, source review не runtime proof. npm views19:32UTC подтвердил3.1.1/5.0.0 без новых версий; generic runtime/external HTTPS отдельно.
 4. Полный Q06, профильные Q08 human journeys и оставшийся Q01/device по доступной среде; Q08 accounting 661a870 не закрывает эти пути.
 5. Q09/Q10/Q11 после gates; C02 после release, C04/C05 по API, C06 по правам/режиму.
 6. C07 technical e1669c1→b1ac4f2 не закрывает installed HTTPS/menu/mobile/matrix; продолжить реальные C07-D/M/X и C08 по самостоятельным выходам. Q11 fresh pack принят, Linux install pending. Support history browser owner/customer/outsider/append PASS, UX сохранён b16c0da→53f5224.

@@ -83,7 +83,15 @@ manifest freshness=true, installedRuntime=false, source2163a0f. Own artifact
 Linux npm/installation/readiness pending; [граница](../changes/hosting-q11-artifact-foundation-20260926.md).
 В GRAPH C07 technical slice сохранён `e1669c1`: actual Electron 44.4.5 PASS 2.192 s.
 Installed HTTPS/backend/menu/mobile и C07 platform/history matrix не приняты.
-Этот slice перенесён как b1ac4f2, текущий integration HEAD; baseline full gate был раньше переноса.
+Этот slice перенесён как b1ac4f2; baseline full gate был раньше переноса. Post-transfer
+raw18952 EXIT1 только Chat desktop scaffold metadata, repair14d0276; следующий raw95073
+PASS EXIT0, 38 actual/39, Catalog build absent/no environment SKIP, scaffold10/sync101/15/
+style494/0/links814/0. Fake fail/skip runner regression не является app outcome.
+Support fresh live36.666s покрывает новые assets:
+[отчёт](../changes/support-history-live-20260926.md). Остальной Docker11 basis e4944c3 сохранён.
+Catalog footer c6390f1 INTEGRATION/9ea82f7 ORIGINAL изменён до Catalog checks.
+Новые ORIGINAL Q10 own Support-copy driver и Q11 Ubuntu candidate driver source-reviewed;
+actual execution/install/native/cleanup proof pending, они не входят в принятие raw95073.
 
 ## Следующий текущий остаток
 
@@ -98,11 +106,11 @@ Installed HTTPS/backend/menu/mobile и C07 platform/history matrix не прин
    Raw check:all session4956 завершился PASS exit0 38/39: Catalog build отсутствует по контракту,
    environment SKIP нет; baseline acceptance98146ad. Chat manifest прошёл repository checks.
    Затем SupportUX b16c0da→53f5224, Q11artifact a6f7201→19f4487 и C07 e1669c1→b1ac4f2
-   перенесены после baseline gate. Новый final raw на текущем HEAD ещё не запущен,
-   запланирован после этих docs. Main/push нет, исходные checkout не переключать.
+   перенесены после baseline gate. Исторический raw18952 EXIT1 сохранён; Chat metadata
+   repaired14d0276, actual finalraw95073 PASS EXIT0. Main/push нет, исходные checkout не переключать.
 3. Merged all-11 Docker gate exact source e4944c3 PASS exit0 в 19:26:40.573Z;
    generic runtime исключён, external TLS/bootstrap отдельно. Сохранить baseline evidence,
-   затем выполнить planned post-transfer final raw gate; не переименовывать старый PASS в новый.
+   post-transfer raw95073 принят самостоятельно; прежние EXIT1 не переименовывать в PASS.
 4. Продолжить полный Q06, Q08 human journeys, Q09/Q10 и внешние/device/platform границы
    Q11/C07 по зависимостям [плана](../EXECUTION-PLAN-20260926.md). IDs и остатки сохраняются.
    Support history browser owner/customer/outsider/append PASS, UX сохранён b16c0da→53f5224.
