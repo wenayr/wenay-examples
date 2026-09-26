@@ -14,7 +14,8 @@ import {organizerDefinition} from '../../pizzeria/organizer/service'
 
 async function main() {
     const kind = process.env.HOSTING_APP_KIND == 'pizzeria' ? 'pizzeria' : 'organizer'
-    const prepared = JSON.parse(readFileSync(path.resolve('data/product-images.json'), 'utf8')) as Record<string, string>
+    const imagesFile = process.env.HOSTING_PRODUCT_IMAGES_FILE ?? 'data/product-images.json'
+    const prepared = JSON.parse(readFileSync(path.resolve(imagesFile), 'utf8')) as Record<string, string>
     const image = process.env.HOSTING_ORGANIZER_IMAGE ?? prepared[kind + '-first']
     const images: Record<string, string> = {first: image, second: prepared[kind + '-second']}
     const directory = await mkdtemp(path.join(os.tmpdir(), 'wenay-stateful-'))
