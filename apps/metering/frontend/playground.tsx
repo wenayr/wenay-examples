@@ -230,7 +230,7 @@ export function Playground({orgId, credentials, consumed, disabled, openKeys}: P
                     value={eventId}
                     onChange={event => setEventId(event.target.value)}
                     maxLength={120}
-                    pattern="[A-Za-z0-9_:.-]+"
+                    pattern="[A-Za-z0-9_:.\-]+"
                     spellCheck={false}
                     required
                 />
