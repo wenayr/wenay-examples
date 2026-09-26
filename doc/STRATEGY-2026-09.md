@@ -4,6 +4,24 @@
 она задаёт следующую очередь, а не объявляет перечисленные доработки выполненными.
 Текущие результаты обновления — [отчёт](changes/common2-3.1.1-react2-5.0.0.md) и [STATUS](STATUS.md).
 
+Последний полный raw27106 PASS EXIT0 source9d47359:38actual/39, Catalog build absent,
+no environment SKIP, scaffold10/sync101/15/style498/0/links852/0; старые53023/95073
+являются историческими checkpoint. После него Forms copy abef339→5616e92 принят:
+ORIGINAL type1.18/build1.884с/fresh closed-link browser/staff error preserved,
+INTEGRATION56033e EXIT0 type0.7/build1.0с; [отчёт](changes/forms-public-link-copy-20260926.md).
+Support machine019268b→11e9de0 принят в ORIGINAL: proof4c11ef EXIT0 4.0141с,
+target41567 type0.8/test30.5/build1.8с, source review/5ports0/own directories absent;
+[отчёт](changes/support-machine-search-q06-20260926.md). INTEGRATION64391 PASS type0.8/test33.6/build1.6с,
+proof37d462 EXIT0 5.0608с, bounded merged acceptance подтверждена repo936304 EXIT0.
+Own ports57777/57797/58210/58218/58224 listener0, own dirs absent. Repo0dd605 EXIT1
+только missing Support scaffold entry; required metadata482390e→faa3e3f,
+repo936304 EXIT0 7.643с scaffold10/sync101/15/style500/0/links869/0/generated status verify.
+Full raw27106 не покрывает последующие Forms5616e92/Support11e9de0/faa3e3f metadata;
+перед main fresh full raw pending. Это bounded Q06 acceptance, не whole Q06.
+Performance baseline0645a89 [фиксирует](changes/performance-bundle-baseline-20260926.md)
+actual initial/dynamic bundle bytes, не runtime acceleration. Следующий efficiency
+slice выбирает один candidate и измеряет before/after, не переписывает все проекты.
+
 Текущий bounded checkpoint: Documents producer `53f3a8d`→`9d47359` принят — два production
 archives с общей Counter org/ключом дают distinct UUID events/cost2; same-checkpoint restart
 сохраняет exact receipt, legacy ai-1 terminal snapshot неизменен. ORIGINAL proof0dd006
@@ -13,14 +31,16 @@ lost-settle/crash gap и data-reset semantics остаются открытым�
 Metering quota UX report34b2195 принят в границе owner save/discard/reopen, auditor readonly
 и actual360px: [отчёт](changes/metering-human-browser-20260926.md); whole Q08 не закрыт,
 Forms bounded browser v1/v2/old history/auditor/actual360px принят `c0fa1c2`:
-[отчёт](changes/forms-publication-browser-20260926.md). ORIGINAL three-line copy fix
-type/source review PASS, fresh build/browser pending. Full raw27106 PASS EXIT0 COMPLETE
+[отчёт](changes/forms-publication-browser-20260926.md). Последующий copy fix принят отдельно выше.
+Full raw27106 PASS EXIT0 COMPLETE
 source9d47359:38actual/39, Catalog build absent, no environment SKIP,
 scaffold10/sync101/15/style498/0/links852/0; native Python/Docker доступны.
 Intentional runner-regression fake fail/skip не actual app failure/skip.
 Последующий c0fa1c2 docs-only, прежний raw53023 PASS относится к source392170d.
-Support Q06-S-MACHINE ORIGINAL source active/pending, приёмка не заявляется;
-Q06 parent и Q08 parent сохраняют свои остатки.
+Q06 parent lost reserve/settle/crash, pending-restart runtime/postcommit race matrix,
+human UUID и old published namespace сохраняют остатки; Q08 parent не закрыт.
+Next foundation: Q06 fault boundary после принятого Support machine subset.
+Q11 external HTTPS и C07 installed требуют реальной среды, локальные proofs их не заменяют.
 
 ## Что мы здесь делаем
 

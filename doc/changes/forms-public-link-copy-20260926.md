@@ -40,3 +40,7 @@ Own PTY33961, loopback52145, own temp
 Owner logout подтверждён login page; все3 собственные tabs закрыты.
 Helper stop exit0; actual port listener0/temp existsFalse. Никакого дополнительного source/helper
 изменения, native ledger, paid provider/external transmission или тяжёлого запуска агентом.
+
+Перенос ORIGINALabef339→INTEGRATION5616e92: root target56033e **EXIT0**
+typecheck0.7s/build1.0s. Последующий repo936304 PASS включает эту copy source;
+raw27106 source9d47359 был до неё. Current server/current-version denial не менялся.

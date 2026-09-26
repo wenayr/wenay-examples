@@ -1,11 +1,18 @@
 # Непрерывное развитие примеров, 26 сентября 2026
 
+Текущая INTEGRATION контрольная точка: последний full raw27106 PASS EXIT0 source9d47359,
+38actual/39, Catalog build absent/no environment SKIP; scaffold10/sync101/15/style498/0/links852/0.
+После него Forms copy5616e92 принят отдельно; Support machine11e9de0 принят в ORIGINAL,
+INTEGRATIONtarget64391 PASS/proof37d462 PASS/repo936304 PASS; bounded merged acceptance подтверждена. Historical53023 не текущий gate.
+Performance baseline0645a89 — sizes без runtime acceleration; следующая работа —
+Q06 fault boundary и один measured efficiency candidate. Подробности в конце.
+
 Поручение пользователя: продолжать после каждого этапа; развивать удобство, внешний вид, оптимизацию и проверки, возвращаться к стратегии после исчерпания очереди.
 
 Основание: doc/STRATEGY-2026-09.md, точные common2 3.1.1 / react2 5.0.0, предыдущий check:all прошёл.
 Ветка: codex/library-upgrade-20260926. Пользовательский apps/facade-map/TASK.md не изменять. Не push, не paid AI, не тяжёлые кластеры.
 
-Текущий этап:
+Исторический исходный этап:
 - Q07: metering HTML pattern и documents выбор отличающейся версии.
 - Q01: браузерная приёмка organizer, CRM/metering, выявленные UX/визуальные дефекты.
 - Q02: составной backup пиццерии с независимой приёмкой.
@@ -325,3 +332,34 @@ type/source review PASS, свежие build/browser pending, не часть raw
 Support Q06-S-MACHINE ORIGINAL source active/pending; preliminary review не final
 freeze/runtime acceptance. Next IDs/deps прежние: guarded Support receipt handoff,
 lost-settle/crash contract и отдельная human Forms copy приёмка. Parent Q06/Q08 open.
+
+## Последующий checkpoint: Forms copy и Support machine foundation
+
+Последний полный raw27106 PASS EXIT0 относится к source9d47359, 38actual/39,
+Catalog build absent/no environment SKIP, scaffold10/sync101/15/style498/0/links852/0.
+Исторический53023 не текущий full gate; новые изменения ниже проверяются отдельно.
+
+Forms three-line copy abef339→5616e92 принят: ORIGINAL type1.18/build1.884с и fresh
+closed-link browser с сохранённым staff error; INTEGRATION56033e EXIT0 type0.7/build1.0с.
+[Отчёт](../../changes/forms-public-link-copy-20260926.md). Whole Q08-FORMS не закрыт.
+Performance baseline0645a89: [actual initial/dynamic bundle sizes](../../changes/performance-bundle-baseline-20260926.md);
+network transfer/parse/runtime acceleration не измерены и не заявляются.
+
+Q06-S-MACHINE ORIGINAL019268b→INTEGRATION11e9de0: новый guarded durable resource принят
+в ORIGINAL после strengthened proof4c11ef EXIT0 4.0141с, target41567
+type0.8/test30.5/build1.8с, final source review/5ports0/own directories absent.
+[Отчёт](../../changes/support-machine-search-q06-20260926.md). INTEGRATIONtarget64391
+PASS type0.8/test33.6/build1.6с, proof37d462 EXIT0 5.0608с и repo936304 EXIT0; bounded merged acceptance подтверждена.
+Root подтвердил ports57777/57797/58210/58218/58224 listener0 и own dirs absent.
+Repo0dd605 EXIT1 был только missing Support scaffold entry; metadata482390e→faa3e3f,
+repo936304 EXIT0 7.643с: scaffold10/sync101/15/style500/0/links869/0/generated status verify.
+Full raw27106 source9d47359 не покрывает later Forms5616e92/Support11e9de0/faa3e3f metadata.
+Fresh full raw перед main pending; этот bounded acceptance не whole Q06 и не новый full gate.
+Current source snapshots/receipt guard и private native checkpoint/UUID foundation
+не закрывают lost reserve/settle/crash, pending-restart runtime или postcommit race matrix.
+Human assistant UUID и old published namespace остались отдельными unresolved контрактами.
+
+Next приоритет: bounded Q06 fault boundary после принятого Support machine subset.
+Efficiency — один measured candidate before/after; не все проекты переписывать.
+Q11 external HTTPS/C07 installed pending real environment. Stable IDs/deps прежние,
+родительские Q06/Q08 открыты; apps/STATUS/other reports/main/push не менялись этим docs slice.
