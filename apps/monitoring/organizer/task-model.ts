@@ -3,6 +3,7 @@ export type tWorkStatus = typeof WORK_COLUMNS[number]['key']
 export type WorkTask = {
     id: string, title: string, description: string, assignee: string, createdBy: string,
     status: tWorkStatus, due: string, priority: 'normal'|'high', revision: number,
+    schedule?: {date: string, startMinute: number, durationMinutes: number},
     source?: {kind: 'order'|'stock'|'ticket'|'deal'|'incident', id: string, label: string}, automatic?: boolean, audience?: string[],
     checklist?: {title: string, done: boolean}[], completedAt?: number, completedBy?: string,
 }

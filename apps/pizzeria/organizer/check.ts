@@ -9,6 +9,7 @@ import {createServiceLeader} from 'wenay-common2/service/server'
 import {serviceDefinition} from '../backend/service'
 import {organizerDefinition} from './service'
 import type {WorkView} from './model'
+import {checkTaskSchedules} from './schedule-check'
 
 async function waitFor(label: string, predicate: () => boolean) {
     const deadline = Date.now()+15000
@@ -194,6 +195,7 @@ async function integration() {
 async function main() {
     await integration()
     await standalone()
+    await checkTaskSchedules()
 }
 main().catch(function failed(error) {
     console.error(error)

@@ -9,6 +9,8 @@ import {CanvasBoard} from './canvas'
 import {TaskGhosts} from './task-ghosts'
 import {ScreenPanel, type ScreenResources} from './screen'
 import {ChatPanel, type ChatResources} from './chat'
+import {Schedule} from './schedule'
+import {localDate as localDay} from './schedule-math'
 
 import type {tClientCommands} from 'wenay-common2/service/client'
 import type {organizerDefinition} from './service'
@@ -50,10 +52,6 @@ function newTask(me: string, sourceId = ''): TaskDraft {
     }
 }
 
-function localDay() {
-    return new Date().toLocaleDateString('sv-SE')
-}
-
 // Смещение призрака передаём долями карточки: у получателя другой масштаб экрана.
 function share(delta: number, size: number) {
     return Math.max(-64, Math.min(64, delta / size))
@@ -68,7 +66,7 @@ const scopes = [
 
 export function Organizer(props: OrganizerProps) {
     const {value, busy, run, initialSource = '', openSource, resources} = props
-    const [tab, setTab] = useState('board')
+    const [tab, setTab] = useState('schedule')
     const presence = useBoardPresence({
         resources,
         enabled: tab != 'people',
@@ -300,6 +298,10 @@ export function Organizer(props: OrganizerProps) {
             <h2>Команда и задачи</h2>
         </div>
         <div className="work-toolbar">
+            <button type="button" aria-pressed={tab == 'schedule'} onClick={function scheduleTab() {
+                setScope('all')
+                setTab('schedule')
+            }}>График работ</button>
             <button type="button" aria-pressed={tab == 'board'} onClick={function boardTab() {
                 setTab('board')
             }}>Доска</button>
@@ -729,6 +731,33 @@ export function Organizer(props: OrganizerProps) {
 
     let page = people
     if (tab == 'board') page = taskBoard
+    if (tab == 'schedule') {
+        const people = value.people.filter(person => !filter || person.account == filter)
+        const tasks = columns.flatMap(column => column.items.map(id => value.tasks[id]))
+        page = <>
+            {filters}
+            {taskForm}
+            {!people.length && <div className="work-help" role="status">
+                {value.people.length > 0 ? <>
+                    <p>По выбранному исполнителю нет строк календаря. Задачи вне сетки доступны для планирования ниже.</p>
+                    <button onClick={function showAllPeople() {setFilter('')}}>Показать всех сотрудников</button>
+                </> : <>
+                    <p>В команде пока нет доступных сотрудников. Добавьте сотрудника, чтобы размещать задачи по времени.</p>
+                    <button onClick={function showTeam() {setTab('people')}}>Открыть сотрудников</button>
+                </>}
+            </div>}
+            <Schedule
+                value={{...value, people}}
+                allPeople={value.people}
+                tasks={tasks}
+                busy={busy}
+                ready={!resources || presence.phase == 'ready'}
+                generation={presence.generation}
+                run={run}
+                edit={edit}
+            />
+        </>
+    }
     if (tab == 'canvas') {
         page = <CanvasBoard value={value} busy={busy} run={run} presence={presence}/>
     }
@@ -741,17 +770,19 @@ export function Organizer(props: OrganizerProps) {
     >
         {tabs}
         <WorkloadPanel value={value}/>
-        {resources && <ScreenPanel resources={resources}/>}
-        {resources && <ChatPanel
-            resources={resources}
-            work={value}
-            apply={(proposal, items) => run('workApplyProposal', {proposal, items})}
-        />}
-        {tab != 'people' && resources && <BoardPeople presence={presence} show={function showAll() {
-            setFilter('')
-            setQuery('')
-            setScope('all')
-        }}/>}
+        {resources && <div className="work-collaboration-tools">
+            <ScreenPanel resources={resources}/>
+            <ChatPanel
+                resources={resources}
+                work={value}
+                apply={(proposal, items) => run('workApplyProposal', {proposal, items})}
+            />
+            {tab != 'people' && <BoardPeople presence={presence} show={function showAll() {
+                setFilter('')
+                setQuery('')
+                setScope('all')
+            }}/>}
+        </div>}
         {page}
     </section>
 }
