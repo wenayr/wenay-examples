@@ -71,8 +71,8 @@ root Chat manifest включён в свежие repository checks. Main/push �
 | Q07 | Metering pattern / Documents diff | B00 | Локально приняты b11a848 / affe595; интеграционный код проверяется заново |
 | Q08 | Эксплуатационный сценарий каждого оставшегося продукта | B00, профильные Q/G | Accounting 661a870: 11 builds/12 Vite manifests/check:repo PASS; human journeys и fresh full app gate отдельно |
 | Q09 | Свежесть Catalog и настоящие screenshots | B00, G03 | Ожидает snapshot/fallback/skip приёмки |
-| Q10 | Чистый scaffold с предметным расширением | Q04–Q08 | Own Support driver source-reviewed; actual copy/install/roles/cold restore и замеры pending |
-| Q11 | Проект → сервер → HTTPS → update/rollback | Q03 | b14bece origin и a6f7201 artifact fresh pack/verify PASS; Linux install/external HTTPS pending |
+| Q10 | Чистый scaffold с предметным расширением | Q04–Q08 | Bounded own Support-copy native subset PASS de64a4a→27eb75b; full journey/browser/backup-format pending |
+| Q11 | Проект → сервер → HTTPS → update/rollback | Q03 | Origin/artifact и Ubuntu candidate runtime subset PASS80327be→98ce6a3; clean-host/external HTTPS pending |
 | Q12 | Общий chat web/desktop/installed mobile | B00, C01–C08 | C01 f083593 и C03 e97161a локально приняты; остальные границы самостоятельны |
 | G01 | Графический Organizer | B00 | b03eabf локально принят; touch/два физических устройства не приняты |
 | G02 | Графический Booking | G01 | e9dae43 локально принят; browser DST и physical touch остаются |
@@ -277,6 +277,14 @@ late response не рисует старый diff; affe595, browser v4/v7 с и�
 targeted typecheck/test/build, отдельный отчёт/коммит на приложение.
 При полезном существующем outcome достаточно свежей приёмки и исправления конкретных находок.
 
+Booking transfer UX subset принят отдельно после raw95073: targeted20383 type0.7/test20.4/
+build0.9с PASS; browser70919 cancel сохранил27сент10:00, реальный move на4окт09:00,
+повторный вход показал обе даты периода4октября, cancel сохранил новое время, console[].
+Measured360×640: scrollWidth345, panel312.8, cancel264.98px. Screenshots desktop/mobile
+и cleanup двух own fixtures записаны в [отчёте](changes/booking-transfer-ux-20260926.md).
+Это responsive web, не installed mobile; held-response org/role/logout browser matrix,
+browser conflict/retry и отдельный DST переход остаются непроверенными. Parent Q08 не закрыт.
+
 ### Q08-CRM
 
 Триггер: partial import оборван, оператор продолжает после restart; клиент сравнивает предложения.
@@ -347,8 +355,12 @@ B00/G03; ожидает; Catalog build отсутствует по контра�
 Ожидает; отчёт затрат не выдаёт количество строк за качество. Затем OPT-REUSE.
 В ORIGINAL подготовлен `scripts/scaffold-runtime-check.mjs`: own Support copy,
 urgent SLA30min, public current-role/private/dedup/failover/restart/cold directory restore.
-Independent SOURCE PASS после bounded phase/IPC/npm config fixes; actual npmci/build/generated
-TS/native smoke/timeout cleanup не выполнялись. Это не full donor/browser/backup-format proof.
+Independent SOURCE PASS после bounded phase/IPC/npm config fixes. Первый55452 EXIT1 после
+npmci выявил generated optional types; explicit dueAt guards/disconnect?.() сохраняют assertions.
+Повтор15011 EXIT0: npmci/type/build/domain/conversation/native PASS, current roles/private/
+receipt retry/failover/restart/cold directory restore и own cleanup подтверждены.
+Сохранено ORIGINALde64a4a→INTEGRATION27eb75b; [отчёт](changes/scaffold-runtime-q10-20260926.md).
+Это не full donor/browser/backup-format/machine proof; timeout escalation runtime branch не заявлен.
 
 ## Волна 4: Q11 — «хочу сайт, вот сервер»
 
@@ -378,8 +390,12 @@ Source `2163a0f`, собственный `work/hosting-installation/hosting-2163
 Linux npm/install/readiness не приняты; перенос был после baseline full gate.
 Следующий ORIGINAL `scripts/hosting-linux-runtime-check.mjs` source-reviewed после canonical
 extraction path guard: candidate Ubuntu24.04/amd64/glibc2.39/Node24.18.0, own bounded Docker
-runtime/public authority fixture. Actual Docker/Linux/npmci/native outcome pending root;
-agent/socket/SSH/systemd/TLS/clean host не принимаются prepared source.
+runtime/public authority fixture. Первый63344 EXIT1 после npmci из-за readonly /tmp;
+TMPDIR own tmpfs fix сохранил security limits. Повтор25390 EXIT0 подтвердил Ubuntu24.04/
+amd64/glibc2.39/Node24.18.0, real npmci/native authority/receipts/dashboard/static assets
+и own container/volume/directory cleanup. Сохранено80327be→98ce6a3;
+[отчёт](changes/hosting-linux-runtime-q11-20260926.md). Это candidate runtime subset;
+agent/socket/SSH/systemd/TLS/clean-host installation и Q11 целиком не приняты.
 [Граница артефакта](changes/hosting-q11-artifact-foundation-20260926.md).
 Q11-B — следующий срез bootstrap чистого согласованного Linux-хоста после Q11-P:
 поддерживаемые distro/architecture/permissions/network проверены preflight,
@@ -548,12 +564,28 @@ C-OPT-PLATFORMS после C07-X: общие модели/client и явные l
 
 ## Ближайший порядок и продолжение
 
+Текущая практическая последовательность:
+
+| Шаг | ID и работа | Когда можно переходить дальше |
+| --- | --- | --- |
+| 1 | B00/merged validation: сохранять exact npm/locks и доказательства уже перенесённых изменений | raw95073 PASS; новые изменения имеют свои targeted/runtime/browser gates |
+| 2 | Q06: доказать native durable result + настоящий receipt после restart, затем Support machine handoff | одинаковый request не повторяет работу, другой input конфликтует; lost-settle остаётся явным unknown |
+| 3 | Q08: законченные journeys Organizer/Booking/остальных продуктов; оптимизация по фактическому initial/total graph | выбор, отмена, ошибки, роли и narrow UI проверены; уменьшение измерено, поведение сохранено |
+| 4 | Q09/Q10: реальные screenshots, fresh/unknown badges, самостоятельная копия и изменение бизнес-правила | не только structural copy: установка, сборка, native journey и восстановление реально проходят |
+| 5 | Q11-P/B: artifact → Linux runtime → согласованный host → HTTPS → update/rollback | artifact и Linux subset приняты; внешний DNS/TLS/systemd/agent требуют отдельного live proof |
+| 6 | Q12/C03/C06/C07: аккаунты и plain chat → права remote → установленные клиенты web/desktop/mobile | две реальные сессии/устройства, reconnect/history/switch/revoke; C07 source probe не заменяет installed matrix |
+| 7 | C02/C04/C05/C08: исправленная AI библиотека → специализированные сервисы → создание/размещение сайтов и прочие jobs | published fix/repro, current ACL, cancel/receipt/artifact и живой executor каждого сервиса |
+
+Шаги3–4 идут параллельно независимому Q06 proof. Платный AI начинается только после
+контракта расхода и восстановления; существующий plain chat не ждёт AI release.
+Внешняя среда не останавливает независимые локальные этапы.
+
 1. Q06-B 71c9d8c и Documents owner keys 58d0aeb приняты; следующий Q06 срез — Support handoff/lost-settle/reconciliation.
 2. Integration baseline e4944c3: npmci13/13, raw4956 PASS38/39, Docker11 PASS, acceptance98146ad. Post-transfer raw18952 EXIT1 только Chat desktop metadata; repair14d0276 и actual raw95073 PASS38/39, scaffold10/sync101/15/style494/0/links814/0. ORIGINAL/GRAPH checkout не переключать.
-3. Fresh Support live36.666s покрывает новые Support assets отдельно от baseline Docker11. После сохранения этих docs следующие Q10/Q11 prepared drivers выполнять последовательно: actual ещё pending, source review не runtime proof. npm views19:32UTC подтвердил3.1.1/5.0.0 без новых версий; generic runtime/external HTTPS отдельно.
-4. Полный Q06, профильные Q08 human journeys и оставшийся Q01/device по доступной среде; Q08 accounting 661a870 не закрывает эти пути.
+3. Fresh Support live36.666s покрывает новые Support assets отдельно от baseline Docker11. Q10repeat15011/Q11repeat25390 bounded native runtime proofs приняты, parent stages pending; Booking targeted/browser UX subset принят после raw95073. npm views19:32UTC подтвердил3.1.1/5.0.0 без новых версий; generic runtime/external HTTPS отдельно.
+4. Следующий Q06 research по current gaps: Support machine receipt handoff, lost reserve/settle response и reconciliation/crash gap, до paid usage. Затем профильные Q08 human journeys/Q01/device; accounting661a870 не закрывает эти пути.
 5. Q09/Q10/Q11 после gates; C02 после release, C04/C05 по API, C06 по правам/режиму.
-6. C07 technical e1669c1→b1ac4f2 не закрывает installed HTTPS/menu/mobile/matrix; продолжить реальные C07-D/M/X и C08 по самостоятельным выходам. Q11 fresh pack принят, Linux install pending. Support history browser owner/customer/outsider/append PASS, UX сохранён b16c0da→53f5224.
+6. C07 technical e1669c1→b1ac4f2 не закрывает installed HTTPS/menu/mobile/matrix; продолжить реальные C07-D/M/X и C08 по самостоятельным выходам. Q11 fresh pack и bounded Linux runtime приняты; установка чистого host/systemd/HTTPS pending. Support history browser owner/customer/outsider/append PASS, UX сохранён b16c0da→53f5224.
 
 Этап начинает progress; результат/решения/блокеры/следующий ID записываются перед сменой контекста.
 По окончании долговечный отчёт остаётся, временный progress удаляется.
