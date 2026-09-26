@@ -61,6 +61,14 @@ Catalog build absent, no environment SKIP, scaffold10/sync101/15/style496/0/link
 Затем перенесены CRM label `745ba88`→`e40062a` и Q06 native proof `7264bfd`→`b2b447b`;
 их bounded evidence записано ниже, INTEGRATION target99016 PASS EXIT0 type1.2/test23.2/build2.0с.
 Raw53023 не выдаётся за full gate этих последующих изменений.
+Documents narrow producer slice принят `53f3a8d`→`9d47359`: ORIGINAL proof0dd006
+PASS3.9421s и type/test/build9254 PASS0.9/45.7/1.9с; INTEGRATION repeat e18bd3
+EXIT0 5.8218s. Full raw27106 **PASS EXIT0 COMPLETE** на source9d47359:
+38 actual/39, Catalog build absent по контракту, environment SKIP нет;
+scaffold10/sync101/15/style498/0/links852/0. Native Python/Docker доступны.
+Intentional fake fail/skip runner regression не является actual app failure/skip.
+Metering bounded quota browser принят report34b2195; Forms browser c0fa1c2 принят отдельно.
+Последующий c0fa1c2 — docs-only Forms report, не новый app source basis этого gate.
 
 ## Обзор всей очереди
 
@@ -72,7 +80,7 @@ Raw53023 не выдаётся за full gate этих последующих и
 | Q03 | Последовательный hosting live gate | B00 | Merged all-11 Docker PASS на e4944c3; generic runtime исключён, external HTTPS отдельно |
 | Q04 | Support machine search и owner keys UI | B00 | Принят 2e159e2: runtime/runner/browser; fake usage не закрывает Q06 |
 | Q05 | Documents machine upload/start/status/result | Q04 | Backend 5755acb и owner keys 58d0aeb приняты; merged baseline и post-transfer raw95073 PASS |
-| Q06 | Настоящий Counter для двух продуктовых API | Q04, Q05 | Q06-A 272f704, Documents receipt Q06-B 71c9d8c и bounded native checkpoint7264bfd→b2b447b приняты; Support/lost-settle/reconciliation pending, до paid usage |
+| Q06 | Настоящий Counter для двух продуктовых API | Q04, Q05 | Q06-A 272f704, Documents receipt Q06-B 71c9d8c, bounded native checkpoint7264bfd→b2b447b и Documents producer53f3a8d→9d47359 приняты; Support/lost-settle/reconciliation pending, до paid usage |
 | Q07 | Metering pattern / Documents diff | B00 | Локально приняты b11a848 / affe595; интеграционный код проверяется заново |
 | Q08 | Эксплуатационный сценарий каждого оставшегося продукта | B00, профильные Q/G | Accounting 661a870: 11 builds/12 Vite manifests/check:repo PASS; human journeys и fresh full app gate отдельно |
 | Q09 | Свежесть Catalog и настоящие screenshots | B00, G03 | Ожидает snapshot/fallback/skip приёмки |
@@ -258,13 +266,22 @@ controlled refusal до terminal write после двух distinct committed Co
 исправлен stable checkpoint name + run ID. Port52920=0/own fixture absent после repeat.
 [Отчёт](changes/usage-ai-checkpoint-q06-proof-20260926.md). Это не production identity,
 не atomic commit/crash/lost-response reconciliation и не приёмка всего Q06.
-INTEGRATION repeat chunkd42aa7 PASS EXIT0 6.158s на b2b447b; отдельная root cleanup
-проверка пока pending. Prefixes completed/gap различают fixture checkpoints,
-но не доказывают независимость двух production producers. Следующий bounded
-Q06-PRODUCER-D: public UUID IDs и два независимых Documents host в одном Counter org,
-cost2/restart checkpoint/no reexecution; реализация и actual proof пока pending.
+INTEGRATION repeat chunkd42aa7 PASS EXIT0 6.158s на b2b447b; root подтвердил own port/
+fixture cleanup. Prefixes completed/gap различают fixture checkpoints,
+но не доказывают независимость двух production producers.
+Q06-PRODUCER-D принят `53f3a8d`→`9d47359`: public randomUUID и два production Documents
+archives с одной Counter org/ключом дают distinct native events/cost2, restart сохраняет
+exact receipt без extraction; changed payload требует exact native conflict.
+Legacy ai-1 persisted plain completed snapshot full deepEqual после production reopen,
+синтетический seed отдельно от двух billed CSV runs. ORIGINAL proof0dd006 PASS3.9421s,
+Documents9254 type/test/build PASS0.9/45.7/1.9с; INTEGRATION e18bd3 EXIT0 5.8218s.
+[Отчёт](changes/documents-producer-id-q06-20260926.md). Data reset/lost checkpoint
+не принимается за restart или exactly-once; Support code этим slice не изменён.
 Parent Q06 остаётся pending: Support machine handoff, lost reserve/settle response и
 reconciliation/crash gap. Null не означает no-cost, rerun/refund запрещены без доказанного исхода.
+Q06-S-MACHINE ORIGINAL source active/pending: новый guarded durable search resource,
+native private checkpoint/UUID/actual settled receipt; preliminary review не final
+source/runtime acceptance. Старые published array и human assistant не меняются этим scope.
 Q04→Q05→Q06 обязательно; полный контракт требуется до paid provider usage.
 
 ## Волна 3: отдельный UX/lifecycle контракт для каждого продукта
@@ -288,7 +305,7 @@ late response не рисует старый diff; affe595, browser v4/v7 с и�
 | Q08-PIZZERIA | Заказ → кухня/курьер → конечный исход, отмена/повтор | Несколько ролей, atomic stock/order limits, понятный отказ, формы/очередь/карточка, reconnect/restart; Q02 backup отдельно |
 | Q08-SUPPORT | Customer ticket+attachment → staff answer/private note → customer outcome | Private/foreign ticket denied, attachment current ACL после IO, retry/reconnect/restart; Q04 machine search и Q03 deployment отдельно |
 | Q08-DOCUMENTS | Upload → extraction terminal → reviewer edit/approve → immutable revision/export | Failed/cancelled/uncertain видимы, старое approval неизменно, uploader не approve, stale revision/revoke/download; Q05/Q07 отдельно |
-| Q08-METERING | Owner quotas/keys → reserve/settle/outbox → uncertain/retry delivery | Remaining quota/uncertain честные, hash-only secret once, explicit retry без второго списания; Q06 интеграция и Q07 форма отдельно |
+| Q08-METERING | Owner quotas/keys → reserve/settle/outbox → uncertain/retry delivery | Bounded quota owner save/discard/reopen, auditor readonly и actual360px PASS report34b2195; keys/uncertain/retry/Q06 остальной scope отдельно |
 
 Для каждого — current-code runtime и browser нескольких ролей, console errors,
 targeted typecheck/test/build, отдельный отчёт/коммит на приложение.
@@ -318,6 +335,11 @@ allchecked status/no resume, counters2/1/1 и mobile360px scroll345/cleanup PASS
 этот subset после raw53023 не принимает весь import lifecycle/publication scope.
 
 ### Q08-FORMS
+
+Bounded Forms browser принят `c0fa1c2`: v1/v2/publication/old response history,
+auditor и actual360px; [отчёт](changes/forms-publication-browser-20260926.md).
+Новый ORIGINAL respondent copy slice (три строки) source frozen, type/review PASS,
+fresh build/browser pending; он не входит в raw27106. Whole Q08-FORMS не закрыт.
 
 Триггер: old version link, export и retention/compaction. Результат: старая ссылка имеет явный исход,
 export проверяет текущие права, данные не удаляются до срока и ответы не переписываются.
@@ -591,7 +613,7 @@ C-OPT-PLATFORMS после C07-X: общие модели/client и явные l
 | Шаг | ID и работа | Когда можно переходить дальше |
 | --- | --- | --- |
 | 1 | B00/merged validation: сохранять exact npm/locks и доказательства уже перенесённых изменений | raw95073 PASS; новые изменения имеют свои targeted/runtime/browser gates |
-| 2 | Q06: после bounded native checkpoint proof проверить production identity и Support machine handoff | одинаковый request не повторяет работу, другой input конфликтует; lost-settle/crash gap остаются явным unknown |
+| 2 | Q06: после принятого Documents producer subset проверить Support machine handoff | одинаковый request не повторяет работу, другой input конфликтует; lost-settle/crash gap остаются явным unknown |
 | 3 | Q08: законченные journeys Organizer/Booking/остальных продуктов; оптимизация по фактическому initial/total graph | выбор, отмена, ошибки, роли и narrow UI проверены; уменьшение измерено, поведение сохранено |
 | 4 | Q09/Q10: реальные screenshots, fresh/unknown badges, самостоятельная копия и изменение бизнес-правила | не только structural copy: установка, сборка, native journey и восстановление реально проходят |
 | 5 | Q11-P/B: artifact → Linux runtime → согласованный host → HTTPS → update/rollback | artifact и Linux subset приняты; внешний DNS/TLS/systemd/agent требуют отдельного live proof |

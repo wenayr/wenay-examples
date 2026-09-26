@@ -288,3 +288,40 @@ Next: bounded Q06-PRODUCER-D public UUID IDs и два independent Documents hos
 Counter org/cost2/restart same checkpoint/no reexecution; source/runtime пока pending.
 Затем scoped Support machine receipt handoff и lost-response/crash-gap contract. Main/push нет;
 два новых subsets не расширяют source basis raw53023 или прежних Docker reports.
+
+## Accepted Documents producer subset; новый full gate active
+
+Q06-PRODUCER-D сохранён ORIGINAL53f3a8d→INTEGRATION9d47359. Одна production строка
+public id:randomUUID; два independent production Documents archives/same Counter org/
+shared billing key дали distinct native events и cost2. Same checkpoint restart сохраняет
+exact receipt/ID без extraction; changed payload требует published native conflict.
+Synthetic legacy ai-1 compatibility seed не billed evidence. Strengthening first845f68
+EXIT1 DataCloneError на reactive Proxy сохранён; исправлено чтением persisted plain
+openAiCheckpoint.initial snapshot с durable completed assert, после production reopen
+fullrun deepEqual. Final source re-review PASS; ORIGINAL proof0dd006 EXIT0 3.9421s,
+Documents9254 type/test/build EXIT0 0.9/45.7/1.9с; INTEGRATION e18bd3 EXIT0 5.8218s.
+[Отчёт](../../changes/documents-producer-id-q06-20260926.md).
+Parent Q06 Support machine handoff/lost reserve-settle response/crash gap остаётся pending;
+data reset не равен restart, automatic rerun/refund и exactly-once after reset не доказаны.
+
+Metering bounded quota journey report34b2195 PASS: owner save/discard/reopen,
+auditor readonly, measured owner360px/scroll345, console/own cleanup;
+[отчёт](../../changes/metering-human-browser-20260926.md). Это human subset, не вся
+Q08-METERING keys/uncertain/outbox/retry matrix и не закрытие Q08 parent.
+На том checkpoint Forms UI slice был active/pending; последующая приёмка записана ниже.
+
+Root full raw27106 завершился PASS EXIT0 COMPLETE на exact source9d47359:
+38actual/39, Catalog build absent по контракту, no environment SKIP;
+scaffold10/sync101/15/style498/0/links852/0. Native Python/Docker доступны.
+Intentional runner-regression fake fail/skip не actual app failure/skip.
+Предыдущий raw53023 PASS source392170d остаётся отдельной immutable контрольной
+точкой. Последующий c0fa1c2 docs-only Forms report не меняет app source basis gate.
+STATUS не редактировался; main/push нет.
+
+Forms bounded browser c0fa1c2 принят: v1/v2/publication/old response history,
+auditor/actual360px; [отчёт](../../changes/forms-publication-browser-20260926.md).
+Новый ORIGINAL respondent copy slice три строки только для login refused/respondent:
+type/source review PASS, свежие build/browser pending, не часть raw27106 app scope.
+Support Q06-S-MACHINE ORIGINAL source active/pending; preliminary review не final
+freeze/runtime acceptance. Next IDs/deps прежние: guarded Support receipt handoff,
+lost-settle/crash contract и отдельная human Forms copy приёмка. Parent Q06/Q08 open.
