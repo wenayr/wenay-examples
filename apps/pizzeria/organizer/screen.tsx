@@ -1,6 +1,6 @@
 import React, {useEffect, useMemo, useRef, useState} from 'react'
 import {useOwnedClient, useClientStore} from 'wenay-react2/react'
-import {useMediaSource} from 'wenay-react2/communication'
+import {useMediaSource} from 'wenay-calls'
 import {attachVideoCanvas} from 'wenay-common2/media'
 import {createStore, syncStoreReplayBatch} from 'wenay-common2/observe'
 import type {ServiceResourceController} from 'wenay-common2/service/client'

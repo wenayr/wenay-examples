@@ -1,7 +1,7 @@
 # Печь — пиццерия
 
 <!-- status:versions -->
-Текущие зависимости: **common2 2.21.1 / react2 3.5.1**.
+Текущие зависимости: **common2 3.1.1 / react2 5.0.0**.
 <!-- /status:versions -->
 
 Самостоятельное приложение с настоящим Node backend и React frontend. Пакеты берутся только из npm; версии и integrity закреплены в package-lock.json.
@@ -55,8 +55,9 @@ npm start
 
 - `backend/service.ts` — предметная модель и разрешения приложения.
 - `backend/main.ts` — запуск с файловым архивом и статическим frontend.
-- `backend/leader.ts`, `access.ts`, `rest.ts`, остальные файлы инфраструктуры — адаптированная самостоятельная копия scaffold-примера common2; теперь принадлежат этому приложению.
-- `frontend/main.tsx` — интерфейсы ролей, публичные hooks `wenay-react2/react`. Данные и команды идут через `backend/client.ts`: выбор узла, RPC и replay common2. HTTP facade остаётся доступным для входа и внешних интеграций.
+- `backend/service.ts`, `backend/main.ts` и `backend/serving-node.ts` — композиция предметного фасада; запуск authority и обслуживающих узлов обеспечивается публичным `wenay-common2/service/host`.
+- `frontend/main.tsx` — интерфейсы ролей, публичные hooks `wenay-react2/react` и общий адаптер `shared/react/service-session.ts`. Выбор узла, RPC и replay обеспечивает service client common2. HTTP facade доступен для входа и внешних интеграций.
+- `organizer/screen.tsx` и `organizer/voice-record.tsx` — захват медиа через `wenay-calls`; `npm run build` собирает также самостоятельный органайзер.
 - `npm test` — реальный authority и узел чтения, проверки ролей, изоляции клиентов, повтора requestId и полного цикла доставки.
 - `npm run test:network` — независимые заведения, масштабирование, отказы процессов и восстановление архивов.
 

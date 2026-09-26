@@ -1,5 +1,5 @@
 import React, {useEffect, useRef, useState} from 'react'
-import {useMediaSource} from 'wenay-react2/communication'
+import {useMediaSource} from 'wenay-calls'
 import {decodeMediaFrame} from 'wenay-common2/media'
 import {captureUnavailable} from './capture-support'
 

@@ -20,5 +20,5 @@
 Список собирается `scripts/status.mjs` из фактических импортов приложения.
 
 <!-- status:imports -->
-`wenay-common2`, `wenay-common2/ai`, `wenay-common2/conversation`, `wenay-common2/listen`, `wenay-common2/media`, `wenay-common2/observe`, `wenay-common2/peer`, `wenay-common2/rpc`, `wenay-common2/server/auth`, `wenay-common2/server/blob`, `wenay-common2/server/fs`, `wenay-common2/server/http`, `wenay-common2/server/process`, `wenay-common2/service`, `wenay-common2/service/client`, `wenay-common2/service/host`, `wenay-common2/service/server`, `wenay-react2/communication`, `wenay-react2/react`
+`wenay-calls`, `wenay-common2`, `wenay-common2/ai`, `wenay-common2/conversation`, `wenay-common2/listen`, `wenay-common2/media`, `wenay-common2/observe`, `wenay-common2/peer`, `wenay-common2/rpc`, `wenay-common2/server/auth`, `wenay-common2/server/blob`, `wenay-common2/server/fs`, `wenay-common2/server/http`, `wenay-common2/server/process`, `wenay-common2/service`, `wenay-common2/service/client`, `wenay-common2/service/host`, `wenay-common2/service/server`, `wenay-react2/react`
 <!-- /status:imports -->
