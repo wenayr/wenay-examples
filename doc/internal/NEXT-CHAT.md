@@ -25,10 +25,23 @@ W1 проверена root: lazy registry `c960d41`, 12/12; identity `afb2fe3` �
 IDENTITY-REVOKE-RELOGIN (старый токен после revoke + fresh login снова принимается),
 fixed gate EXIT 1, S01.01 blocked-library. AI `7f7633e`: оба прежних дефекта
 воспроизведены, classifier 2/2, fixed gate EXIT 1. Общий typecheck EXIT 0.
-Следующая зависимость — опубликованное исправление identity, затем membership/client;
-независимо доступен CAD artifact/host contract. Актуальные scopes/статусы и команды —
-в shell/docs/BOARD.md. Не начинать другие examples. F0 не является готовым приложением
-или mobile install; diagnostic EXIT 0 не закрывает identity/AI gates.
+W2 продолжена на dev identity без ожидания release fix; F1/release gate сохранён.
+Актуальный shell HEAD `7dc7d2e`: server/projects `0f5feec`, client `e60608d`,
+web `e29e863`, CLI subset `0818d39`. Root проверил typecheck, native workspaces
+с двумя restart, session owner, реальные CLI subprocesses и browser. CLI create
+появился в уже открытом web другого аккаунта без reload. Style39/0, docs46/0.
+Initial JS199.76 kB/63.54 gzip, deferred312.85/99.53; это не измерение token savings.
+S01.02/S02.01/S02.03 accepted-dev; S01.03 module runtime enable/disable и S02.06
+conversation send/history/watch остаются partial. Metadata не является редактором.
+Текущий dev preview `http://127.0.0.1:61156/`, PID11680, PTY55769; данные shell
+`.artifacts/app-server-data`, screenshot `.artifacts/W2-web.png`. Второй writer
+с этим же dataDir не запускать. Остальные owned probe порты закрыты.
+Следующая связная работа: S01.04 conversation persistence/current ACL → S02.02 →
+S02.04/S02.06; параллельно S01.05 documents и настоящий text module. Независимо
+доступен CAD artifact/host contract. Актуальные scopes/статусы/ограничения —
+в shell/docs/BOARD.md и docs/evidence/W2-acceptance.md. Другие examples не менять.
+W2 не закрывает mobile install или identity/AI production gates; check:all включает
+expect-fixed и сейчас не заявлен пройденным. Main/push отсутствуют.
 
 Предыдущая итерация планирования (до нового поручения выше):
 пользователь запросил план нового общего каркаса backend/web/установленного mobile/CLI
