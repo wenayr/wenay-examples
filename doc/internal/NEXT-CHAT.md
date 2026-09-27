@@ -1,10 +1,10 @@
 # Контекст продолжения wenay-examples
 
-## Текущая работа: P0/P1 приняты в dev scope, следующий P2
+## Текущая работа: P2 принят в dev scope, следующий P3
 
 27 сентября 2026. Активный продукт находится в отдельном репозитории
 C:/Users/wenay/WebstormProjects/wenay-shell, ветка codex/shell-foundation,
-HEAD b06e5d6, рабочее дерево чистое. Этот блок заменяет очередь W0–W2 ниже.
+HEAD 9d7d0a0, P2 server/client/UI сохранены. Этот блок заменяет очередь W0–W2 ниже.
 Приложения examples сейчас не расширять; пользователь просит концентрироваться
 на одном законченном этапе общего продукта. Здесь изменён только checkpoint.
 
@@ -38,32 +38,55 @@ policy запретила cleanup без подробной причины. Не
 Он не используется; остальные fixtures закрыты штатно. Failed assertions сохранены
 в evidence, не переименованы в PASS.
 
-Последнее уточнение пользователя: диалоговый, затем голосовой редактор; постоянная
-левая навигация с чатами и проектами. Project открывает общую рабочую область, chat —
-историю и изменения. CAD/video/music — подключаемые модули. Web, установленный
+Последнее уточнение пользователя: самостоятельного chat mode нет. Главный объект —
+проект, раскрывающийся слева почти как в ChatGPT; внутри личные диалоги. Стрелка
+раскрывает список, название открывает проект. Диалог/Редактор — два layout одного
+проекта с общей историей и drafts. CAD/video/music — подключаемые модули. Web, установленный
 desktop/mobile и CLI используют общий клиент и отдельно запускаемый сервер.
-Канонический порядок — shell/docs/PRODUCT-SEQUENCE.md: P0/P1 готовы в dev scope;
+Канонический порядок — shell/docs/PRODUCT-SEQUENCE.md: P0/P1/P2 готовы в dev scope;
 P2 проекты в sidebar → P3 один настоящий text editor → P4 voice/AI → P5 CAD →
 P6 server/desktop/CLI installers → P7 installed mobile. Не делать всё параллельно.
 После каждого этапа — законченный сценарий, review использования библиотек и упрощение.
 
-Первое действие P2: зафиксировать placement contract и native proof до UI. Existing
-Project + один native conversation placement fact; move/unlink сохраняют ID/history.
-Current owner + target workspace membership/active project проверяются на сервере;
-размещение не выдаёт личную историю другим участникам. Сценарий: один проект, два
-личных чата, общий Workbench и возврат чата в личные. Details/gates/будущие A/B/C/root
-zones находятся в PRODUCT-SEQUENCE. Подагенты GPT-6 Sol high завершили P1; их можно
-переиспользовать, но доступны только 3 одновременно плюс root. Tests/build/runtime
-по правилам выполняет root последовательно. Дочерних агентов не запускать.
+P2 server 7699d9b, общий client 928cfae, UI/docs 9d7d0a0. Project + native shell/project fact сохраняют
+ID/history при explicit legacy import/move; unlink в самостоятельный chat mode не нужен.
+Native create не имеет initial facts: узкий optional intent внутри original journal record,
+затем native bind, два resumable commits, не atomic. Pending скрыт; exact retry после
+restart дозавершает тот же room. Current ACL и original receipts проверены root.
+Server project3.63s/client strengthened3.56s, W3server3.29s/P1lifecycle3.30s/client3.49s PASS.
+Первые failures и ограничения — shell/docs/evidence/P2-acceptance.md и P2-server/client.
 
-Текущий preview http://127.0.0.1:61156/, PID24448, PTY94699; данные shell
-.artifacts/app-server-data, screenshot .artifacts/P1-chat-desktop.jpg,
-mobile .artifacts/P1-archive-mobile.jpg. P0 данные сохранены, отдельный P1 demo chat
-восстановлен. Старый W3 PID31488/PTY98934 остановлен. Peer tab закрыта, viewport reset;
-основная вкладка оставлена. Остальные owned probe listeners закрыты. Второй writer
+P2 final root typecheck2.69s, style65/0 за1.72s, build3.84s/170modules PASS. Initial
+JS212.96kB/67.00gzip, session353.10/110.37, CSS14.39/3.63; это не token savings.
+Browser1280×800/actual390×844: create project/two dialogs, arrow/title/search, drafts/layout,
+legacy import/move в двух Alice, archive/restore с сохранением Editor, Alice→Bob isolation,
+Tab/Escape/portal/focus/no overflow, console[] PASS. Реальный restart preview сохранил
+ID/history/placement/layout. Старый conversation-only URL разрешается в actual project.
+Final меню «…» объединяет перенос/архив; после последней сборки проверены desktop/mobile.
+Сохранённый uncertain Send не перезаписывается; explicit dismiss сохраняет draft и
+перечитывает native state. P2 browser fault injection этих новых error actions не выполнялся;
+native contracts проверены probes, UI guards source review. Draft persistence после reload нет.
+Root docs39files/101links/0broken, git diff --check PASS. Полный scope — P2-acceptance.md.
+
+Первое действие продолжения — P3: один общий document envelope/text module, сначала
+публичные native APIs и persistence/revision/ACL proof для двух диалогов, затем renderer
+в существующем Editor. Metadata renderer нельзя назвать готовым редактором. Сохранить
+project-first UX; при обзорной оптимизации проверить немонтируемые старые web components.
+Не начинать CAD/mobile/installers параллельно. Details — PRODUCT-SEQUENCE и EXECUTION-PLAN.
+Агенты A shell_native_foundation/B shell_composition/C shell_platform_probe завершили P2.
+Подагенты GPT-6 Sol high, максимум 3 одновременно плюс root; completed будить
+followup_task, send_message не начинает turn. Runtime/build/tests root последовательно.
+
+Текущий preview http://127.0.0.1:61156/, PID36528, PTY37419; данные shell
+.artifacts/app-server-data, screenshots .artifacts/P2-projects-desktop.jpg и
+.artifacts/P2-projects-mobile.jpg. Создан «Новый редактор», IDa5aadbf5-dab3-4613-a3eb-7bb9306656f4,
+с двумя demo dialogs. P0 данные сохранены, P1 fixture восстановлен и явно перенесён
+в существующий «Личный помощник Алисы». P1 PID24448/PTY94699, первый P2 PTY30289
+остановлены. Peer tab6 закрыта, viewport reset; основная tab3 оставлена на проекте.
+Остальные owned probe listeners закрыты. Второй writer
 не запускать. После остановки: SHELL_PORT=61156, npm start из wenay-shell.
 
-Project binding, documents, AI provider, настоящие редакторы, conversation CLI
+Project binding/UI принят. Documents, AI provider, настоящие редакторы, conversation CLI
 send/history/watch и установленные приложения ещё не приняты. IDENTITY-REVOKE-RELOGIN,
 conversation lifecycle и AI gates остаются открытыми; full check:all/F1/release не
 объявлены зелёными, main/push нет. Пользовательский apps/facade-map/TASK.md не трогать.
