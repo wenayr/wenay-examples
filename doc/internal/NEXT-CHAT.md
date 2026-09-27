@@ -1,6 +1,45 @@
 # Контекст продолжения wenay-examples
 
-## Уточнение задачи 27 сентября 2026
+## Текущая работа: W3 / P0 принят, следующий этап P1
+
+27 сентября 2026. Активный продукт находится в отдельном репозитории
+`C:/Users/wenay/WebstormProjects/wenay-shell`, ветка `codex/shell-foundation`,
+HEAD `ad3cb89`, рабочее дерево чистое. Этот блок заменяет очередь W0–W2 ниже.
+Приложения examples сейчас не расширять; пользователь просит концентрироваться
+на одном законченном этапе общего продукта.
+
+После отклонения каталога и рекламного входа реализован chat-first web: тёмная
+левая колонка, реальные личные чаты, поиск, история, компактный вход, черновики,
+deep links и explicit retry. Server `a44f97b`, headless client `0b24aea`, UI и
+приёмка `ad3cb89`. Использованы публичные common2 3.1.1/react2 5.0.0, без patches.
+Root проверил native persistence/restart/receipt/current ACL, client lifecycle,
+CLI regression, build, typecheck и style49/0; docs66/0. Browser1280×800/390×844,
+account isolation и настоящий lost-ACK после commit → reconnect → retry PASS:
+одно сообщение, новый draft сохранён. Доказательства — shell/docs/evidence/W3-acceptance.md.
+
+Последнее уточнение пользователя: диалоговый, затем голосовой редактор; постоянная
+левая навигация с чатами и проектами. Проект открывает общую рабочую область, чат —
+историю и изменения. CAD/video/music — подключаемые модули. Web, установленный
+desktop/mobile и CLI используют общий клиент и отдельно запускаемый сервер.
+Канонический порядок — shell/docs/PRODUCT-SEQUENCE.md: P1 архив/восстановление/
+удаление из архива → P2 проекты в sidebar → P3 один настоящий редактор → P4 voice/AI
+→ P5 CAD → P6 server/desktop/CLI installers → P7 installed mobile. Не делать всё
+параллельно. Следующая задача — P1 native lifecycle/ACL/replay invalidation proof
+до добавления кнопок; native archive/delete API отсутствует, tombstone не есть purge.
+
+Текущий preview `http://127.0.0.1:61156/`, PID31488, PTY98934; данные shell
+`.artifacts/app-server-data`, screenshot `.artifacts/W3-chat-desktop.jpg`.
+Старый W2 PID11680/PTY55769 остановлен. Recovery fixture53848 завершена штатно,
+вкладка закрыта, owned probe listeners отсутствуют. Второй writer не запускать.
+При остановленном preview: `$env:SHELL_PORT = '61156'`, затем `npm start` из shell.
+
+Архив, связь чатов с проектами, documents, AI provider, настоящие редакторы,
+conversation CLI send/history/watch и установленные приложения ещё не приняты.
+IDENTITY-REVOKE-RELOGIN / conversation lifecycle / AI gates остаются открытыми;
+check:all не заявлен зелёным, main/push нет. Три GPT-6 Sol high завершили scopes;
+для P1 переиспользовать их, runtime/build/test по правилам запускает root последовательно.
+
+## История постановки и W0–W2, 27 сентября 2026
 
 Новое поручение: сначала суперподробный план, затем запуск GPT-6 Sol.
 Подготовлены [82 задания](../SHELL-EXECUTION-PLAN.md),
