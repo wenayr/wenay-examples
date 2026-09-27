@@ -21,8 +21,14 @@ F0 принят в shell `2633efe`: native `c3d777d`, composition `5a9e812` (14/
 web `437ac6c` (build + browser subscriptions/cleanup). На root runtime портах
 50890/54991 listeners отсутствуют. Новая W1 уже назначена тем же трём Sol high:
 S01.01 identity, S03.01/02 lazy views, S07.01 AI boundary repro.
-Следующее действие: принять W1 по `wenay-shell/docs/W1-BRIEFS.md` и обновить BOARD;
-не начинать другие examples. F0 не является готовым приложением или mobile install.
+W1 проверена root: lazy registry `c960d41`, 12/12; identity `afb2fe3` — новый
+IDENTITY-REVOKE-RELOGIN (старый токен после revoke + fresh login снова принимается),
+fixed gate EXIT 1, S01.01 blocked-library. AI `7f7633e`: оба прежних дефекта
+воспроизведены, classifier 2/2, fixed gate EXIT 1. Общий typecheck EXIT 0.
+Следующая зависимость — опубликованное исправление identity, затем membership/client;
+независимо доступен CAD artifact/host contract. Актуальные scopes/статусы и команды —
+в shell/docs/BOARD.md. Не начинать другие examples. F0 не является готовым приложением
+или mobile install; diagnostic EXIT 0 не закрывает identity/AI gates.
 
 Предыдущая итерация планирования (до нового поручения выше):
 пользователь запросил план нового общего каркаса backend/web/установленного mobile/CLI
