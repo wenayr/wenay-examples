@@ -1,43 +1,72 @@
 # Контекст продолжения wenay-examples
 
-## Текущая работа: W3 / P0 принят, следующий этап P1
+## Текущая работа: P0/P1 приняты в dev scope, следующий P2
 
 27 сентября 2026. Активный продукт находится в отдельном репозитории
-`C:/Users/wenay/WebstormProjects/wenay-shell`, ветка `codex/shell-foundation`,
-HEAD `ad3cb89`, рабочее дерево чистое. Этот блок заменяет очередь W0–W2 ниже.
+C:/Users/wenay/WebstormProjects/wenay-shell, ветка codex/shell-foundation,
+HEAD b06e5d6, рабочее дерево чистое. Этот блок заменяет очередь W0–W2 ниже.
 Приложения examples сейчас не расширять; пользователь просит концентрироваться
-на одном законченном этапе общего продукта.
+на одном законченном этапе общего продукта. Здесь изменён только checkpoint.
 
-После отклонения каталога и рекламного входа реализован chat-first web: тёмная
-левая колонка, реальные личные чаты, поиск, история, компактный вход, черновики,
-deep links и explicit retry. Server `a44f97b`, headless client `0b24aea`, UI и
-приёмка `ad3cb89`. Использованы публичные common2 3.1.1/react2 5.0.0, без patches.
-Root проверил native persistence/restart/receipt/current ACL, client lifecycle,
-CLI regression, build, typecheck и style49/0; docs66/0. Browser1280×800/390×844,
-account isolation и настоящий lost-ACK после commit → reconnect → retry PASS:
-одно сообщение, новый draft сохранён. Доказательства — shell/docs/evidence/W3-acceptance.md.
+P0/W3 реализовал chat-first web: тёмная левая колонка, реальные личные чаты,
+поиск, история, компактный вход, drafts/deep links/explicit retry. Server a44f97b,
+headless client 0b24aea, UI ad3cb89. Root native persistence/restart/receipt/current ACL,
+CLI regression и browser1280×800/390×844, account isolation, actual lost-ACK после
+commit→reconnect→retry PASS: одно сообщение, новый draft сохранён.
+
+P1 добавил архив, read-only историю, восстановление и delete только из архива.
+Server f187a27, общий client 90ac2f1, UI/итоговая документация b06e5d6. Public common2
+3.1.1/react2 5.0.0, точные зависимости без patches/link/соседних исходников. Lifecycle —
+один native fact; original receipt сравнивается с persisted event, не mutable fact.
+Delete закрывает старые native readers, invalidated/retired обновляют два consumer;
+owned setter сохраняет normal ACK, held mirrors очищаются. Это tombstone, не purge.
+
+Root P1 проверки: server3.08s/W3regression2.96s/client3.47s EXIT0, final typecheck3.18s,
+style57/0, build2.54s/169modules/browsergraphPASS; docs45files/84links/0broken.
+Initial JS215.75kB/67.67gzip, session343.42/108.27; не измерение token savings.
+Browser две Alice вкладки archive/restore/read-only/draft/focus/новое message безreload,
+confirmation/cancel/keyboard и actual390×844 scrollWidth390 PASS, console[].
+Final irreversible browser delete submit не выполнялся; native delete/ACK/retry/restart/
+readers доказаны probes. Lifecycle lost-ACK/conflict browser и installed device не приняты.
+Полные факты/failed attempts — shell/docs/evidence/P1-acceptance.md и P1-server/client/web.
+
+У common2 initial replay reader rejection также вызвал process fatal. Existing lifecycle
+adapter расширен до native failRecovery и проверен sync/Promise reader failures;
+исходная ошибка сохранена, npm defect не исправлен. После fatal собственный temp
+C:/Users/wenay/AppData/Local/Temp/wenay-conversation-client-zsMaws оставлен: automatic
+policy запретила cleanup без подробной причины. Не повторять/не обходить удаление.
+Он не используется; остальные fixtures закрыты штатно. Failed assertions сохранены
+в evidence, не переименованы в PASS.
 
 Последнее уточнение пользователя: диалоговый, затем голосовой редактор; постоянная
-левая навигация с чатами и проектами. Проект открывает общую рабочую область, чат —
+левая навигация с чатами и проектами. Project открывает общую рабочую область, chat —
 историю и изменения. CAD/video/music — подключаемые модули. Web, установленный
 desktop/mobile и CLI используют общий клиент и отдельно запускаемый сервер.
-Канонический порядок — shell/docs/PRODUCT-SEQUENCE.md: P1 архив/восстановление/
-удаление из архива → P2 проекты в sidebar → P3 один настоящий редактор → P4 voice/AI
-→ P5 CAD → P6 server/desktop/CLI installers → P7 installed mobile. Не делать всё
-параллельно. Следующая задача — P1 native lifecycle/ACL/replay invalidation proof
-до добавления кнопок; native archive/delete API отсутствует, tombstone не есть purge.
+Канонический порядок — shell/docs/PRODUCT-SEQUENCE.md: P0/P1 готовы в dev scope;
+P2 проекты в sidebar → P3 один настоящий text editor → P4 voice/AI → P5 CAD →
+P6 server/desktop/CLI installers → P7 installed mobile. Не делать всё параллельно.
+После каждого этапа — законченный сценарий, review использования библиотек и упрощение.
 
-Текущий preview `http://127.0.0.1:61156/`, PID31488, PTY98934; данные shell
-`.artifacts/app-server-data`, screenshot `.artifacts/W3-chat-desktop.jpg`.
-Старый W2 PID11680/PTY55769 остановлен. Recovery fixture53848 завершена штатно,
-вкладка закрыта, owned probe listeners отсутствуют. Второй writer не запускать.
-При остановленном preview: `$env:SHELL_PORT = '61156'`, затем `npm start` из shell.
+Первое действие P2: зафиксировать placement contract и native proof до UI. Existing
+Project + один native conversation placement fact; move/unlink сохраняют ID/history.
+Current owner + target workspace membership/active project проверяются на сервере;
+размещение не выдаёт личную историю другим участникам. Сценарий: один проект, два
+личных чата, общий Workbench и возврат чата в личные. Details/gates/будущие A/B/C/root
+zones находятся в PRODUCT-SEQUENCE. Подагенты GPT-6 Sol high завершили P1; их можно
+переиспользовать, но доступны только 3 одновременно плюс root. Tests/build/runtime
+по правилам выполняет root последовательно. Дочерних агентов не запускать.
 
-Архив, связь чатов с проектами, documents, AI provider, настоящие редакторы,
-conversation CLI send/history/watch и установленные приложения ещё не приняты.
-IDENTITY-REVOKE-RELOGIN / conversation lifecycle / AI gates остаются открытыми;
-check:all не заявлен зелёным, main/push нет. Три GPT-6 Sol high завершили scopes;
-для P1 переиспользовать их, runtime/build/test по правилам запускает root последовательно.
+Текущий preview http://127.0.0.1:61156/, PID24448, PTY94699; данные shell
+.artifacts/app-server-data, screenshot .artifacts/P1-chat-desktop.jpg,
+mobile .artifacts/P1-archive-mobile.jpg. P0 данные сохранены, отдельный P1 demo chat
+восстановлен. Старый W3 PID31488/PTY98934 остановлен. Peer tab закрыта, viewport reset;
+основная вкладка оставлена. Остальные owned probe listeners закрыты. Второй writer
+не запускать. После остановки: SHELL_PORT=61156, npm start из wenay-shell.
+
+Project binding, documents, AI provider, настоящие редакторы, conversation CLI
+send/history/watch и установленные приложения ещё не приняты. IDENTITY-REVOKE-RELOGIN,
+conversation lifecycle и AI gates остаются открытыми; full check:all/F1/release не
+объявлены зелёными, main/push нет. Пользовательский apps/facade-map/TASK.md не трогать.
 
 ## История постановки и W0–W2, 27 сентября 2026
 
