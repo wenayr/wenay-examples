@@ -9,10 +9,15 @@ const shots = ['support', 'documents', 'metering', 'crm', 'booking', 'forms', 'm
 const files = [
     ['/', ['index.html', 'text/html; charset=utf-8']],
     ['/catalog.js', ['catalog.js', 'text/javascript; charset=utf-8']],
+    ['/catalog-model.js', ['catalog-model.js', 'text/javascript; charset=utf-8']],
     ['/products.js', ['products.js', 'text/javascript; charset=utf-8']],
     ['/style.css', ['style.css', 'text/css; charset=utf-8']]
 ]
 for (const name of shots) files.push(['/screenshots/' + name + '.png', ['../../doc/screenshots/' + name + '.png', 'image/png']])
+for (const name of [...shots, 'hosting', 'pizzeria']) {
+    files.push(['/guides/' + name, ['../' + name + '/README.md', 'text/plain; charset=utf-8']])
+}
+files.push(['/guides/organizer', ['../pizzeria/organizer/README.md', 'text/plain; charset=utf-8']])
 const routes = new Map(files)
 const port = Number(process.env.CATALOG_PORT ?? 3800)
 if (!Number.isInteger(port) || port < 1 || port > 65535) throw new Error('CATALOG_PORT должен быть 1-65535')

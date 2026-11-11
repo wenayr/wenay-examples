@@ -34,6 +34,9 @@ export function build() {
             ...item,
             port: Number(row?.port ?? 0),
             ready: !!passed,
+            checked: row?.checked ?? 'не запускалось',
+            results: row?.results ?? {},
+            scaffold: existsSync(path.join(repository, 'apps', item.id, 'scaffold.json')),
             checks: plain(paper?.checks ?? ''),
             limits: plain(paper?.limits ?? '')
         }

@@ -1,9 +1,88 @@
 <!doctype html>
-<html lang="ru"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="light"><title>Wenay — мастерская сервисов</title><link rel="stylesheet" href="/style.css"></head>
-<body><header><a class="brand" href="/" aria-label="На главную">w<span>enay</span><i>examples</i></a><span class="edition">МАСТЕРСКАЯ / 2026</span></header>
-<main><section class="hero"><p class="eyebrow">СВОЙ ПРОДУКТ НАЧИНАЕТСЯ ЗДЕСЬ</p><h1>Меньше повторять.<br><em>Больше создавать.</em></h1><p class="intro">Самостоятельные сервисы, которые можно взять за основу. Реальные роли, совместная работа и проверка на нескольких узлах.</p><div class="hero-foot"><span><b id="ready-count">06</b> основы для нового продукта</span><span><b id="pending-count">02</b> примера в работе</span><a href="#products">Выбрать основу <span aria-hidden="true">↘</span></a></div></section>
-<section id="products" aria-labelledby="products-title"><div class="section-top"><div><p class="eyebrow">КАТАЛОГ</p><h2 id="products-title">Выберите свою отправную точку</h2></div><div class="filters" role="group" aria-label="Состояние примеров"><button data-filter="ready" class="active" aria-pressed="true">Можно пробовать</button><button data-filter="all" aria-pressed="false">Все примеры</button></div></div><div id="cards" class="cards"></div></section>
-<section class="foundation"><p class="eyebrow">ОБЩАЯ ОСНОВА</p><h2>Сервисы самостоятельны.<br>Механизмы знакомы.</h2><div class="principles"><article><span>01</span><h3>Права — в действии</h3><p>Для каждой роли свой набор возможностей. Отзыв доступа проверяется и в уже открытых соединениях.</p></article><article><span>02</span><h3>Изменения — всем участникам</h3><p>Состояние и переподключение обслуживают библиотеки. Примеры проверяются с двумя обслуживающими узлами.</p></article><article><span>03</span><h3>ИИ — с проверкой человеком</h3><p>Источники, версии, отмена и контроль результата. По умолчанию работают тестовые исполнители без платных запросов.</p></article></div></section>
-<footer><span>wenay-common2 3.1.1 · wenay-react2 5.0.0</span><span>Локальная витрина · ничего не запускает и не развёртывает</span></footer></main>
-<dialog id="details" aria-labelledby="detail-title"><button id="close" class="close" aria-label="Закрыть">×</button><div id="detail-content"></div></dialog><script type="module" src="/catalog.js"></script></body></html>
-
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light">
+    <meta name="description" content="Примеры сервисов Wenay: поддержка, продажи, документы и работа команды. Выберите сценарий и запустите приложение локально.">
+    <title>Wenay — приложения для реальных задач</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+    <a class="skip-link" href="#products">Перейти к приложениям</a>
+    <header class="site-header wrap">
+        <a class="brand" href="/" aria-label="Wenay — главная">wenay<span class="brand-dot">.</span><span class="brand-caption">примеры</span></a>
+        <nav aria-label="Навигация по странице">
+            <a href="#products">Приложения</a>
+            <a href="#start">Как начать</a>
+            <a class="header-link" href="#foundation">Общая основа <span aria-hidden="true">↗</span></a>
+        </nav>
+    </header>
+    <main>
+        <section class="hero wrap" aria-labelledby="hero-title">
+            <div class="hero-copy">
+                <p class="eyebrow"><span class="signal-dot" aria-hidden="true"></span> МАСТЕРСКАЯ ПРИЛОЖЕНИЙ</p>
+                <h1 id="hero-title">У вашей задачи<br>есть <em>начало.</em></h1>
+                <p class="intro">Соберите свой сервис на работающем примере. От первого обращения до согласованной заявки — с ролями, историей и совместной работой.</p>
+                <a class="button primary" href="#products">Найти свой пример <span aria-hidden="true">↗</span></a>
+                <p class="hero-note">Исходный код · Локальный запуск · Ваши данные</p>
+            </div>
+            <aside class="scenario" aria-labelledby="scenario-title">
+                <div class="scenario-top"><span>ВНУТРИ ПРИМЕРА</span><span class="scenario-number">01 / NORTHSTAR</span></div>
+                <h2 id="scenario-title">Одно обращение.<br>Понятный путь к решению.</h2>
+                <ol class="journey">
+                    <li><span class="step-number">01</span><div><strong>Клиент описывает вопрос</strong><p>Обращение попадает в общую очередь.</p></div><span class="journey-mark" aria-hidden="true">↗</span></li>
+                    <li><span class="step-number">02</span><div><strong>Команда готовит ответ</strong><p>Ответственный, заметки и база знаний.</p></div></li>
+                    <li><span class="step-number">03</span><div><strong>Решение остаётся в истории</strong><p>Контекст доступен для следующего обращения.</p></div><span class="journey-check" aria-hidden="true">✓</span></li>
+                </ol>
+                <button class="text-button" id="featured">Разобрать сценарий поддержки <span aria-hidden="true">→</span></button>
+            </aside>
+        </section>
+        <div class="catalog-intro wrap">
+            <p>От работы с клиентами<br>до ежедневных операций.</p>
+            <p><strong id="product-count">—</strong><span>примеров в каталоге</span></p>
+            <p>Выберите задачу.<br>Изучите процесс. Запустите у себя.</p>
+        </div>
+        <section id="products" class="products wrap" aria-labelledby="products-title">
+            <div class="section-heading">
+                <div><p class="eyebrow">ВЫБЕРИТЕ ЗАДАЧУ</p><h2 id="products-title">С чего начнём?</h2></div>
+                <label class="search"><span class="sr-only">Поиск примеров</span><span aria-hidden="true">⌕</span><input id="search" type="search" placeholder="Название или задача" autocomplete="off"></label>
+            </div>
+            <div class="catalog-toolbar">
+                <div id="categories" class="filters" role="group" aria-label="Направление работы">
+                    <button data-category="all" aria-pressed="true">Все приложения</button>
+                    <button data-category="clients" aria-pressed="false">Работа с клиентами</button>
+                    <button data-category="team" aria-pressed="false">Процессы команды</button>
+                    <button data-category="operations" aria-pressed="false">Операционная работа</button>
+                </div>
+                <label class="verified-filter"><input id="verified" type="checkbox"> Только с успешным прогоном</label>
+            </div>
+            <p id="result-count" class="result-count" role="status" aria-live="polite"></p>
+            <div id="cards" class="cards"></div>
+            <noscript><p class="empty-state">Для поиска и просмотра приложений включите JavaScript. Инструкции также доступны в README каждого приложения в репозитории.</p></noscript>
+            <p class="catalog-note">Результаты проверок записаны при последнем прогоне. Для открытия приложения сначала запустите его на своём компьютере.</p>
+        </section>
+        <section id="start" class="start-section wrap" aria-labelledby="start-title">
+            <div class="section-heading"><div><p class="eyebrow">ОТ ПРИМЕРА К ВАШЕМУ ПРОДУКТУ</p><h2 id="start-title">Три шага к первому запуску</h2></div><span class="section-index" aria-hidden="true">01 — 03</span></div>
+            <ol class="start-steps">
+                <li><span>01</span><h3>Выберите процесс</h3><p>Откройте сценарий: кто участвует, какое действие выполняет и как получает результат.</p></li>
+                <li><span>02</span><h3>Запустите приложение</h3><p>В карточке есть команды запуска и адрес. В README — демонстрационные аккаунты и требования к окружению.</p></li>
+                <li><span>03</span><h3>Адаптируйте под себя</h3><p>У примеров с шаблоном можно создать отдельную копию. Меняйте предметные правила и проверяйте сценарий для каждой роли.</p></li>
+            </ol>
+        </section>
+        <section id="foundation" class="foundation" aria-labelledby="foundation-title">
+            <div class="wrap foundation-inner">
+                <div><p class="eyebrow">WENAY-COMMON2 + WENAY-REACT2</p><h2 id="foundation-title">Разные задачи.<br>Знакомая основа.</h2><p class="foundation-intro">Библиотеки связывают сервер и интерфейс. В примерах остаётся то, что определяет ваш продукт.</p></div>
+                <div class="principles">
+                    <article><span>01</span><div><h3>Свои действия для каждой роли</h3><p>Клиент, сотрудник и руководитель работают с доступными им данными и командами.</p></div></article>
+                    <article><span>02</span><div><h3>Общее состояние команды</h3><p>Изменения приходят участникам через библиотечные механизмы состояния и переподключения.</p></div></article>
+                    <article><span>03</span><div><h3>Проверки рядом с кодом</h3><p>В каждом приложении описаны сценарии, команды проверки и известные ограничения.</p></div></article>
+                </div>
+            </div>
+        </section>
+    </main>
+    <footer class="wrap site-footer"><a class="brand" href="/">wenay<span class="brand-dot">.</span></a><p>Небольшие приложения. Реальные рабочие процессы.</p><a href="#products">К приложениям ↑</a></footer>
+    <dialog id="details" aria-labelledby="detail-title"><button id="close" class="close" aria-label="Закрыть сценарий" autofocus>×</button><div id="detail-content"></div></dialog>
+    <script type="module" src="/catalog.js"></script>
+</body>
+</html>

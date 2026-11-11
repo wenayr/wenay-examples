@@ -1,16 +1,20 @@
 import {products} from './products.js'
+import {selectProducts, launchCommand, copyCommand} from './catalog-model.js'
 
 /** @typedef {(typeof products)[number]} Product */
 
 const cards = /** @type {HTMLElement} */ (document.querySelector('#cards'))
 const dialog = /** @type {HTMLDialogElement} */ (document.querySelector('#details'))
 const content = /** @type {HTMLElement} */ (document.querySelector('#detail-content'))
-const readyCount = /** @type {HTMLElement} */ (document.querySelector('#ready-count'))
-const pendingCount = /** @type {HTMLElement} */ (document.querySelector('#pending-count'))
+const search = /** @type {HTMLInputElement} */ (document.querySelector('#search'))
+const verified = /** @type {HTMLInputElement} */ (document.querySelector('#verified'))
+const resultCount = /** @type {HTMLElement} */ (document.querySelector('#result-count'))
+const filters = /** @type {NodeListOf<HTMLButtonElement>} */ (document.querySelectorAll('[data-category]'))
+const filter = {category: 'all', query: '', verified: false}
 
-const ready = products.filter(product => product.ready)
-readyCount.textContent = String(ready.length).padStart(2, '0')
-pendingCount.textContent = String(products.length - ready.length).padStart(2, '0')
+/** @type {HTMLElement | null} */
+let opener = null
+document.querySelector('#product-count')?.replaceChildren(String(products.length).padStart(2, '0'))
 
 /**
  * @param {string} tag
@@ -24,99 +28,185 @@ function node(tag, className, text) {
     return result
 }
 
+/**
+ * @param {string} url
+ * @param {string} title
+ * @param {string} className
+ */
+function link(url, title, className) {
+    const result = /** @type {HTMLAnchorElement} */ (node('a', className, title))
+    result.href = url
+    result.target = '_blank'
+    result.rel = 'noopener'
+    return result
+}
+
+/** @param {string} command */
+function commands(command) {
+    const section = node('div', 'command-block')
+    const pre = node('pre')
+    pre.append(node('code', '', command))
+    const controls = node('div', 'command-controls')
+    const copy = /** @type {HTMLButtonElement} */ (node('button', 'copy-button', 'Копировать команды'))
+    const feedback = node('span', 'copy-feedback')
+    feedback.setAttribute('role', 'status')
+    copy.addEventListener('click', async function copyText() {
+        copy.disabled = true
+        try {
+            await navigator.clipboard.writeText(command)
+            feedback.textContent = 'Команды скопированы'
+        } catch {
+            feedback.textContent = 'Не удалось скопировать. Выделите команды и скопируйте их вручную.'
+        } finally {
+            copy.disabled = false
+        }
+    })
+    controls.append(copy, feedback)
+    section.append(pre, controls)
+    return section
+}
+
 /** @param {Product} product */
-function copyCommand(product) {
-    return [
-        'node scripts/create-saas-example.mjs ' + product.id + ' work/my-' + product.id + ' --name my-' + product.id,
-        'cd work/my-' + product.id,
-        'npm ci',
-        'npm run build',
-        'npm start'
-    ].join('\n')
+function technicalDetails(product) {
+    const details = node('details', 'technical-details')
+    details.append(node('summary', '', 'Проверки, ограничения и самостоятельная копия'))
+    const stamp = product.checked == 'не запускалось' ? 'Нет записанных прогонов.' : 'Последняя запись: ' + product.checked + ' UTC.'
+    details.append(node('p', 'check-date', stamp))
+    const results = node('ul', 'check-results')
+    const names = {typecheck: 'Проверка типов', test: 'Тесты', build: 'Сборка'}
+    for (const [key, value] of Object.entries(product.results)) {
+        let label = value
+        if (value == '✓') label = 'успешно'
+        if (value == '✗') label = 'есть ошибки'
+        if (value == '?') label = 'нет результата'
+        results.append(node('li', '', (names[/** @type {keyof typeof names} */ (key)] ?? key) + ': ' + label))
+    }
+    details.append(results)
+    details.append(node('p', '', 'Это сохранённые результаты для зависимостей примера. После изменения исходников проверки нужно повторить.'))
+    details.append(node('h3', '', 'Какие сценарии проверяются'), node('p', '', product.checks))
+    details.append(node('h3', '', 'Ограничения примера'), node('p', '', product.limits))
+    const copy = copyCommand(product)
+    if (copy) {
+        details.append(node('h3', '', 'Создать свой проект'))
+        details.append(node('p', '', 'Выполняйте из корня репозитория. Папка назначения должна быть новой. Данные и секреты исходного примера не копируются.'))
+        details.append(commands(copy))
+        details.append(node('p', '', 'Копия использует отдельный порт. Адрес и демонстрационные аккаунты будут в её README.'))
+    }
+    return details
 }
 
 /**
  * @param {Product} product
- * @param {string} text
+ * @param {HTMLElement} trigger
  */
-function openLink(product, text) {
-    const link = /** @type {HTMLAnchorElement} */ (node('a', 'detail-open', text))
-    link.href = 'http://127.0.0.1:' + product.port + '/'
-    link.target = '_blank'
-    link.rel = 'noopener'
-    return link
-}
-
-/** @param {Product} product */
-function show(product) {
+function show(product, trigger) {
+    opener = trigger
     content.replaceChildren()
-    const heading = node('h2', '', product.name + ' / ' + product.title)
+    const heading = node('h2', '', product.title)
     heading.id = 'detail-title'
-    content.append(node('p', 'eyebrow', product.kind), heading, node('p', '', product.description))
-    content.append(node('h3', '', 'Путь участников'))
+    content.append(node('p', 'eyebrow', product.name + ' / ' + product.kind), heading, node('p', '', product.description))
+    content.append(node('h3', '', 'Как работает сценарий'))
     const list = node('ol')
     for (const role of product.roles) list.append(node('li', '', role))
-    content.append(list, node('h3', '', 'Что проверено'), node('p', '', product.checks))
-    content.append(node('p', 'detail-note', product.limits))
-    if (product.ready) {
-        content.append(node('h3', '', 'Создать самостоятельную копию'), node('pre', '', copyCommand(product)))
-        const note = 'Запускайте команды из репозитория примеров. Папка назначения должна быть новой.'
-        content.append(node('p', '', note + ' Аккаунты и подробные проверки описаны в README созданного проекта.'))
-        content.append(openLink(product, 'Открыть локальный пример ↗'))
+    content.append(list, node('h3', '', 'Запустить у себя'))
+    content.append(node('p', '', 'Откройте терминал в корне репозитория. Нужен Node.js 22.12 или новее.'))
+    if (product.id == 'hosting') {
+        content.append(node('p', 'launch-note', 'Сначала подготовьте панель по README. Для размещения также потребуется Docker и настроенный агент.'))
+        content.append(link('/guides/hosting', 'README: обязательная настройка панели ↗', 'documentation-link'))
     }
+    content.append(commands(launchCommand(product)))
+    if (product.id == 'hosting') {
+        content.append(node('p', '', 'Перед npm start задайте HOSTING_ACCOUNTS_FILE — путь к файлу аккаунтов с заменёнными паролями-заглушками.'))
+        content.append(node('p', '', 'Также задайте SERVICE_TOKEN_SECRET и SERVICE_NODE_TOKEN: разные секреты не короче 32 символов. Сохраните их для перезапуска.'))
+    }
+    content.append(node('p', 'launch-note', 'Сначала дождитесь запуска сервера в терминале. Витрина не запускает приложения и не проверяет их доступность.'))
+    content.append(link('http://127.0.0.1:' + product.port + '/', 'Открыть запущенный пример ↗', 'button primary detail-open'))
+    content.append(node('p', '', 'Адрес по умолчанию: 127.0.0.1:' + product.port + '. Если изменили порт, используйте адрес из терминала.'))
+    content.append(link('/guides/' + product.id, 'README: аккаунты и настройка ↗', 'documentation-link'))
+    if (product.id == 'pizzeria') {
+        content.append(node('h3', '', 'Органайзер команды'))
+        content.append(node('p', '', 'Отдельный интерфейс с задачами, чатом и холстом. Запускается из того же приложения в другом терминале.'))
+        content.append(commands('cd apps/pizzeria\nnpm run start:organizer'))
+        content.append(link('/guides/organizer', 'README органайзера ↗', 'documentation-link'))
+    }
+    content.append(technicalDetails(product))
     dialog.showModal()
+    dialog.scrollTop = 0
 }
 
 /** @param {Product} product */
-function visualOf(product) {
-    const visual = node('div', 'visual')
-    const mock = node('div', 'mock')
-    const aside = node('div', 'mock-aside')
-    const main = node('div', 'mock-main')
-    const lines = node('div', 'mock-lines')
-    aside.append(node('b', '', product.name.slice(0, 1)), node('i'), node('i'), node('i'))
-    product.labels.forEach(function line(label, index) {
-        const box = node('div', '', label)
-        box.append(node('strong', '', product.counts[index]), node('i'), node('i'))
-        lines.append(box)
-    })
-    main.append(node('h4', '', product.name), lines)
-    mock.append(aside, main)
-    visual.append(mock, node('span', 'mock-label', 'Схема сценария'))
-    return visual
+function cardOf(product) {
+    const card = node('article', 'card')
+    card.style.setProperty('--product-accent', product.accent)
+    card.style.setProperty('--product-wash', product.wash)
+    const top = node('div', 'card-top')
+    const mark = node('span', 'product-mark', product.name.slice(0, 1))
+    mark.setAttribute('aria-hidden', 'true')
+    const name = node('div', 'product-name', product.name)
+    name.append(node('span', 'product-kind', product.kind))
+    top.append(mark, name)
+    const title = node('h3', '', product.title)
+    const tags = node('ul', 'process-tags')
+    tags.setAttribute('aria-label', 'Этапы работы')
+    for (const label of product.labels) tags.append(node('li', '', label))
+    const bottom = node('div', 'card-bottom')
+    const details = node('button', 'text-button', 'Сценарий и запуск')
+    details.setAttribute('aria-label', product.name + ': сценарий и запуск')
+    const arrow = node('span', '', '→')
+    arrow.setAttribute('aria-hidden', 'true')
+    details.append(arrow)
+    details.addEventListener('click', function openDetails() {show(product, details)})
+    const state = product.ready ? 'Успешный прогон записан' : 'Проверки требуют внимания'
+    bottom.append(details, node('p', 'card-state' + (product.ready ? '' : ' pending'), state))
+    card.append(top, title, node('p', 'card-description', product.description), tags, bottom)
+    return card
 }
 
-/** @param {string} filter */
-function render(filter) {
+function resetFilters() {
+    filter.category = 'all'
+    filter.query = ''
+    filter.verified = false
+    search.value = ''
+    verified.checked = false
+    render()
+    search.focus()
+}
+
+function render() {
     cards.replaceChildren()
-    for (const product of products.filter(item => filter == 'all' || item.ready)) {
-        const card = node('article', 'card')
-        card.style.setProperty('--accent', product.accent)
-        card.style.setProperty('--wash', product.wash)
-        const body = node('div', 'card-body')
-        const top = node('div', 'card-top')
-        const bottom = node('div', 'card-bottom')
-        top.append(node('h3', '', product.name), node('span', 'tag', product.kind))
-        if (product.ready) bottom.append(openLink(product, 'Открыть пример ↗'))
-        else bottom.append(node('span', 'state', 'В работе'))
-        const details = node('button', '', 'Сценарий и запуск →')
-        details.addEventListener('click', () => show(product))
-        bottom.append(details)
-        body.append(top, node('p', '', product.description), bottom)
-        card.append(visualOf(product), body)
-        cards.append(card)
-    }
+    filters.forEach(button => button.setAttribute('aria-pressed', String(button.dataset.category == filter.category)))
+    const selected = selectProducts(products, filter)
+    resultCount.textContent = 'Показано: ' + selected.length + ' из ' + products.length
+    for (const product of selected) cards.append(cardOf(product))
+    if (selected.length > 0) return
+    const empty = node('div', 'empty-state')
+    empty.append(node('h3', '', 'Подходящих примеров пока нет'))
+    empty.append(node('p', '', 'Попробуйте другое слово или сбросьте выбранные фильтры.'))
+    const reset = node('button', '', 'Показать все приложения')
+    reset.addEventListener('click', resetFilters)
+    empty.append(reset)
+    cards.append(empty)
 }
 
-const filters = /** @type {NodeListOf<HTMLElement>} */ (document.querySelectorAll('[data-filter]'))
 filters.forEach(function bind(button) {
     button.addEventListener('click', function pick() {
-        filters.forEach(function mark(item) {
-            item.classList.toggle('active', item == button)
-            item.setAttribute('aria-pressed', String(item == button))
-        })
-        render(button.dataset.filter ?? 'all')
+        filter.category = button.dataset.category ?? 'all'
+        render()
     })
 })
-document.querySelector('#close')?.addEventListener('click', () => dialog.close())
-render('ready')
+search.addEventListener('input', function searchProducts() {
+    filter.query = search.value
+    render()
+})
+verified.addEventListener('change', function filterVerified() {
+    filter.verified = verified.checked
+    render()
+})
+document.querySelector('#close')?.addEventListener('click', function closeDialog() {dialog.close()})
+dialog.addEventListener('close', function restoreFocus() {opener?.focus()})
+const featured = /** @type {HTMLButtonElement} */ (document.querySelector('#featured'))
+featured.addEventListener('click', function showFeatured() {
+    const product = products.find(item => item.id == 'support')
+    if (product) show(product, featured)
+})
+render()
