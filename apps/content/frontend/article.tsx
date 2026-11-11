@@ -77,9 +77,9 @@ export function PublicJournal({orgId, initialSlug = '', revisionKey = ''}: Journ
     }, [key])
 
     const failure = <section className="empty">
-        <h1>Эта история пока недоступна</h1>
+        <h1>Материал недоступен</h1>
         <p role="alert">{error}</p>
-        <button onClick={() => setSlug('')}>К другим историям</button>
+        <button onClick={() => setSlug('')}>К списку публикаций</button>
     </section>
 
     const page = loaded?.key == key ? <>
@@ -87,23 +87,23 @@ export function PublicJournal({orgId, initialSlug = '', revisionKey = ''}: Journ
             РЕДАКЦИЯ · {date(loaded.page.publishedAt)} · ВЫПУСК {loaded.page.version}
         </p>
         <Article title={loaded.page.title} blocks={loaded.page.blocks} orgId={orgId}/>
-    </> : <p className="empty">Открываем опубликованную историю…</p>
+    </> : <p className="empty" role="status">Открываем опубликованный материал…</p>
 
-    let index = <p>Проверяем свежие публикации…</p>
+    let index = <p role="status">Загружаем публикации…</p>
     if (list?.key == key) {
         index = list.items.length ? <>{list.items.map(function entry(item, position) {
             return <button key={item.id} onClick={() => setSlug(item.slug)}>
                 <span>{String(position + 1).padStart(2, '0')}</span>
                 <h2>{item.title}</h2>
-                <small>Читать историю →</small>
+                <small>Читать материал →</small>
             </button>
-        })}</> : <p>Новые истории скоро появятся здесь.</p>
+        })}</> : <p>Публикаций пока нет. Здесь появятся материалы, которые выпустит редакция.</p>
     }
 
     const catalogue = <section className="journal-index">
         <p className="eyebrow">ВЫПУСКИ РЕДАКЦИИ</p>
-        <h1>Есть что рассказать.</h1>
-        <p>Истории, заметки и мысли нашей команды.</p>
+        <h1>Публикации команды</h1>
+        <p>Статьи и заметки, прошедшие редакционную проверку.</p>
         <div>{index}</div>
     </section>
 
@@ -119,10 +119,10 @@ export function PublicJournal({orgId, initialSlug = '', revisionKey = ''}: Journ
     return <div className="public-journal">
         <header>
             <a href="#" onClick={home}>Folio<span>JOURNAL</span></a>
-            <span>Хорошие истории остаются с нами.</span>
+            <span>Журнал команды</span>
             <button onClick={() => setReload(value => value + 1)}>Обновить</button>
         </header>
         {body}
-        <footer>Folio Journal · Написано людьми, для людей.</footer>
+        <footer>Folio · Публикации редакции</footer>
     </div>
 }
