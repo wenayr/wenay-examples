@@ -1,2 +1,139 @@
-*{box-sizing:border-box}body{margin:0;background:#f4f5f8;color:#17212f;font:16px/1.5 system-ui,sans-serif}header{display:flex;align-items:center;gap:32px;padding:22px 5vw;background:#152638;color:#dae5ed}header a{color:white;text-decoration:none;font-weight:800;letter-spacing:2px}header button{margin-left:auto}main{max-width:1160px;margin:45px auto;padding:0 24px}h1{font-size:42px;line-height:1.15;letter-spacing:-1.6px;margin:10px 0 24px}h2{font-size:23px;margin-top:0}h3{margin:0}.eyebrow{font-size:12px;letter-spacing:2px;font-weight:700;color:#59778c}.page-title,.card-heading,.operation{display:flex;justify-content:space-between;gap:20px;align-items:center}.connected{font-size:14px;color:#286650}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin:24px 0}.stats article{display:flex;flex-direction:column}.stats b{font-size:32px}.stats span,.muted{color:#6f7c88}section,article,details{background:#fff;border:1px solid #e0e6ec;border-radius:12px;padding:22px}section{margin:22px 0}section article{background:#fafbfd}details{margin:16px 0}summary{cursor:pointer;font-weight:600}.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:16px}fieldset{border:0;padding:0;min-width:0}label{display:flex;flex-direction:column;gap:6px;margin:12px 0;font-size:14px;font-weight:600}input,select,button{font:inherit;border:1px solid #ccd6e0;border-radius:7px;padding:10px 12px}input,select{width:100%;background:white;color:#17212f}button{cursor:pointer;background:#fff;color:#17212f;margin:6px 0}button.primary{background:#275feb;color:#fff;border-color:#275feb}button:disabled{opacity:.5;cursor:default}input:focus,select:focus,button:focus-visible,summary:focus-visible{outline:3px solid #a8c4ff;outline-offset:2px}.project-select{max-width:360px}.badge{font-size:12px;background:#e9eef5;padding:5px 10px;border-radius:20px;white-space:nowrap}.succeeded{background:#dcf3e8;color:#245c43}.failed{background:#ffebe8;color:#963e31}.running{background:#e6edff;color:#2148a1}.release{display:flex;gap:24px;padding:13px 0;border-bottom:1px solid #eef1f5}.release code{overflow-wrap:anywhere;font-size:12px;align-self:center}.operation{margin:8px 0}.operation p{font-size:13px;color:#657485;margin:5px 0;overflow-wrap:anywhere}[role=alert]{color:#a62f2f}.two{display:grid;grid-template-columns:1fr 1fr;gap:14px}.login{max-width:620px}.login form{max-width:400px;margin-top:30px}.login h1{font-size:52px}a{color:#275feb}details form{max-width:600px}@media(max-width:640px){header{padding:16px 20px;gap:10px}header span{display:none}main{margin:28px auto;padding:0 16px}h1,.login h1{font-size:34px}.page-title{display:block}.stats{gap:8px}.stats article{padding:12px}.stats b{font-size:26px}section{padding:16px}.release{display:block}.operation{align-items:flex-start}.two{grid-template-columns:1fr}.cards{grid-template-columns:1fr}}
-.public-origin-value{overflow-wrap:anywhere}
+* {box-sizing: border-box}
+:root {font-family: system-ui, -apple-system, 'Segoe UI', sans-serif; color: #182d43; background: #f3f6fa; font-synthesis: none}
+body {margin: 0; font-size: 16px; line-height: 1.6}
+header {display: flex; align-items: center; gap: 32px; padding: 22px 5vw; background: #12283f; color: #c0d2e5}
+header a {color: white; text-decoration: none; font-weight: 800; letter-spacing: 2px}
+header button {margin-left: auto; background: #203e5e; border-color: #45617c; color: #fff}
+header button:hover:not(:disabled) {background: #315575}
+main {max-width: 1200px; margin: 40px auto; padding: 0 28px}
+h1 {font-size: clamp(32px, 4vw, 44px); line-height: 1.15; letter-spacing: -1.5px; margin: 10px 0 18px}
+h2 {font-size: 23px; line-height: 1.3; margin-top: 0; letter-spacing: -.4px}
+h3 {margin: 0; font-size: 18px; overflow-wrap: anywhere}
+p {margin: 12px 0}
+small {font-size: 13px}
+a {color: #225ac4; text-underline-offset: 3px}
+button, input, select {font: inherit; border: 1px solid #b9c8d8; border-radius: 8px; padding: 10px 14px; min-height: 44px}
+input, select {width: 100%; background: white; color: #172c43; min-width: 0}
+input::placeholder {color: #63768c}
+button {cursor: pointer; background: #fff; color: #1f3b59; margin: 6px 0; font-size: 14px; font-weight: 600}
+button:hover:not(:disabled) {background: #edf3fc; border-color: #6b8fbb}
+button.primary {background: #2459cc; color: #fff; border-color: #2459cc}
+button.primary:hover:not(:disabled) {background: #1a47ac}
+button:disabled {opacity: .5; cursor: not-allowed}
+input:focus-visible, select:focus-visible, button:focus-visible, summary:focus-visible, a:focus-visible {outline: 3px solid #769de8; outline-offset: 3px}
+label {display: flex; flex-direction: column; gap: 7px; margin: 14px 0; font-size: 14px; font-weight: 600}
+fieldset {border: 0; padding: 0; margin: 0; min-width: 0}
+.eyebrow {font-size: 12px; letter-spacing: 1.5px; font-weight: 700; color: #4f6e8e}
+.page-title, .card-heading, .operation {display: flex; justify-content: space-between; gap: 20px; align-items: center}
+.page-title {margin-bottom: 28px; align-items: flex-start}
+.page-title p {max-width: 650px}
+.connected {font-size: 13px; color: #26704c; white-space: nowrap; padding-top: 12px}
+.stats {display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; margin: 24px 0}
+.stats article {display: flex; flex-direction: column; border-top: 3px solid #7a9fd5}
+.stats b {font-size: 36px; line-height: 1.2; font-variant-numeric: tabular-nums; margin-bottom: 8px}
+.stats span, .muted {color: #546b83}
+section, article, details {background: #fff; border: 1px solid #d8e2ec; border-radius: 14px; padding: 24px; min-width: 0}
+section {margin: 24px 0; box-shadow: 0 5px 20px #1d3c5b05}
+section article {background: #f9fbfe}
+details {margin: 16px 0}
+summary {cursor: pointer; font-weight: 600; color: #2459a5; padding: 4px 0}
+.cards {display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 18px}
+.cards article {display: flex; flex-direction: column; align-items: stretch}
+.cards article p {overflow-wrap: anywhere}
+.cards article form {margin-top: auto}
+.card-heading {align-items: flex-start}
+.project-select {max-width: 420px; font-size: 13px}
+.project-select select {font-weight: 600}
+.badge {font-size: 12px; background: #e9eef5; color: #3f5772; padding: 5px 10px; border-radius: 20px; white-space: nowrap; font-weight: 600}
+.succeeded {background: #dcf3e8; color: #245c43}
+.failed {background: #ffebe8; color: #963e31}
+.running {background: #e6edff; color: #2148a1}
+.release {display: grid; grid-template-columns: minmax(90px, auto) minmax(0, 1fr); gap: 24px; padding: 16px 0; border-bottom: 1px solid #e3eaf2}
+.release code {overflow-wrap: anywhere; font-size: 13px; align-self: center; color: #4c6684}
+.operation {margin: 12px 0; align-items: flex-start}
+.operation p {font-size: 14px; color: #526a84; margin: 8px 0; overflow-wrap: anywhere}
+[role=alert] {color: #97372d; overflow-wrap: anywhere}
+.two {display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px}
+details form {max-width: 680px}
+.empty-state {background: #f7f9fc; border: 1px dashed #b9cbdc; border-radius: 12px; padding: 24px; color: #536b85}
+.empty-state h2 {color: #233f5e}
+.connection-state {padding-top: 64px; padding-bottom: 64px; text-align: center}
+.login {display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); padding: 0; margin: 48px auto 72px; border: 1px solid #d5dfeb; border-radius: 22px; overflow: hidden; background: #fff; box-shadow: 0 18px 60px #163a5b0c}
+.login-story {background: #183650; color: #f3f7ff; margin: 0; border: 0; border-radius: 0; padding: clamp(28px, 4vw, 58px)}
+.login-story .eyebrow {color: #b5d1ee}
+.login-story h1 {font-size: clamp(34px, 3.6vw, 52px); margin: 25px 0}
+.login-story > p:not(.eyebrow) {color: #c4d5e8; font-size: 16px}
+.login-steps {display: grid; gap: 22px; margin: 36px 0 0; padding-left: 24px; color: #8cb5e8}
+.login-steps li {padding-left: 8px}
+.login-steps strong {display: block; color: #f3f7ff; font-size: 15px}
+.login-steps span {display: block; color: #bdd0e5; font-size: 14px; margin-top: 4px}
+.login-card {align-self: center; padding: clamp(28px, 4vw, 58px)}
+.login-card h2 {font-size: 29px; margin-bottom: 12px}
+.login-card > p {font-size: 14px; margin-bottom: 28px}
+.login-card button {width: 100%; margin-top: 18px}
+.public-origin-value {overflow-wrap: anywhere}
+@media (max-width: 850px) {
+    .login {margin: 28px; grid-template-columns: 1fr}
+    .login-steps {grid-template-columns: repeat(3, minmax(0, 1fr)); padding-left: 18px; gap: 25px}
+    .login-story, .login-card {padding: 32px}
+    .login-card {max-width: 540px; width: 100%; margin: auto}
+    .page-title {flex-wrap: wrap}
+}
+@media (max-width: 640px) {
+    header {padding: 16px 20px; gap: 10px}
+    header span {display: none}
+    main {margin: 26px auto; padding: 0 16px}
+    .page-title {gap: 8px}
+    .connected {padding-top: 0; white-space: normal}
+    .stats {gap: 8px}
+    .stats article {padding: 16px 12px}
+    .stats b {font-size: 28px}
+    .stats span {font-size: 12px}
+    section, article, details {padding: 18px}
+    .release {grid-template-columns: 1fr; gap: 6px}
+    .operation {flex-direction: column; gap: 10px}
+    .operation .badge {order: -1}
+    .two {grid-template-columns: 1fr; gap: 0}
+    .cards {grid-template-columns: 1fr}
+    .login {margin: 18px 16px 40px; padding: 0}
+    .login-story, .login-card {padding: 26px}
+    .login-steps {grid-template-columns: 1fr; gap: 16px; margin-top: 24px}
+    .login-story h1 {font-size: 34px; letter-spacing: -1px}
+    .login-story > p:not(.eyebrow) {font-size: 15px}
+    .empty-state {padding: 20px}
+}
+@media (prefers-reduced-motion: reduce) {
+    * {scroll-behavior: auto !important}
+}
+
+/* The project has one visible release workflow, with evidence below. */
+.deployment-workflow {padding: 0; overflow: hidden; border-color: #bdcee2}
+.deployment-next {display: flex; align-items: center; justify-content: space-between; gap: 28px; padding: 28px 30px; background: #eaf1fb}
+.deployment-next h2 {font-size: 25px; margin: 10px 0}
+.deployment-next p:last-child {font-size: 14px; color: #4b6687; max-width: 740px; margin-bottom: 0}
+.workflow-link {display: inline-block; flex-shrink: 0; padding: 11px 16px; border: 1px solid #b1c5df; border-radius: 8px; text-decoration: none; color: #214f92; font-size: 14px; font-weight: 650; background: #fff}
+.workflow-link:hover {background: #f5f8ff}
+.deployment-stages {display: grid; grid-template-columns: repeat(3, minmax(0, 1fr))}
+.deployment-stages a {display: grid; gap: 7px; padding: 23px 30px; border-right: 1px solid #dce5f0; text-decoration: none}
+.deployment-stages a:last-child {border: 0}
+.deployment-stages a:hover {background: #f6f9fd}
+.deployment-stages span {font-size: 13px; font-weight: 600; color: #4f6d91}
+.deployment-stages strong {font-size: 29px; font-weight: 650; color: #243f60; line-height: 1.2}
+.deployment-stages small {font-size: 12px; color: #566e8d}
+.deployment-workspace {display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 22px; align-items: start}
+.deployment-workspace > section {margin: 0}
+.deployment-workspace .cards {grid-template-columns: 1fr}
+.deployment-workspace section > .muted {font-size: 14px; margin-bottom: 22px}
+#project-environments, #project-releases, #deployment-history {scroll-margin-top: 25px}
+@media (max-width: 900px) {
+    .deployment-workspace {grid-template-columns: 1fr}
+    .deployment-next {align-items: flex-start; flex-direction: column; gap: 16px}
+}
+@media (max-width: 640px) {
+    .deployment-next {padding: 23px}
+    .deployment-next h2 {font-size: 23px}
+    .deployment-stages {grid-template-columns: 1fr}
+    .deployment-stages a {grid-template-columns: minmax(0, 1fr) auto; padding: 18px 23px; border-right: 0; border-bottom: 1px solid #dce5f0}
+    .deployment-stages strong {grid-column: 2; grid-row: 1 / span 2; font-size: 23px; align-self: center}
+    .deployment-stages small {grid-column: 1}
+}
