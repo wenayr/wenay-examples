@@ -32,6 +32,8 @@ const queueTitles: Record<string, string> = {
     dispatch: 'Доставка'
 }
 
+const orderStages = ['placed', 'cooking', 'ready', 'delivering', 'delivered'] as const
+
 // Кнопка появляется только у того, кто отвечает за этот шаг: повар закрывает свою
 // выпечку, курьер — свою доставку.
 const transitions = [
@@ -143,43 +145,47 @@ function App({location, network}: {location: Location, network: boolean}) {
         </>}
     </div>
 
-    let heroTitle = 'Хороший день начинается с пиццы.'
-    if (me && !me.roles.includes('customer')) heroTitle = 'Каждый заказ — вовремя.'
+    let heroTitle = 'Выберите пиццу. Мы займёмся ужином.'
+    if (staffMode) heroTitle = 'Заказы вашей смены'
 
     const hero = <section className={staffMode ? 'hero staff-hero' : 'hero'} hidden={staffMode && workOpen}>
         <div>
             <p className="eyebrow">
-                {staffMode ? 'РАБОЧАЯ СМЕНА' : 'ПИЦЦЕРИЯ РАЙОНА · С 10:00 ДО 23:00'}
+                {staffMode ? 'КУХНЯ · ДОСТАВКА · КОМАНДА' : 'ПЕЧЬ · МЕНЮ И ДОСТАВКА'}
             </p>
             <h1>{heroTitle}</h1>
             <p>
                 {staffMode
-                    ? 'Заказы, кухня и команда вашего заведения.'
-                    : 'Свежие ингредиенты, горячая печь и заказ, за которым можно следить.'}
+                    ? 'Возьмите заказ в работу, отметьте готовность и передайте его курьеру.'
+                    : 'Состав и цена — в меню. Добавьте блюда в заказ и следите за приготовлением и доставкой в своём аккаунте.'}
             </p>
+            {!staffMode && <a className="hero-link" href="#menu">Выбрать пиццу <span aria-hidden="true">↓</span></a>}
         </div>
-        {!staffMode && <div className="pizza" aria-hidden="true">🍕</div>}
+        {!staffMode && <figure className="pizza">
+            <img src="/dish-photos/margherita.png" alt="Маргарита с томатами, сыром и базиликом"/>
+            <figcaption>Маргарита · пример подачи</figcaption>
+        </figure>}
     </section>
 
-    const loginPanel = <section className="login panel">
+    const loginPanel = <section className="login panel" id="order-account">
         <div>
-            <h2>{signup ? 'Создать аккаунт' : 'Добро пожаловать'}</h2>
-            <p>Войдите, чтобы оформить заказ или открыть рабочую панель.</p>
-            <small>
+            <h2>{signup ? 'Создать аккаунт' : 'Войти для заказа'}</h2>
+            <p>Меню доступно без входа. Аккаунт нужен для оформления и отслеживания заказа. Сотрудники здесь открывают свою смену.</p>
+            <details className="demo-accounts"><summary>Аккаунты для знакомства с примером</summary><small>
                 Демо: alice / alice-pass · chef / chef-pass · rider / rider-pass ·
                 manager / manager-pass · owner / owner-pass
-            </small>
+            </small></details>
         </div>
         <form onSubmit={login}>
             <label>Логин
-                <input name="account" required minLength={3} maxLength={32}/>
+                <input name="account" autoComplete="username" required minLength={3} maxLength={32}/>
             </label>
             {signup && <>
                 <label>Имя<input name="name" required/></label>
                 <label>Телефон<input name="phone" type="tel" required/></label>
             </>}
             <label>Пароль
-                <input name="password" type="password" required minLength={6}/>
+                <input name="password" type="password" autoComplete={signup ? 'new-password' : 'current-password'} required minLength={6}/>
             </label>
             <button className="primary" disabled={busy}>{signup ? 'Зарегистрироваться' : 'Войти'}</button>
             <button type="button" onClick={() => setSignup(!signup)}>
@@ -233,20 +239,31 @@ function App({location, network}: {location: Location, network: boolean}) {
         const total = cart.reduce(function sum(value, id) {
             return value + (menu.items.find(item => item.id == id)?.price ?? 0)
         }, 0)
-        return <form className="panel checkout" onSubmit={submit}>
+        return <form className="panel checkout order-cart" id="order-cart" onSubmit={submit}>
             <div>
-                <h3>Ваш заказ · {cart.length} шт.</h3>
+                <p className="eyebrow">КОРЗИНА</p>
+                <h3>Ваш заказ <span>{cart.length} шт.</span></h3>
+                {cart.length == 0 && <p className="cart-empty">Добавьте пиццу из меню. Здесь появятся состав заказа и итоговая сумма.</p>}
                 {[...new Set(cart)].map(id => (
-                    <p key={id}>
-                        {menu.items.find(item => item.id == id)?.title ?? id} × {cart.filter(x => x == id).length}
-                        <button type="button" aria-label={'Убрать ' + id} onClick={() => remove(id)}>−</button>
-                    </p>
+                    <div className="cart-line" key={id}>
+                        <strong>{menu.items.find(item => item.id == id)?.title ?? id}</strong>
+                        <span>{money(menu.items.find(item => item.id == id)?.price ?? 0)} за шт.</span>
+                        <div className="cart-quantity">
+                            <button type="button" disabled={busy} aria-label={'Убрать одну ' + (menu.items.find(item => item.id == id)?.title ?? id)}
+                                onClick={() => remove(id)}>−</button>
+                            <span aria-label="Количество">{cart.filter(x => x == id).length}</span>
+                            <button type="button" disabled={busy || cart.length >= 20}
+                                aria-label={'Добавить одну ' + (menu.items.find(item => item.id == id)?.title ?? id)}
+                                onClick={() => setCart([...cart, id])}>+</button>
+                        </div>
+                    </div>
                 ))}
-                <b>{money(total)}</b>
+                <div className="cart-total"><span>Итого</span><b>{money(total)}</b></div>
             </div>
             <label>Адрес доставки
                 <input
                     name="address"
+                    disabled={busy}
                     required
                     minLength={5}
                     maxLength={300}
@@ -260,30 +277,52 @@ function App({location, network}: {location: Location, network: boolean}) {
 
     const menuSection = session && <Live remote={session.views.menu} initial={{items: []}}>
         {menu => (
-            <section>
+            <section id="menu">
                 <div className="section-title">
-                    <h2>Из нашей печи</h2>
-                    <span>Готовим после вашего заказа</span>
+                    <div><p className="eyebrow">ВЫБЕРИТЕ БЛЮДА</p><h2>Из нашей печи</h2></div>
+                    <span>Блюд в меню: {menu.items.length} · цены в евро</span>
                 </div>
+                <div className="menu-workspace">
+                <div>
                 <div className="cards">
                     {menu.items.map(item => (
                         <DishCardView key={item.id} item={item} authority={location.url}>
-                            <button
-                                disabled={!can('placeOrder') || cart.length >= 20}
+                            {can('placeOrder') && <button
+                                disabled={busy || cart.length >= 20}
                                 onClick={() => setCart([...cart, item.id])}
                             >
                                 + В корзину
-                            </button>
+                            </button>}
+                            {!can('placeOrder') && !token && <a href="#order-account" className="menu-order-link">Войти для заказа</a>}
+                            {!can('placeOrder') && token && <span className="order-unavailable">Заказ недоступен для этой роли</span>}
                         </DishCardView>
                     ))}
                 </div>
-                {can('placeOrder') && checkout(menu)}
+                {menu.items.length == 0 && <p className="empty">В этом заведении пока нет доступных блюд. Загляните позже или выберите другое заведение.</p>}
+                </div>
+                <aside className="order-sidebar" aria-label="Оформление заказа">
+                    {can('placeOrder') ? checkout(menu) : <section className="order-guide panel">
+                        <p className="eyebrow">ОТ МЕНЮ ДО ДВЕРИ</p>
+                        <h3>Заказ в три шага</h3>
+                        <ol>
+                            <li><strong>Выберите пиццу</strong><p>Сравните состав, порцию и цену в карточках меню.</p></li>
+                            <li><strong>Укажите адрес</strong><p>Войдите в аккаунт, добавьте блюда в корзину и оформите заказ.</p></li>
+                            <li><strong>Следите за заказом</strong><p>Приготовление, готовность и доставка появятся в истории.</p></li>
+                        </ol>
+                        {!token && <a href="#order-account" className="hero-link">Войти для заказа →</a>}
+                        {token && <p className="order-payment">Чтобы оформить заказ, войдите с аккаунтом клиента.</p>}
+                        <p className="order-payment">Оплата при получении. Онлайн-оплата не подключена.</p>
+                    </section>}
+                    <div className="order-location"><span>Ваше заведение</span><strong>{location.title}</strong>
+                        <p>Меню и рабочая очередь относятся к выбранному заведению.</p></div>
+                </aside>
+                </div>
             </section>
         )}
     </Live>
 
     const queues = views && me?.views.filter(name => name in queueTitles).map(name => (
-        <section key={name}>
+        <section key={name} id={'queue-' + name}>
             <h2>{queueTitles[name]}</h2>
             <Live remote={views[name as 'myOrders']} initial={{orders: {}}}>
                 {value => (
@@ -301,6 +340,17 @@ function App({location, network}: {location: Location, network: boolean}) {
                             return <article className="panel order" id={'order-' + order.id} key={order.id}>
                                 <span className={'badge ' + order.state}>{labels[order.state]}</span>
                                 <h3>Заказ #{order.id.slice(-6)}</h3>
+                                {name == 'myOrders' && order.state != 'cancelled' && <ol className="order-progress" aria-label="Ход заказа">
+                                    {orderStages.map((stage, index) => {
+                                        const position = orderStages.findIndex(item => item == order.state)
+                                        let progress = ''
+                                        if (index < position) progress = 'complete'
+                                        if (index == position) progress = 'current'
+                                        return <li key={stage} className={progress} aria-current={index == position ? 'step' : undefined}>
+                                            {labels[stage]}
+                                        </li>
+                                    })}
+                                </ol>}
                                 {order.items && <p>{(order.lines?.map(line => line.title) ?? order.items).join(', ')}</p>}
                                 {name == 'myOrders' && composition && (
                                     <details>
@@ -325,14 +375,14 @@ function App({location, network}: {location: Location, network: boolean}) {
                                 )}
                                 {order.address && <p>⌖ {order.address}<br/>{order.phone}</p>}
                                 {order.total != null && <b>{money(order.total)}</b>}
-                                {order.history && <ol>
+                                {order.history && <details className="order-history"><summary>История заказа</summary><ol>
                                     {order.history.map((entry, index) => (
                                         <li key={index}>
                                             {labels[entry.state]}{' '}
                                             <small>{new Date(entry.ts).toLocaleTimeString('ru-RU')}</small>
                                         </li>
                                     ))}
-                                </ol>}
+                                </ol></details>}
                                 <footer>
                                     {transitions.filter(available).map(([name, , title]) => (
                                         <button
@@ -430,7 +480,13 @@ function App({location, network}: {location: Location, network: boolean}) {
 
     return <>
         <header>
-            <a className="brand" href="/">◉ ПЕЧЬ<span>Пицца. Люди. Тёплые встречи.</span></a>
+            <a className="brand" href="/">◉ ПЕЧЬ<span>Пицца с доставкой</span></a>
+            {!staffMode && <nav className="customer-nav" aria-label="Заказ пиццы">
+                <a href="#menu">Меню</a>
+                {!token && <a href="#order-account">Вход</a>}
+                {can('placeOrder') && <a href="#order-cart">Корзина · {cart.length}</a>}
+                {me?.views.includes('myOrders') && <a href="#queue-myOrders">Мои заказы</a>}
+            </nav>}
             {identity}
         </header>
         <main>
@@ -445,7 +501,6 @@ function App({location, network}: {location: Location, network: boolean}) {
                 <button onClick={clearError}>Закрыть</button>
             </div>}
             {notice && <p role="status" className="notice">{notice}</p>}
-            {!token && loginPanel}
             {views && me?.views.includes('work') && <>
                 {workNav}
                 {workOpen && <DeferredPanel className="notice" loadingLabel="Загружаем команду и задачи…">
@@ -455,6 +510,7 @@ function App({location, network}: {location: Location, network: boolean}) {
             <div hidden={workOpen && staffMode}>
                 {staffMode && workload}
                 {!staffMode && menuSection}
+                {!token && loginPanel}
                 {queues}
                 {inventory}
                 {staff}

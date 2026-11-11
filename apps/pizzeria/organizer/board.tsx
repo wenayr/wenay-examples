@@ -116,6 +116,9 @@ export function Organizer(props: OrganizerProps) {
     const columns = value.columns.map(function shown(column) {
         return {...column, items: column.items.filter(visible)}
     })
+    const activeTasks = Object.values(value.tasks).filter(task => task.status != 'done')
+    const upcoming = activeTasks.filter(task => task.due).sort((left, right) => left.due.localeCompare(right.due)).slice(0, 4)
+    const unassigned = activeTasks.filter(task => !task.assignee).length
     function canEdit(task: WorkTask) {
         if (task.automatic) return false
         return value.manage || task.assignee == value.me || task.createdBy == value.me
@@ -296,7 +299,7 @@ export function Organizer(props: OrganizerProps) {
     }
     const tabs = <div className="work-heading">
         <div>
-            <small>ЛЮДИ · РАБОТА · РЕЗУЛЬТАТ</small>
+            <small>ИСПОЛНИТЕЛИ · СРОКИ · ПРОВЕРКА</small>
             <h2>Команда и задачи</h2>
         </div>
         <div className="work-toolbar">
@@ -640,6 +643,42 @@ export function Organizer(props: OrganizerProps) {
         return `Перемещение: колонка ${column}, позиция ${board.over.index + 1}`
     }
 
+    const focus = <aside className="work-focus" aria-label="Сроки и загрузка команды">
+        <section>
+            <p className="work-kicker">СРОКИ</p>
+            <h3>Ближайшие задачи</h3>
+            {upcoming.length ? <ul className="work-focus-list">
+                {upcoming.map(task => <li key={task.id}>
+                    <strong>{task.title}</strong>
+                    {dueNote(task)}
+                    <small>{value.people.find(person => person.account == task.assignee)?.name ?? 'Без исполнителя'}</small>
+                </li>)}
+            </ul> : <p className="work-help">У незавершённых задач пока нет сроков. Укажите дату в карточке, чтобы видеть ближайшую работу.</p>}
+            <button onClick={function showToday() {
+                setScope('today')
+                setFilter('')
+                setQuery('')
+            }}>Показать задачи на сегодня</button>
+        </section>
+        <section>
+            <p className="work-kicker">ИСПОЛНИТЕЛИ</p>
+            <h3>Работа в команде</h3>
+            <ul className="work-assignment-list">
+                {value.people.map(person => {
+                    const count = activeTasks.filter(task => task.assignee == person.account).length
+                    return <li key={person.account}>
+                        <button onClick={function showPerson() {
+                            setFilter(person.account)
+                            setScope('all')
+                            setQuery('')
+                        }}><span>{person.name}</span><strong>{count}</strong></button>
+                    </li>
+                })}
+            </ul>
+            <p className="work-help">Незавершённые задачи в доступной вам выборке. Без исполнителя: <b>{unassigned}</b>.</p>
+        </section>
+    </aside>
+
     const taskBoard = <>
         {summary}
         {filters}
@@ -651,7 +690,18 @@ export function Organizer(props: OrganizerProps) {
             {' '}Срок включительно, по местной дате.
         </p>
         {taskForm}
-        {lanes}
+        {!columns.some(column => column.items.length > 0) && <div className="work-empty" role="status">
+            <h3>{Object.keys(value.tasks).length ? 'Нет задач по выбранным условиям' : 'Создайте первую задачу'}</h3>
+            <p>{Object.keys(value.tasks).length
+                ? 'Измените поиск, исполнителя или срок, чтобы увидеть другие задачи.'
+                : 'Укажите результат, назначьте исполнителя и срок. Задача появится на общей доске.'}</p>
+            {(query || filter || scope != 'all') && <button onClick={function resetFilters() {
+                setQuery('')
+                setFilter('')
+                setScope('all')
+            }}>Сбросить фильтры</button>}
+        </div>}
+        <div className="work-board-layout">{lanes}{focus}</div>
         <p className="work-move-status" aria-live="polite">{moveStatus()}</p>
         {dragNotice && <p role="status" className="work-help">{dragNotice}</p>}
         {resources && <TaskGhosts participants={presence.others} root={boardElement} value={value}/>}
@@ -741,18 +791,22 @@ export function Organizer(props: OrganizerProps) {
     >
         {tabs}
         <WorkloadPanel value={value}/>
-        {resources && <ScreenPanel resources={resources}/>}
-        {resources && <ChatPanel
-            resources={resources}
-            work={value}
-            apply={(proposal, items) => run('workApplyProposal', {proposal, items})}
-        />}
         {tab != 'people' && resources && <BoardPeople presence={presence} show={function showAll() {
             setFilter('')
             setQuery('')
             setScope('all')
         }}/>}
         {page}
+        {resources && <details className="work-collaboration">
+            <summary>Чат и совместный просмотр</summary>
+            <p className="work-help">Обсудите задачи с командой или покажите экран, не покидая рабочую доску.</p>
+            <ScreenPanel resources={resources}/>
+            <ChatPanel
+                resources={resources}
+                work={value}
+                apply={(proposal, items) => run('workApplyProposal', {proposal, items})}
+            />
+        </details>}
     </section>
 }
 

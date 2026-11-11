@@ -21,10 +21,10 @@ function App() {
     const {session, me, token, setToken, connected} = connection
     const loginAction = useServiceAction(token)
     const commands = useCommandAction(session?.commands)
-    const busy = loginAction.busy||commands.busy
-    const error = loginAction.error||commands.error
+    const busy = loginAction.busy || commands.busy
+    const error = loginAction.error || commands.error
     const action = loginAction.action
-    async function login(event:React.FormEvent<HTMLFormElement>) {
+    async function login(event: React.FormEvent<HTMLFormElement>) {
         event.preventDefault()
         const form = new FormData(event.currentTarget)
         connection.dismissError()
@@ -40,12 +40,15 @@ function App() {
         })
     }
     const loginForm = <form className="work-form work-login work-app" onSubmit={login}>
-        <h1>Работа команды<br/>на одной доске.</h1>
-        <p>Любые работы, сроки и проверка результата.</p>
-        <label>Логин<input name="account" required/></label>
-        <label>Пароль<input type="password" name="password" required/></label>
-        <button className="primary" disabled={busy}>Войти</button>
-        <p>Демо: owner / owner-pass<br/>manager / manager-pass<br/>worker / worker-pass</p>
+        <p className="work-kicker">ЗАДАЧИ И СОВМЕСТНАЯ РАБОТА</p>
+        <h1>Кто делает.<br/>Когда готово.</h1>
+        <p>Распределяйте задачи, назначайте сроки и проверяйте результат на общей доске команды.</p>
+        <label>Логин<input name="account" autoComplete="username" required/></label>
+        <label>Пароль<input type="password" name="password" autoComplete="current-password" required/></label>
+        <button className="primary" disabled={busy}>{loginAction.busy ? 'Входим…' : 'Открыть доску'}</button>
+        <details className="work-demo"><summary>Демонстрационные аккаунты</summary>
+            <p>Владелец: owner / owner-pass<br/>Руководитель: manager / manager-pass<br/>Исполнитель: worker / worker-pass</p>
+        </details>
     </form>
 
     const board = session && <ServiceView remote={session.views.work} initial={emptyWork}>
@@ -61,7 +64,11 @@ function App() {
 
     let page: React.ReactNode = loginForm
     if (token) {
-        page = <p>{me ? 'Нет доступа к органайзеру' : 'Подключаемся…'}</p>
+        page = <section className="work-connection" role="status">
+            <h1>{me ? 'Нет доступа к доске' : 'Подключаемся к команде…'}</h1>
+            <p>{me ? 'Попросите владельца открыть доступ или войдите с другим аккаунтом.' : 'Загружаем участников и задачи.'}</p>
+            <button onClick={function returnToLogin() {setToken('')}}>Вернуться ко входу</button>
+        </section>
         if (session && me?.views.includes('work')) page = board
     }
 
@@ -74,8 +81,11 @@ function App() {
             </span>
         </header>
         <main>
-        {(error||connection.error)&&<p role="alert" className="work-error">{error||connection.error}</p>}
-        {page}
+            {(error || connection.error) && <p role="alert" className="work-error">{error || connection.error}</p>}
+            {token && me && !connected && <p className="work-connection-notice" role="status">
+                Связь восстанавливается. Изменения станут доступны после подключения.
+            </p>}
+            {page}
     </main></>
 }
 const measuring = import.meta.env.DEV && new URLSearchParams(location.search).has('measure-board')
