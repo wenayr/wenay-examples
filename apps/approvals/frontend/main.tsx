@@ -70,18 +70,19 @@ function App() {
             {notice}
             <main className="login">
                 <section>
-                    <a className="brand">accord<span>ХОРОШИЕ РЕШЕНИЯ ВМЕСТЕ</span></a>
-                    <h1>Меньше ожидания.<br/>Больше ясности.</h1>
-                    <p>Заявка, уточнение, решение.<br/>Один понятный путь для всей команды.</p>
+                    <div className="brand">accord<span>ЗАЯВКИ И СОГЛАСОВАНИЯ</span></div>
+                    <h1>Каждая заявка.<br/>С понятным решением.</h1>
+                    <p>Отправляйте запросы команде, уточняйте детали и сохраняйте историю согласования каждой версии.</p>
                     <div className="steps">
-                        <i>01 Поделиться планом</i>
-                        <i>02 Обсудить детали</i>
-                        <i>03 Договориться</i>
+                        <i><b>01</b> Подготовьте заявку</i>
+                        <i><b>02</b> Отправьте на рассмотрение</i>
+                        <i><b>03</b> Получите решение с комментарием</i>
                     </div>
                 </section>
                 <section className="paper">
-                    <p className="eyebrow">ВАША КОМАНДА</p>
-                    <h2>Продолжим с хорошей идеи</h2>
+                    <p className="eyebrow">ВХОД В ACCORD</p>
+                    <h2>Заявки вашей команды</h2>
+                    <p className="login-hint">Войдите, чтобы отправить запрос или рассмотреть заявки коллег.</p>
                     <form onSubmit={login} key={account}>
                         <label>Аккаунт
                             <input name="account" defaultValue={account} autoComplete="username" required/>
@@ -89,8 +90,9 @@ function App() {
                         <label>Пароль
                             <input name="password" type="password" defaultValue={account + '-pass'} autoComplete="current-password" required/>
                         </label>
-                        <button className="primary" disabled={action.busy}>Войти →</button>
+                        <button className="primary" disabled={action.busy}>{action.busy ? 'Входим…' : 'Войти в рабочее пространство'}</button>
                     </form>
+                    <p className="demo-label">Проверить пример в роли</p>
                     <div className="presets">
                         {Object.entries(roles).map(([key, label]) => (
                             <button key={key} onClick={() => setAccount(key)} aria-pressed={account == key}>{label}</button>
@@ -106,8 +108,10 @@ function App() {
         return <>
             {notice}
             <main className="paper">
-                <h1>Нет доступных заявок</h1>
-                <p>Подключаемся или доступ к команде изменился.</p>
+                <h1>{connection.me && !connection.me.views.includes('workspace') ? 'Рабочее пространство недоступно' : 'Подключаемся к команде…'}</h1>
+                <p>{connection.me && !connection.me.views.includes('workspace')
+                    ? 'У этого аккаунта нет доступа к заявкам команды. Войдите под другим аккаунтом.'
+                    : 'Загружаем заявки и ваши права доступа.'}</p>
                 <button onClick={() => connection.setToken('')}>Вернуться ко входу</button>
             </main>
         </>
@@ -116,15 +120,18 @@ function App() {
         {notice}
         <ServiceView initial={initial} remote={connection.session!.views.workspace}>
             {value => (
-                <Workspace value={value} commands={connection.session!.commands} logout={() => connection.setToken('')}/>
+                <Workspace
+                    value={value} commands={connection.session!.commands}
+                    connected={connection.connected} logout={() => connection.setToken('')}
+                />
             )}
         </ServiceView>
     </>
 }
 
-type WorkspaceProps = {value: ApprovalWorkspace, commands: Commands, logout: () => void}
+type WorkspaceProps = {value: ApprovalWorkspace, commands: Commands, connected: boolean, logout: () => void}
 
-function Workspace({value, commands, logout}: WorkspaceProps) {
+function Workspace({value, commands, connected, logout}: WorkspaceProps) {
     const [orgId, setOrgId] = useState('')
     const [selected, setSelected] = useState('')
     const [creating, setCreating] = useState(false)
@@ -137,6 +144,11 @@ function Workspace({value, commands, logout}: WorkspaceProps) {
     const rows = requests.filter(item => filter == 'all' || item.status == filter)
     const row = rows.find(item => item.id == selected) ?? rows[0]
     const counted = (status: tStatus) => requests.filter(item => item.status == status).length
+    const needsAction = requests.filter(function actionable(item) {
+        if (item.author == value.me?.account) return ['draft', 'changes', 'withdrawn'].includes(item.status)
+        return org?.role != 'requester' && item.status == 'pending'
+    })
+    const nextRequest = needsAction.slice().sort((a, b) => a.updatedAt - b.updatedAt)[0]
 
     function switchOrganization(event: React.ChangeEvent<HTMLSelectElement>) {
         setOrgId(event.target.value)
@@ -152,6 +164,16 @@ function Workspace({value, commands, logout}: WorkspaceProps) {
         setSelected(id)
         setCreating(false)
     }
+    function chooseFilter(status: string) {
+        setFilter(status)
+        setSelected('')
+        setCreating(false)
+    }
+    function openNext() {
+        if (!nextRequest) return
+        setFilter('all')
+        openRequest(nextRequest.id)
+    }
     function changeRole(account: string, role: tMemberRole) {
         void action.action(() => commands.memberRole(crypto.randomUUID(), {
             orgId: org.id, revision: org.revision, account, role
@@ -159,19 +181,25 @@ function Workspace({value, commands, logout}: WorkspaceProps) {
     }
 
     const header = <header>
-        <a className="brand">accord</a>
+        <div className="brand">accord</div>
         <select aria-label="Организация" value={org?.id ?? ''} onChange={switchOrganization}>
             {value.organizations.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}
         </select>
-        <span>{value.me?.name} · {org ? roles[org.role] : ''}</span>
+        <span className="account-label">{value.me?.name} · {org ? roles[org.role] : ''}</span>
+        <small className="connection" role="status">{connected ? '● На связи' : '○ Переподключение'}</small>
         {org?.role == 'owner' && <button onClick={() => setTeam(!team)}>{team ? 'К заявкам' : 'Команда'}</button>}
         <button onClick={logout}>Выйти</button>
     </header>
 
+    if (!value.me) return <main className="loading" role="status"><h1>Загружаем заявки…</h1></main>
+
     if (!org) {
         return <>
             {header}
-            <main className="paper"><h1>Доступ к команде закрыт</h1></main>
+            <main className="paper empty">
+                <h1>Нет доступной команды</h1>
+                <p>Попросите владельца проверить вашу роль или войдите под другим аккаунтом.</p>
+            </main>
         </>
     }
     if (team && org.role == 'owner') {
@@ -179,13 +207,14 @@ function Workspace({value, commands, logout}: WorkspaceProps) {
             {header}
             <main key={org.id + org.role} className="workspace">
                 <section className="paper">
-                    <h1>Кому доверить решение</h1>
+                    <h1>Участники и роли</h1>
                     <p>Сотрудник видит свои заявки. Проверяющий рассматривает заявки команды. Даже владелец не согласовывает свои.</p>
                     {value.people.filter(person => person.orgId == org.id).map(person => (
                         <label key={person.account}>{person.account}
                             <select
                                 aria-label={'Роль ' + person.account}
                                 value={person.role}
+                                disabled={action.busy || !connected}
                                 onChange={event => changeRole(person.account, event.target.value as tMemberRole)}
                             >
                                 <option value="none">Отозвать доступ</option>
@@ -202,8 +231,12 @@ function Workspace({value, commands, logout}: WorkspaceProps) {
     }
 
     let detail = <section className="paper empty">
-        <h2>Хорошая идея заслуживает ответа</h2>
-        <p>Создайте заявку и объясните, зачем она команде.</p>
+        <h2>{requests.length ? 'Нет заявок с выбранным статусом' : 'Заявок пока нет'}</h2>
+        <p>{requests.length ? 'Выберите другой статус или вернитесь к полному списку.' : 'Создайте заявку, опишите запрос и отправьте его на рассмотрение.'}</p>
+        {requests.length > 0 && <button onClick={() => chooseFilter('all')}>Показать все заявки</button>}
+        {!requests.length && <div className="request-examples">
+            <span>Закупка оборудования</span><span>Обучение сотрудника</span><span>Бюджет проекта</span>
+        </div>}
     </section>
     if (creating) {
         function saved(id: string) {
@@ -211,9 +244,11 @@ function Workspace({value, commands, logout}: WorkspaceProps) {
             setFilter('all')
             setCreating(false)
         }
-        detail = <RequestForm key="new" fields={value.fields} orgId={org.id} row={null} commands={commands} saved={saved}/>
+        detail = <RequestForm key="new" fields={value.fields} orgId={org.id} row={null} commands={commands} saved={saved} disabled={!connected}/>
     } else if (row) {
-        detail = <RequestPanel key={row.id + ':' + row.revision + ':' + org.role} row={row} value={value} commands={commands}/>
+        detail = <RequestPanel
+            key={row.id + ':' + row.revision + ':' + org.role} row={row} value={value} commands={commands} disabled={!connected}
+        />
     }
 
     const lead = org.role == 'requester'
@@ -221,24 +256,50 @@ function Workspace({value, commands, logout}: WorkspaceProps) {
         : 'Рассмотрите отправленные версии. Черновик не заменяет принятое решение.'
     return <>
         {header}
+        {!connected && <p className="connection-notice" role="status">Связь восстанавливается. Сохранение и решения доступны после подключения.</p>}
         <main key={org.id + org.role} className="workspace">
             <div className="intro">
                 <div>
-                    <p className="eyebrow">ОТ ПЛАНА К РЕШЕНИЮ</p>
-                    <h1>Давайте договоримся</h1>
+                    <p className="eyebrow">СОГЛАСОВАНИЕ ЗАПРОСОВ</p>
+                    <h1>{org.role == 'requester' ? 'Мои заявки' : 'Заявки команды'}</h1>
                     <p>{lead}</p>
                 </div>
                 <button className="primary" onClick={startDraft}>+ Новая заявка</button>
             </div>
-            <div className="metrics">
-                <span><strong>{counted('pending')}</strong> ждут решения</span>
-                <span><strong>{counted('approved')}</strong> согласовано</span>
-                <span><strong>{counted('changes')}</strong> нужно уточнить</span>
-            </div>
+            <section className="queue-overview" aria-labelledby="queue-title">
+                <div className="queue-next">
+                    <p className="eyebrow">СЛЕДУЮЩИЙ ШАГ</p>
+                    <h2 id="queue-title">{needsAction.length ? 'Требуют вашего действия: ' + needsAction.length : 'Ваша очередь разобрана'}</h2>
+                    <p>{nextRequest
+                        ? nextRequest.title
+                        : 'Можно проверить ожидающие решения заявки или подготовить новый запрос.'}</p>
+                    {nextRequest && <button onClick={openNext}>
+                        {nextRequest.author == value.me?.account ? 'Продолжить заявку' : 'Рассмотреть заявку'} →
+                    </button>}
+                </div>
+                <div className="queue-rules">
+                    <h3>От запроса к решению</h3>
+                    <ol><li>Сохраните черновик с обоснованием.</li><li>Отправьте версию на рассмотрение.</li>
+                        <li>Получите решение другого сотрудника.</li></ol>
+                    <p>Решение относится к отправленной версии. Правки не изменяют историю согласования.</p>
+                </div>
+            </section>
+            <nav className="metrics queue-stages" aria-label="Фильтр заявок по статусу">
+                <button aria-pressed={filter == 'pending'} onClick={() => chooseFilter('pending')}>
+                    <strong>{counted('pending')}</strong><span>На рассмотрении</span><small>Ожидают решения проверяющего</small>
+                </button>
+                <button aria-pressed={filter == 'changes'} onClick={() => chooseFilter('changes')}>
+                    <strong>{counted('changes')}</strong><span>На уточнении</span><small>Автору нужно дополнить заявку</small>
+                </button>
+                <button aria-pressed={filter == 'approved'} onClick={() => chooseFilter('approved')}>
+                    <strong>{counted('approved')}</strong><span>Согласованы</span><small>Решение сохранено в истории</small>
+                </button>
+            </nav>
             <div className="split">
                 <aside>
+                    <div className="request-list-heading"><h2>Список заявок</h2><span>{rows.length}</span></div>
                     <label>Показать
-                        <select value={filter} onChange={event => setFilter(event.target.value)}>
+                        <select value={filter} onChange={event => chooseFilter(event.target.value)}>
                             <option value="all">Все заявки</option>
                             {Object.entries(statuses).map(([key, label]) => <option key={key} value={key}>{label}</option>)}
                         </select>
@@ -247,14 +308,16 @@ function Workspace({value, commands, logout}: WorkspaceProps) {
                         <button
                             className={'request-card ' + (!creating && item.id == row?.id ? 'selected' : '')}
                             key={item.id}
+                            aria-pressed={!creating && item.id == row?.id}
                             onClick={() => openRequest(item.id)}
                         >
                             <small className={'status ' + item.status}>{statuses[item.status]}</small>
                             <strong>{item.title}</strong>
                             <span>{Number(item.answers.amount ?? 0).toLocaleString('ru-RU')} ₽ · {item.author}</span>
+                            <small>{item.versions.length ? 'Отправленных версий: ' + item.versions.length : 'Ещё не отправлена'}</small>
                         </button>
                     ))}
-                    {rows.length == 0 && <p>Здесь пока спокойно.</p>}
+                    {rows.length == 0 && <p>Заявок с этим статусом нет.</p>}
                 </aside>
                 {detail}
             </div>
@@ -267,10 +330,11 @@ type FormProps = {
     orgId: string,
     row: Request | null,
     commands: Commands,
-    saved: (id: string) => void
+    saved: (id: string) => void,
+    disabled: boolean
 }
 
-function RequestForm({fields, orgId, row, commands, saved}: FormProps) {
+function RequestForm({fields, orgId, row, commands, saved, disabled}: FormProps) {
     const [title, setTitle] = useState(row?.title ?? '')
     const [answers, setAnswers] = useState<Answers>(row?.answers ?? {})
     const action = useServiceAction(commands)
@@ -296,16 +360,16 @@ function RequestForm({fields, orgId, row, commands, saved}: FormProps) {
             <label>Коротко о запросе
                 <input value={title} required maxLength={160} onChange={event => setTitle(event.target.value)}/>
             </label>
-            <Questions fields={fields} answers={answers} change={setAnswers} disabled={action.busy}/>
-            <button className="primary" disabled={action.busy}>Сохранить черновик</button>
+            <Questions fields={fields} answers={answers} change={setAnswers} disabled={action.busy || disabled}/>
+            <button className="primary" disabled={action.busy || disabled}>{action.busy ? 'Сохраняем…' : 'Сохранить черновик'}</button>
         </form>
         {action.error && <p className="error" role="alert">{action.error}</p>}
     </section>
 }
 
-type PanelProps = {row: Request, value: ApprovalWorkspace, commands: Commands}
+type PanelProps = {row: Request, value: ApprovalWorkspace, commands: Commands, disabled: boolean}
 
-function RequestPanel({row, value, commands}: PanelProps) {
+function RequestPanel({row, value, commands, disabled}: PanelProps) {
     const own = row.author == value.me?.account
     const role = value.organizations.find(org => org.id == row.orgId)!.role
     const editable = own && ['draft', 'changes', 'withdrawn'].includes(row.status)
@@ -342,15 +406,20 @@ function RequestPanel({row, value, commands}: PanelProps) {
                 <small>{row.author} · редакция {row.revision}</small>
             </div>
             <h2>{row.title}</h2>
+            <dl className="request-facts">
+                <div><dt>Автор</dt><dd>{row.author}</dd></div>
+                <div><dt>Отправлено версий</dt><dd>{row.versions.length || 'Пока ни одной'}</dd></div>
+                <div><dt>Последнее изменение</dt><dd>{row.updatedAt ? new Date(row.updatedAt).toLocaleDateString('ru-RU') : 'Не указано'}</dd></div>
+            </dl>
             {own && row.status == 'pending' && (
-                <button onClick={() => void withdraw()} disabled={action.busy}>Отозвать с рассмотрения</button>
+                <button onClick={() => void withdraw()} disabled={action.busy || disabled}>Отозвать с рассмотрения</button>
             )}
             {editable && (
-                <button className="primary" onClick={() => void send()} disabled={action.busy}>Отправить сохранённую версию →</button>
+                <button className="primary" onClick={() => void send()} disabled={action.busy || disabled}>Отправить сохранённую версию →</button>
             )}
             {own && role != 'requester' && <p>Решение по вашей заявке принимает другой проверяющий.</p>}
         </section>
-        {editable && <RequestForm fields={value.fields} orgId={row.orgId} row={row} commands={commands} saved={() => {}}/>}
+        {editable && <RequestForm fields={value.fields} orgId={row.orgId} row={row} commands={commands} saved={() => {}} disabled={disabled}/>}
         {current && <section className="paper">
             <label>Отправленная версия
                 <select value={version} onChange={event => setVersion(Number(event.target.value))}>
@@ -366,16 +435,17 @@ function RequestPanel({row, value, commands}: PanelProps) {
             {reviewing && <>
                 <label>Комментарий к решению
                     <textarea value={body} maxLength={2000} onChange={event => setBody(event.target.value)}/>
+                    <small>Для возврата на уточнение или отказа объясните причину.</small>
                 </label>
                 <div className="decision-buttons">
-                    <button className="primary" onClick={() => setConfirm('approved')}>Согласовать</button>
-                    <button onClick={() => setConfirm('changes')}>Вернуть на уточнение</button>
-                    <button onClick={() => setConfirm('rejected')}>Отказать</button>
+                    <button className="primary" disabled={disabled || action.busy} onClick={() => setConfirm('approved')}>Согласовать</button>
+                    <button disabled={disabled || action.busy || !body.trim()} onClick={() => setConfirm('changes')}>Вернуть на уточнение</button>
+                    <button disabled={disabled || action.busy || !body.trim()} onClick={() => setConfirm('rejected')}>Отказать</button>
                 </div>
             </>}
         </section>}
         {row.history.length > 0 && <section className="paper history">
-            <h2>Как пришли к решению</h2>
+            <h2>История согласования</h2>
             {row.history.slice().reverse().map((event, index) => (
                 <article key={index}>
                     <strong>{event.kind == 'submitted' ? 'Отправлено' : statuses[event.kind]} · версия {event.version}</strong>
@@ -395,7 +465,7 @@ function RequestPanel({row, value, commands}: PanelProps) {
             <h2>{questions[confirm]}</h2>
             <p>Решение будет относиться только к отправленной версии {version}. Автор увидит ваш комментарий.</p>
             {body && <blockquote>{body}</blockquote>}
-            <button className="primary" disabled={action.busy} onClick={() => void decide()}>Подтвердить решение</button>
+            <button className="primary" disabled={action.busy || disabled} onClick={() => void decide()}>Подтвердить решение</button>
             {action.error && <p role="alert">{action.error}</p>}
         </Overlay>}
     </div>
