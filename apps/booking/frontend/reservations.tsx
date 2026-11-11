@@ -78,8 +78,8 @@ export function Reservations({value, org, commands, busy, move}: ReservationsPro
     return <>
         <div className="page-heading">
             <div>
-                <p className="eyebrow">ВСТРЕЧИ, КОТОРЫЕ ВАЖНЫ</p>
-                <h1>{org.role == 'customer' ? 'Ваши планы на день' : 'Расписание команды'}</h1>
+                <p className="eyebrow">ЗАПИСИ И ПОДТВЕРЖДЕНИЯ</p>
+                <h1>{org.role == 'customer' ? 'Мои встречи' : 'Встречи команды'}</h1>
                 <p>Подтверждайте, переносите и освобождайте время, когда планы меняются.</p>
             </div>
             <label className="inline">
@@ -100,8 +100,8 @@ export function Reservations({value, org, commands, busy, move}: ReservationsPro
             ))}
             {!bookings.length && <div className="empty">
                 <span>◒</span>
-                <h2>День пока свободен</h2>
-                <p>Выберите удобное время в календаре.</p>
+                <h2>{all ? 'Записей пока нет' : 'Нет предстоящих встреч'}</h2>
+                <p>{all ? 'Новая запись появится здесь после выбора времени.' : 'Выберите время в календаре или включите историю записей.'}</p>
             </div>}
         </div>
         <section className="secondary-section">

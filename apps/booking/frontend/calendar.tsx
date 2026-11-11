@@ -79,6 +79,8 @@ export function Calendar({value, org, resources, commands, busy, moving, done}: 
     const calendar = loaded?.key == key && loaded.remote == remote ? loaded.result : null
     const slot = calendar?.slots.find(item => item.start == selected)
     const disabled = busy || action.busy || !remote || !calendar
+    const held = orgBookings.filter(item => item.status == 'held').length
+    const freeSlots = calendar?.slots.filter(item => item.available > 0).length ?? 0
 
     // Один и тот же замысел повторяется тем же ключом: сервис не создаст вторую запись.
     function intentKey(signature: string) {
@@ -154,25 +156,28 @@ export function Calendar({value, org, resources, commands, busy, moving, done}: 
     }
 
     const rail = <aside className="service-rail">
-        <h2>На какую встречу?</h2>
-        {services.map(item => {
-            const place = value.resources.find(value => value.id == item.resourceId)
-            const deposit = item.depositUnits
-                ? 'Тестовая предоплата ' + item.depositUnits + ' ед.'
-                : 'Без предоплаты'
-            return <button
-                className={'service-option ' + (service?.id == item.id ? 'selected' : '')}
-                key={item.id}
-                disabled={!!booking}
-                onClick={() => chooseService(item.id)}
-            >
-                <span className="service-symbol">◒</span>
-                <strong>{item.name}</strong>
-                <p>{item.description}</p>
-                <small>{item.duration} мин · {place?.name}</small>
-                <span className="service-price">{deposit}</span>
-            </button>
-        })}
+        <h2><span className="step-index">01</span> Выберите услугу</h2>
+        <div className="service-options">
+            {services.map(item => {
+                const place = value.resources.find(value => value.id == item.resourceId)
+                const deposit = item.depositUnits
+                    ? 'Тестовая предоплата ' + item.depositUnits + ' ед.'
+                    : 'Без предоплаты'
+                return <button
+                    className={'service-option ' + (service?.id == item.id ? 'selected' : '')}
+                    key={item.id}
+                    aria-pressed={service?.id == item.id}
+                    disabled={!!booking}
+                    onClick={() => chooseService(item.id)}
+                >
+                    <span className="service-symbol">◒</span>
+                    <strong>{item.name}</strong>
+                    <p>{item.description}</p>
+                    <small>{item.duration} мин · {place?.name}</small>
+                    <span className="service-price">{deposit}</span>
+                </button>
+            })}
+        </div>
         {!services.length && <p>Активных услуг пока нет.</p>}
         <div className="gentle-note">
             <span>☀</span>
@@ -305,13 +310,35 @@ export function Calendar({value, org, resources, commands, busy, moving, done}: 
         )}
     </form>
 
+    const selection = <aside className="booking-selection" aria-label="Выбранная встреча">
+        <h2><span className="step-index">03</span> {booking ? 'Перенос' : 'Ваша запись'}</h2>
+        {summary || <section className="selection-placeholder">
+            <span className="selection-symbol" aria-hidden="true">◷</span>
+            <h3>{service ? 'Осталось выбрать время' : 'Начните с услуги'}</h3>
+            <p>Нажмите на время в календаре. Здесь появятся детали встречи и действие для записи.</p>
+            {service && <dl className="selection-facts">
+                <div><dt>Услуга</dt><dd>{service.name}</dd></div>
+                <div><dt>Длительность</dt><dd>{service.duration} минут</dd></div>
+                <div><dt>Место</dt><dd>{resource?.name ?? 'Не указано'}</dd></div>
+                <div><dt>Участников</dt><dd>{partySize}</dd></div>
+            </dl>}
+        </section>}
+        <section className="booking-next">
+            <h3>{booking ? 'Что произойдёт при переносе' : 'Как завершить запись'}</h3>
+            <p>{booking
+                ? 'Подтвердите новое время. Если место уже занято, прежняя встреча сохранится.'
+                : 'Сначала удержите место. Затем подтвердите встречу в разделе записей до окончания таймера.'}</p>
+            {held > 0 && <button onClick={done}>К подтверждению · {held}</button>}
+        </section>
+    </aside>
+
     return <>
         <div className="page-heading">
             <div>
                 <p className="eyebrow">
-                    {booking ? 'ПЛАНЫ МОГУТ МЕНЯТЬСЯ' : 'ВСТРЕТИМСЯ В УДОБНОЕ ВРЕМЯ'}
+                    {booking ? 'ПЕРЕНОС ЗАПИСИ' : 'НОВАЯ ЗАПИСЬ'}
                 </p>
-                <h1>{booking ? 'Выберите новое время' : 'Немного времени для себя.'}</h1>
+                <h1>{booking ? 'Выберите новое время' : 'Выберите услугу и время'}</h1>
                 <p>
                     {booking
                         ? 'Текущая запись сохранится, если новое время уже занято.'
@@ -323,6 +350,13 @@ export function Calendar({value, org, resources, commands, busy, moving, done}: 
         <div className="booking-layout">
             {rail}
             <section className="calendar-panel">
+                <div className="availability-heading">
+                    <div>
+                        <h2><span className="step-index">02</span> Найдите удобное время</h2>
+                        <p>{calendar ? 'Свободных вариантов в выбранном периоде: ' + freeSlots : 'Выберите дату и число участников.'}</p>
+                    </div>
+                    <span>{days == 1 ? '1 день' : '7 дней'}</span>
+                </div>
                 {!booking && <PreferenceAssistant
                     resources={resources}
                     orgId={org.id}
@@ -334,9 +368,18 @@ export function Calendar({value, org, resources, commands, busy, moving, done}: 
                 {(error || action.error) && (
                     <p className="inline-error" role="alert">{error || action.error}</p>
                 )}
-                {calendar ? grid : <div className="empty">Проверяем свободное время…</div>}
-                {summary}
+                {calendar && grid}
+                {!calendar && !error && service && <div className="empty" role="status">Проверяем свободное время…</div>}
+                {!service && <div className="empty">
+                    <h2>Запись пока не открыта</h2>
+                    <p>Владелец должен добавить активную услугу и настроить расписание.</p>
+                </div>}
+                {!calendar && error && <div className="empty">
+                    <h2>Не удалось загрузить расписание</h2>
+                    <p>Проверьте дату и число участников, затем обновите доступное время.</p>
+                </div>}
             </section>
+            {selection}
         </div>
     </>
 }

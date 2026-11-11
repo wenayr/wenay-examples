@@ -64,16 +64,21 @@ function App() {
 
     const entry = <main className="login">
         <section className="login-story">
-            <a className="brand"><span>◒</span> daylight<span>BOOKING STUDIO</span></a>
-            <p className="eyebrow">ОСТАВЬТЕ ВРЕМЯ ДЛЯ ВАЖНОГО</p>
-            <h1>Хорошая встреча<br/>начинается<br/>с удобного времени.</h1>
-            <p>Запись к специалисту, спокойное планирование<br/>и чуть больше внимания к вашему дню.</p>
-            <div className="sun-art"><i/><i/><span/></div>
-            <small>Найдём время, которое подходит вам.</small>
+            <div className="brand"><span aria-hidden="true">◒</span> daylight<span>ЗАПИСЬ И РАСПИСАНИЕ</span></div>
+            <p className="eyebrow">ДЛЯ КЛИЕНТОВ И КОМАНДЫ</p>
+            <h1>Запись на встречу.<br/>Без пересечений.</h1>
+            <p>Выберите услугу, найдите свободное время и подтвердите запись. Команда видит встречи и управляет расписанием.</p>
+            <ol className="login-benefits">
+                <li><span>01</span> Выбор времени с учётом вместимости</li>
+                <li><span>02</span> Подтверждение удержанного места</li>
+                <li><span>03</span> Перенос с сохранением прежней записи при отказе</li>
+            </ol>
+            <div className="sun-art" aria-hidden="true"><i/><i/><span/></div>
+            <small>Время встречи всегда указано в часовом поясе выбранного места.</small>
         </section>
         <section className="login-form">
-            <p className="eyebrow">РАДЫ НОВОЙ ВСТРЕЧЕ</p>
-            <h2>Ваш день начинается здесь</h2>
+            <p className="eyebrow">ВХОД В DAYLIGHT</p>
+            <h2>Откройте своё расписание</h2>
             <p>Войдите, чтобы выбрать время или управлять расписанием.</p>
             <form key={preset} onSubmit={login}>
                 <label>Аккаунт
@@ -82,9 +87,10 @@ function App() {
                 <label>Пароль
                     <input name="password" type="password" defaultValue={preset + '-pass'} autoComplete="current-password" required/>
                 </label>
-                <button className="primary" disabled={action.busy}>Продолжить →</button>
+                <button className="primary" disabled={action.busy}>{action.busy ? 'Входим…' : 'Войти в расписание'}</button>
             </form>
             <div className="presets">
+                <p className="demo-label">Проверить пример в роли</p>
                 {Object.entries(presets).map(([id, label]) => (
                     <button key={id} aria-pressed={id == preset} onClick={() => setPreset(id)}>{label}</button>
                 ))}
@@ -94,7 +100,10 @@ function App() {
     </main>
 
     const waiting = <main className="loading">
-        <h1>Подключаем календарь…</h1>
+        <h1>{connection.me && !connection.me.views.includes('workspace') ? 'Расписание недоступно' : 'Подключаем календарь…'}</h1>
+        <p>{connection.me && !connection.me.views.includes('workspace')
+            ? 'У этого аккаунта нет доступа к рабочему пространству. Войдите под другим аккаунтом.'
+            : 'Загружаем услуги и доступ к расписанию.'}</p>
         <button onClick={() => connection.setToken('')}>Вернуться ко входу</button>
     </main>
 
@@ -187,7 +196,7 @@ function Workspace({value, commands, resources, connected, logout}: WorkspacePro
         </nav>
         <div className="sidebar-note">
             <span>☀</span>
-            <strong>Время — тоже забота.</strong>
+            <strong>Планы изменились?</strong>
             <p>Если планы изменились, перенесите запись. Освободившееся время пригодится другому.</p>
         </div>
         <div className="account">
@@ -205,19 +214,24 @@ function Workspace({value, commands, resources, connected, logout}: WorkspacePro
         <p>Попросите владельца проверить доступ.</p>
     </div>
 
+    if (!value.account.account) return <main className="loading" role="status"><h1>Загружаем расписание…</h1></main>
+
     return <div className="app">
         {sidebar}
         <main className="workspace">
             <header className="topbar">
                 <span>Daylight <i>/</i> {sections.find(item => item.id == active)?.label}</span>
                 <div>
-                    <span className={connected ? 'connection' : 'connection offline'}>
+                    <span className={connected ? 'connection' : 'connection offline'} role="status">
                         ● {connected ? 'На связи' : 'Переподключение'}
                     </span>
                     <button className="mobile-exit" onClick={logout}>Выйти</button>
                 </div>
             </header>
-            {org ? <div className="page" key={org.id + ':' + active + ':' + org.role}>
+            {!connected && <p className="connection-notice" role="status">Связь восстанавливается. Изменения доступны после подключения.</p>}
+            {org ? <div
+                className="page" key={org.id + ':' + active + ':' + org.role}
+            >
                 {active == 'calendar' && <Calendar
                     value={value}
                     org={org}
