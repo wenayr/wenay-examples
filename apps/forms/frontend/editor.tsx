@@ -40,10 +40,11 @@ type EditorProps = {
     commands: Commands,
     org: Organization,
     row: FormRow | null,
-    created: (id: string) => void
+    created: (id: string) => void,
+    section?: 'all' | 'questions' | 'publication'
 }
 
-export function FormEditor({resources, commands, org, row, created}: EditorProps) {
+export function FormEditor({resources, commands, org, row, created, section = 'all'}: EditorProps) {
     const remote = useFormResource(resources, 'editor')
     const action = useServiceAction(remote)
     const [detail, setDetail] = useState<{remote: typeof remote, value: Detail} | null>(null)
@@ -185,16 +186,19 @@ export function FormEditor({resources, commands, org, row, created}: EditorProps
     return <>
         {action.error && <p role="alert" className="error">{action.error}</p>}
         {notice && <p role="status" className="notice">{notice}</p>}
-        {publicationPanel}
-        {row && !value ? <p className="muted">Открываем свежую версию…</p> : <EditorForm
-            key={value?.id + ':' + value?.revision}
-            detail={value}
-            org={org}
-            commands={commands}
-            created={created}
-            editable={editable}
-        />}
-        {versions}
+        {section != 'questions' && publicationPanel}
+        {row && !value && <p className="muted" role="status">Открываем свежую версию…</p>}
+        <div hidden={section == 'publication'}>
+            {(!row || value) && <EditorForm
+                key={value?.id + ':' + value?.revision}
+                detail={value}
+                org={org}
+                commands={commands}
+                created={created}
+                editable={editable}
+            />}
+        </div>
+        {section != 'questions' && versions}
         {confirm}
     </>
 }

@@ -58,14 +58,14 @@ export function Respondent({token}: {token: string}) {
     }
 
     return <main className="respondent">
-        <a href="/" className="public-brand">✳ petal<span>НЕМНОГО ВАШЕГО ВНИМАНИЯ</span></a>
+        <a href="/" className="public-brand">✳ petal<span>ОПРОС КОМАНДЫ</span></a>
         {failed && <section className="form-paper">
             <h1>Опрос сейчас недоступен</h1>
             <p role="alert">{failed}</p>
             <p>Попросите автора прислать новую ссылку.</p>
         </section>}
         {page}
-        <footer>Вопросы помогают услышать друг друга. Сделано в Petal.</footer>
+        <footer>Форма создана в Petal. Ответы доступны команде опроса.</footer>
     </main>
 }
 
@@ -116,15 +116,16 @@ function PublicForm({resources}: {resources: Resources}) {
 
     if (!form) {
         return <section className="form-paper">
-            <h1>Опрос</h1>
-            <p>{action.error || 'Проверяем доступ к актуальной публикации…'}</p>
+            <h1>{action.error ? 'Не удалось открыть опрос' : 'Открываем опрос…'}</h1>
+            <p role={action.error ? 'alert' : 'status'}>{action.error || 'Проверяем доступ к актуальной публикации.'}</p>
+            {action.error && <p>Обновите страницу. Если ошибка повторится, попросите автора проверить ссылку.</p>}
         </section>
     }
 
     const thanks = <div className="thankyou">
         <span className="petal">✳</span>
-        <h1>Спасибо, мы вас услышали.</h1>
-        <p>Ваш ответ сохранён. Он поможет команде выбрать следующий шаг.</p>
+        <h1>Ответ сохранён</h1>
+        <p>Спасибо за участие. Команда опроса увидит ваши ответы в результатах.</p>
         <button onClick={again}>Заполнить ещё один ответ</button>
     </div>
 
