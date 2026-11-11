@@ -125,8 +125,8 @@ export function Directory({kind, value, org, commands, busy}: DirectoryProps) {
         <div className="page-title">
             <div>
                 <p className="eyebrow">ЛЮДИ И КОМПАНИИ</p>
-                <h1>{kind == 'contacts' ? 'Ваш круг контактов' : 'Компании, с которыми растём'}</h1>
-                <p>Общие сведения команды. Сделки и договорённости находятся в карточках.</p>
+                <h1>{kind == 'contacts' ? 'Контакты клиентов' : 'Компании'}</h1>
+                <p>Поддерживайте актуальные данные клиентов. Предложения и история общения хранятся в сделках.</p>
             </div>
             <button className="primary" disabled={busy} onClick={() => setEditing(null)}>
                 + {kind == 'contacts' ? 'Контакт' : 'Компания'}
@@ -150,7 +150,14 @@ export function Directory({kind, value, org, commands, busy}: DirectoryProps) {
         </div>
         {editing !== undefined && form}
         <div className="directory-grid">{records.map(card)}</div>
-        {!records.length && <p className="empty">Записей пока нет.</p>}
+        {!records.length && <div className="empty">
+            <h2>{query || archived ? 'Записи не найдены' : 'Записей пока нет'}</h2>
+            <p>Добавьте контакт или компанию либо измените условия поиска.</p>
+            {(query || archived) && <button onClick={function resetFilters() {
+                setQuery('')
+                setArchived(false)
+            }}>Сбросить поиск и фильтры</button>}
+        </div>}
     </>
 }
 
@@ -177,7 +184,7 @@ export function Team({value, org, commands, busy}: TeamProps) {
     return <>
         <div className="page-title">
             <div>
-                <p className="eyebrow">ДОВЕРИЕ И ОТВЕТСТВЕННОСТЬ</p>
+                <p className="eyebrow">УЧАСТНИКИ И ПРАВА ДОСТУПА</p>
                 <h1>Команда Orbit</h1>
                 <p>Роли действуют внутри выбранной организации.</p>
             </div>

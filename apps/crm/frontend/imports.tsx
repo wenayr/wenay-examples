@@ -228,8 +228,8 @@ export function Imports({value, workspace, org, resources, commands, busy}: Impo
     return <>
         <div className="page-title">
             <div>
-                <p className="eyebrow">ИЗ ТАБЛИЦЫ В ОТНОШЕНИЯ</p>
-                <h1>Новые контакты, без рутины.</h1>
+                <p className="eyebrow">ПЕРЕНОС КЛИЕНТСКОЙ БАЗЫ</p>
+                <h1>Импорт контактов</h1>
                 <p>Проверьте колонки перед импортом. Ошибки и дубликаты останутся в отчёте.</p>
             </div>
         </div>

@@ -70,20 +70,20 @@ function App() {
 
     const entry = <main className="login">
         <section className="login-story">
-            <a className="brand"><span>◎</span> orbit<span className="brand-caption">CRM STUDIO</span></a>
-            <span className="eyebrow">СЛЕДУЮЩИЙ ХОРОШИЙ РАЗГОВОР</span>
-            <h1>У каждого контакта<br/>есть будущее.</h1>
-            <p>Обсуждайте. Предлагайте. Договаривайтесь.<br/>От первого знакомства до общего результата.</p>
-            <div className="orbit-art">
-                <i/><i/><i/>
-                <span>●</span>
-                <strong>Всё начинается<br/>с доверия.</strong>
-            </div>
-            <small>Ваша команда. Ваши отношения с клиентами.</small>
+            <div className="brand"><span>◎</span> orbit<span className="brand-caption">ПРОДАЖИ И КЛИЕНТЫ</span></div>
+            <span className="eyebrow">ОТ ПЕРВОГО КОНТАКТА ДО СОГЛАСОВАНИЯ</span>
+            <h1>Ведите сделки.<br/>Сохраняйте договорённости.</h1>
+            <p>Следите за этапами продаж, готовьте предложения и получайте решение клиента в карточке сделки.</p>
+            <ol className="login-benefits">
+                <li><span>01</span><div><strong>Воронка продаж</strong><p>Этап, стоимость и ответственный по каждой сделке.</p></div></li>
+                <li><span>02</span><div><strong>Предложения клиенту</strong><p>Отдельные версии с решением и комментариями.</p></div></li>
+                <li><span>03</span><div><strong>Работа команды</strong><p>Контакты, история общения и связанные задачи.</p></div></li>
+            </ol>
+            <small>Orbit · продажи и согласование предложений</small>
         </section>
         <section className="login-form">
-            <p className="eyebrow">ВАШ КРУГ ВОЗМОЖНОСТЕЙ</p>
-            <h2>Продолжим разговор</h2>
+            <p className="eyebrow">РАБОЧЕЕ ПРОСТРАНСТВО ПРОДАЖ</p>
+            <h2>Войти в Orbit</h2>
             <p>Войдите в рабочее пространство команды.</p>
             <form key={preset} onSubmit={login}>
                 <label>Аккаунт
@@ -92,10 +92,10 @@ function App() {
                 <label>Пароль
                     <input name="password" type="password" defaultValue={preset + '-pass'} autoComplete="current-password" required/>
                 </label>
-                <button className="primary" disabled={action.busy}>Войти в Orbit →</button>
+                <button className="primary" disabled={action.busy}>{action.busy ? 'Входим…' : 'Открыть сделки →'}</button>
             </form>
             <div className="presets">
-                <p>Посмотреть от лица</p>
+                <p>Попробовать демо в роли</p>
                 {Object.entries({...roles, outsider: 'Другой команды'}).map(([id, label]) => (
                     <button key={id} aria-pressed={preset == id} onClick={() => setPreset(id)}>{label}</button>
                 ))}
@@ -104,9 +104,23 @@ function App() {
         </section>
     </main>
 
+    const accessDenied = !!connection.me && !connection.me.views.includes('workspace')
+    let waitingTitle = 'Подключаемся к команде…'
+    let waitingDescription = 'Загружаем сделки и проверяем доступ к рабочему пространству.'
+    if (accessDenied) {
+        waitingTitle = 'Нет доступа к сделкам'
+        waitingDescription = 'Обратитесь к владельцу команды или войдите другим аккаунтом.'
+    } else if (connection.error) {
+        waitingTitle = 'Не удалось подключиться'
+        waitingDescription = 'Проверьте соединение и повторите подключение.'
+    }
     const waiting = <main className="loading">
         <span className="brand">◎ orbit</span>
-        <h1>Подключаемся к команде…</h1>
+        <h1>{waitingTitle}</h1>
+        <p role="status">{waitingDescription}</p>
+        {connection.error && !accessDenied && (
+            <button className="primary" onClick={() => connection.setToken(connection.liveToken)}>Повторить подключение</button>
+        )}
         <button onClick={() => connection.setToken('')}>Вернуться ко входу</button>
     </main>
 
@@ -196,8 +210,8 @@ function Workspace({value, commands, resources, views, connected, logout}: Works
         </nav>
         <div className="sidebar-card">
             <span>✦</span>
-            <strong>Хорошие связи<br/>становятся сильнее.</strong>
-            <p>Записывайте договорённости и сохраняйте общий контекст.</p>
+            <strong>Следующий шаг по сделке</strong>
+            <p>Откройте карточку, чтобы добавить заметку, обновить этап или подготовить предложение.</p>
         </div>
         <div className="account">
             <span className="avatar">{value.me!.name.slice(0, 1)}</span>
