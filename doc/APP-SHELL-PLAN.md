@@ -395,9 +395,11 @@ CAD-адаптер; platform feasibility; независимая проверк�
 
 ## 12. Основания read-only аудита
 
-- [Chat service](C:/Users/wenay/.codex/worktrees/examples-integration/wenay-examples/apps/chat/backend/service.ts),
-  [conversation resource](C:/Users/wenay/.codex/worktrees/examples-integration/wenay-examples/apps/chat/backend/chat-resource.ts),
-  [владение клиентом](C:/Users/wenay/.codex/worktrees/examples-integration/wenay-examples/apps/chat/shared/conversation-client.ts).
+- Исторический аудит chat выполнялся в локальном worktree
+  `C:/Users/wenay/.codex/worktrees/examples-integration/wenay-examples`, который сейчас отсутствует:
+  `apps/chat/backend/service.ts`, `apps/chat/backend/chat-resource.ts`,
+  `apps/chat/shared/conversation-client.ts`. Это основания того аудита, а не доступные исходники текущего каталога.
+  Актуальное направление продукта описано в [контексте продолжения](internal/NEXT-CHAT.md).
 - [CAD package](C:/Users/wenay/WebstormProjects/Dynamic/package.json),
   [правила CAD](C:/Users/wenay/WebstormProjects/Dynamic/AGENTS.md),
   [DomainPack](C:/Users/wenay/WebstormProjects/Dynamic/lib/cad/packs/pack.ts).

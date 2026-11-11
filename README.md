@@ -30,7 +30,8 @@
 
 Актуальные результаты проверок — [doc/STATUS.md](doc/STATUS.md).
 
-Последнее обновление — [common2 3.1.1 / react2 5.0.0](doc/changes/common2-3.1.1-react2-5.0.0.md).
+Последняя переработка — [интерфейсы, композиция и бизнес-тексты примеров](doc/changes/examples-design-20261112.md).
+Обновление библиотек — [common2 3.1.1 / react2 5.0.0](doc/changes/common2-3.1.1-react2-5.0.0.md).
 Дальнейшая очередь и критерии каждого проекта — [стратегия сентября](doc/STRATEGY-2026-09.md).
 
 ## Быстрый старт
@@ -39,6 +40,7 @@
 cd apps/support
 npm ci
 npm test
+npm run build
 npm start
 ```
 
