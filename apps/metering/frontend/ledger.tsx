@@ -7,8 +7,8 @@ import {date, metrics, statuses} from './contracts'
 type Event = MeteringWorkspace['events'][number]
 const theme = themeQuartz.withParams({
     fontFamily: 'Inter, Segoe UI, sans-serif',
-    fontSize: 12,
-    headerFontSize: 11,
+    fontSize: 14,
+    headerFontSize: 13,
     headerBackgroundColor: '#f6f8fb',
     backgroundColor: '#ffffff',
     foregroundColor: '#34475f',
@@ -66,14 +66,14 @@ export default function Ledger({events}: {events: Event[]}) {
                 defaultColDef={defaultColumn}
                 theme={theme}
                 quickFilterText={query}
-                rowHeight={45}
-                headerHeight={42}
+                rowHeight={49}
+                headerHeight={46}
                 animateRows={false}
                 overlayNoRowsTemplate="<span>В этом периоде ещё нет операций</span>"
             />
         </div>
         <p className="footnote">
-            Таблица использует AgGridTable из wenay-react2, строки поступают из ролевой проекции common2.
+            В журнале видны только операции вашей организации. Один идентификатор события связывает запрос и его повторные попытки.
         </p>
     </section>
 }

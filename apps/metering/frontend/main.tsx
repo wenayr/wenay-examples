@@ -81,9 +81,9 @@ function App() {
         <section className="login-intro">
             <div className="brand"><span>◫</span> counter<span className="brand-label">API METERING</span></div>
             <div>
-                <p className="eyebrow">СЕРВИС РАСТЁТ. РАСХОД ПОНЯТЕН.</p>
-                <h1>Каждая операция<br/>на своём месте.</h1>
-                <p>Ключи, квоты и прозрачная история<br/>использования вашего API.</p>
+                <p className="eyebrow">УЧЁТ ИСПОЛЬЗОВАНИЯ API</p>
+                <h1>Контролируйте расход<br/>до запуска операции.</h1>
+                <p>Выдавайте ключи с ограниченными правами, задавайте квоты и проверяйте, на что потрачены единицы.</p>
                 <div className="login-equation">
                     <span>Лимит</span><b>−</b><span>Расход</span><b>−</b><span>Резерв</span><b>=</b>
                     <strong>Доступно</strong>
@@ -93,8 +93,8 @@ function App() {
         </section>
         <section className="login-form">
             <p className="eyebrow">КАБИНЕТ РАЗРАБОТЧИКА</p>
-            <h2>Добро пожаловать</h2>
-            <p>Продолжите работу с вашей организацией.</p>
+            <h2>Войти в Counter</h2>
+            <p>Откройте расход и ключи своей организации.</p>
             <form key={preset} onSubmit={login}>
                 <label>Аккаунт
                     <input name="account" defaultValue={preset} autoComplete="username" required/>
@@ -120,6 +120,7 @@ function App() {
 
     const waiting = <main className="connecting">
         <h1>{connection.me ? 'Кабинет недоступен' : 'Подключаемся…'}</h1>
+        <p>{connection.me ? 'У аккаунта нет доступа к кабинету. Войдите с другой учётной записью.' : 'Загружаем организации, ключи и текущий расход.'}</p>
         <button onClick={() => connection.setToken('')}>Вернуться ко входу</button>
     </main>
 
@@ -227,7 +228,7 @@ function Workspace({value, commands, resources, connected, logout}: WorkspacePro
                 </div>
             </header>
             <div className="page">
-        {!connected && <p className="notice warning">Изменения временно недоступны. Подключение восстанавливается.</p>}
+        {!connected && <p className="notice warning" role="status">Связь восстанавливается. Дождитесь подключения перед изменением лимитов и ключей.</p>}
         {!org ? <div className="empty">
             <h1>Нет доступной организации</h1>
             <p>Войдите другим аккаунтом.</p>
@@ -241,6 +242,7 @@ function Workspace({value, commands, resources, connected, logout}: WorkspacePro
                 busy={busy}
                 openKeys={() => setTab('keys')}
                 openClient={() => setTab('client')}
+                openEvents={() => setTab('events')}
             />}
             {tab == 'keys' && (
                 <Keys value={value} org={org} resources={resources} commands={commands} busy={busy} onUse={useKey}/>
@@ -255,7 +257,7 @@ function Workspace({value, commands, resources, connected, logout}: WorkspacePro
             {tab == 'events' && <>
                 <div className="page-heading">
                     <div>
-                        <p className="eyebrow">ПРОЗРАЧНАЯ ИСТОРИЯ</p>
+                        <p className="eyebrow">УЧЁТ ПО ОПЕРАЦИЯМ</p>
                         <h1>Журнал операций</h1>
                         <p>Фактическое потребление, резервы и их исходы.</p>
                     </div>
@@ -290,7 +292,8 @@ type OverviewProps = {
     commands: Commands,
     busy: boolean,
     openKeys: () => void,
-    openClient: () => void
+    openClient: () => void,
+    openEvents: () => void
 }
 
 // Единицы по исходу: подтверждённые списываются фактом, освобождённые не стоят ничего.
@@ -300,15 +303,19 @@ function eventUnits(event: MeteringWorkspace['events'][number]) {
     return event.reservedUnits
 }
 
-function Overview({value, org, period, setPeriod, commands, busy, openKeys, openClient}: OverviewProps) {
+function Overview({value, org, period, setPeriod, commands, busy, openKeys, openClient, openEvents}: OverviewProps) {
     const [editing, setEditing] = useState(false)
 
     const empty = {used: 0, reserved: 0, active: 0}
     const usage = value.periods.find(item => item.orgId == org.id && item.period == period) ?? empty
     const available = Math.max(0, org.monthlyUnits - usage.used - usage.reserved)
+    const currentUsage = value.periods.find(item => item.orgId == org.id && item.period == value.currentPeriod) ?? empty
+    const currentAvailable = Math.max(0, org.monthlyUnits - currentUsage.used - currentUsage.reserved)
     const keys = value.keys.filter(key => key.orgId == org.id && !key.revokedAt && key.expiresAt > Date.now())
     const events = value.events.filter(event => event.orgId == org.id && event.period == period)
     const last = events.slice().sort((a, b) => b.updatedAt - a.updatedAt).slice(0, 5)
+    const uncertain = events.filter(event => event.status == 'unknown')
+    const expiring = keys.filter(key => key.expiresAt <= Date.now() + 7 * 86400000)
     const percentages = {
         used: Math.min(100, usage.used / org.monthlyUnits * 100),
         reserved: Math.min(100, usage.reserved / org.monthlyUnits * 100)
@@ -325,11 +332,16 @@ function Overview({value, org, period, setPeriod, commands, busy, openKeys, open
         if (await commands.run('budgetConfigure', input)) setEditing(false)
     }
 
+    function openCurrentEvents() {
+        setPeriod(value.currentPeriod)
+        openEvents()
+    }
+
     const heading = <div className="page-heading">
         <div>
-            <p className="eyebrow">ВСЁ ПОД КОНТРОЛЕМ</p>
+            <p className="eyebrow">РАСХОД И ЛИМИТЫ</p>
             <h1>Использование API</h1>
-            <p>Понятный расход. Предсказуемые ограничения.</p>
+            <p>Сколько единиц потрачено, занято незавершёнными операциями и доступно для новых запросов.</p>
         </div>
         <label>Расчётный период
             <input
@@ -361,6 +373,39 @@ function Overview({value, org, period, setPeriod, commands, busy, openKeys, open
             <i className="stat-icon">◇</i>
         </article>
     </div>
+
+    const attention = <section className="usage-attention" aria-labelledby="usage-attention-title">
+        <div className="attention-heading">
+            <p className="eyebrow">СЛЕДУЮЩИЙ ШАГ</p>
+            <h2 id="usage-attention-title">Что проверить сейчас</h2>
+            <p>Операции выбранного периода, действующие ключи и доступный лимит текущего месяца.</p>
+        </div>
+        <ul className="attention-list">
+            <li className={uncertain.length ? 'needs-review' : ''}>
+                <div><strong>{uncertain.length ? 'Неопределённых исходов: ' + uncertain.length : 'Неопределённых исходов нет'}</strong>
+                    <p>{uncertain.length
+                        ? 'Сверьте результат с исполнителем до повторного списания или освобождения резерва.'
+                        : 'В журнале можно проследить резерв, расход и повторные попытки каждого запроса.'}</p></div>
+                <button onClick={openEvents}>Открыть журнал</button>
+            </li>
+            <li>
+                <div><strong>{expiring.length ? 'Истекают в ближайшие 7 дней: ' + expiring.length : 'Ключи доступа: ' + keys.length}</strong>
+                    <p>{keys.length
+                        ? 'Проверьте сроки и права перед подключением следующего потребителя.'
+                        : 'Для вызова API нужен действующий ключ. Его выпускает владелец организации.'}</p></div>
+                <button onClick={openKeys}>Проверить ключи</button>
+            </li>
+            <li>
+                <div><strong>Сейчас доступно: {number(currentAvailable)} ед. · {value.currentPeriod}</strong>
+                    <p>{currentAvailable > 0
+                        ? 'Выполните запрос в тестовом клиенте и сравните его результат с журналом.'
+                        : 'Проверьте незавершённые операции и текущий лимит перед новым запросом.'}</p></div>
+                <button onClick={currentAvailable > 0 ? openClient : openCurrentEvents}>
+                    {currentAvailable > 0 ? 'Открыть API-клиент' : 'Операции текущего месяца'}
+                </button>
+            </li>
+        </ul>
+    </section>
 
     const quotaLabel = 'Использовано ' + usage.used + ', в резерве ' + usage.reserved + ', доступно ' + available
 
@@ -407,7 +452,7 @@ function Overview({value, org, period, setPeriod, commands, busy, openKeys, open
     const access = <section className="panel access-panel">
         <p className="eyebrow">ВАШ API</p>
         <div className="large-symbol">⌘</div>
-        <h2>Готов к следующему запросу</h2>
+        <h2>Доступ к операциям</h2>
         <p>{accessHint}</p>
         <div className="access-facts">
             <div><strong>{keys.length}</strong><span>активных ключей</span></div>
@@ -446,7 +491,7 @@ function Overview({value, org, period, setPeriod, commands, busy, openKeys, open
                 <h2>Последние операции</h2>
                 <p>Обновляются вместе с состоянием сервиса.</p>
             </div>
-            <button onClick={openClient}>Выполнить запрос ↗</button>
+            <button onClick={openEvents}>Весь журнал →</button>
         </div>
         {last.length ? recentList : recentEmpty}
     </section>
@@ -475,6 +520,7 @@ function Overview({value, org, period, setPeriod, commands, busy, openKeys, open
     return <>
         {heading}
         {stats}
+        {attention}
         <div className="overview-grid">
             {quota}
             {access}
