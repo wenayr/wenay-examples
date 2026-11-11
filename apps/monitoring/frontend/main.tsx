@@ -32,11 +32,19 @@ const sections = [
 ]
 
 const headlines: Record<string, string> = {
-    overview: 'Ясная картина.',
-    incidents: 'От сигнала к решению.',
-    tasks: 'Что нужно проверить.',
-    notices: 'Ничего важного мимо.',
-    team: 'Команда на связи.'
+    overview: 'Состояние сервисов',
+    incidents: 'Инциденты',
+    tasks: 'Задачи дежурных',
+    notices: 'Уведомления',
+    team: 'Команда и доступ'
+}
+
+const descriptions: Record<string, string> = {
+    overview: 'Проверьте свежесть измерений и откройте сервис, которому требуется внимание.',
+    incidents: 'Возьмите проблему в работу и оставьте команде результат проверки.',
+    tasks: 'Распределяйте работу по инцидентам и отмечайте выполненные шаги.',
+    notices: 'Изменения сервисов и инцидентов, доступные вашей роли.',
+    team: 'Назначайте дежурных и определяйте, кто может управлять проверками.'
 }
 
 function useClock() {
@@ -108,7 +116,7 @@ function PublicPage({value, login}: {value: PublicStatus, login: () => void}) {
             <button onClick={login}>Вход для команды</button>
         </header>
         <p className="eyebrow">ОТКРЫТЫЙ СТАТУС СЕРВИСОВ</p>
-        <h1>{healthy ? 'Всё работает.' : 'Знать, что происходит.'}</h1>
+        <h1>{healthy ? 'Все наблюдаемые сервисы работают' : 'Текущее состояние сервисов'}</h1>
         <p className="lead">Последние подтверждённые измерения. Серые интервалы — время, за которое нет данных.</p>
         <div className="public-services">
             {value.services.map(function service(item) {
@@ -216,7 +224,8 @@ function App() {
         >
             <button className="close" aria-label="Закрыть вход" onClick={() => setLoginOpen(false)}>×</button>
             <p className="eyebrow">РАБОЧЕЕ ПРОСТРАНСТВО</p>
-            <h2>Спокойнее, когда знаешь.</h2>
+            <h2>Войти в Signal</h2>
+            <p className="muted">Проверяйте сервисы, разбирайте инциденты и назначайте задачи дежурным.</p>
             <form key={preset} onSubmit={login}>
                 <label>Аккаунт
                     <input name="account" defaultValue={preset} required autoComplete="username"/>
@@ -224,11 +233,11 @@ function App() {
                 <label>Пароль
                     <input name="password" type="password" defaultValue={preset + '-pass'} required autoComplete="current-password"/>
                 </label>
-                <button className="primary" disabled={action.busy}>Войти</button>
+                <button className="primary" disabled={action.busy}>{action.busy ? 'Входим…' : 'Открыть рабочее пространство'}</button>
             </form>
             <div className="presets">
                 {['owner', 'oncall', 'observer', 'outsider'].map(account => (
-                    <button key={account} onClick={() => setPreset(account)}>
+                    <button key={account} aria-pressed={preset == account} onClick={() => setPreset(account)}>
                         {account == 'outsider' ? 'Другая команда' : roles[account as keyof typeof roles]}
                     </button>
                 ))}
@@ -242,10 +251,11 @@ type FormProps = {
     value: MonitoringWorkspace,
     org: Organization,
     commands: Commands,
+    disabled: boolean,
     close: () => void
 }
 
-function MonitorForm({monitor, value, org, commands, close}: FormProps) {
+function MonitorForm({monitor, value, org, commands, disabled, close}: FormProps) {
     async function save(event: React.FormEvent<HTMLFormElement>) {
         event.preventDefault()
         const form = new FormData(event.currentTarget)
@@ -274,10 +284,10 @@ function MonitorForm({monitor, value, org, commands, close}: FormProps) {
         onEscape={close}
     >
         <button className="close" aria-label="Закрыть настройки" onClick={close}>×</button>
-        <p className="eyebrow">НЕБОЛЬШАЯ ПРОВЕРКА. БОЛЬШЕ ЯСНОСТИ.</p>
+        <p className="eyebrow">ПАРАМЕТРЫ НАБЛЮДЕНИЯ</p>
         <h2>{monitor ? 'Настройка проверки' : 'Новая проверка'}</h2>
         <form onSubmit={save}>
-            <fieldset disabled={commands.busy}>
+            <fieldset disabled={commands.busy || disabled}>
                 <label>Название
                     <input name="name" defaultValue={monitor?.name} required maxLength={120}/>
                 </label>
@@ -346,6 +356,8 @@ function Workspace({value, session, commands, connected, logout}: WorkspaceProps
     const detail = monitors.find(item => item.id == selected)
     const active = staff ? section : 'overview'
     const counted = (id: string) => monitors.filter(item => signalStatus(item, now).id == id).length
+    const openIncidents = incidents.filter(incident => incident.status != 'resolved').toReversed()
+    const waitingMonitors = monitors.filter(monitor => signalStatus(monitor, now).id == 'unknown')
 
     function switchOrganization(event: React.ChangeEvent<HTMLSelectElement>) {
         setOrgId(event.target.value)
@@ -366,14 +378,15 @@ function Workspace({value, session, commands, connected, logout}: WorkspaceProps
         <select aria-label="Организация" value={org?.id ?? ''} onChange={switchOrganization}>
             {value.organizations.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}
         </select>
-        <nav>
+        <nav aria-label="Разделы мониторинга">
             {sections.filter(([id]) => staff || id == 'overview').map(([id, icon, label]) => (
-                <button key={id} className={active == id ? 'active' : ''} onClick={() => setSection(id)}>
-                    <span>{icon}</span>{label}
+                <button key={id} className={active == id ? 'active' : ''}
+                    aria-current={active == id ? 'page' : undefined} onClick={() => setSection(id)}>
+                    <span aria-hidden="true">{icon}</span>{label}
                 </button>
             ))}
         </nav>
-        <div className="sidebar-note">Тишина — это хорошо.<br/>Свежие данные — ещё лучше.</div>
+        <div className="sidebar-note">Серый статус означает отсутствие свежих данных. Проверьте исполнителя перед выводом о доступности сервиса.</div>
         <button onClick={logout}>Выйти · {org ? roles[org.role] : 'Участник'}</button>
     </aside>
 
@@ -392,6 +405,9 @@ function Workspace({value, session, commands, connected, logout}: WorkspaceProps
                 <small>не означает, что всё работает</small>
             </article>
         </div>
+        <div className="monitor-workspace">
+        <div>
+        <div className="monitor-section-heading"><h2>Наблюдение за сервисами</h2><span>{counted('up')} работают · {counted('paused')} на паузе</span></div>
         <div className="monitor-list">
             {monitors.map(function card(monitor) {
                 const status = signalStatus(monitor, now)
@@ -418,6 +434,36 @@ function Workspace({value, session, commands, connected, logout}: WorkspaceProps
         <p className="legend">
             <i className="up"/>Успех <i className="down"/>Ошибка <i className="unknown"/>Нет подтверждённых данных · 50 интервалов
         </p>
+        </div>
+        <aside className="monitor-context" aria-label="Что требует внимания">
+            <section className="monitor-context-section">
+                <p className="eyebrow">РЕАГИРОВАНИЕ</p>
+                <h2>Открытые инциденты <span>{openIncidents.length}</span></h2>
+                {openIncidents.length ? <ul className="signal-digest">
+                    {openIncidents.slice(0, 4).map(incident => <li key={incident.id}>
+                        <span className={'status ' + (incident.status == 'acknowledged' ? 'paused' : 'down')}>{workLabel(incident.status)}</span>
+                        <strong>{incident.title}</strong>
+                        <small>Открыт {date(incident.openedAt)}</small>
+                        <button onClick={() => setSelected(incident.monitorId)}>Посмотреть измерения</button>
+                    </li>)}
+                </ul> : <p className="context-empty">Открытых инцидентов нет. Состояние сервисов оценивается отдельно по свежести измерений.</p>}
+                {staff && <button className="context-link" onClick={() => setSection('incidents')}>Открыть историю инцидентов →</button>}
+            </section>
+            <section className="monitor-context-section">
+                <p className="eyebrow">КАЧЕСТВО ДАННЫХ</p>
+                <h2>Ожидаем подтверждения</h2>
+                {waitingMonitors.length ? <ul className="freshness-list">
+                    {waitingMonitors.slice(0, 4).map(monitor => <li key={monitor.id}>
+                        <button onClick={() => setSelected(monitor.id)}>{monitor.name}</button>
+                        <small>Последнее измерение: {date(monitor.lastAt)}</small>
+                    </li>)}
+                </ul> : <p className="context-empty">{monitors.length
+                    ? 'Все активные проверки имеют актуальный статус. Приостановленные сервисы не проверяются.'
+                    : 'Добавьте сервис. Здесь будут видны проверки, от которых ещё не получен свежий результат.'}</p>}
+                <p className="context-note">Серый интервал означает отсутствие результата. Он не подтверждает ни доступность, ни сбой сервиса.</p>
+            </section>
+        </aside>
+        </div>
     </>
 
     const incidentList = <div className="incident-list">
@@ -450,7 +496,8 @@ function Workspace({value, session, commands, connected, logout}: WorkspaceProps
         <label className="inline quiet">
             <input
                 type="checkbox"
-                checked={value.quiet.find(item => item.orgId == org.id)?.enabled ?? false}
+                checked={value.quiet.find(item => item.orgId == org?.id)?.enabled ?? false}
+                disabled={commands.busy || !connected}
                 onChange={event => void commands.run('notificationSettings', {orgId: org.id, quiet: event.target.checked})}
             />
             Тихий режим: не создавать новые уведомления для меня
@@ -463,7 +510,8 @@ function Workspace({value, session, commands, connected, logout}: WorkspaceProps
                     <small>{date(item.at)}</small>
                 </div>
                 {!item.read && (
-                    <button onClick={() => void commands.run('noticeRead', {orgId: org.id, id: item.id})}>Прочитано</button>
+                    <button disabled={commands.busy || !connected}
+                        onClick={() => void commands.run('noticeRead', {orgId: org.id, id: item.id})}>Прочитано</button>
                 )}
             </article>
         ))}
@@ -471,7 +519,7 @@ function Workspace({value, session, commands, connected, logout}: WorkspaceProps
     </>
 
     const team = <div className="people">
-        {value.people.filter(item => item.orgId == org.id && item.role != 'probe').map(person => (
+        {value.people.filter(item => item.orgId == org?.id && item.role != 'probe').map(person => (
             <article key={person.account}>
                 <div>
                     <strong>{person.name}</strong>
@@ -479,6 +527,7 @@ function Workspace({value, session, commands, connected, logout}: WorkspaceProps
                 </div>
                 {owner ? <select
                     aria-label={'Роль ' + person.account}
+                    disabled={commands.busy || !connected}
                     value={person.role}
                     onChange={event => void commands.run('memberRole', {
                         orgId: org.id, revision: org.revision, account: person.account,
@@ -499,19 +548,25 @@ function Workspace({value, session, commands, connected, logout}: WorkspaceProps
         <main className="work">
             <header className="topbar">
                 <span>{org?.name ?? 'Нет доступных организаций'}</span>
-                <span className={connected ? 'online' : 'offline'}>
+                <span className={connected ? 'online' : 'offline'} role="status">
                     ● {connected ? 'На связи' : 'Переподключаемся'}
                 </span>
             </header>
+            {!org && <div className="page"><section className="empty">
+                <h1>Нет доступной организации</h1>
+                <p>Попросите владельца открыть вам доступ или войдите с другим аккаунтом.</p>
+                <button onClick={logout}>Сменить аккаунт</button>
+            </section></div>}
             {org && <div className="page">
+                {!connected && <p className="connection-notice" role="status">
+                    Связь восстанавливается. Отображаются последние полученные данные. Изменение настроек временно недоступно.
+                </p>}
                 <div className="page-title">
                     <div>
-                        <p className="eyebrow">ДЕРЖИМ РУКУ НА ПУЛЬСЕ</p>
+                        <p className="eyebrow">МОНИТОРИНГ И РЕАГИРОВАНИЕ</p>
                         <h1>{headlines[active]}</h1>
                         <p className="lead">
-                            {active == 'overview'
-                                ? 'Последние измерения и изменения, требующие внимания.'
-                                : 'Общий контекст для спокойной работы.'}
+                            {descriptions[active]}
                         </p>
                     </div>
                     {owner && active == 'overview' && (
@@ -539,6 +594,7 @@ function Workspace({value, session, commands, connected, logout}: WorkspaceProps
             value={value}
             org={org}
             commands={commands}
+            disabled={!connected}
             close={() => setEditing(null)}
         />}
         {detail && <Overlay
