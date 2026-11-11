@@ -1,4 +1,4 @@
-import React, {useState} from 'react'
+import React, {useEffect, useRef, useState} from 'react'
 import type {SupportWorkspace} from '../backend/domain'
 import type {Ticket} from '../backend/model'
 import {AssistantPanel} from './assistant'
@@ -24,15 +24,33 @@ export function Inbox({value, org, commands, resources, busy}: InboxProps) {
     const [query, setQuery] = useState('')
     const [filter, setFilter] = useState('active')
     const [creating, setCreating] = useState(false)
+    const [now, setNow] = useState(Date.now)
+    const inboxRef = useRef<HTMLDivElement>(null)
+
+    useEffect(function refreshDeadlines() {
+        const timer = setInterval(() => setNow(Date.now()), 60_000)
+        return () => clearInterval(timer)
+    }, [])
 
     const staff = org.role != 'customer'
     const mine = value.tickets.filter(item => item.orgId == org.id)
     const all = mine.sort((a, b) => b.updatedAt - a.updatedAt)
 
+    function unanswered(item: Ticket) {
+        return item.status != 'resolved' && item.firstResponseAt == undefined
+    }
+    function overdue(item: Ticket) {
+        return unanswered(item) && item.dueAt != undefined && item.dueAt <= now
+    }
+
     // Фильтр и поиск независимы: список — пересечение того и другого.
     function inFilter(item: SupportWorkspace['tickets'][number]) {
         if (filter == 'all') return true
         if (filter == 'mine') return item.assignee == value.account.account
+        if (filter == 'unanswered') return unanswered(item)
+        if (filter == 'overdue') return overdue(item)
+        if (filter == 'unassigned') return item.status != 'resolved' && !item.assignee
+        if (filter == 'waiting') return item.status == 'waiting'
         if (filter == 'resolved') return item.status == 'resolved'
         return item.status != 'resolved'
     }
@@ -74,6 +92,67 @@ export function Inbox({value, org, commands, resources, busy}: InboxProps) {
         {id: 'resolved', title: 'Решённые'},
         {id: 'all', title: 'Все'}
     ]
+
+    const queues = staff ? [
+        {id: 'unanswered', title: 'Без первого ответа', count: all.filter(unanswered).length},
+        {id: 'overdue', title: 'Срок ответа истёк', count: all.filter(overdue).length},
+        {id: 'unassigned', title: 'Без ответственного', count: all.filter(item => item.status != 'resolved' && !item.assignee).length},
+        {id: 'mine', title: 'Назначены мне', count: all.filter(item => item.assignee == value.account.account).length}
+    ] : [
+        {id: 'active', title: 'Открытые обращения', count: all.filter(item => item.status != 'resolved').length},
+        {id: 'waiting', title: 'В ожидании', count: all.filter(item => item.status == 'waiting').length},
+        {id: 'resolved', title: 'Решённые вопросы', count: all.filter(item => item.status == 'resolved').length}
+    ]
+    const needsReply = all.filter(unanswered)
+    const byDeadline = [...needsReply].sort((a, b) => (a.dueAt ?? Infinity) - (b.dueAt ?? Infinity))
+    const attention = byDeadline.slice(0, 3)
+    const queueTitle = queues.find(item => item.id == filter)?.title ?? filters.find(item => item.id == filter)?.title
+
+    function chooseQueue(id: string) {
+        setFilter(id)
+        setQuery('')
+    }
+    function openAttention(id: string) {
+        setFilter('all')
+        setQuery('')
+        setSelected(id)
+        inboxRef.current?.scrollIntoView({block: 'start'})
+    }
+
+    const overview = <section className={'queue-overview' + (staff ? '' : ' customer')} aria-label="Обзор обращений">
+        <div className="queue-summary">
+            <div className="queue-summary-heading">
+                <p className="eyebrow">{staff ? 'ОЧЕРЕДЬ КОМАНДЫ' : 'ВАШИ ОБРАЩЕНИЯ'}</p>
+                <span>{all.length} всего</span>
+            </div>
+            <div className="queue-counters">
+                {queues.map(item => <button key={item.id} aria-pressed={filter == item.id} onClick={() => chooseQueue(item.id)}>
+                    <strong>{item.count}</strong><span>{item.title}</span>
+                </button>)}
+            </div>
+        </div>
+        {staff && <div className="queue-attention">
+            <div className="queue-attention-heading">
+                <h2>Первый ответ</h2>
+                <p>Сначала обращения с ближайшим сроком</p>
+            </div>
+            {attention.length > 0 ? <div className="queue-attention-list">
+                {attention.map(item => <button key={item.id} onClick={() => openAttention(item.id)}>
+                    <span className={'queue-deadline' + (overdue(item) ? ' overdue' : '')}>
+                        {item.dueAt ? dateLabel(item.dueAt) : 'Срок не задан'}
+                        {overdue(item) && <small>Просрочено</small>}
+                    </span>
+                    <span><strong>{item.subject}</strong><small>{item.assignee ? name(item.assignee) : 'Назначьте ответственного'}</small></span>
+                    <span aria-hidden="true">→</span>
+                </button>)}
+            </div> : <p className="queue-clear">Нет открытых обращений без первого ответа. Продолжайте текущие диалоги в списке ниже.</p>}
+        </div>}
+    </section>
+
+    function resetFilters() {
+        setQuery('')
+        setFilter('all')
+    }
 
     const form = <form className="create-ticket panel-form" onSubmit={createTicket}>
         <div className="form-heading">
@@ -158,18 +237,20 @@ export function Inbox({value, org, commands, resources, busy}: InboxProps) {
             </div>
         </div>
         <div className="list-count">
-            {tickets.length} обращений <span>По последнему обновлению</span>
+            <strong>{queueTitle} · {tickets.length}</strong>
+            {filter != 'all' && <button onClick={resetFilters}>Все обращения</button>}
         </div>
         <div className="tickets-scroll">
             {tickets.map(card)}
             {!tickets.length && <div className="empty-state">
                 <span>✓</span>
-                <h3>{query ? 'Ничего не найдено' : 'Здесь пока спокойно'}</h3>
+                <h3>{query ? 'Обращения не найдены' : 'Нет обращений в этом списке'}</h3>
                 <p>
                     {query
                         ? 'Попробуйте другую тему или снимите фильтр.'
-                        : 'Новые обращения появятся в этом списке.'}
+                        : 'Проверьте другие статусы или создайте обращение.'}
                 </p>
+                {(query || filter != 'all') && <button onClick={resetFilters}>Показать все обращения</button>}
             </div>}
         </div>
     </section>
@@ -177,8 +258,8 @@ export function Inbox({value, org, commands, resources, busy}: InboxProps) {
     const nothing = <section className="conversation empty-conversation">
         <div className="empty-state">
             <span>✳</span>
-            <h2>Начнём с разговора</h2>
-            <p>Создайте обращение или выберите другой фильтр.</p>
+            <h2>Выберите обращение</h2>
+            <p>Здесь появятся переписка, вложения и действия по выбранному обращению.</p>
         </div>
     </section>
 
@@ -187,13 +268,13 @@ export function Inbox({value, org, commands, resources, busy}: InboxProps) {
     return <>
         <div className="page-heading">
             <div>
-                <p className="eyebrow">{staff ? 'ПОМОГАЕМ ДВИГАТЬСЯ ДАЛЬШЕ' : 'МЫ РЯДОМ'}</p>
+                <p className="eyebrow">{staff ? 'ПОДДЕРЖКА КЛИЕНТОВ' : 'СВЯЗЬ С ПОДДЕРЖКОЙ'}</p>
                 <h1>
-                    {staff ? 'Входящие' : 'Мои обращения'} <span className="heading-count">{open}</span>
+                    {staff ? 'Обращения' : 'Мои обращения'} <span className="heading-count">{open} открытых</span>
                 </h1>
                 <p>
                     {staff
-                        ? 'Все разговоры вашей команды — в одном месте.'
+                        ? 'Отвечайте клиентам, следите за сроками и распределяйте работу.'
                         : 'Задайте вопрос и продолжайте разговор с командой.'}
                 </p>
             </div>
@@ -201,8 +282,9 @@ export function Inbox({value, org, commands, resources, busy}: InboxProps) {
                 {creating ? 'Закрыть форму' : '+ Новое обращение'}
             </button>
         </div>
+        {overview}
         {creating && form}
-        <div className="inbox-layout">
+        <div className="inbox-layout" ref={inboxRef}>
             {list}
             {ticket ? <Conversation
                 key={ticket.id + ':' + org.role}

@@ -25,7 +25,7 @@ const sections = [
     {id: 'notifications', title: 'Уведомления', icon: '♧'},
     {id: 'knowledge', title: 'База знаний', icon: '▥'},
     {id: 'team', title: 'Команда', icon: '◉'},
-    {id: 'keys', title: 'Машинные ключи', icon: '⚿'},
+    {id: 'keys', title: 'Ключи интеграций', icon: '⚿'},
     {id: 'audit', title: 'История действий', icon: '◷'}
 ] as const
 
@@ -83,22 +83,23 @@ function App() {
             <div className="brand">
                 <span className="brand-mark">✳</span> northstar<span className="brand-tag">SUPPORT</span>
             </div>
-            <p className="eyebrow">БЛИЖЕ К КЛИЕНТАМ</p>
-            <h1>Хорошая поддержка<br/>начинается<br/>с внимания.</h1>
+            <p className="eyebrow">ОБРАЩЕНИЯ И РАБОТА КОМАНДЫ</p>
+            <h1>От обращения<br/>до решения.</h1>
             <p className="login-description">
-                Обращения, знания и команда.<br/>Всё, что нужно для следующего хорошего ответа.
+                Отвечайте клиентам, назначайте ответственных и сохраняйте решения в общей базе знаний.
             </p>
-            <div className="story-card">
-                <span className="story-line">Клиенту помогли — команда стала сильнее.</span>
-                <span className="story-dots">● ● ●</span>
-            </div>
-            <footer>Одно рабочее пространство. Общий контекст.</footer>
+            <ol className="login-benefits">
+                <li><span>01</span><div><strong>Соберите обращения</strong><p>Переписка и вложения доступны в одной карточке.</p></div></li>
+                <li><span>02</span><div><strong>Распределите работу</strong><p>Ответственный, приоритет и срок первого ответа.</p></div></li>
+                <li><span>03</span><div><strong>Сохраните решение</strong><p>Публичный ответ клиенту и заметки для команды.</p></div></li>
+            </ol>
+            <footer>Northstar · рабочее пространство поддержки</footer>
         </section>
         <section className="login-form-wrap">
             <div className="login-heading">
                 <p className="eyebrow">ВАШЕ РАБОЧЕЕ МЕСТО</p>
-                <h2>Рады видеть вас</h2>
-                <p>Войдите в аккаунт, чтобы продолжить работу.</p>
+                <h2>Войти в поддержку</h2>
+                <p>Откройте обращения и задачи своей команды.</p>
             </div>
             <form key={preset} onSubmit={login} className="stack">
                 <label>Аккаунт
@@ -113,7 +114,7 @@ function App() {
             </form>
             <OidcLogin onToken={connection.setToken}/>
             <div className="demo-presets">
-                <p>Посмотреть от лица</p>
+                <p>Попробовать демо в роли</p>
                 <div>
                     {Object.entries(presets).map(([id, label]) => (
                         <button key={id} aria-pressed={preset == id} onClick={() => setPreset(id)}>{label}</button>
@@ -124,10 +125,23 @@ function App() {
         </section>
     </main>
 
+    const accessDenied = !!connection.me && !connection.me.views.includes('workspace')
+    let waitingTitle = 'Подключаемся к команде…'
+    let waitingDescription = 'Загружаем обращения и проверяем доступ к рабочему пространству.'
+    if (accessDenied) {
+        waitingTitle = 'Нет доступа к рабочему пространству'
+        waitingDescription = 'Обратитесь к владельцу команды или войдите другим аккаунтом.'
+    } else if (connection.error) {
+        waitingTitle = 'Не удалось подключиться'
+        waitingDescription = 'Проверьте соединение и повторите подключение. Введённый аккаунт сохранён.'
+    }
     const waiting = <main className="connection-state">
         <span className="brand-mark">✳</span>
-        <h1>{connection.me ? 'Рабочее пространство недоступно' : 'Подключаемся к команде…'}</h1>
-        <p>Права и данные загружаются с сервера.</p>
+        <h1>{waitingTitle}</h1>
+        <p role="status">{waitingDescription}</p>
+        {connection.error && !accessDenied && (
+            <button className="primary" onClick={() => connection.setToken(connection.liveToken)}>Повторить подключение</button>
+        )}
         <button onClick={() => connection.setToken('')}>Вернуться ко входу</button>
     </main>
 

@@ -41,11 +41,11 @@ export function Knowledge({value, org, commands, busy}: Props) {
             </button>
         ))}
         {!articles.length && <div className="empty-state">
-            <h2>{query ? 'Статьи не найдены' : 'Знания начинаются с первого ответа'}</h2>
+            <h2>{query ? 'Статьи не найдены' : 'Статей пока нет'}</h2>
             <p>
                 {query
                     ? 'Измените поисковый запрос.'
-                    : 'Сохраните инструкцию, к которой команда сможет вернуться.'}
+                    : 'Здесь появятся инструкции и ответы на частые вопросы.'}
             </p>
         </div>}
     </div>
@@ -72,9 +72,9 @@ export function Knowledge({value, org, commands, busy}: Props) {
     return <section className="page-content">
         <div className="section-heading">
             <div>
-                <p className="eyebrow">ОПЫТ, КОТОРЫЙ ОСТАЁТСЯ</p>
+                <p className="eyebrow">ИНСТРУКЦИИ И ОТВЕТЫ</p>
                 <h1>База знаний</h1>
-                <p>Хорошее решение не должно теряться в переписке.</p>
+                <p>Находите инструкции, публикуйте ответы и используйте их в обращениях.</p>
             </div>
             {staff && (
                 <button className="primary" disabled={busy} onClick={() => setCreating(!creating)}>
@@ -524,7 +524,7 @@ export function Audit({value, orgId}: {value: SupportWorkspace, orgId: string}) 
 
     const empty = <div className="empty-state audit-empty">
         <span>◷</span>
-        <h2>История ещё впереди</h2>
+        <h2>Действий пока нет</h2>
         <p>Создайте обращение или измените статью — действие появится здесь.</p>
     </div>
 

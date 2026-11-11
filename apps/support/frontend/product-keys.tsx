@@ -109,8 +109,8 @@ export function ProductKeys({resources, commands, orgId, orgName, disabled}: Pro
         <div className="section-heading">
             <div>
                 <p className="eyebrow">ДОСТУП ДЛЯ ИНТЕГРАЦИЙ</p>
-                <h1>Машинные ключи</h1>
-                <p>Поиск опубликованных знаний организации «{orgName}».</p>
+                <h1>Ключи интеграций</h1>
+                <p>Разрешите внешнему сервису искать опубликованные статьи организации «{orgName}».</p>
             </div>
             <button disabled={busy} onClick={refresh}>Обновить список</button>
         </div>
@@ -122,7 +122,7 @@ export function ProductKeys({resources, commands, orgId, orgName, disabled}: Pro
             <label>Срок действия, дней
                 <input name="days" type="number" min={1} max={90} step={1} defaultValue={30} required disabled={busy}/>
             </label>
-            <p className="muted">Право: knowledge:search. Ключ не открывает обращения и управление командой.</p>
+            <p className="muted">Доступ только к поиску статей: knowledge:search. Обращения и управление командой закрыты.</p>
             <button className="primary" disabled={busy}>{action.busy ? 'Выполняем…' : 'Выпустить ключ'}</button>
             {action.error && <p className="inline-warning" role="alert">{action.error}</p>}
             {action.error && pending.current && <p className="muted">
