@@ -62,20 +62,21 @@ function App() {
         <section className="login-story">
             <div className="brand"><span className="brand-mark">▱</span>papertrail</div>
             <div>
-                <p className="eyebrow">ОТ ФАЙЛА К РЕШЕНИЮ</p>
-                <h1>Данные, которым<br/>можно доверять.</h1>
-                <p>Загрузите документ. Проверьте результат рядом с оригиналом. Передайте дальше подтверждённую версию.</p>
-                <div className="paper-visual" aria-hidden="true">
-                    <span/>
-                    <div className="paper-grid">{Array.from({length: 15}, (_value, index) => <i key={index}/>)}</div>
-                </div>
+                <p className="eyebrow">ПРОВЕРКА ДОКУМЕНТОВ</p>
+                <h1>Из файла —<br/>в проверенные данные.</h1>
+                <p>Извлекайте таблицы из CSV, TXT и текстовых PDF. Исправляйте строки и передавайте команде подтверждённую версию.</p>
+                <ol className="login-benefits">
+                    <li><span>01</span><div><strong>Загрузите оригинал</strong><p>Исходный файл сохраняется отдельно от исправлений.</p></div></li>
+                    <li><span>02</span><div><strong>Проверьте результат</strong><p>Сравните данные с источником и оставьте комментарий.</p></div></li>
+                    <li><span>03</span><div><strong>Передайте дальше</strong><p>Подтвердите версию и выгрузите CSV или JSON.</p></div></li>
+                </ol>
             </div>
             <footer className="login-footer">КАЖДОЕ ИЗМЕНЕНИЕ ОСТАЁТСЯ В ИСТОРИИ</footer>
         </section>
         <section className="login-form">
             <p className="eyebrow">СТУДИЯ ДОКУМЕНТОВ</p>
-            <h2>Продолжим работу</h2>
-            <p className="muted">Ваши файлы, команда и история проверки.</p>
+            <h2>Войти в Papertrail</h2>
+            <p className="muted">Откройте документы и очередь проверки своей команды.</p>
             <form key={preset} className="stack" onSubmit={login}>
                 <label>Аккаунт
                     <input name="account" autoComplete="username" required defaultValue={preset}/>
@@ -86,7 +87,7 @@ function App() {
                 <button className="primary" disabled={action.busy}>{action.busy ? 'Входим…' : 'Открыть студию →'}</button>
             </form>
             <div className="presets">
-                <p className="muted">Посмотреть рабочее место</p>
+                <p className="muted">Попробовать демо в роли</p>
                 <div className="row">
                     {Object.entries(presets).map(([id, label]) => (
                         <button key={id} aria-pressed={preset == id} onClick={() => setPreset(id)}>{label}</button>
@@ -97,9 +98,22 @@ function App() {
         </section>
     </main>
 
+    const accessDenied = !!connection.me && !connection.me.views.includes('workspace')
+    let waitingTitle = 'Открываем документы…'
+    let waitingDescription = 'Проверяем доступ к рабочему пространству.'
+    if (accessDenied) {
+        waitingTitle = 'Нет доступа к документам'
+        waitingDescription = 'Обратитесь к владельцу команды или войдите другим аккаунтом.'
+    } else if (connection.error) {
+        waitingTitle = 'Не удалось подключиться'
+        waitingDescription = 'Проверьте соединение и повторите подключение.'
+    }
     const waiting = <main className="loading">
-        <h1>Открываем студию…</h1>
-        <p className="muted">Проверяем доступ к рабочему пространству.</p>
+        <h1>{waitingTitle}</h1>
+        <p className="muted" role="status">{waitingDescription}</p>
+        {connection.error && !accessDenied && (
+            <button className="primary" onClick={() => connection.setToken(connection.liveToken)}>Повторить подключение</button>
+        )}
         <button onClick={() => connection.setToken('')}>Вернуться ко входу</button>
     </main>
 

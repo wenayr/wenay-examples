@@ -25,6 +25,30 @@ const documentTabs = [
 
 const accepted = '.csv,.txt,.pdf,text/csv, text/plain, application/pdf'
 
+const documentQueues = [
+    {id: 'uploaded', title: 'К обработке', hint: 'Запустить извлечение'},
+    {id: 'processing', title: 'В обработке', hint: 'Дождаться результата'},
+    {id: 'review', title: 'На проверке', hint: 'Сверить с оригиналом'},
+    {id: 'attention', title: 'Требуют внимания', hint: 'Проверить причину'},
+    {id: 'approved', title: 'Подтверждены', hint: 'Выгрузить данные'}
+] as const
+
+function documentQueue(document: DocumentMetadata) {
+    if (document.status == 'failed' || document.status == 'uncertain') return 'attention'
+    if (document.status == 'cancelled') return 'uploaded'
+    return document.status
+}
+
+function nextStep(document: DocumentMetadata, canReview: boolean) {
+    if (document.status == 'uncertain') return 'Сверьте результат перед повторным запуском'
+    if (document.status == 'failed') return 'Проверьте причину ошибки обработки'
+    if (document.status == 'review') return canReview ? 'Проверьте и подтвердите данные' : 'Дождитесь проверки команды'
+    if (document.status == 'approved') return 'Подтверждённые данные готовы к выгрузке'
+    if (document.status == 'processing') return 'Дождитесь завершения обработки'
+    if (document.status == 'cancelled') return 'Проверьте документ после отмены обработки'
+    return 'Запустите извлечение данных из оригинала'
+}
+
 function fileKind(name: string) {
     const lower = name.toLowerCase()
     if (lower.endsWith('.pdf')) return 'PDF'
@@ -51,17 +75,40 @@ export function Studio({value, org, resources, commands, busy}: StudioProps) {
 
     const [selected, setSelected] = useState('')
     const [query, setQuery] = useState('')
+    const [queue, setQueue] = useState('all')
     const [dragging, setDragging] = useState(false)
     const [uploading, setUploading] = useState(false)
     const [uploadNotice, setUploadNotice] = useState('')
     const transfer = useRef<{remote: ProcessorRemote, uploadId: string, cancelled: boolean} | null>(null)
+    const studioRef = useRef<HTMLElement>(null)
 
     const mine = value.documents.filter(item => item.orgId == org.id)
     const documents = mine.sort((a, b) => b.createdAt - a.createdAt)
     const needle = query.toLocaleLowerCase()
-    const filtered = documents.filter(item => item.name.toLocaleLowerCase().includes(needle))
-    const current = documents.find(item => item.id == selected) ?? documents[0]
+    const inQueue = documents.filter(item => queue == 'all' || documentQueue(item) == queue)
+    const filtered = inQueue.filter(item => item.name.toLocaleLowerCase().includes(needle))
+    const current = documents.find(item => item.id == selected) ?? filtered[0]
     const disabled = busy || action.busy || !remote || !ai.ready
+    const canReview = org.role != 'uploader'
+    const nextQueue = canReview
+        ? ['attention', 'review', 'uploaded', 'processing', 'approved']
+        : ['attention', 'uploaded', 'processing', 'review', 'approved']
+    const queuedDocuments = nextQueue.map(id => documents.find(item => documentQueue(item) == id))
+    const nextDocument = queuedDocuments.find(Boolean)
+
+    function chooseQueue(id: string) {
+        setQueue(id)
+        setQuery('')
+        const first = documents.find(item => id == 'all' || documentQueue(item) == id)
+        setSelected(first?.id ?? '')
+    }
+    function openNext() {
+        if (!nextDocument) return
+        setQueue('all')
+        setQuery('')
+        setSelected(nextDocument.id)
+        studioRef.current?.scrollIntoView({block: 'start'})
+    }
 
     const scope = useRef({remote, orgId: org.id})
     scope.current = {remote, orgId: org.id}
@@ -174,8 +221,8 @@ export function Studio({value, org, resources, commands, busy}: StudioProps) {
     >
         <span aria-hidden="true">↥</span>
         <div className="grow">
-            <h3>{action.busy ? 'Загружаем документ…' : 'Новый документ начинается здесь'}</h3>
-            <p>Перетащите CSV, TXT или PDF либо выберите файл. До 512 КиБ, без платных запросов.</p>
+            <h3>{action.busy ? 'Загружаем документ…' : 'Добавить документ'}</h3>
+            <p>Перетащите CSV, TXT или текстовый PDF. Размер файла — до 512 КиБ.</p>
         </div>
         <label>
             <span className="sr-only">Выбрать документ</span>
@@ -192,13 +239,15 @@ export function Studio({value, org, resources, commands, busy}: StudioProps) {
 
     const emptyList = <div className="empty">
         <span className="empty-symbol">▤</span>
-        <h3>{query ? 'Ничего не найдено' : 'Здесь будут ваши документы'}</h3>
-        <p>{query ? 'Попробуйте другое название.' : 'Загрузите файл или начните с примера сметы.'}</p>
+        <h3>{query || queue != 'all' ? 'Документы не найдены' : 'Здесь будут ваши документы'}</h3>
+        <p>{query || queue != 'all' ? 'Измените название или выберите другой этап.' : 'Загрузите файл или начните с примера сметы.'}</p>
+        {query && <button onClick={() => setQuery('')}>Очистить поиск</button>}
+        {queue != 'all' && <button onClick={() => chooseQueue('all')}>Все документы</button>}
     </div>
 
     const list = <aside className="documents-list">
         <div className="list-toolbar">
-            <strong>Все документы <span className="muted">{documents.length}</span></strong>
+            <strong>{documentQueues.find(item => item.id == queue)?.title ?? 'Все документы'} <span className="muted">{filtered.length}</span></strong>
             <input
                 placeholder="Найти документ…"
                 aria-label="Поиск документов"
@@ -245,21 +294,40 @@ export function Studio({value, org, resources, commands, busy}: StudioProps) {
         <div className="page-heading">
             <div>
                 <p className="eyebrow">ДОКУМЕНТЫ → ПРОВЕРЕННЫЕ ДАННЫЕ</p>
-                <h1>Каждый документ на своём месте</h1>
-                <p>Загрузка, обработка и проверка — в одном рабочем пространстве.</p>
+                <h1>Документы и проверка</h1>
+                <p>Сверьте извлечённые данные с оригиналом, подтвердите версию и выгрузите результат.</p>
             </div>
-            <span className="badge">PAPERTRAIL STUDIO</span>
+            <span className="badge">CSV · TXT · PDF</span>
         </div>
-        <div className="metric-grid">
-            <Metric icon="▤" value={documents.length} label="Документов в работе"/>
-            <Metric icon="◷" value={countByStatus(documents, 'review')} label="Ждут проверки"/>
-            <Metric icon="✓" value={countByStatus(documents, 'approved')} label="Подтверждены"/>
-        </div>
+        <section className="document-flow" aria-label="Этапы работы с документами">
+            <div className="document-flow-heading">
+                <div><h2>От загрузки к результату</h2><p>Выберите этап, чтобы открыть нужную очередь.</p></div>
+                <button aria-pressed={queue == 'all'} onClick={() => chooseQueue('all')}>Все документы · {documents.length}</button>
+            </div>
+            <div className="document-pipeline">
+                {documentQueues.map(item => <button
+                    key={item.id} className={'pipeline-stage ' + item.id}
+                    aria-pressed={queue == item.id} onClick={() => chooseQueue(item.id)}
+                >
+                    <span>{item.title}</span>
+                    <strong>{documents.filter(document => documentQueue(document) == item.id).length}</strong>
+                    <small>{item.hint}</small>
+                </button>)}
+            </div>
+            {nextDocument ? <div className="document-next">
+                <div><p className="eyebrow">СЛЕДУЮЩИЙ ШАГ</p><h3>{nextStep(nextDocument, canReview)}</h3></div>
+                <div className="next-file"><strong>{nextDocument.name}</strong><small>Обновлён {formatDate(nextDocument.updatedAt)}</small></div>
+                <button onClick={openNext}>Открыть документ →</button>
+            </div> : <div className="document-start">
+                <strong>Начните с исходного файла</strong>
+                <p>Загрузите документ ниже или откройте пример сметы. После обработки здесь появится очередь проверки.</p>
+            </div>}
+        </section>
         {uploadPanel}
         {uploading && <button onClick={() => void cancelUpload()}>Отменить загрузку</button>}
         {uploadNotice && <p role="status" className="muted">{uploadNotice}</p>}
         {!!connectionError && <p className="inline-error" role="alert">{connectionMessage}</p>}
-        <section className="studio">
+        <section className="studio" ref={studioRef}>
             {list}
             {current && remote ? <DocumentPane
                 key={current.id}
@@ -267,20 +335,16 @@ export function Studio({value, org, resources, commands, busy}: StudioProps) {
                 remote={remote}
                 ai={ai.state}
                 aiReady={ai.ready}
-                canReview={org.role != 'uploader'}
+                canReview={canReview}
                 commands={commands}
                 busy={busy}
             /> : placeholder}
         </section>
-        <p className="muted" style={{fontSize: 10, marginTop: 16}}>
+        <p className="muted" style={{marginTop: 16}}>
             Обработка CSV, TXT и текстового слоя PDF. Для сканов нужен отдельный OCR,
             нейросеть и платные запросы не используются.
         </p>
     </div>
-}
-
-function countByStatus(documents: DocumentMetadata[], status: string) {
-    return documents.filter(item => item.status == status).length
 }
 
 // Отмена могла опоздать: сервис честно говорит, на какой стадии застал запрос.
@@ -288,16 +352,6 @@ function cancelNotice(status: string) {
     if (status == 'cancelled') return 'Загрузка отменена'
     if (status == 'committing') return 'Файл уже сохраняется. Дождитесь результата'
     return 'Файл уже сохранён'
-}
-
-function Metric({icon, value, label}: {icon: string, value: number, label: string}) {
-    return <div className="metric">
-        <span className="metric-icon" aria-hidden="true">{icon}</span>
-        <div>
-            <strong>{value}</strong>
-            <small>{label}</small>
-        </div>
-    </div>
 }
 
 type PaneProps = {
@@ -469,7 +523,7 @@ function DocumentPane({document, remote, ai, aiReady, canReview, commands, busy}
             <header>НЕИЗМЕНЯЕМЫЙ ОРИГИНАЛ · UTF-8</header>
             <pre>{detail.originalText}</pre>
         </div>}
-        <button style={{marginTop: 13, fontSize: 11}} disabled={disabled} onClick={() => void download()}>
+        <button style={{marginTop: 13}} disabled={disabled} onClick={() => void download()}>
             Скачать исходный файл ↓
         </button>
     </>
@@ -527,7 +581,7 @@ function DocumentPane({document, remote, ai, aiReady, canReview, commands, busy}
         </div>
     </footer>
 
-    const management = <details style={{marginTop: 18, fontSize: 10, color: '#9aa6b8'}}>
+    const management = <details className="document-management">
         <summary>Управление документом</summary>
         <p style={{margin: '10px 0'}}>Удалённый документ исчезнет из рабочего списка.</p>
         <button
@@ -538,6 +592,19 @@ function DocumentPane({document, remote, ai, aiReady, canReview, commands, busy}
             Удалить документ
         </button>
     </details>
+
+    function navigateTabs(event: React.KeyboardEvent<HTMLDivElement>) {
+        const at = documentTabs.findIndex(item => item.id == tab)
+        let next = at
+        if (event.key == 'ArrowRight') next = (at + 1) % documentTabs.length
+        else if (event.key == 'ArrowLeft') next = (at + documentTabs.length - 1) % documentTabs.length
+        else if (event.key == 'Home') next = 0
+        else if (event.key == 'End') next = documentTabs.length - 1
+        else return
+        event.preventDefault()
+        setTab(documentTabs[next].id)
+        event.currentTarget.querySelectorAll<HTMLButtonElement>('[role="tab"]')[next]?.focus()
+    }
 
     return <div className="document-work">
         <header className="document-top">
@@ -550,14 +617,22 @@ function DocumentPane({document, remote, ai, aiReady, canReview, commands, busy}
             </div>
             <span className={'badge ' + document.status}>{statusLabels[document.status]}</span>
         </header>
-        <div className="document-tabs" role="tablist" aria-label="Содержимое документа">
+        <div className="document-tabs" role="tablist" aria-label="Содержимое документа" onKeyDown={navigateTabs}>
             {documentTabs.map(item => (
-                <button role="tab" aria-selected={tab == item.id} key={item.id} onClick={() => setTab(item.id)}>
+                <button
+                    role="tab"
+                    id={'document-tab-' + item.id}
+                    aria-controls="document-panel"
+                    aria-selected={tab == item.id}
+                    tabIndex={tab == item.id ? 0 : -1}
+                    key={item.id}
+                    onClick={() => setTab(item.id)}
+                >
                     {item.title}
                 </button>
             ))}
         </div>
-        <div className="document-body">
+        <div className="document-body" id="document-panel" role="tabpanel" aria-labelledby={'document-tab-' + tab} tabIndex={0}>
             {document.status == 'approved' && (
                 <div className="approval-summary">✓ Документ подтверждён. Данные готовы к экспорту.</div>
             )}
