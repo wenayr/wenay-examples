@@ -88,7 +88,14 @@ npm test
 npm run build
 ```
 
-Живые проверки размещения продуктов запускаются отдельно и требуют собранных образов `wenay-examples.local/<продукт>:first` и `:second`: `npm run test:booking`, `test:crm`, `test:forms`, `test:monitoring`, `test:approvals`, `test:content`, а также `test:support`, `test:documents`, `test:metering` и `test:stateful` для пиццерии и органайзера. Каждая проходит установку, обновление и откат при постоянном адресе шлюза с лимитом контейнера 256 МиБ.
+`npm test` не требует Docker Engine или LXD: ролевые RPC и шлюзы проверяются настоящими локальными сетевыми клиентами,
+а Docker/LXD adapters и агенты обращаются к собственным HTTP-стендам через временные сокеты или named pipes.
+Проверки оркестрации и WebSocket также автономны. Контейнеры, образы и виртуальные машины этот набор не создаёт.
+
+Живые проверки размещения продуктов запускаются отдельно и требуют работающего Linux Docker Engine и собранных образов `wenay-examples.local/<продукт>:first` и `:second`: `npm run test:booking`, `test:crm`, `test:forms`, `test:monitoring`, `test:approvals`, `test:content`, а также `test:support`, `test:documents`, `test:metering` и `test:stateful` для пиццерии и органайзера. Каждая проходит установку, обновление и откат при постоянном адресе шлюза с лимитом контейнера 256 МиБ.
+
+`npm run test:docker` проверяет настоящий Docker runtime, а `test:public-address` — размещённые приложения через постоянный адрес.
+Они также требуют Linux Docker Engine и подготовленных образов и не входят в `npm test`.
 
 Последовательный gate из корня: `node scripts/hosting-live-gate.mjs`; план без Docker — `--plan`, текущая пара — `--only=organizer,pizzeria`. Для обоих продуктов gate использует полный `test:public-address`, а не REST-only `test:stateful`. Недоступные предпосылки отмечаются skip с кодом выхода 2; pass выбранного поднабора не заменяет полный gate. [Подготовка, покрытие и отчёты](LIVE-GATE.md).
 

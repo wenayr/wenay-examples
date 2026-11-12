@@ -4,8 +4,10 @@ import {createBookingRuntime} from './runtime'
 import {bookingRoles, bookingWorkspace} from './domain'
 import {createBookingState} from './model'
 import {daySlots, remaining, validateResource} from './schedule'
+import {checkBookingReschedule} from './reschedule-check'
 
 async function main() {
+    await checkBookingReschedule()
     const sample = createBookingState(), source = sample.resources.studio, offering = sample.services.consultation
     const sunday = {...source, weekly: [{day: 7, start: '01:00', end: '04:00'}]}
     const short = {...offering, duration: 15, before: 0, after: 0}
@@ -66,11 +68,14 @@ async function main() {
         await owner.resourceSave(rpc(), {...state().resources.studio, capacity: 1})
         await assert.rejects(first.resourceSave(rpc(), {...state().resources.studio, name: 'forged'}), /forbidden/)
         await assert.rejects(staff.resourceSave(rpc(), {...state().resources.harbor}), /доступа/)
-            const foreign = runtime.definition.resources.calendar.open(context('outsider'))
+        const foreign = runtime.definition.resources.calendar.open(context('outsider'))
         const range = {orgId, serviceId: 'consultation', from: '2026-09-14', days: 1, partySize: 1}
         assert.throws(() => foreign.facade.control.read(range), /доступа/)
+        assert.throws(() => foreign.facade.control.read({...range, includeOccupied: true}), /доступа/)
         assert.throws(() => calendar.facade.control.read({orgId, serviceId: 'consultation', from: '2026-09-14', days: 15, partySize: 1}), /14 дней/)
         assert.throws(() => calendar.facade.control.read({orgId, serviceId: 'harbor', from: '2026-09-14', days: 1, partySize: 1}), /недоступна/)
+        assert.throws(() => calendar.facade.control.read({...range, serviceId: 'harbor', includeOccupied: true}), /недоступна/)
+        assert.equal(calendar.facade.control.read({...range, from: '2026-09-19', includeOccupied: true}).slots.length, 0, 'closed day stays empty')
         const slots = calendar.facade.control.read({orgId, serviceId: 'consultation', from: '2026-09-14', days: 1, partySize: 1}).slots
         assert(slots.length > 4)
         const start = slots[0].start
@@ -86,12 +91,26 @@ async function main() {
         const free = calendar.facade.control.read(day).slots
         const note = 'buffer occupies resource through end+15min'
         assert(!free.some(slot => slot.start == start + 15 * 60000), note)
+        assert(!free.some(slot => slot.start == start), 'default calendar only returns enough places')
+        const withOccupied = calendar.facade.control.read({...day, includeOccupied: true}).slots
+        const waitingSlot = withOccupied.find(slot => slot.start == start)
+        assert.equal(waitingSlot?.available, 0, 'occupied start is selectable for waitlist')
+        assert.equal(withOccupied.find(slot => slot.start == start + 45 * 60000)?.available, 0, 'occupied view retains the booking buffer')
+        assert(withOccupied.every(slot => slot.start > clock && slot.start <= clock + 180 * 86400000))
+        const heldCalendar = runtime.definition.resources.calendar.open(context(state().bookings[winner].customer))
+        try {
+            assert.throws(() => heldCalendar.facade.control.read({...day, bookingId: winner}), /подтверждённую/)
+        } finally {heldCalendar.close()}
+        const beforeRead = clock
+        clock = start
+        assert(!calendar.facade.control.read({...day, includeOccupied: true}).slots.some(slot => slot.start <= clock), 'past starts stay hidden')
+        clock = beforeRead
         await assert.rejects(outsider.bookingConfirm(rpc(), action(winner, 'cross-tenant')), /доступа/)
         const otherClient = state().bookings[winner].customer == 'customer' ? second : first
         await assert.rejects(otherClient.bookingConfirm(rpc(), action(winner, 'other-customer')), /недоступна/)
         await winningClient.bookingConfirm(rpc(), action(winner, 'confirm-first'))
         assert.equal(state().bookings[winner].status, 'confirmed')
-        const joined = await otherClient.waitJoin(rpc(), {orgId, key: 'wait-once', serviceId: 'consultation', start, partySize: 1})
+        const joined = await otherClient.waitJoin(rpc(), {orgId, key: 'wait-once', serviceId: 'consultation', start: waitingSlot!.start, partySize: 1})
         assert.equal((await otherClient.waitJoin(rpc(), {orgId, key: 'wait-once', serviceId: 'consultation', start, partySize: 1})).fresh, false)
         assert.equal(state().waitlist[joined.id].status, 'waiting')
         await winningClient.bookingCancel(rpc(), action(winner, 'cancel-first'))
@@ -102,9 +121,52 @@ async function main() {
         assert.equal(Object.values(state().bookings).filter(value => value.id == offerId).length, 1)
         await otherClient.bookingConfirm(rpc(), action(offerId, 'accept-wait'))
         assert.equal(state().waitlist[joined.id].status, 'accepted')
+        const moveAccount = state().bookings[offerId].customer
+        const moverCalendar = runtime.definition.resources.calendar.open(context(moveAccount))
+        const deniedAccount = moveAccount == 'customer' ? 'customer2' : 'customer'
+        const deniedCalendar = runtime.definition.resources.calendar.open(context(deniedAccount))
+        const moveDay = {...day, bookingId: offerId}
+        try {
+            const overlapStart = start + 15 * 60000
+            assert(!moverCalendar.facade.control.read(day).slots.some(slot => slot.start == overlapStart), 'new booking counts the existing reservation')
+            const overlap = moverCalendar.facade.control.read(moveDay).slots.find(slot => slot.start == overlapStart)
+            assert.equal(overlap?.available, 1, 'move calendar excludes only its own confirmed reservation')
+            assert.throws(() => deniedCalendar.facade.control.read(moveDay), /недоступна/)
+            assert.throws(() => foreign.facade.control.read(moveDay), /доступа/)
+            const foreignDay = {...moveDay, orgId: 'harbor', serviceId: 'harbor'}
+            assert.throws(() => foreign.facade.control.read(foreignDay), /недоступна/)
+            assert.throws(() => moverCalendar.facade.control.read({...moveDay, partySize: 2}), /не соответствует/)
+            const compatible = await owner.serviceSave(rpc(), {...state().services.consultation, id: '', revision: 0, name: 'Совместимая услуга'})
+            const target = moverCalendar.facade.control.read({...moveDay, serviceId: compatible.id})
+            assert(target.slots.some(slot => slot.start == overlapStart), 'cross-service reschedule keeps own-booking exclusion')
+            await otherClient.bookingMove(rpc(), {...action(offerId, 'move-overlap'), start: overlap!.start})
+            assert.equal(state().bookings[offerId].start, overlapStart)
+            await otherClient.bookingMove(rpc(), {...action(offerId, 'move-return'), start})
+            clock = start
+            assert.throws(() => moverCalendar.facade.control.read(moveDay), /подтверждённую/)
+            clock = beforeRead
+        } finally {
+            moverCalendar.close()
+            deniedCalendar.close()
+        }
         const secondSlot = start + 3600000
         const blocked = await owner.bookingHold(rpc(), {...hold('blocked', secondSlot), customer: 'customer'})
         await owner.bookingConfirm(rpc(), action(blocked.id, 'confirm-blocked'))
+        const moveWithNeighbor = runtime.definition.resources.calendar.open(context(moveAccount))
+        try {
+            const positions = moveWithNeighbor.facade.control.read({...moveDay, includeOccupied: true}).slots
+            assert.equal(positions.find(slot => slot.start == secondSlot)?.available, 0, 'excluding the moved booking keeps other reservations')
+        } finally {moveWithNeighbor.close()}
+        await owner.resourceSave(rpc(), {...state().resources.studio, capacity: 2})
+        await owner.serviceSave(rpc(), {...state().services.consultation, capacity: 2})
+        const pair = {...day, partySize: 2}
+        assert(!calendar.facade.control.read(pair).slots.some(slot => slot.start == start), 'one free place is insufficient for two people')
+        const partial = calendar.facade.control.read({...pair, includeOccupied: true}).slots.find(slot => slot.start == start)
+        assert.equal(partial?.available, 1, 'partial capacity is returned honestly for waitlist')
+        assert.equal(calendar.facade.control.read(day).slots.find(slot => slot.start == start)?.available, 1, 'one person can still book')
+        await assert.rejects(first.bookingHold(rpc(), {...hold('too-large-party', start), partySize: 2}), /недостаточно/)
+        await owner.serviceSave(rpc(), {...state().services.consultation, capacity: 1})
+        await owner.resourceSave(rpc(), {...state().resources.studio, capacity: 1})
         const original = state().bookings[offerId]
         const left = {...original, id: 'adjacent-left', occupiedFrom: start, occupiedTo: start + 3600000, status: 'confirmed' as const}
         const right = {...original, id: 'adjacent-right', occupiedFrom: start + 3600000, occupiedTo: start + 7200000, status: 'confirmed' as const}

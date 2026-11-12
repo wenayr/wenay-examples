@@ -1,0 +1,15 @@
+{
+  "name": "wenay-chat-desktop",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Windows shell for the existing HTTPS Wenay Chat web client",
+  "main": "main.cjs",
+  "scripts": {
+    "start": "electron .",
+    "check:source": "node --check main.cjs && node source-check.cjs"
+  },
+  "devDependencies": {
+    "electron": "44.4.5"
+  },
+  "engines": {"node": ">=22.12"}
+}

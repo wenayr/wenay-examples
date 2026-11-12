@@ -337,14 +337,44 @@ export const products = [
         ],
         "port": 3700,
         "ready": false,
-        "checked": "2026-11-11 21:45",
+        "checked": "не запускалось",
         "results": {
-            "typecheck": "✓",
-            "test": "пропущено: нет docker",
-            "build": "✓"
+            "typecheck": "?",
+            "test": "?",
+            "build": "?"
         },
         "scaffold": false,
         "checks": "npm test — docker, gateway, агент, LXD, оркестрация, WebSocket; отдельные test:<app> разворачивают реальные продукты",
         "limits": "Реальный Kubernetes не заявляется. LXD-протокол проверен без настоящей VM. Автоматических миграций схемы нет."
+    },
+    {
+        "id": "chat",
+        "group": "team",
+        "name": "Рядом",
+        "kind": "Общий чат",
+        "title": "Один разговор на всех экранах",
+        "description": "Общая история, обычные сообщения и явный тестовый помощник. Повтор и перезапуск сохраняют разговор.",
+        "accent": "#3d5263",
+        "wash": "#e5edf2",
+        "labels": [
+            "Разговор",
+            "Сообщение",
+            "Ответ"
+        ],
+        "roles": [
+            "Участник создаёт разговор и пишет в общий чат со второго клиента.",
+            "Тестовый помощник возвращает законченный демонстрационный ответ по явному запросу."
+        ],
+        "port": 3819,
+        "ready": false,
+        "checked": "не запускалось",
+        "results": {
+            "typecheck": "?",
+            "test": "?",
+            "build": "?"
+        },
+        "scaffold": true,
+        "checks": "npm test — реальные сетевые клиенты, receipts, persistence, доступ",
+        "limits": "Две демонстрационные учётные записи и два статических workspace. Team сохраняет C01\nжурнал целиком, включая private-alice; Personal — новый host, автоматического переноса\nстарой личной истории нет. Native bound owner-команды меняют membership и защищают\nпоследнего owner. Logout локален и не обещает глобального отзыва токенов.\n\nПолный native REST отключён; остаётся native credential login. Ограничение связано с\nSERVICE-COMMAND-RECEIPT-ACL.\nC03 требует собственной runtime/browser приёмки и не наследует PASS C01.\nТестовый ответ не вызывает внешнюю модель. Streaming, remote agent, установленные\ndesktop/mobile и реальное размещение остаются отдельными непринятыми этапами."
     }
 ]

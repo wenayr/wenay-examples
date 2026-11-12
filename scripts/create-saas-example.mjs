@@ -125,7 +125,7 @@ function replacePort(files, from, to) {
     return changed
 }
 
-// Унаследованная проверка компилируется и проходит, но описывает предметную область донора.
+// Унаследованная проверка описывает предметную область донора; её результат в копии ещё неизвестен.
 // Пометка в первой строке не даёт принять её за собственную проверку копии.
 function markInherited(files, template) {
     const note = '// Проверка унаследована от шаблона ' + template
@@ -150,9 +150,11 @@ function scaffoldNote(template, name, port, title, inherited, versions) {
 
 ## Унаследованные проверки
 
-Эти файлы пришли от донора вместе с исходниками. Они запускаются и проходят, но проверяют
-предметную область ${template}, а не вашу. Первая строка каждого помечена; переписывайте
-их под свои правила и снимайте пометку.
+Эти файлы пришли от донора вместе с исходниками и проверяют предметную область ${template}.
+Копировщик их не запускал: результат в этой копии ещё неизвестен. До изменения исходников
+выполните установку и исходные проверки по README, сохраните результат как baseline.
+Первая строка каждого файла помечена; адаптируйте проверки вместе со своими правилами,
+сохраняя нужные регрессии донора на явно заданных тестовых данных, и снимайте пометку.
 
 ${list || '- нет'}
 
@@ -169,7 +171,66 @@ ${list || '- нет'}
 `
 }
 
-function instructions(template, name, sourceReadme, port, title) {
+const templateGuides = {
+    monitoring: {
+        accounts: 'owner, oncall, observer, outsider',
+        hint: 'Для probe-a/probe-b используются отдельные технические роли. HTTP-проверки работают после создания монитора, цели задаёт оператор. '
+            + 'AI-сводка — локальное демо по фактам, автоматических команд хостингу нет. '
+            + 'ui-fixture.ts создаёт демонстрационные отчёты, npm test выполняет настоящие HTTP-проверки.'
+    },
+    forms: {
+        accounts: 'owner, author, analyst, outsider',
+        hint: 'Респондент входит по опубликованному случайному токену. Формы имеют неизменяемые версии, условные поля, агрегаты, удаление и экспорт. '
+            + 'Группировка — локальное демо без модели и платных запросов. Все npm test автономны.'
+    },
+    booking: {
+        accounts: 'owner, staff, customer, customer2, outsider',
+        hint: 'Расписание использует IANA зоны и UTC слоты. TTL/вместимость проверяются authority; '
+            + 'помощник — локальный parser без LLM, депозит и напоминания тестовые. Все npm test автономны.'
+    },
+    crm: {
+        accounts: 'owner, lead, manager, customer, outsider',
+        hint: 'CRM содержит сделки, версии предложений, задачи и импорт контактов. '
+            + 'Помощник по умолчанию использует тестовый исполнитель без платной модели.'
+    },
+    support: {
+        accounts: 'owner, lead, agent, customer, outsider',
+        hint: 'Внешний OIDC-вход описан в OIDC.md. SERVICE_DEMO=0 требует отдельного пустого SERVICE_DATA_DIR. '
+            + 'Помощник по умолчанию использует тестовый исполнитель, а не платную модель.'
+    },
+    metering: {
+        accounts: 'owner, auditor, outsider',
+        hint: 'Учёт использует тестовые единицы, без денежных списаний. npm test проверяет домен, подписанные webhooks и authority с двумя serving nodes. '
+            + 'Межсервисные проверки соседних приложений остались в исходном репозитории.'
+    },
+    documents: {
+        accounts: 'owner, reviewer, customer, outsider',
+        hint: 'Для CSV через Python нужен установленный Python 3 и при необходимости DOCUMENT_PYTHON. '
+            + 'Node-обработка CSV/TXT и PDF с текстовым слоем не требует ИИ-провайдера. OCR сканов не реализован.'
+    },
+    approvals: {
+        accounts: 'owner, reviewer, requester, requester2, outsider',
+        hint: 'Сотрудник создаёт заявку и отправляет неизменяемую версию. Проверяющий согласовывает, возвращает на уточнение или отказывает. '
+            + 'Владелец управляет ролями; свою заявку не согласовывает никто. Внешняя модель не используется.'
+    },
+    content: {
+        accounts: 'owner, author, editor, publisher, reader, outsider',
+        hint: 'Автор собирает страницу и отправляет версию редактору; издатель публикует одобренную версию или ставит её в расписание. '
+            + 'Исходная welcome ещё не опубликована. Анонимное чтение — /#read=northstar. '
+            + 'Помощник использует тестовый исполнитель без платной модели.'
+    },
+    chat: {
+        accounts: 'alice, bob',
+        hint: 'Откройте чат в двух окнах: общий разговор доступен Алисе и Бобу, личное пространство — только Алисе. '
+            + 'Ответ тестового помощника запускается отдельно, без внешней модели. Копия содержит только web-чат, без desktop-клиента.'
+    }
+}
+
+function instructions(template, name, sourceReadme, port, title, scripts) {
+    const guide = templateGuides[template]
+    if (!guide) throw new Error('Добавьте описание первого запуска для шаблона ' + template)
+    const available = ['typecheck', 'test', 'build', 'start'].filter(script => Object.hasOwn(scripts, script))
+    const steps = available.map(script => ['test', 'start'].includes(script) ? 'npm ' + script : 'npm run ' + script)
     return `# ${title}
 
 Самостоятельная копия примера ${template} (пакет \`${name}\`). Название npm-пакета изменено; сервисные идентификаторы, маршруты и предметная модель сохранены, чтобы пример работал без скрытого массового переименования.
@@ -180,15 +241,12 @@ function instructions(template, name, sourceReadme, port, title) {
 
 \`\`\`text
 npm ci --no-audit --no-fund
-npm run typecheck
-npm test
-npm run build
-npm start
+${steps.join('\n')}
 \`\`\`
 
 Откройте http://127.0.0.1:${port}/. Порт можно изменить через SERVICE_PORT. Файлы .env не загружаются автоматически: задайте переменные окружения процессу или используйте явный Node --env-file.
 
-${template == 'monitoring' ? 'Демонстрационные аккаунты: owner, oncall, observer, outsider; пароль — имя аккаунта + -pass. Для probe-a/probe-b используются отдельные технические роли. HTTP-проверки начинают работать только после создания монитора, цели задаёт оператор. AI-сводка — локальное демо по фактам, автоматических команд хостингу нет. ui-fixture.ts создаёт явно демонстрационные отчёты, npm test выполняет настоящие HTTP-проверки.' : template == 'forms' ? 'Демонстрационные аккаунты: owner, author, analyst, outsider; пароль — имя аккаунта + -pass. Респондент входит только по опубликованному случайному токену. Формы имеют неизменяемые версии, условные поля, агрегаты, удаление и экспорт. Группировка — локальное демо без модели и платных запросов. Все npm test автономны.' : template == 'booking' ? 'Демонстрационные аккаунты: owner, staff, customer, customer2, outsider; пароль — имя аккаунта + -pass. Расписание использует IANA зоны и UTC слоты. TTL/вместимость проверяются authority; помощник — локальный parser без LLM, депозит и напоминания тестовые. Все npm test автономны.' : template == 'crm' ? 'Демонстрационные аккаунты: owner, lead, manager, customer, outsider; пароль — имя аккаунта + -pass. CRM содержит сделки, версии предложений, задачи и импорт контактов. Помощник по умолчанию использует тестовый исполнитель без платной модели.' : template == 'support' ? 'Демонстрационные аккаунты: owner, lead, agent, customer, outsider; пароль — имя аккаунта + -pass. Внешний OIDC-вход описан в OIDC.md. SERVICE_DEMO=0 требует отдельного пустого SERVICE_DATA_DIR. Помощник по умолчанию использует тестовый исполнитель, а не платную модель.' : template == 'metering' ? 'Демонстрационные аккаунты: owner, auditor, outsider; пароль — имя аккаунта + -pass. Учёт использует тестовые единицы, без денежных списаний. npm test проверяет домен, подписанные webhooks и authority с двумя serving nodes. Проверка test:integration связывает соседние приложения support/documents: она предназначена только для исходного репозитория, её файл и npm-команда не включены в эту самостоятельную копию.' : 'Демонстрационные аккаунты: owner, reviewer, customer, outsider; пароль — имя аккаунта + -pass. Для CSV через Python нужен установленный Python 3 и при необходимости DOCUMENT_PYTHON. Node-обработка CSV/TXT и PDF с текстовым слоем не требует ИИ-провайдера. OCR сканов не реализован.'}
+Демонстрационные аккаунты: ${guide.accounts}; пароль — имя аккаунта + -pass. ${guide.hint}
 
 ## Что перенесено
 
@@ -196,7 +254,7 @@ ${template == 'monitoring' ? 'Демонстрационные аккаунты:
 
 Небольшие адаптеры shared/react принадлежат этой копии приложения. Это не отдельный SDK или общая обязательная платформа. Перед изменениями прочитайте AGENTS.md и doc/CODE-RULES.md. Уважайте существующие ролевые фасады и используйте публичные API wenay-common2/wenay-react2.
 
-${sourceReadme ? '## Документация исходного примера\n\nНиже сохранено описание примера. Ссылки за пределы каталога (например ../../doc) относятся к исходному репозиторию wenay-examples и не входят в самостоятельную копию.\n\n' + sourceReadme : ''}
+${sourceReadme ? '## История исходного примера\n\n[SOURCE-README.md](SOURCE-README.md) — справочное описание донора, не инструкция запуска копии. Упомянутые там внешние файлы, соседние приложения и проверки репозитория сюда не перенесены; доступные команды копии перечислены выше и в package.json.' : ''}
 `
 }
 
@@ -263,9 +321,15 @@ export async function createSaasExample(deps) {
     const page = files.get('frontend/index.html')?.toString('utf8')
     if (page) files.set('frontend/index.html', Buffer.from(page.replace(/<title>[^<]*<\/title>/, '<title>' + pageTitle + '</title>')))
     const inherited = markInherited(files, template)
-    // Описание донора попадает в README копии целиком: порт в нём тоже должен быть новым.
-    const sourceReadme = files.get('README.md')?.toString('utf8').split(donorPort).join(port)
-    files.set('README.md', Buffer.from(instructions(template, packageName, sourceReadme, port, pageTitle)))
+    // Исходный README сохраняет исторические адреса и внешние ссылки отдельно от инструкции копии.
+    const sourceReadme = files.get('README.md')?.toString('utf8')
+    if (sourceReadme) {
+        const warning = '# Справочная история донора\n\nЭто исходное описание ' + template + ', не инструкция запуска этой копии.\n'
+            + 'Внешние документы, соседние приложения и исключённые npm scripts сюда не перенесены.\n'
+            + 'Исходные порты и результаты проверок сохранены как история. Начните с [README.md](README.md).\n\n---\n\n'
+        files.set('SOURCE-README.md', Buffer.from(warning + sourceReadme))
+    }
+    files.set('README.md', Buffer.from(instructions(template, packageName, sourceReadme, port, pageTitle, packageJson.scripts)))
     const libraries = Object.entries(packageJson.dependencies ?? {}).filter(entry => entry[0].startsWith('wenay-'))
     files.set('SCAFFOLD.md', Buffer.from(scaffoldNote(template, packageName, port, pageTitle, inherited, libraries.map(entry => entry[0] + ' ' + entry[1]).join(', '))))
     files.set('.gitignore', Buffer.from('node_modules/\npublic/\ndist/\ncoverage/\n.env\n.env.*\n!.env.example\n*-data/\ndata/\n*.log\n*.replay\n'))

@@ -1,8 +1,8 @@
 # Q05: минимальный дизайн машинного API Documents
 
 26 сентября 2026. **Дизайн, не реализация и не приёмка Q05.** Объединяет
-[исходный аудит](../progress/documents-machine-api-audit.md) и
-[проверку публичных API и lifecycle](../progress/documents-machine-api-review.md).
+[исходный аудит](../internal/progress/documents-machine-api-audit.md) и
+[проверку публичных API и lifecycle](../internal/progress/documents-machine-api-review.md).
 Исходники приложений, package/lock, shared journal и тесты этим документом не меняются.
 Версии основания: опубликованные common2 3.1.1 / react2 5.0.0.
 

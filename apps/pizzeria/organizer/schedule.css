@@ -1,0 +1,847 @@
+.plan {
+    --plan-paper: #fffdf7;
+    --plan-sage: #edf3ed;
+    --plan-border: var(--work-line, #d8e1dc);
+    --plan-ink: var(--work-ink, #1f3834);
+    --plan-muted: var(--work-muted, #687b75);
+    --plan-accent: var(--work-accent, #246756);
+    min-width: 0;
+    margin-top: 16px;
+    color: var(--plan-ink);
+}
+
+.work-collaboration-tools {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.work-collaboration-tools > :is(.work-screen, .work-chat) {
+    margin: 0;
+}
+
+.work-collaboration-tools > section:has(> button[aria-expanded=true]) {
+    flex-basis: 100%;
+}
+
+.work-collaboration-tools button {
+    font-size: 12px;
+}
+
+.plan-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    margin-bottom: 14px;
+}
+
+.plan-title small,
+.plan-inspector-title small {
+    color: var(--plan-muted);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1.8px;
+}
+
+.plan-title h2 {
+    margin: 7px 0 8px;
+    font-size: clamp(25px, 3vw, 34px);
+    line-height: 1.12;
+    letter-spacing: -0.8px;
+}
+
+.plan-title p {
+    margin: 0;
+    color: var(--plan-muted);
+    font-size: 13px;
+}
+
+.plan-total {
+    display: grid;
+    flex: 0 0 auto;
+    gap: 5px;
+    border-left: 1px solid var(--plan-border);
+    padding: 4px 0 4px 24px;
+    text-align: right;
+}
+
+.plan-total strong {
+    color: var(--plan-accent);
+    font-size: 26px;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.6px;
+}
+
+.plan-total span {
+    color: var(--plan-muted);
+    font-size: 12px;
+}
+
+.plan-toolbar {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    border: 1px solid var(--plan-border);
+    border-radius: 14px;
+    background: var(--plan-paper);
+    padding: 12px;
+    box-shadow: 0 3px 15px #263d2f05;
+}
+
+.plan-toolbar > strong {
+    flex: 1 1 200px;
+    padding: 0 8px;
+    font-size: 13px;
+    font-weight: 600;
+    text-align: center;
+}
+
+.plan-mode {
+    display: flex;
+    gap: 4px;
+    border: 1px solid var(--plan-border);
+    border-radius: 11px;
+    background: var(--plan-sage);
+    padding: 3px;
+    margin-right: 4px;
+}
+
+.work-app .plan-mode button {
+    min-height: 34px;
+    border-color: transparent;
+    border-radius: 8px;
+    background: transparent;
+    padding: 7px 16px;
+    font-size: 12px;
+}
+
+.work-app .plan-mode button[aria-pressed=true] {
+    border-color: var(--plan-accent);
+    background: var(--plan-accent);
+    color: #fff;
+    box-shadow: 0 2px 5px #203b2914;
+}
+
+.work-app .plan-date {
+    flex: 0 1 160px;
+    gap: 4px;
+    font-size: 12px;
+}
+
+.work-app .plan-date input {
+    padding: 7px 9px;
+    font-size: 12px;
+}
+
+.plan-settings {
+    display: flex;
+    align-items: end;
+    flex-wrap: wrap;
+    gap: 16px;
+    min-width: 0;
+    margin: 12px 0 0;
+    border: 1px solid var(--plan-border);
+    border-radius: 12px;
+    background: #f3f6ef;
+    padding: 16px;
+}
+
+.plan-settings legend {
+    padding: 0 7px;
+    color: var(--plan-accent);
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.work-app .plan-settings label {
+    flex: 1 1 150px;
+}
+
+.plan-settings p {
+    flex: 1 1 220px;
+    margin: 0;
+    color: var(--plan-muted);
+    font-size: 12px;
+}
+
+.plan-help {
+    margin: 14px 2px 18px;
+    max-width: 1000px;
+    color: var(--plan-muted);
+    font-size: 12px;
+    line-height: 1.65;
+}
+
+.plan-content {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    align-items: start;
+    gap: 20px;
+}
+
+.plan-content.with-inspector {
+    grid-template-columns: minmax(0, 1fr) 360px;
+}
+
+.plan-surface {
+    min-width: 0;
+}
+
+.plan-week-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    align-items: start;
+    gap: 14px;
+}
+
+.plan-backlog {
+    min-width: 0;
+    border: 1px solid var(--plan-border);
+    border-radius: 14px;
+    background: var(--plan-sage);
+    padding: 14px;
+}
+
+.plan-backlog h3 {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin: 0 0 8px;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.plan-backlog h3 span {
+    border-radius: 20px;
+    background: #dce8dd;
+    padding: 4px 8px;
+    color: #355b47;
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+}
+
+.plan-backlog > p {
+    margin: 0 0 16px;
+    color: var(--plan-muted);
+    font-size: 12px;
+    line-height: 1.6;
+}
+
+.plan-backlog-items,
+.plan-cell-items {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-height: 118px;
+    min-width: 0;
+    border-radius: 9px;
+}
+
+.plan-backlog-items {
+    flex-direction: row;
+    min-height: 72px;
+    overflow-x: auto;
+}
+
+.plan-backlog-items > .plan-card {
+    flex: 0 0 210px;
+}
+
+.plan-backlog > p {
+    margin-bottom: 8px;
+}
+
+.plan .plan-backlog-items:empty::before {
+    min-height: 48px;
+    padding: 10px;
+}
+
+.plan-backlog:has(.plan-backlog-items:empty) {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.plan-backlog:has(.plan-backlog-items:empty) > h3 {
+    margin: 0;
+    gap: 12px;
+}
+
+.plan-backlog:has(.plan-backlog-items:empty) > p {
+    flex: 1 1 240px;
+    margin: 0;
+}
+
+.plan-backlog:has(.plan-backlog-items:empty) > div {
+    min-height: 0;
+}
+
+.plan .plan-backlog-items:empty::before {
+    min-height: 0;
+    border: 0;
+    padding: 0;
+}
+
+.plan-backlog-items:empty::before,
+.plan-cell-items:empty::before {
+    content: attr(data-empty);
+    display: grid;
+    flex: 1;
+    min-height: 104px;
+    place-items: center;
+    border: 1px dashed #c7d4c8;
+    border-radius: 9px;
+    padding: 14px;
+    color: #6a7f6d;
+    font-size: 12px;
+    line-height: 1.5;
+    text-align: center;
+    pointer-events: none;
+}
+
+.plan-week-scroll {
+    min-width: 0;
+    max-height: min(72vh, 820px);
+    overflow: auto;
+    border: 1px solid var(--plan-border);
+    border-radius: 14px;
+    background: var(--plan-paper);
+    scrollbar-color: #a6b8ab #f1f5ef;
+    scrollbar-width: thin;
+    overscroll-behavior: contain;
+    scroll-padding-top: 96px;
+    scroll-padding-left: 160px;
+}
+
+.plan-week-grid {
+    display: grid;
+    grid-template-columns: 140px repeat(7, minmax(140px, 1fr));
+    align-items: stretch;
+    min-width: 1120px;
+}
+
+.plan-corner,
+.work-app .plan-day-heading {
+    position: sticky;
+    top: 0;
+    z-index: 3;
+    min-height: 72px;
+    border: 0;
+    border-bottom: 1px solid var(--plan-border);
+    border-right: 1px solid var(--plan-border);
+    border-radius: 0;
+    background: #f1f5ee;
+    padding: 10px;
+}
+
+.plan-corner {
+    left: 0;
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    color: var(--plan-muted);
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.work-app .plan-day-heading {
+    display: grid;
+    align-content: center;
+    gap: 4px;
+    text-align: left;
+    font-weight: 400;
+}
+
+.plan-day-heading > span {
+    color: var(--plan-muted);
+    font-size: 12px;
+    text-transform: capitalize;
+}
+
+.plan-day-heading > strong {
+    color: var(--plan-ink);
+    font-size: 15px;
+    font-weight: 700;
+}
+
+.plan-day-heading > small {
+    color: var(--plan-accent);
+    font-size: 12px;
+}
+
+.work-app .plan-day-heading:hover:not(:disabled) {
+    border-color: var(--plan-border);
+    background: #e7efe2;
+}
+
+.work-app .plan-day-heading.today {
+    background: #e3eee0;
+    box-shadow: inset 0 3px 0 var(--plan-accent);
+}
+
+.plan-day-heading.today > strong {
+    color: var(--plan-accent);
+}
+
+.plan-person {
+    position: sticky;
+    left: 0;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: start;
+    gap: 7px;
+    min-width: 0;
+    border-bottom: 1px solid var(--plan-border);
+    border-right: 1px solid var(--plan-border);
+    background: #f8faf4;
+    padding: 18px 14px;
+    box-shadow: 3px 0 6px #25413105;
+    overflow-wrap: anywhere;
+}
+
+.plan-avatar {
+    display: grid;
+    width: 34px;
+    height: 34px;
+    place-items: center;
+    border: 1px solid #c9d9c9;
+    border-radius: 11px;
+    background: #e2eddf;
+    color: #375f47;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.plan-person strong {
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.plan-person small {
+    color: var(--plan-muted);
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.plan-week-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+    min-width: 0;
+    min-height: 150px;
+    border-bottom: 1px solid var(--plan-border);
+    border-right: 1px solid var(--plan-border);
+    background: var(--plan-paper);
+    padding: 10px;
+    transition: background-color 120ms ease, box-shadow 120ms ease;
+}
+
+.plan-week-cell.target {
+    background: #e7f1e2;
+    box-shadow: inset 0 0 0 2px var(--plan-accent);
+}
+
+.plan-week-cell.target .plan-cell-items:empty::before {
+    border-color: var(--plan-accent);
+    color: var(--plan-accent);
+}
+
+.plan-cell-load {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 5px;
+    min-height: 20px;
+    color: var(--plan-muted);
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+}
+
+.plan-cell-load .plan-overlap {
+    border: 1px solid #ebcda6;
+    border-radius: 5px;
+    background: #fff2dd;
+    padding: 3px 5px;
+    color: #83501d;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.plan-cell-items {
+    flex: 1;
+}
+
+.plan-card {
+    position: relative;
+    min-width: 0;
+    flex: 0 0 auto;
+    border: 1px solid #d5dfd2;
+    border-left: 3px solid #83a17c;
+    border-radius: 9px;
+    background: #fff;
+    padding: 10px;
+    box-shadow: 0 2px 5px #233d2408;
+    overflow-wrap: anywhere;
+}
+
+.plan-card:hover {
+    border-color: #aec4a9;
+    box-shadow: 0 3px 9px #233d2410;
+}
+
+.plan-card.doing {
+    border-left-color: #337a68;
+    background: #f7fcf9;
+}
+
+.plan-card.done {
+    border-left-color: #adb9ac;
+    background: #f7f8f4;
+}
+
+.plan-card.done .plan-card-title {
+    color: #657467;
+}
+
+.plan-card.moving {
+    z-index: 1;
+    border-style: dashed;
+    opacity: 0.45;
+}
+
+.plan-card-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 5px;
+    margin-bottom: 6px;
+}
+
+.plan-card-top > span {
+    border-radius: 5px;
+    background: #edf4e9;
+    padding: 4px 6px;
+    color: #41603a;
+    font-size: 12px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+
+.work-app .plan-card-top button {
+    flex: 0 0 auto;
+    width: 36px;
+    height: 36px;
+    min-height: 36px;
+    border-color: transparent;
+    border-radius: 6px;
+    background: transparent;
+    padding: 2px;
+    color: #526a50;
+    font-size: 18px;
+    line-height: 1;
+    cursor: grab;
+    touch-action: none;
+    user-select: none;
+}
+
+.work-app .plan-card-top button:active {
+    cursor: grabbing;
+}
+
+.work-app .plan-card-top button:hover:not(:disabled) {
+    border-color: #c7d8c2;
+    background: #edf4e9;
+    color: #335b39;
+}
+
+.work-app .plan-card-title {
+    display: block;
+    width: 100%;
+    border: 0;
+    border-radius: 4px;
+    background: transparent;
+    padding: 0;
+    color: var(--plan-ink);
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.55;
+    text-align: left;
+    overflow-wrap: anywhere;
+}
+
+.work-app .plan-card-title:hover:not(:disabled) {
+    background: transparent;
+    color: var(--plan-accent);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+.plan-card > small {
+    display: block;
+    margin-top: 6px;
+    color: var(--plan-muted);
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.plan-inspector {
+    position: sticky;
+    top: 18px;
+    min-width: 0;
+    border: 1px solid var(--plan-border);
+    border-radius: 15px;
+    background: var(--plan-paper);
+    padding: 20px;
+    box-shadow: 0 8px 25px #233d240b;
+}
+
+.plan-inspector-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.work-app .plan-inspector-title button {
+    width: 32px;
+    height: 32px;
+    border-color: transparent;
+    background: transparent;
+    padding: 2px;
+    font-size: 23px;
+    font-weight: 400;
+    line-height: 1;
+}
+
+.plan-inspector h3 {
+    margin: 15px 0 10px;
+    font-size: 19px;
+    font-weight: 600;
+    line-height: 1.4;
+    letter-spacing: -0.3px;
+    overflow-wrap: anywhere;
+}
+
+.plan-inspector > p {
+    margin: 10px 0 16px;
+    color: var(--plan-muted);
+    font-size: 12px;
+}
+
+.plan-inspector [role=alert] {
+    border: 1px solid #e7cca3;
+    border-radius: 8px;
+    background: #fff4e4;
+    padding: 11px;
+    color: #7c501c;
+}
+
+.plan-inspector [role=alert] button {
+    margin-top: 8px;
+}
+
+.plan-inspector fieldset {
+    display: grid;
+    gap: 14px;
+    min-width: 0;
+    margin: 0 0 15px;
+    border: 0;
+    padding: 0;
+}
+
+.plan-inspector fieldset p {
+    margin: 0;
+    color: var(--plan-muted);
+    font-size: 12px;
+}
+
+.plan-time-fields {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.plan-inspector > button {
+    width: 100%;
+    border-top: 1px solid var(--plan-border);
+    font-size: 12px;
+}
+
+.plan-live {
+    min-height: 18px;
+    margin: 12px 2px 0;
+    color: var(--plan-accent);
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.plan-live:empty {
+    display: none;
+}
+
+.plan-drag-preview {
+    z-index: 10000;
+    border: 1px solid #8eae89;
+    border-left: 3px solid #4b7c48;
+    border-radius: 9px;
+    background: #fffdf7;
+    padding: 12px;
+    color: #203c2b;
+    box-shadow: 0 14px 38px #1c402833;
+    font-family: Inter, system-ui, sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.55;
+    overflow-wrap: anywhere;
+    pointer-events: none;
+}
+
+.work-app .plan :is(button, input, select):focus-visible,
+.plan-week-scroll:focus-visible {
+    position: relative;
+    z-index: 6;
+    outline: 3px solid #287148;
+    outline-offset: 3px;
+    box-shadow: 0 0 0 5px #ffffffd9;
+}
+
+.work-app .plan .plan-day-heading:focus-visible {
+    position: sticky;
+    outline-offset: -4px;
+    box-shadow: none;
+}
+
+@media (max-width: 1200px) {
+    .plan-content.with-inspector {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .plan-inspector {
+        order: -1;
+        position: static;
+        width: min(100%, 520px);
+    }
+}
+
+@media (max-width: 800px) {
+    .plan {
+        margin-top: 18px;
+    }
+
+    .plan-title {
+        align-items: start;
+        gap: 16px;
+    }
+
+    .plan-total {
+        padding-left: 14px;
+    }
+
+    .plan-total strong {
+        font-size: 20px;
+    }
+
+    .plan-week-layout {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .plan-backlog {
+        padding: 12px;
+    }
+
+    .plan-backlog > p {
+        margin-bottom: 12px;
+    }
+
+    .plan-backlog-items {
+        flex-direction: row;
+        min-height: 116px;
+        overflow-x: auto;
+        padding: 3px 3px 10px;
+        scrollbar-color: #a6b8ab transparent;
+        overscroll-behavior-x: contain;
+    }
+
+    .plan-backlog-items > .plan-card {
+        flex: 0 0 210px;
+    }
+
+    .plan-week-scroll {
+        max-height: 65vh;
+        border-radius: 12px;
+    }
+
+    .plan-inspector {
+        width: 100%;
+        padding: 16px;
+    }
+
+    .plan-toolbar > strong {
+        flex-basis: 100%;
+        order: 1;
+        padding-top: 7px;
+        text-align: left;
+    }
+
+    .work-app .plan-date {
+        flex: 1 1 150px;
+    }
+}
+
+@media (max-width: 450px) {
+    .plan-title {
+        flex-direction: column;
+    }
+
+    .plan-total {
+        display: flex;
+        align-items: baseline;
+        gap: 10px;
+        width: 100%;
+        border-left: 0;
+        padding: 0;
+        text-align: left;
+    }
+
+    .plan-toolbar {
+        gap: 7px;
+        padding: 10px;
+    }
+
+    .plan-mode {
+        justify-content: center;
+        width: 100%;
+        margin-right: 0;
+    }
+
+    .work-app .plan-mode button {
+        flex: 1;
+    }
+
+    .work-app .plan-toolbar > button {
+        padding: 8px 10px;
+        font-size: 12px;
+    }
+
+    .work-app .plan-date {
+        flex-basis: 100%;
+    }
+
+    .plan-time-fields {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .plan-week-cell {
+        transition: none;
+    }
+}

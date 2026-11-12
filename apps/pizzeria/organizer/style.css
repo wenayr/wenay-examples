@@ -78,7 +78,7 @@
 .work-avatar{display:grid;width:42px;height:42px;place-items:center;border-radius:50%;background:#d9e8e0;color:var(--work-accent);font-weight:800}
 
 .work-standalone{min-height:100vh;margin:0;background:#f3f6f4;color:#1f3834;font-family:Inter,system-ui,sans-serif}
-.work-standalone header{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #d8e1dc;background:#fff;padding:16px 5%;box-shadow:0 2px 12px #173a3108}
+.work-standalone > #root > header{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #d8e1dc;background:#fff;padding:16px 5%;box-shadow:0 2px 12px #173a3108}
 .work-standalone main{max-width:1360px;margin:auto;padding:22px 32px 48px}
 .work-login{max-width:420px;margin:60px auto}
 .work-login h1{margin-top:0;font-size:clamp(28px,5vw,42px);line-height:1.08;letter-spacing:-1px}
@@ -109,16 +109,16 @@
 .work-load-metrics strong{font-size:26px}
 .work-load-metrics strong small{font-size:12px;font-weight:500}
 .work-load>small{color:var(--work-muted);font-size: 12px}
-.work-standalone header button{font:inherit;margin-left:12px;background:#fff;color:#246756;border:1px solid #cbd8d2;border-radius:8px;padding:8px 12px;cursor:pointer}
-.work-standalone header button:focus-visible{outline:3px solid #7cbba6;outline-offset:2px}
-.work-standalone header>span{font-size:13px}
+.work-standalone > #root > header button{font:inherit;margin-left:12px;background:#fff;color:#246756;border:1px solid #cbd8d2;border-radius:8px;padding:8px 12px;cursor:pointer}
+.work-standalone > #root > header button:focus-visible{outline:3px solid #7cbba6;outline-offset:2px}
+.work-standalone > #root > header>span{font-size:13px}
 .work-app .work-load .work-heading h2{font-size:22px}
 @media(max-width:750px){.work-filters{grid-template-columns:1fr 1fr}
 .work-filters>label{max-width:none}
 .work-filters>button:first-child{grid-column:1/-1}
 .work-filters>label:first-of-type{grid-column:1/-1}
-.work-standalone header{gap:12px;padding:16px}
-.work-standalone header>span{text-align:right}
+.work-standalone > #root > header{gap:12px;padding:16px}
+.work-standalone > #root > header>span{text-align:right}
 .work-load-metrics{grid-template-columns:1fr}
 .work-form .work-checklist .work-row>button{margin-top:8px}
 }
@@ -229,7 +229,7 @@
 .work-connection button {font: inherit; padding: 12px 16px; border: 1px solid #b5cbbf; border-radius: 9px; background: white; color: #245e4d; cursor: pointer}
 .work-connection button:focus-visible {outline: 3px solid #7cbba6; outline-offset: 3px}
 .work-connection-notice {padding: 15px 18px; border: 1px solid #e9d4aa; border-radius: 10px; background: #fff3dc; color: #79551f}
-.work-standalone header {gap: 20px; flex-wrap: wrap}
+.work-standalone > #root > header {gap: 20px; flex-wrap: wrap}
 @media (max-width: 750px) {
     .work-heading .work-toolbar {width: 100%; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr))}
     .work-heading .work-toolbar > button {font-size: 13px; padding: 9px 7px}
@@ -241,7 +241,7 @@
     .work-filters > * {grid-column: 1}
     .work-empty {padding: 20px}
     .work-connection {padding: 24px; margin: 30px auto}
-    .work-standalone header > span {font-size: 12px}
+    .work-standalone > #root > header > span {font-size: 12px}
 }
 
 /* A board with a working context: upcoming commitments and assignee load. */

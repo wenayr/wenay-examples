@@ -53,6 +53,33 @@ async function check() {
         }
         return files
     }
+    async function checkReadme(directory) {
+        const readme = await readFile(path.join(directory, 'README.md'), 'utf8')
+        const pkg = JSON.parse(await readFile(path.join(directory, 'package.json'), 'utf8'))
+        for (const command of readme.matchAll(/\bnpm\s+(?:run\s+([\w:-]+)|(test|start))\b/g)) {
+            const script = command[1] ?? command[2]
+            assert(Object.hasOwn(pkg.scripts, script), directory + ': README предлагает отсутствующий npm script ' + script)
+        }
+        for (const link of readme.matchAll(/\[[^\]]+\]\(([^)]+)\)/g)) {
+            if (/^[a-z]+:|^#/.test(link[1])) continue
+            const file = path.resolve(directory, link[1].split('#')[0])
+            assert(file.startsWith(directory + path.sep), 'стартовый README ссылается за пределы копии: ' + link[1])
+            assert((await lstat(file)).isFile(), 'файл стартового README отсутствует: ' + link[1])
+        }
+        assert(!readme.includes('## Документация исходного примера'), 'инструкция копии не должна включать README донора целиком')
+        const source = await readFile(path.join(directory, 'SOURCE-README.md'), 'utf8')
+        assert(source.includes('не инструкция запуска этой копии'), 'история донора должна быть явно отделена')
+        const note = await readFile(path.join(directory, 'SCAFFOLD.md'), 'utf8')
+        assert(note.includes('Копировщик их не запускал') && note.includes('baseline'), 'результат исходных проверок пока неизвестен')
+        assert(!note.includes('Они запускаются и проходят'), 'нельзя обещать результат проверок до их запуска')
+    }
+    async function checkProductGuide(directory, accounts) {
+        const readme = await readFile(path.join(directory, 'README.md'), 'utf8')
+        const described = readme.match(/Демонстрационные аккаунты: ([^;]+);/)
+        assert(described, directory + ': в стартовом README нет демо-аккаунтов')
+        assert.deepEqual(described[1].split(', '), accounts, directory + ': README предлагает аккаунты другого продукта')
+        assert(!/DOCUMENT_PYTHON|Python|CSV|OCR|Node-обработка|примера documents/.test(readme), directory + ': осталась инструкция documents')
+    }
 
     try {
         const described = checkManifests()
@@ -74,6 +101,8 @@ async function check() {
         const fixture = path.join(temporary, 'source-repository')
         const fixtureSource = path.join(fixture, 'apps', 'support')
         await cp(copy, fixtureSource, {recursive: true, force: false, errorOnExist: true})
+        const donorOnly = 'DONOR_ONLY_UNAVAILABLE_STEP\n\nnpm run source:only\n\n[Внешний отчёт](../../doc/ABSENT-DONOR.md)\n'
+        await put(path.join(fixtureSource, 'README.md'), donorOnly)
         await put(path.join(fixture, 'doc', 'CODE-RULES.md'), await readFile(path.join(repository, 'doc', 'CODE-RULES.md')))
         const marker = 'PRIVATE_TEST_ONLY_' + Date.now()
         for (const name of ['.env', '.env.production', 'backend/.env', 'backend/secrets.ts', 'backend/private-key.pem', 'backend/token.json', 'backend/temporary/debug.ts', 'public/index.html', 'support-data/private.json', 'testtemp/dump.json']) {
@@ -85,6 +114,9 @@ async function check() {
         const clean = path.join(temporary, 'clean-copy')
         await mkdir(clean)
         await createSaasExample({template: 'support', repository: fixture, destination: clean, name: 'clean-copy'})
+        await checkReadme(clean)
+        assert(!(await readFile(path.join(clean, 'README.md'), 'utf8')).includes('DONOR_ONLY_UNAVAILABLE_STEP'))
+        assert((await readFile(path.join(clean, 'SOURCE-README.md'), 'utf8')).includes(donorOnly))
         const outputs = await allFiles(clean)
         for (const file of outputs) assert(!(await readFile(file, 'utf8')).includes(marker), 'secret/build/data marker was copied: ' + file)
         for (const name of ['.env', '.env.production', 'node_modules', 'public', 'support-data', 'testtemp', 'backend/secrets.ts', 'backend/temporary']) {
@@ -128,7 +160,10 @@ async function check() {
         assert((await readFile(path.join(named, 'frontend/index.html'), 'utf8')).includes('<title>Проба копии</title>'))
         assert((await readFile(path.join(named, 'backend/server.ts'), 'utf8')).includes('4990'))
         assert((await readFile(path.join(named, 'frontend/vite.config.ts'), 'utf8')).includes('4990'))
-        for (const file of await allFiles(named)) assert(!(await readFile(file, 'utf8')).includes('3818'), 'донорский порт остался в ' + file)
+        for (const file of await allFiles(named)) {
+            if (path.basename(file) == 'SOURCE-README.md') continue
+            assert(!(await readFile(file, 'utf8')).includes('3818'), 'донорский порт остался в ' + file)
+        }
         assert((await readFile(path.join(named, 'README.md'), 'utf8')).startsWith('# Проба копии'))
         const note = await readFile(path.join(named, 'SCAFFOLD.md'), 'utf8')
         assert(note.includes('approvals') && note.includes('4990') && note.includes('backend/check.ts'))
@@ -149,6 +184,7 @@ async function check() {
         assert((await readFile(path.join(crm, 'README.md'), 'utf8')).includes('3913'))
         const approvals = path.join(temporary, 'approvals-copy')
         await createSaasExample({template: 'approvals', destination: approvals, name: 'approvals-copy'})
+        await checkProductGuide(approvals, ['owner', 'reviewer', 'requester', 'requester2', 'outsider'])
         const approvalFiles = ['backend/domain.ts', 'backend/domain-check.ts', 'backend/check.ts', 'backend/questions.ts', 'frontend/questions.tsx', 'frontend/main.tsx']
         for (const file of approvalFiles) assert((await lstat(path.join(approvals, file))).isFile())
         const approvalSource = await readFile(path.join(approvals, 'backend', 'domain.ts'), 'utf8')
@@ -176,7 +212,7 @@ async function check() {
         await assert.rejects(lstat(path.join(metering, 'backend/backup-check.ts')), {code: 'ENOENT'})
         await assert.rejects(lstat(path.join(metering, 'backend/integration-check.ts')), {code: 'ENOENT'})
         for (const file of ['backend/domain-check.ts', 'backend/webhook-check.ts', 'backend/check.ts', 'backend/provider-http.ts', 'frontend/webhooks.tsx', 'Dockerfile', '.dockerignore', '.env.example']) assert((await lstat(path.join(metering, file))).isFile())
-        assert((await readFile(path.join(metering, 'README.md'), 'utf8')).includes('только для исходного репозитория'))
+        assert(!(await readFile(path.join(metering, 'README.md'), 'utf8')).includes('test:integration'))
         const meteringFixture = path.join(fixture, 'apps/metering')
         await cp(metering, meteringFixture, {recursive: true, force: false, errorOnExist: true})
         for (const name of ['.env', 'metering-data/private.json', 'backend/secret.ts', 'public/index.html']) await put(path.join(meteringFixture, name), marker)
@@ -190,6 +226,8 @@ async function check() {
         assert.equal(bookingPackage.name, bookingLock.packages[''].name)
         assert.equal(bookingPackage.name, bookingLock.name)
         assert.equal(bookingPackage.dependencies['@js-temporal/polyfill'], '0.5.1')
+        assert(!(await readFile(path.join(booking, 'README.md'), 'utf8')).includes('test:backup'))
+        assert((await readFile(path.join(booking, 'SOURCE-README.md'), 'utf8')).includes('test:backup'))
         for (const file of ['backend/schedule.ts', 'backend/assistant-resource.ts', 'backend/assistant-check.ts', 'backend/check.ts', 'frontend/assistant.tsx', 'Dockerfile', '.dockerignore']) assert((await lstat(path.join(booking, file))).isFile())
         assert((await readFile(path.join(booking, 'README.md'), 'utf8')).includes('3914'))
         const bookingFixture = path.join(fixture, 'apps/booking')
@@ -214,6 +252,7 @@ async function check() {
         for (const file of await allFiles(formsClean)) assert(!(await readFile(file, 'utf8')).includes(marker))
         const content = path.join(temporary, 'content-copy')
         await createSaasExample({template: 'content', destination: content, name: 'content-copy'})
+        await checkProductGuide(content, ['owner', 'author', 'editor', 'publisher', 'reader', 'outsider'])
         const contentPackage = JSON.parse(await readFile(path.join(content, 'package.json'), 'utf8'))
         assert(!JSON.stringify(contentPackage.scripts).includes('test:integration'))
         assert(!JSON.stringify(contentPackage.scripts).includes('integration-check'))
@@ -237,6 +276,14 @@ async function check() {
         const monitoringClean = path.join(temporary, 'monitoring-clean')
         await createSaasExample({template: 'monitoring', repository: fixture, destination: monitoringClean})
         for (const file of await allFiles(monitoringClean)) assert(!(await readFile(file, 'utf8')).includes(marker))
+        const chat = path.join(temporary, 'chat-copy')
+        await createSaasExample({template: 'chat', destination: chat, name: 'chat-copy'})
+        await checkProductGuide(chat, ['alice', 'bob'])
+        await assert.rejects(lstat(path.join(chat, 'desktop')), {code: 'ENOENT'})
+        assert((await readFile(path.join(chat, 'README.md'), 'utf8')).includes('3919'))
+        for (const directory of [copy, named, crm, approvals, documents, metering, booking, forms, content, monitoring, chat]) {
+            await checkReadme(directory)
+        }
         console.log('Scaffold checks passed: ' + described + ' apps with own manifests, exact lock/name, monitoring HTTP workers/AI/organizer, forms archive/grouping/public sources, booking DST/AI/runtime sources, metering repo-only integration omitted, no secrets/data/build/deps, no overwrite, collision guards, no symlink/junction following, approvals decision domain without forms commands, content without cross-app integration check, own port/title and marked inherited checks, no cross-app or missing local imports')
     } finally {
         await remove(temporary)

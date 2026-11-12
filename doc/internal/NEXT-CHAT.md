@@ -1,5 +1,51 @@
 # Контекст продолжения wenay-examples
 
+## Пауза по просьбе пользователя — объединение 12 ноября 2026
+
+Пользователь попросил остановить работу и свои процессы, продолжить позже.
+Не возобновлять реализацию или проверки до нового поручения. Эта запись заменяет
+прежние «следующие действия» ниже для текущей задачи examples.
+
+- Текущая ветка `codex/examples-design-20261112`, HEAD ещё `3019765`.
+- Выполнен `git merge --no-ff --no-commit codex/examples-integration-20260926`
+  (`db0ecac`). Слияние оставлено незакоммиченным до проверки. Конфликты в исходниках
+  разрешены; готовые файлы сохранены в working tree/index. Не запускать merge заново.
+- G01/G02, Chat C01/C03/C-OPT и desktop technical уже входят в integration через
+  cherry-pick. Отдельно сливать `work-calendar`/`unified-chat` не требуется.
+- Сохранены ноябрьские композиции Booking/Organizer/Catalog. Chat добавлен в категорию
+  команды. STATUS/products пересобраны, но прежние PASS не доказывают итоговые исходники.
+- Из старой audit-ветки выборочно возвращены: Booking occupied/waitlist и guards
+  (ba1daa2, с сохранением cross-service reschedule); самостоятельный README scaffold,
+  SOURCE-README и корректные аккаунты (часть 1f25f05, без старых зависимостей/demo.ts).
+- У Hosting удалено ошибочное `wenayExamples.requires: ['docker']`: обычный npm test
+  использует локальные protocol fixtures; настоящие Docker/live проверки отдельные.
+- `apps/chat` npm ci завершён. Targeted typecheck Booking/Pizzeria PASS, scaffold 10 PASS;
+  промежуточные style 500/0, links 960/0. Это не итоговая приёмка всей композиции.
+- Общий `npm run check:all` (session 65872) остановлен пользователем во время Pizzeria test;
+  завершился EXIT1 из-за остановки. До неё typecheck Pizzeria PASS1.6s. Прогон не принят.
+- Все найденные собственные процессы этого прогона (Node/cmd/esbuild) остановлены,
+  Docker Desktop/backend больше не работают. Браузерные стенды не запускались.
+  Существующие сторонние Node-процессы и служебные процессы Codex не тронуты.
+- Docker Desktop был запущен, но упал на `sailor-ingest.sock` → `.stale`:
+  `The file cannot be accessed by the system`. Reset/prune/ремонт данных не выполнялись.
+- Два untracked collision сохранены побайтно в `.git/integration-safety-20261112/`:
+  `branch-integration-map` совпадает с входящим; `browser-session` входящей ветки —
+  функциональный superset с optional seed и line-buffered stop. Остальные пользовательские
+  untracked, включая facade-map, не изменялись. Старый запрещённый cleanup не повторялся.
+
+Обновлённая очередь — [REMAINING-TASKS](../REMAINING-TASKS.md), навигация —
+[ROADMAP](../ROADMAP.md), детали паузы —
+[progress](../progress/integrate-ready-branches-20261112.md).
+
+После возобновления: сначала проверить незакоммиченное слияние и исправить найденный
+review-дефект Organizer: в `schedule.tsx` save/unschedule после await закрывает inspector
+без проверки владельца действия, хотя уже может быть выбрана другая задача.
+Затем полный последовательный `npm run check:all`, профильные интеграционные proof,
+браузер Booking/Organizer/Chat/Catalog на desktop/mobile, итоговые docs и merge commit.
+В новом REMAINING есть ссылка на пользовательский untracked reconciliation design;
+перед финальным коммитом заменить её tracked-источником, не присваивая чужой файл.
+Main/push/публикация не выполнялись. Репозиторий wenay-shell не изменялся.
+
 ## Примеры переработаны — 12 ноября 2026
 
 Новое поручение пользователя вернуло работу ко всему каталогу examples и заменило

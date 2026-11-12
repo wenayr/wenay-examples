@@ -74,7 +74,8 @@ async function main() {
         const chef = await login('chef', DEMO_LOGINS.chef)
         const chefMe = (await get('/me', chef)).body.value
         assert.deepEqual(chefMe.roles, ['cook'])
-        assert.deepEqual(chefMe.commands, ['canvasSave', 'canvasMove', 'canvasDelete', 'canvasConnect', 'canvasUnlink', 'workApplyProposal', 'workSaveTask', 'workCheckTask', 'workMoveTask', 'startCooking', 'markReady', 'spoilStock'])
+        assert.deepEqual(chefMe.commands, ['canvasSave', 'canvasMove', 'canvasDelete', 'canvasConnect', 'canvasUnlink', 'workApplyProposal',
+            'workSaveTask', 'workScheduleTask', 'workCheckTask', 'workMoveTask', 'startCooking', 'markReady', 'spoilStock'])
         const signup = await post('/signup', ['s1', {account: 'dana', name: 'Dana', phone: '+1-555-0111', password: 'dana-pass'}])
         assert(signup.body.ok && signup.body.value.roles[0] == 'customer', 'signup')
         const dana = await login('dana', 'dana-pass')

@@ -126,6 +126,7 @@
         "copies": [
             "apps/approvals/backend/identity.ts",
             "apps/booking/backend/identity.ts",
+            "apps/chat/backend/identity.ts",
             "apps/content/backend/identity.ts",
             "apps/crm/backend/identity.ts",
             "apps/documents/backend/identity.ts",

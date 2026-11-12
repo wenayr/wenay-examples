@@ -49,10 +49,5 @@
   },
   "engines": {
     "node": ">=22.12"
-  },
-  "wenayExamples": {
-    "requires": [
-      "docker"
-    ]
   }
 }

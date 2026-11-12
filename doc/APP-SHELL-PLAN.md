@@ -400,13 +400,15 @@ CAD-адаптер; platform feasibility; независимая проверк�
   `apps/chat/backend/service.ts`, `apps/chat/backend/chat-resource.ts`,
   `apps/chat/shared/conversation-client.ts`. Это основания того аудита, а не доступные исходники текущего каталога.
   Актуальное направление продукта описано в [контексте продолжения](internal/NEXT-CHAT.md).
-- [CAD package](C:/Users/wenay/WebstormProjects/Dynamic/package.json),
-  [правила CAD](C:/Users/wenay/WebstormProjects/Dynamic/AGENTS.md),
-  [DomainPack](C:/Users/wenay/WebstormProjects/Dynamic/lib/cad/packs/pack.ts).
-- [CAD HTTP host](C:/Users/wenay/WebstormProjects/Dynamic/lib/mcp/server/httpServer.ts),
-  [checkpoint](C:/Users/wenay/WebstormProjects/Dynamic/lib/mcp/httpEntry.ts),
-  [project patch](C:/Users/wenay/WebstormProjects/Dynamic/lib/mcp/tools/projectPatchTools.ts),
-  [экспорт](C:/Users/wenay/WebstormProjects/Dynamic/lib/mcp/tools/drawingIssueTools.ts).
+- CAD package: `C:/Users/wenay/WebstormProjects/Dynamic/package.json`,
+  правила CAD: `C:/Users/wenay/WebstormProjects/Dynamic/AGENTS.md`,
+  DomainPack: `C:/Users/wenay/WebstormProjects/Dynamic/lib/cad/packs/pack.ts`.
+- CAD HTTP host: `C:/Users/wenay/WebstormProjects/Dynamic/lib/mcp/server/httpServer.ts`,
+  checkpoint: `C:/Users/wenay/WebstormProjects/Dynamic/lib/mcp/httpEntry.ts`,
+  project patch: `C:/Users/wenay/WebstormProjects/Dynamic/lib/mcp/tools/projectPatchTools.ts`,
+  экспорт: `C:/Users/wenay/WebstormProjects/Dynamic/lib/mcp/tools/drawingIssueTools.ts`.
 
-Это локальные ссылки на исследованные checkout. Они позволяют проверить выводы на этой
-машине; изменяемое дерево CAD и исторические отчёты не заменяют будущую runtime-приёмку.
+Это исторические локальные пути исследованных checkout; исходники Dynamic не входят
+в clone examples. В этом репозитории доступны [контракты каркаса](SHELL-CONTRACTS.md)
+и [план реализации](SHELL-EXECUTION-PLAN.md). Они не подменяют исходники CAD;
+изменяемое дерево CAD и исторические отчёты не заменяют будущую runtime-приёмку.

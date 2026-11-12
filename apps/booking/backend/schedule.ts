@@ -100,7 +100,8 @@ export function slotFor(state: BookingState, service: Offering, start: number, p
     if (remaining(state, resource, slot.occupiedFrom, slot.occupiedTo, at, exclude) < partySize) throw new Error('На это время недостаточно свободных мест')
     return slot
 }
-export function availability(state: BookingState, service: Offering, input: {from: string, days: number, partySize: number}, at: number) {
+export function availability(state: BookingState, service: Offering,
+    input: {from: string, days: number, partySize: number, includeOccupied?: boolean}, at: number, exclude = '') {
     const from = civilDate(input.from), resource = state.resources[service.resourceId]
     if (!resource) throw new Error('Ресурс недоступен')
     if (!Number.isInteger(input.days) || input.days < 1 || input.days > 14) throw new Error('Запрашивайте от 1 до 14 дней')
@@ -111,7 +112,7 @@ export function availability(state: BookingState, service: Offering, input: {fro
     if (tooEarly || tooLate) throw new Error('Диапазон вне горизонта записи')
     const slots = service.active ? Array.from({length: input.days}, (_, index) => daySlots(resource, service, from.add({days: index}).toString())).flat()
         .filter(slot => slot.start > at && slot.start <= at + 180 * 86400000)
-        .map(slot => ({...slot, available: Math.min(service.capacity, remaining(state, resource, slot.occupiedFrom, slot.occupiedTo, at))}))
-        .filter(slot => slot.available >= input.partySize) : []
+        .map(slot => ({...slot, available: Math.min(service.capacity, remaining(state, resource, slot.occupiedFrom, slot.occupiedTo, at, exclude))}))
+        .filter(slot => input.includeOccupied == true || slot.available >= input.partySize) : []
     return {serviceId: service.id, resourceId: resource.id, zone: resource.zone, generatedAt: at, slots: slots.slice(0, 1000), truncated: slots.length > 1000}
 }

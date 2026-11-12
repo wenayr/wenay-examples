@@ -1,16 +1,18 @@
 import {PreferenceAssistant} from './assistant'
-import React, {useEffect, useMemo, useRef, useState} from 'react'
+import React, {useEffect, useLayoutEffect, useMemo, useRef, useState} from 'react'
 import {Temporal} from '@js-temporal/polyfill'
 import {useClientStore, useOwnedClient} from 'wenay-react2/react'
 import type {BookingWorkspace} from '../backend/domain'
 import {useServiceAction} from '../shared/react/service-action'
 import {when, clock, type Commands, type Resources, type Organization} from './contracts'
+import {BookingSchedule} from './schedule'
+import {validScheduleDate} from './schedule-math'
 
 function openCalendar(resources: Resources) {
     return resources.open('calendar')
 }
 
-type CalendarRemote = NonNullable<ReturnType<ReturnType<typeof openCalendar>['current']>>['remote']
+export type CalendarRemote = NonNullable<ReturnType<ReturnType<typeof openCalendar>['current']>>['remote']
 type Availability = Awaited<ReturnType<CalendarRemote['control']['read']>>
 
 const shortDays = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс']
@@ -22,10 +24,11 @@ type CalendarProps = {
     commands: Commands,
     busy: boolean,
     moving: string,
-    done: () => void
+    done: () => void,
+    cancelMove: () => void
 }
 
-export function Calendar({value, org, resources, commands, busy, moving, done}: CalendarProps) {
+export function Calendar({value, org, resources, commands, busy, moving, done, cancelMove}: CalendarProps) {
     const owned = useOwnedClient({
         key: resources,
         create: () => ({...openCalendar(resources), ready: Promise.resolve()})
@@ -40,11 +43,14 @@ export function Calendar({value, org, resources, commands, busy, moving, done}: 
     const service = services.find(item => item.id == serviceId) ?? services[0]
     const resource = value.resources.find(item => item.id == service?.resourceId)
     const zone = resource?.zone ?? 'UTC'
+    const bookingResource = value.resources.find(item => item.id == booking?.resourceId)
+    const bookingZone = bookingResource?.zone ?? zone
 
-    const [from, setFrom] = useState(function tomorrow() {
+    const [from, setFrom] = useState(function initialPeriod() {
+        if (booking) return Temporal.Instant.fromEpochMilliseconds(booking.start).toZonedDateTimeISO(bookingZone).toPlainDate().toString()
         return Temporal.Now.zonedDateTimeISO(zone).toPlainDate().add({days: 1}).toString()
     })
-    const [days, setDays] = useState(7)
+    const [days, setDays] = useState(1)
     const [partySize, setPartySize] = useState(booking?.partySize ?? 1)
     const [selected, setSelected] = useState<number | null>(null)
     const [refresh, setRefresh] = useState(0)
@@ -56,7 +62,7 @@ export function Calendar({value, org, resources, commands, busy, moving, done}: 
     const changes = JSON.stringify(orgBookings.map(item => [item.id, item.revision]))
     const key = JSON.stringify([
         org.id, service?.id, service?.revision, resource?.revision,
-        from, days, partySize, changes, refresh
+        from, days, partySize, booking?.id, changes, refresh
     ])
     const current = useRef({key, remote})
     current.current = {key, remote}
@@ -66,7 +72,10 @@ export function Calendar({value, org, resources, commands, busy, moving, done}: 
         let active = true
         setError('')
         if (!remote || !service) return
-        const request = remote.control.read({orgId: org.id, serviceId: service.id, from, days, partySize})
+        const request = remote.control.read({
+            orgId: org.id, serviceId: service.id, from, days, partySize, includeOccupied: !booking,
+            ...(booking ? {bookingId: booking.id} : {})
+        })
         void request.then(function ready(result) {
             if (!active || current.current.key != key || current.current.remote != remote) return
             setLoaded({key, remote, result})
@@ -78,9 +87,17 @@ export function Calendar({value, org, resources, commands, busy, moving, done}: 
 
     const calendar = loaded?.key == key && loaded.remote == remote ? loaded.result : null
     const slot = calendar?.slots.find(item => item.start == selected)
+    const fits = !!slot && slot.available >= partySize
     const disabled = busy || action.busy || !remote || !calendar
     const held = orgBookings.filter(item => item.status == 'held').length
-    const freeSlots = calendar?.slots.filter(item => item.available > 0).length ?? 0
+    const freeSlots = calendar?.slots.filter(item => item.available >= partySize).length ?? 0
+    const scope = useRef(0)
+
+    // A completed command belongs to the consumer that submitted it, even if its parent workspace survives a switch.
+    useLayoutEffect(function ownScope() {
+        scope.current++
+        return function closeScope() {scope.current++}
+    }, [resources, org.id, org.role, moving, value.account.account])
 
     // Один и тот же замысел повторяется тем же ключом: сервис не создаст вторую запись.
     function intentKey(signature: string) {
@@ -92,7 +109,8 @@ export function Calendar({value, org, resources, commands, busy, moving, done}: 
 
     async function reserve(event: React.FormEvent<HTMLFormElement>) {
         event.preventDefault()
-        if (!service || !slot) return
+        if (!service || !slot || !fits) return
+        const submittedScope = scope.current
         const form = new FormData(event.currentTarget)
         let ok = false
         if (booking) {
@@ -110,6 +128,7 @@ export function Calendar({value, org, resources, commands, busy, moving, done}: 
             }
             ok = await commands.run('bookingHold', {...input, key: intentKey('hold' + JSON.stringify(input))})
         }
+        if (scope.current != submittedScope) return
         if (!ok) {
             setRefresh(item => item + 1)
             return
@@ -119,8 +138,11 @@ export function Calendar({value, org, resources, commands, busy, moving, done}: 
     }
     async function wait() {
         if (!service || !slot) return
+        if (fits || booking) return
+        const submittedScope = scope.current
         const input = {orgId: org.id, serviceId: service.id, start: slot.start, partySize}
         const joined = await commands.run('waitJoin', {...input, key: intentKey('wait' + JSON.stringify(input))})
+        if (scope.current != submittedScope) return
         if (!joined) return
         intent.current = null
         done()
@@ -147,6 +169,7 @@ export function Calendar({value, org, resources, commands, busy, moving, done}: 
     ])
 
     function applySuggestion(result: {serviceId: string, date: string, partySize: number}) {
+        if (!validScheduleDate(result.date)) return
         setServiceId(result.serviceId)
         setFrom(result.date)
         setPartySize(result.partySize)
@@ -196,7 +219,7 @@ export function Calendar({value, org, resources, commands, busy, moving, done}: 
                 aria-label="Начало периода"
                 value={from}
                 onChange={function pick(event) {
-                    if (!event.target.value) return
+                    if (!validScheduleDate(event.target.value)) return
                     setFrom(event.target.value)
                     setSelected(null)
                 }}
@@ -243,18 +266,19 @@ export function Calendar({value, org, resources, commands, busy, moving, done}: 
                     </header>
                     <div className="time-slots">
                         {slots.map(function cell(item) {
-                            const occupied = item.available ? '' : 'occupied '
+                            const enough = item.available >= partySize
+                            const occupied = enough ? '' : 'occupied '
                             const chosen = selected == item.start ? 'selected' : ''
                             return <button
                                 key={item.start}
                                 className={occupied + chosen}
                                 aria-pressed={selected == item.start}
-                                aria-label={when(item.start, zone) + (item.available ? ' · свободно' : ' · занято')}
+                                aria-label={when(item.start, zone) + (enough ? ' · свободно' : ' · лист ожидания')}
                                 disabled={busy}
                                 onClick={() => setSelected(item.start)}
                             >
                                 <strong>{clock(item.start, zone)}</strong>
-                                <small>{item.offset} · {item.available ? 'свободно' : 'лист ожидания'}</small>
+                                <small>{item.offset} · {enough ? 'свободно' : 'лист ожидания'}</small>
                             </button>
                         })}
                         {!slots.length && <p>Нет времени<br/>для записи</p>}
@@ -267,7 +291,7 @@ export function Calendar({value, org, resources, commands, busy, moving, done}: 
         )}
         <p className="calendar-caption">
             Свободное время проверяется снова при записи.
-            Занятый слот можно добавить в лист ожидания.
+            {!booking && ' Занятый слот можно добавить в лист ожидания.'}
         </p>
     </>
 
@@ -280,7 +304,7 @@ export function Calendar({value, org, resources, commands, busy, moving, done}: 
             <strong>{when(slot.start, zone)}</strong>
             <p>{service.duration} минут · {resource?.name}</p>
         </div>
-        {!booking && <>
+        {!booking && fits && <>
             <label>Комментарий специалисту
                 <textarea name="note" rows={2} maxLength={1000} placeholder="Что важно знать перед встречей?"/>
             </label>
@@ -297,15 +321,17 @@ export function Calendar({value, org, resources, commands, busy, moving, done}: 
                 Напомнить в локальной тестовой почте
             </label>
         </>}
-        {slot.available > 0 ? <button className="primary" disabled={disabled}>
+        {fits ? <button className="primary" disabled={disabled}>
             {booking ? 'Подтвердить перенос' : 'Удержать время и продолжить →'}
         </button> : <>
-            <p>Сейчас это время занято. Мы предложим его, если место освободится.</p>
-            <button type="button" disabled={disabled || !!booking} onClick={() => void wait()}>
-                Встать в лист ожидания
-            </button>
+            <p>Для выбранного числа участников сейчас недостаточно мест.</p>
+            {!booking && <>
+                <p>Ожидание оформляется на ваш аккаунт. Мы предложим время, если места освободятся.</p>
+                <button type="button" disabled={disabled} onClick={() => void wait()}>Встать в лист ожидания</button>
+            </>}
+            {booking && <p>Выберите другой свободный интервал. Текущая встреча сохранена.</p>}
         </>}
-        {!booking && (
+        {!booking && fits && (
             <small>Удержание действует несколько минут. Запись нужно подтвердить в разделе встреч.</small>
         )}
     </form>
@@ -336,50 +362,69 @@ export function Calendar({value, org, resources, commands, busy, moving, done}: 
         <div className="page-heading">
             <div>
                 <p className="eyebrow">
-                    {booking ? 'ПЕРЕНОС ЗАПИСИ' : 'НОВАЯ ЗАПИСЬ'}
+                    {booking ? 'ПЕРЕНОС ЗАПИСИ' : 'ПЛАН ВСТРЕЧ'}
                 </p>
-                <h1>{booking ? 'Выберите новое время' : 'Выберите услугу и время'}</h1>
+                <h1>{booking ? 'Выберите новое время' : 'Расписание и запись'}</h1>
                 <p>
                     {booking
                         ? 'Текущая запись сохранится, если новое время уже занято.'
-                        : 'Выберите услугу и время. Мы ненадолго удержим его для подтверждения.'}
+                        : 'Смотрите встречи на графике. Для новой записи раскройте выбор услуги и свободного времени.'}
                 </p>
             </div>
             <span className="zone-badge">◷ {zone}</span>
         </div>
-        <div className="booking-layout">
-            {rail}
-            <section className="calendar-panel">
-                <div className="availability-heading">
-                    <div>
-                        <h2><span className="step-index">02</span> Найдите удобное время</h2>
-                        <p>{calendar ? 'Свободных вариантов в выбранном периоде: ' + freeSlots : 'Выберите дату и число участников.'}</p>
+        {booking && <section className="booking-transfer" aria-label="Перенос встречи">
+            <div>
+                <p className="eyebrow">ТЕКУЩАЯ ВСТРЕЧА</p>
+                <strong>{value.services.find(item => item.id == booking.serviceId)?.name}</strong>
+                <p>{when(booking.start, bookingZone)} · {bookingResource?.name} · {bookingZone}</p>
+            </div>
+            <div aria-live="polite">
+                <p className="eyebrow">НОВОЕ ВРЕМЯ</p>
+                {slot ? <strong>{when(slot.start, zone)} · {zone}</strong> : <p>Выберите свободное время ниже.</p>}
+            </div>
+            <button type="button" disabled={commands.busy || action.busy} onClick={cancelMove}>
+                Отменить перенос и вернуться к встречам
+            </button>
+        </section>}
+        <BookingSchedule value={value} org={org} commands={commands} remote={remote} busy={busy}
+            from={from} days={days} setFrom={setFrom} setDays={setDays} zone={zone}/>
+        <details className="booking-slot-picker" open={!!booking}>
+            <summary>{booking ? 'Выбрать новое время из свободных слотов' : 'Записаться: выбрать услугу и свободное время'}</summary>
+            <div className="booking-layout">
+                {rail}
+                <section className="calendar-panel">
+                    <div className="availability-heading">
+                        <div>
+                            <h2><span className="step-index">02</span> Найдите удобное время</h2>
+                            <p>{calendar ? 'Свободных вариантов в выбранном периоде: ' + freeSlots : 'Выберите дату и число участников.'}</p>
+                        </div>
+                        <span>{days == 1 ? '1 день' : '7 дней'}</span>
                     </div>
-                    <span>{days == 1 ? '1 день' : '7 дней'}</span>
-                </div>
-                {!booking && <PreferenceAssistant
-                    resources={resources}
-                    orgId={org.id}
-                    busy={busy}
-                    catalogKey={catalogKey}
-                    apply={applySuggestion}
-                />}
-                {toolbar}
-                {(error || action.error) && (
-                    <p className="inline-error" role="alert">{error || action.error}</p>
-                )}
-                {calendar && grid}
-                {!calendar && !error && service && <div className="empty" role="status">Проверяем свободное время…</div>}
-                {!service && <div className="empty">
-                    <h2>Запись пока не открыта</h2>
-                    <p>Владелец должен добавить активную услугу и настроить расписание.</p>
-                </div>}
-                {!calendar && error && <div className="empty">
-                    <h2>Не удалось загрузить расписание</h2>
-                    <p>Проверьте дату и число участников, затем обновите доступное время.</p>
-                </div>}
-            </section>
-            {selection}
-        </div>
+                    {!booking && <PreferenceAssistant
+                        resources={resources}
+                        orgId={org.id}
+                        busy={busy}
+                        catalogKey={catalogKey}
+                        apply={applySuggestion}
+                    />}
+                    {toolbar}
+                    {(error || action.error) && (
+                        <p className="inline-error" role="alert">{error || action.error}</p>
+                    )}
+                    {calendar && grid}
+                    {!calendar && !error && service && <div className="empty" role="status">Проверяем свободное время…</div>}
+                    {!service && <div className="empty">
+                        <h2>Запись пока не открыта</h2>
+                        <p>Владелец должен добавить активную услугу и настроить расписание.</p>
+                    </div>}
+                    {!calendar && error && <div className="empty">
+                        <h2>Не удалось загрузить расписание</h2>
+                        <p>Проверьте дату и число участников, затем обновите доступное время.</p>
+                    </div>}
+                </section>
+                {selection}
+            </div>
+        </details>
     </>
 }

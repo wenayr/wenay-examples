@@ -10,14 +10,32 @@
 
 ## Открыто: common2
 
-Две задачи, у каждой точная версия, минимальное воспроизведение и критерий приёмки в своём файле. Обе повторно подтверждены на npm 3.1.1.
+Пять задач, у каждой точная версия, минимальное воспроизведение и критерий приёмки в своём файле.
+AI-задачи повторно подтверждены, Conversation receipt и lifecycle впервые подтверждены на npm 3.1.1.
+Service command receipt ACL подтверждён public HTTP/RPC runtime repro на npm 3.1.1.
 
 | ID | Что не так | Воспроизведение | Обход в примерах |
 | --- | --- | --- | --- |
 | [AI-POLICY-INVALIDATION](AI-POLICY-INVALIDATION.md) | Уже открытый AI-фрагмент отдаёт результат после внешнего изменения policy; публичного способа уведомить существующие проекции нет | `cd apps/support && node --import tsx backend/ai-policy-repro.ts` | Приватный вывод читается отдельным запросом с текущим ACL и версией источника |
 | [AI-RESOURCE-LIFECYCLE](AI-RESOURCE-LIFECYCLE.md) | Позднее завершение replay при отзыве SC1 даёт необработанное исключение специализированного AI-клиента | `cd apps/support && node --import tsx backend/ai-resource-lifecycle-repro.ts` | Публичное state-only зеркало `createStore` плюс `syncStoreReplay(..., {onError})` вместо AI-клиента |
+| [CONVERSATION-RECEIPT-POLICY](CONVERSATION-RECEIPT-POLICY.md) | Прежний requestId возвращает закрытую message/channel/conversation после policy=false; новые requestId и keyframe учитывают запрет | `cd apps/chat` затем `npx tsx ../../doc/library-tasks/repro/conversation-receipt-policy.ts` | `apps/chat/backend/chat-resource.ts`: account-scoped `previous(requestId)` повторяет `requireRoom` до native fragment/выдачи entity |
+| [CONVERSATION-RESOURCE-LIFECYCLE](CONVERSATION-RESOURCE-LIFECYCLE.md) | Завершение живого SC1 remote вызывает поздний process fatal в native conversation replay; публичного error port нет | `cd apps/chat` затем `npx tsx ../../doc/library-tasks/repro/conversation-resource-lifecycle.ts` (или `--revoke`) | `apps/chat/shared/conversation-client.ts`: первый observer публичного RPC handle закрывает native consumer; frontend очищает зеркало по `onEnded` |
+| [SERVICE-COMMAND-RECEIPT-ACL](SERVICE-COMMAND-RECEIPT-ACL.md) | Native HTTP receipt retry возвращает приватный результат после утраты owner-прав; новые запросы и retained principal RPC запрещены | `cd apps/chat` затем `node --import tsx ../../doc/library-tasks/repro/service-command-receipt-acl.ts` | Bound workspace owner RPC commands и login-only native REST; HTTP commands не экспортируются |
 
 Обычный policy repro на 3.1.1 подтверждает прежнюю выдачу result через старый fragment/keyframe; lifecycle repro после внешнего revoke завершается кодом 1 с необработанным `logical RPC line ended`. Режим `--expect-fixed` служит критерием приёмки будущего исправления; в этом аудите AI-критерии не запускались повторно.
+
+
+Conversation repro: обычный режим exit 0, `--expect-fixed` exit 1 на 3.1.1. Это app wrapper workaround, библиотека не исправлена.
+Контракт first entity для retry не описывает исключения из текущей ACL; оговорка о намеренной семантике автора сохранена в задаче.
+
+Service command receipt ACL: обычный режим exit 0 на 3.1.1,
+`freshHttpDenied: true`, `retainedRpcDenied: true`, `repeatedHttpReturnsPrivateResult: true`.
+`--expect-fixed` exit 1; cleanup завершился в обоих режимах. Приёмка app mitigation C03 отдельная.
+
+Conversation lifecycle: native resource close и membership revoke на 3.1.1 оба exit 1 с seq 2
+`logical RPC line ended`, вне `main catch`; `FINALLY` не успевает завершиться.
+Контроль `--revoke --dispose-before-end` exit 0 с завершённым cleanup. `npm test` chat с временным adapter прошёл.
+Ожидается управляемая terminal/error доставка consumer без process fatal; удаление observer guard — после опубликованного исправления и регрессии.
 
 ## Исправлено при обновлении 26 сентября
 

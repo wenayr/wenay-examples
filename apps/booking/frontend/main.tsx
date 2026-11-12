@@ -171,6 +171,10 @@ function Workspace({value, commands, resources, connected, logout}: WorkspacePro
         setMoving('')
         setSection('bookings')
     }
+    function cancelMove() {
+        commands.clearError()
+        moved()
+    }
 
     const sidebar = <aside className="sidebar">
         <a className="brand" href="#calendar" onClick={() => setSection('calendar')}>
@@ -240,6 +244,7 @@ function Workspace({value, commands, resources, connected, logout}: WorkspacePro
                     busy={busy}
                     moving={moving}
                     done={moved}
+                    cancelMove={cancelMove}
                 />}
                 {active == 'bookings' && (
                     <Reservations value={value} org={org} commands={commands} busy={busy} move={moveBooking}/>

@@ -71,6 +71,9 @@ export function createTaskCommands<S extends TaskHost>(deps: TaskDeps<S>) {
                 if (previous?.status == 'done') {
                     throw new Error('Верните задачу в работу перед редактированием результата')
                 }
+                if (previous?.schedule && !input.assignee) {
+                    throw new Error('Сначала снимите задачу с графика, затем уберите исполнителя')
+                }
                 const items = input.checklist ?? previous?.checklist ?? []
                 const checklist = items.map(item => ({title: item.title.trim(), done: item.done}))
                 if (input.assignee && !isStaff(ctx.state.accounts[input.assignee]?.roles ?? [])) {
@@ -91,6 +94,7 @@ export function createTaskCommands<S extends TaskHost>(deps: TaskDeps<S>) {
                 const origin = source
                     ? {source: {kind: source.kind ?? 'order', id: source.id, label: source.label}}
                     : {}
+                const schedule = previous?.schedule ? {schedule: {...previous.schedule}} : {}
                 const task: WorkTask = {
                     id,
                     title: input.title.trim(),
@@ -102,12 +106,45 @@ export function createTaskCommands<S extends TaskHost>(deps: TaskDeps<S>) {
                     createdBy: previous?.createdBy ?? ctx.account,
                     revision: (previous?.revision ?? 0) + 1,
                     checklist,
+                    ...schedule,
                     ...completion,
                     ...origin
                 }
                 ctx.state.organizer.tasks[id] = task
                 if (!previous) ctx.state.organizer.columns.todo.push(id)
                 return {id, revision: task.revision}
+            },
+        }),
+        workScheduleTask: schemaCommand({
+            id: 'string', revision: 'number', assignee: 'string', date: 'string', startMinute: 'number', durationMinutes: 'number'
+        }, {
+            allow: staff,
+            validate(input) {
+                if (!input.date) return
+                if (!realDate(input.date)) throw new Error('Укажите существующую дату работы')
+                const integral = Number.isInteger(input.startMinute) && Number.isInteger(input.durationMinutes)
+                const startValid = input.startMinute >= 0 && input.startMinute <= 1439 && input.startMinute % 15 == 0
+                const durationValid = input.durationMinutes >= 15 && input.durationMinutes <= 720 && input.durationMinutes % 15 == 0
+                const valid = integral && startValid && durationValid && input.startMinute + input.durationMinutes <= 1440
+                if (!valid) {
+                    throw new Error('Интервал работы: шаг 15 минут, длительность от 15 до 720 минут, в пределах одного дня')
+                }
+            },
+            apply(ctx: ServiceCommandCtx<S>, input) {
+                const task = editable(ctx, input.id, input.revision)
+                if (task.status == 'done') throw new Error('Верните задачу в работу перед планированием')
+                if (input.date && !input.assignee) throw new Error('Для запланированной работы нужен сотрудник')
+                if (input.assignee && !isStaff(ctx.state.accounts[input.assignee]?.roles ?? [])) {
+                    throw new Error('Исполнитель должен быть сотрудником')
+                }
+                if (!manage(ctx.roles) && input.assignee != ctx.account) {
+                    throw new Error('Назначать задачи другим может менеджер')
+                }
+                task.assignee = input.assignee
+                if (input.date) task.schedule = {date: input.date, startMinute: input.startMinute, durationMinutes: input.durationMinutes}
+                else delete task.schedule
+                task.revision++
+                return {id: task.id, revision: task.revision}
             },
         }),
         workCheckTask: schemaCommand({
