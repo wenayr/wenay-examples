@@ -1,7 +1,7 @@
 /** All prices in a search use the same currency and its minor unit. */
-export interface TourOffer {
+export interface TourOffer<HotelId extends string = string> {
   id: string
-  hotelId: string
+  hotelId: HotelId
   origin: string
   departure: string
   tripDays: number
@@ -31,8 +31,8 @@ function calendarDay(value: string): number {
   return time
 }
 
-function dailyOffer(offers: TourOffer[]): TourOffer | null {
-  return offers.reduce<TourOffer | null>((best, offer) => {
+function dailyOffer<T extends TourOffer>(offers: readonly T[]): T | null {
+  return offers.reduce<T | null>((best, offer) => {
     if (!best || offer.total < best.total || (offer.total === best.total && offer.id < best.id)) {
       return offer
     }
@@ -40,7 +40,7 @@ function dailyOffer(offers: TourOffer[]): TourOffer | null {
   }, null)
 }
 
-export function searchTours(offers: readonly TourOffer[], criteria: SearchCriteria) {
+export function searchTours<HotelId extends string>(offers: readonly TourOffer<HotelId>[], criteria: SearchCriteria) {
   const first = calendarDay(criteria.firstDeparture)
   const last = calendarDay(criteria.lastDeparture)
   if (first > last) throw new RangeError('Invalid departure window')
@@ -57,13 +57,13 @@ export function searchTours(offers: readonly TourOffer[], criteria: SearchCriter
     dates.push(new Date(day).toISOString().slice(0, 10))
   }
   const window = new Set(dates)
-  const byHotel = new Map<string, Map<string, TourOffer[]>>()
+  const byHotel = new Map<HotelId, Map<string, TourOffer<HotelId>[]>>()
   for (const offer of offers) {
     if (!offer.available || !window.has(offer.departure)
       || offer.origin !== criteria.origin || offer.currency !== criteria.currency
       || offer.tripDays !== criteria.tripDays || offer.travelers !== criteria.travelers
       || !Number.isSafeInteger(offer.total) || offer.total < 0) continue
-    const hotel = byHotel.get(offer.hotelId) ?? new Map<string, TourOffer[]>()
+    const hotel = byHotel.get(offer.hotelId) ?? new Map<string, TourOffer<HotelId>[]>()
     const day = hotel.get(offer.departure) ?? []
     day.push(offer)
     hotel.set(offer.departure, day)

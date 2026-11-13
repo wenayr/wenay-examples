@@ -1,0 +1,116 @@
+.travel-calendar {
+  --calendar-ink: #193735;
+  --calendar-muted: #516965;
+  --calendar-budget: #007565;
+  --calendar-lowest: #738785;
+  --calendar-line: #dce7e3;
+  --calendar-height: 92px;
+  --calendar-padding: 8px;
+  min-width: 0;
+  color: var(--calendar-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.travel-calendar h3 { margin: 0; font-size: 1rem; line-height: 1.35; }
+.travel-calendar p { margin: .7rem 0; }
+
+.travel-calendar__key {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  margin: 8px 0 12px;
+  color: var(--calendar-muted);
+  font-size: .78rem;
+}
+
+.travel-calendar__key span { display: inline-flex; align-items: center; gap: 6px; }
+.travel-calendar__key span::before {
+  content: '';
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  box-sizing: border-box;
+  border-radius: 50%;
+}
+.travel-calendar__key-budget::before { background: var(--calendar-budget); }
+.travel-calendar__key-lowest::before { border: 2px solid var(--calendar-lowest); }
+
+.travel-calendar__unit { margin: 0 0 1px; font-size: .68rem; color: var(--calendar-muted); }
+.travel-calendar__chart { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 5px; }
+.travel-calendar__axis {
+  position: relative;
+  min-width: 35px;
+  height: var(--calendar-height);
+  margin-top: var(--calendar-padding);
+  color: var(--calendar-muted);
+  font-size: .7rem;
+}
+.travel-calendar__axis span { position: absolute; right: 2px; transform: translateY(-50%); }
+.travel-calendar__scroll { overflow-x: auto; scrollbar-width: thin; }
+.travel-calendar__plot {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(var(--day-count), minmax(0, 1fr));
+  min-width: calc(var(--day-count) * 27px);
+}
+.travel-calendar__lines, .travel-calendar__points {
+  height: var(--calendar-height);
+  pointer-events: none;
+}
+.travel-calendar__lines {
+  position: absolute;
+  inset: var(--calendar-padding) 0 auto;
+}
+.travel-calendar__lines > i { position: absolute; width: 100%; border-top: 1px solid var(--calendar-line); }
+.travel-calendar__lines svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.travel-calendar__lines path { fill: none; vector-effect: non-scaling-stroke; stroke-linejoin: round; }
+.travel-calendar__trend-lowest { stroke: var(--calendar-lowest); stroke-width: 1.5; stroke-dasharray: 3 4; }
+.travel-calendar__trend-budget { stroke: var(--calendar-budget); stroke-width: 2; }
+.travel-calendar .travel-calendar__day {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  padding: var(--calendar-padding) 0 0;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--calendar-muted);
+  font: inherit;
+  cursor: pointer;
+}
+.travel-calendar__day:hover { box-shadow: inset 0 0 0 1px var(--calendar-line); }
+.travel-calendar__day:focus-visible { outline: 2px solid var(--calendar-budget); outline-offset: -2px; }
+.travel-calendar__points { display: block; position: relative; }
+.travel-calendar__points i { position: absolute; left: 50%; transform: translate(-50%, -50%); }
+.travel-calendar__low-dot, .travel-calendar__budget-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  box-sizing: border-box;
+}
+.travel-calendar__low-dot { background: white; border: 2px solid var(--calendar-lowest); }
+.travel-calendar__budget-dot { background: var(--calendar-budget); border: 1px solid white; }
+.travel-calendar__day.is-selected .travel-calendar__budget-dot { width: 12px; height: 12px; box-shadow: 0 0 0 2px var(--calendar-budget); }
+.travel-calendar__missing { top: 100%; line-height: 1; font-style: normal; color: var(--calendar-muted); }
+.travel-calendar__date {
+  align-self: center;
+  margin: 10px 0 4px;
+  padding: 2px 4px;
+  border-radius: 4px;
+  font-size: .73rem;
+  font-weight: 600;
+}
+.travel-calendar__day.is-selected .travel-calendar__date { background: var(--calendar-budget); color: white; }
+.travel-calendar__details {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 3px 10px;
+  min-height: 1.25em;
+  padding-top: 8px;
+  color: var(--calendar-muted);
+  font-size: .82rem;
+  line-height: 1.45;
+}
+.travel-calendar__details strong { color: var(--calendar-ink); }
