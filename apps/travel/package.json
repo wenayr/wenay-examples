@@ -6,6 +6,8 @@
   "engines": {"node": ">=24.2"},
   "scripts": {
     "dev": "vite",
+    "start": "node server.mjs",
+    "typecheck": "tsc --noEmit",
     "build": "tsc --noEmit && vite build --base=./",
     "test": "node --test test/*.test.ts",
     "demo": "node demo/january.ts"

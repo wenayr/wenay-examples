@@ -11,6 +11,7 @@ work/
 # Сборка и данные приложений. Общий шаблон `*-data` покрывает и будущие
 # приложения: каталог данных называется по сервису (support-data, docs-data).
 apps/*/public/
+!apps/travel/public/
 apps/*/vendor/
 apps/*/data/
 apps/*/*-data/

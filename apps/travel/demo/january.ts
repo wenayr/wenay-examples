@@ -1,3 +1,4 @@
+import {defaultSearch, demoOffers, hotels} from './catalog.ts'
 import {searchTours, type SearchCriteria, type TourOffer} from '../src/search-tours.ts'
 
 export const criteria: SearchCriteria = {
@@ -23,8 +24,11 @@ export const offers = [
 ]
 
 if (import.meta.main) {
-  console.log('Демонстрационные предложения. Цены включают перелёт и проживание для двоих.')
-  console.table(searchTours(offers, criteria).map(({hotelId, best}) => ({
-    'Отель': hotelId, 'Вылет': best.departure, 'Тур, ₽': best.total / 100,
-  })))
+    console.log('Демонстрационный тур из Таллина. Цены за перелёт и проживание для двоих, 10 дней.')
+    console.table(searchTours(demoOffers, defaultSearch).map(({hotelId, best, inBudgetMaxTotal}) => ({
+        'Отель': hotels[hotelId].name,
+        'Вылет по лучшей цене': best.departure,
+        'Минимум, €': best.total / 100,
+        'Максимум в бюджете, €': inBudgetMaxTotal / 100,
+    })))
 }

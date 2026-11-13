@@ -10,7 +10,7 @@ const logDirectory = path.join(repository, 'work', 'run-all')
 // Порядок появления приложений. Используется везде, где каталог перебирается целиком.
 export const APPS = [
     'pizzeria', 'hosting', 'support', 'documents', 'metering', 'crm',
-    'booking', 'forms', 'monitoring', 'content', 'catalog', 'approvals', 'chat'
+    'booking', 'forms', 'monitoring', 'content', 'catalog', 'approvals', 'chat', 'travel'
 ]
 export const SCRIPTS = ['typecheck', 'test', 'build']
 

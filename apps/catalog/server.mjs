@@ -14,7 +14,7 @@ const files = [
     ['/style.css', ['style.css', 'text/css; charset=utf-8']]
 ]
 for (const name of shots) files.push(['/screenshots/' + name + '.png', ['../../doc/screenshots/' + name + '.png', 'image/png']])
-for (const name of [...shots, 'hosting', 'pizzeria']) {
+for (const name of [...shots, 'hosting', 'pizzeria', 'travel']) {
     files.push(['/guides/' + name, ['../' + name + '/README.md', 'text/plain; charset=utf-8']])
 }
 files.push(['/guides/organizer', ['../pizzeria/organizer/README.md', 'text/plain; charset=utf-8']])

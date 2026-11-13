@@ -1,0 +1,31 @@
+.tour-inquiry {
+    display: grid;
+    gap: 0.65rem;
+    color: #182c32;
+    overflow-wrap: anywhere;
+}
+
+.tour-inquiry [role="status"]:empty {
+    display: contents;
+}
+
+.tour-inquiry button {
+    justify-self: start;
+    max-width: 100%;
+    min-height: 44px;
+    padding: 0.65rem 1rem;
+    border: 1px solid #105d58;
+    border-radius: 0.65rem;
+    background: #105d58;
+    color: white;
+    font: inherit;
+    font-weight: 650;
+    cursor: pointer;
+}
+
+.tour-inquiry button:hover { background: #164d4a; }
+.tour-inquiry button:focus-visible { outline: 3px solid #91602a; outline-offset: 3px; }
+.tour-inquiry button:disabled { opacity: 0.6; cursor: default; }
+.tour-inquiry strong { color: #105d58; }
+.tour-inquiry p { margin: 0.4rem 0 0; }
+.tour-inquiry small { color: #506064; line-height: 1.4; }

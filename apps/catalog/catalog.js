@@ -109,7 +109,8 @@ function show(product, trigger) {
     const list = node('ol')
     for (const role of product.roles) list.append(node('li', '', role))
     content.append(list, node('h3', '', 'Запустить у себя'))
-    content.append(node('p', '', 'Откройте терминал в корне репозитория. Нужен Node.js 22.12 или новее.'))
+    const nodeVersion = product.id == 'travel' ? '24.2' : '22.12'
+    content.append(node('p', '', 'Откройте терминал в корне репозитория. Нужен Node.js ' + nodeVersion + ' или новее.'))
     if (product.id == 'hosting') {
         content.append(node('p', 'launch-note', 'Сначала подготовьте панель по README. Для размещения также потребуется Docker и настроенный агент.'))
         content.append(link('/guides/hosting', 'README: обязательная настройка панели ↗', 'documentation-link'))

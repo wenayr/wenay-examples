@@ -10,14 +10,14 @@ interface PriceCalendarProps {
   onSelect: (offer: TourOffer) => void
 }
 
-const rubles = new Intl.NumberFormat('ru-RU', {
-  style: 'currency', currency: 'RUB', minimumFractionDigits: 0, maximumFractionDigits: 2,
+const euros = new Intl.NumberFormat('ru-RU', {
+  style: 'currency', currency: 'EUR', minimumFractionDigits: 0, maximumFractionDigits: 2,
 })
 const dateFormat = new Intl.DateTimeFormat('ru-RU', {day: 'numeric', month: 'long', timeZone: 'UTC'})
 const axisFormat = new Intl.NumberFormat('ru-RU', {maximumFractionDigits: 2})
 
 function price(total: number) {
-  return rubles.format(total / 100)
+  return euros.format(total / 100)
 }
 
 function dateLabel(iso: string) {
@@ -71,11 +71,20 @@ export function PriceCalendar({days, selectedOfferId, onSelect}: PriceCalendarPr
     </section>
   }
 
+  if (days.length == 1) {
+    const day = days[0]
+    const priceForDate = day.inBudget ?? day.lowest
+    return <section className="travel-calendar" aria-label="Стоимость на дату вылета">
+      <h3>Стоимость на дату вылета</h3>
+      <p>{dateLabel(day.departure)} · <strong>{priceForDate && price(priceForDate.total)}</strong></p>
+    </section>
+  }
+
   const {bottom, top, step} = chartScale(days)
   const y = (total: number) => 100 - (total - bottom) / (top - bottom) * 100
   const ticks = []
   for (let amount = bottom; amount <= top; amount += step) ticks.push(amount)
-  const axisThousands = top >= 100_000 && step >= 1_000
+  const axisThousands = top >= 1_000_000 && step >= 10_000
   const axisValue = (amount: number) => axisFormat.format(amount / (axisThousands ? 100_000 : 100))
   return <section className="travel-calendar" aria-label="Стоимость по датам вылета">
     <h3>Стоимость по датам вылета</h3>
@@ -83,7 +92,7 @@ export function PriceCalendar({days, selectedOfferId, onSelect}: PriceCalendarPr
       <span className="travel-calendar__key-budget">В бюджете</span>
       <span className="travel-calendar__key-lowest">Минимум дня</span>
     </div>
-    <div className="travel-calendar__unit">{axisThousands ? 'тыс. ₽' : '₽'}</div>
+    <div className="travel-calendar__unit">{axisThousands ? 'тыс. €' : '€'}</div>
     <div className="travel-calendar__chart">
       <div className="travel-calendar__axis" aria-hidden="true">
         {ticks.map(amount => <span key={amount} style={{top: y(amount) + '%'}}>{axisValue(amount)}</span>)}

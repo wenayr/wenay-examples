@@ -1,7 +1,15 @@
 import {createRoot} from 'react-dom/client'
 import {App} from './App.tsx'
+import {createPreferences} from './preferences.ts'
 import {createTravelSearch} from './state.ts'
 import './style.css'
 
-const root = document.getElementById('root')
-if (root) createRoot(root).render(<App store={createTravelSearch()} />)
+async function start() {
+    const element = document.getElementById('root')
+    if (!element) return
+    const preferences = createPreferences()
+    const initial = await preferences.load()
+    createRoot(element).render(<App store={createTravelSearch(initial, preferences)} />)
+}
+
+void start()

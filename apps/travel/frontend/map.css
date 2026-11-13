@@ -1,157 +1,179 @@
 .hotel-map {
-  position: relative;
   isolation: isolate;
+  position: relative;
   overflow: hidden;
-  border-radius: 1rem;
-  background: #c9e1df;
-  color: #173d3a;
+  border: 1px solid #aebbae;
+  border-radius: 15px;
+  color: #224639;
+  background: #cddfdc;
 }
-
 .hotel-map__canvas {
-  height: clamp(21rem, 48vh, 34rem);
-  min-width: 0;
   width: 100%;
-  background-color: #c9e1df;
+  height: clamp(420px, 39vw, 460px);
   font: inherit;
+  background-color: #cadeda;
+  background-image: linear-gradient(#f7f7df36 1px, transparent 1px),
+    linear-gradient(90deg, #f7f7df36 1px, transparent 1px);
+  background-size: 32px 32px;
 }
-
-.hotel-map__canvas:focus-visible {
-  outline: 3px solid #0f7771;
-  outline-offset: -3px;
-}
-
-.hotel-map__place {
-  pointer-events: none;
-  white-space: nowrap;
-}
-
+.hotel-map__canvas:focus-visible { outline: 3px solid #9e4d29; outline-offset: -3px; }
+.hotel-map__place { pointer-events: none; white-space: nowrap; }
 .hotel-map__place span {
   position: absolute;
   transform: translate(-50%, -50%);
+  text-shadow: 0 1px 2px #f5f2df88;
 }
-
-.hotel-map__city {
-  color: #6c705c;
-  font-weight: 700;
-  font-size: 1rem;
-  letter-spacing: .02em;
+.hotel-map__place.place-town {
+  color: #6a725f;
+  font: 600 .72rem/1.2 system-ui, sans-serif;
+  letter-spacing: .05em;
 }
-
-.hotel-map__sea {
-  color: #4d7775;
-  font: italic .95rem Georgia, serif;
+.hotel-map__place.place-water {
+  color: #456d62;
+  font: italic 1.04rem/1.1 'Instrument Serif', Georgia, serif;
+  letter-spacing: .075em;
 }
-
-.hotel-map__marker {
-  color: #203a39;
-  font: 700 .82rem/1.2 system-ui, sans-serif;
-}
-
-.hotel-map__amount {
+.hotel-map__place.place-island { color: #6d705a; font: italic .8rem Georgia, serif; }
+.hotel-map__marker { background: transparent; border: 0; }
+.atlas-pin {
   position: absolute;
-  bottom: 6px;
-  left: 0;
-  transform: translateX(-50%);
+  width: 118px;
+  padding: 6px 9px 5px;
+  border-radius: 5px;
+  border: 1px solid #84998a;
+  background: #fffdf3;
+  color: #254c3d;
+  box-shadow: 0 2px 5px #344d4023;
+  line-height: 1;
+  cursor: pointer;
+}
+.atlas-pin strong {
+  display: block;
+  margin: 0 0 4px;
+  overflow: hidden;
   white-space: nowrap;
-  padding: .43rem .64rem;
-  border: 1px solid #96a6a1;
-  border-radius: .55rem;
-  background: #fff;
-  box-shadow: 0 2px 5px #29494325;
+  text-overflow: ellipsis;
+  font: 600 11px/1.18 'DM Sans', system-ui, sans-serif;
+  letter-spacing: -.01em;
 }
-
-.hotel-map__amount::after {
-  content: '';
-  position: absolute;
-  bottom: -4px;
-  left: calc(50% - 3px);
-  width: 6px;
-  height: 6px;
-  border-right: inherit;
-  border-bottom: inherit;
-  background: inherit;
-  transform: rotate(45deg);
+.atlas-pin__rate {
+  display: block;
+  font: 650 12px/1.1 'DM Sans', system-ui, sans-serif;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -.025em;
 }
-
-.hotel-map__marker.is-selected .hotel-map__amount {
-  border-color: #154e4a;
-  background: #154e4a;
-  color: #fff;
+.atlas-spark {
+  display: block;
+  width: 100%;
+  height: 14px;
+  margin-top: 3px;
+  color: #678c70;
+  overflow: visible;
 }
-
-.hotel-map__marker:focus-visible .hotel-map__amount,
-.hotel-map__tools button:focus-visible {
-  outline: 3px solid #006fa3;
-  outline-offset: 2px;
+.atlas-spark path { stroke: currentColor; stroke-width: 1.45; fill: none; stroke-linejoin: round; }
+.atlas-spark circle { fill: currentColor; }
+.hotel-map__marker.is-selected .atlas-pin {
+  background-color: #214c3c;
+  color: #fffeef;
+  border-color: #214532;
+  box-shadow: 0 3px 7px #223b2f38;
 }
-
+.hotel-map__marker.is-selected .atlas-spark { color: #c3d99c; }
+.hotel-map__marker:focus-visible .atlas-pin,
+.hotel-map__tools button:focus-visible { outline: 3px solid #c05d2e; outline-offset: 2px; }
 .hotel-map__tools {
   position: absolute;
   z-index: 500;
-  top: .7rem;
-  right: .7rem;
+  top: 10px;
+  right: 10px;
   display: flex;
-  gap: .35rem;
+  gap: 5px;
 }
-
 .hotel-map__tools button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 38px;
-  min-height: 38px;
-  padding: .32rem .6rem;
-  background: #fffffff5;
-  color: #234542;
-  border: 1px solid #859b91;
-  border-radius: .55rem;
-  box-shadow: 0 1px 3px #28423e22;
-  font: 600 .76rem/1.2 system-ui, sans-serif;
+  gap: 5px;
+  min-height: 32px;
+  min-width: 32px;
+  padding: 0 7px;
+  color: #2d493d;
+  background: #fffdf4f5;
+  border: 1px solid #96a899;
+  border-radius: 5px;
+  box-shadow: 0 1px 2px #3b514222;
+  font: 600 11px/1.1 system-ui, sans-serif;
   cursor: pointer;
 }
-
-.hotel-map__tools button[aria-pressed="true"] {
-  background: #1d524d;
-  border-color: #1d524d;
-  color: #fff;
-}
-
-.hotel-map__notice {
+.hotel-map__tools button[aria-pressed=true] { background: #294b3c; color: #fffdee; }
+.hotel-map__tools svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.4; }
+.hotel-map__north {
   position: absolute;
-  z-index: 500;
-  top: 3.4rem;
-  right: .7rem;
-  padding: .2rem .4rem;
-  border-radius: .3rem;
-  background: #fffffff0;
-  font: .7rem/1.3 system-ui, sans-serif;
+  top: 9px;
+  left: 12px;
+  z-index: 400;
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  color: #2f4a40;
+  pointer-events: none;
 }
-
+.hotel-map__north b { font: 700 9px/1 system-ui, sans-serif; letter-spacing: .08em; }
+.hotel-map__north svg { width: 15px; height: 20px; }
+.hotel-map__legend,
+.hotel-map__notice {
+  z-index: 450;
+  position: absolute;
+  background: #fffdf2e8;
+  padding: 4px 6px;
+  border-radius: 3px;
+  font: 10px/1.15 system-ui, sans-serif;
+}
+.hotel-map__legend { bottom: 10px; left: 49px; display: flex; align-items: center; gap: 5px; }
+.hotel-map__legend::before { content: ''; width: 10px; height: 7px; border: 1px solid #557257; background: #99b79b; transform: skew(-12deg); }
+.hotel-map__notice { top: 45px; right: 10px; }
 .hotel-map__empty {
   position: absolute;
-  z-index: 500;
+  z-index: 400;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
   margin: 0;
-  padding: .8rem 1rem;
-  background: #fffffff5;
-  border-radius: .7rem;
+  padding: .65rem 1rem;
+  border-radius: 6px;
+  background: #fffdf2e8;
   text-align: center;
-  font-size: .87rem;
+  font-size: .86rem;
 }
-
 .hotel-map .leaflet-control-zoom {
+  border-radius: 4px;
+  border: 1px solid #92a48f;
   overflow: hidden;
-  border: 1px solid #859b91;
-  border-radius: .5rem;
+  box-shadow: 0 2px 4px #344d4022;
+}
+.hotel-map .leaflet-control-zoom a { color: #375a47; background: #fffdf3; }
+.hotel-map .leaflet-control-scale-line { background: #fffdf1b3; border-color: #526853; font-size: 9px; line-height: 1.1; }
+.hotel-map .leaflet-control-attribution { background: #fffdf1d4; font: 9px/1.3 system-ui, sans-serif; }
+.hotel-map .leaflet-control-attribution a { color: #375d50; }
+
+@media (max-width: 700px) {
+  .hotel-map__canvas { height: 300px; }
+  .atlas-pin { width: 104px; padding: 5px 7px 4px; }
+  .atlas-pin strong { font-size: 10px; margin-bottom: 3px; }
+  .atlas-pin__rate { font-size: 11px; }
+  .atlas-spark { height: 11px; margin-top: 2px; }
+  .hotel-map__tools button { min-height: 32px; }
+  .hotel-map__legend { bottom: 9px; left: 47px; font-size: 9px; }
 }
 
-.hotel-map .leaflet-control-zoom a { color: #234542; }
-.hotel-map .leaflet-control-attribution { font: 10px/1.4 system-ui, sans-serif; }
-.hotel-map .leaflet-control-attribution a { color: #185456; }
-
-@media (max-width: 540px) {
-  .hotel-map__canvas { height: 21rem; }
-  .hotel-map__amount { padding: .44rem .52rem; }
+.hotel-map__place.place-airport {
+  color: #7e7159;
+  font: 600 10px/1.25 system-ui, sans-serif;
+  white-space: nowrap;
+}
+.hotel-map__place.place-airport span::before {
+  content: '✈︎';
+  display: block;
+  text-align: center;
+  font-size: 16px;
 }
