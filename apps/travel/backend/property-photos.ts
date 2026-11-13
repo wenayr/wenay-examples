@@ -42,12 +42,16 @@ function parsePhotos(text: string) {
     return entries
 }
 
-export function createPropertyPhotos({manifestPath}: {manifestPath?: string} = {}) {
+export function createPropertyPhotos({manifestPath, lazy}: {manifestPath?: string, lazy?: boolean} = {}) {
     const path = resolve(manifestPath ?? process.env.TRAVEL_PHOTO_MANIFEST ?? bundledPath)
     let photos = new Map<string, SupplyPhoto>()
 
+    function readManifest() {
+        return parsePhotos(readFileSync(path, 'utf8'))
+    }
+
     function reload() {
-        const next = parsePhotos(readFileSync(path, 'utf8'))
+        const next = readManifest()
         const changed = []
         for (const [id, photo] of next) {
             const prior = photos.get(id)
@@ -61,7 +65,7 @@ export function createPropertyPhotos({manifestPath}: {manifestPath?: string} = {
     }
 
     try {
-        reload()
+        if (!lazy) reload()
     } catch (error) {
         if (!(error instanceof Error && 'code' in error && error.code == 'ENOENT')) throw error
     }
@@ -71,7 +75,7 @@ export function createPropertyPhotos({manifestPath}: {manifestPath?: string} = {
         if (direct) return direct
         return hotel.wikidataId ? photos.get('wikidata:' + hotel.wikidataId) ?? null : null
     }
-    return {path, find, reload}
+    return {path, find, reload, readManifest}
 }
 
 // Keep the existing convenience lookup for consumers using the bundled seed.

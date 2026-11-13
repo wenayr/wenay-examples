@@ -6,6 +6,7 @@ import path from 'node:path'
 import {createRequire} from 'node:module'
 import {once} from 'node:events'
 import {spawn} from 'node:child_process'
+import {DatabaseSync} from 'node:sqlite'
 import {setTimeout as delay} from 'node:timers/promises'
 import {fileURLToPath} from 'node:url'
 import {savePlaceSnapshot} from '../backend/places/index.mjs'
@@ -15,6 +16,7 @@ const require = createRequire(import.meta.url)
 const {chromium} = require('playwright')
 const root = fileURLToPath(new URL('../', import.meta.url))
 const port = Number(process.env.TRAVEL_TEST_PORT ?? 48320)
+const width = Number(process.env.TRAVEL_TEST_WIDTH ?? 1440)
 const base = 'http://127.0.0.1:' + port
 const temp = await mkdtemp(path.join(tmpdir(), 'wenay-live-directory-'))
 const manifest = path.join(temp, 'photos.json')
@@ -98,7 +100,7 @@ try {
     browser = await chromium.launch(chromiumOptions ? {
         executablePath: await chromiumOptions.executablePath(), args: chromiumOptions.args,
     } : {headless: true})
-    const context = await browser.newContext({locale: 'ru-RU', viewport: {width: 1200, height: 900}})
+    const context = await browser.newContext({locale: 'ru-RU', viewport: {width, height: 900}})
     // The upstream HTTP fixture and the virtual photograph never leave this test.
     const localPhoto = await readFile(path.join(root, 'public/hotel-photos/q111399390.webp'))
     await context.route(url => url.origin + url.pathname == imageUrl, route => route.fulfill({contentType: 'image/webp', body: localPhoto}))
@@ -111,18 +113,50 @@ try {
     cdp.on('Network.eventSourceMessageReceived', event => events.push(event.eventName))
     await ui.goto(base, {waitUntil: 'domcontentloaded'})
     const cards = ui.locator('.property-card')
+    await cards.first().waitFor()
+    if (width <= 800) await ui.getByRole('button', {name: 'Параметры поиска'}).click()
     await ui.getByLabel('Источник', {exact: true}).selectOption('wikidata')
     const searchLoaded = ui.waitForResponse(response =>
         new URL(response.url()).searchParams.get('q') == 'SSE Test Hotel' && response.ok())
     await ui.getByRole('searchbox').fill('SSE Test Hotel')
     await searchLoaded
     await ui.waitForFunction(() => document.querySelector('.directory-pagination')?.textContent.includes('из 15'))
+    // Moving/zooming only changes the local viewport until the visitor applies it.
+    const requests = name => network.map(value => new URL(value)).filter(url => url.pathname == '/api/travel/' + name)
+    const beforeZoom = requests('catalog').length
+    await ui.getByRole('button', {name: 'Показать объекты выдачи'}).click()
+    await ui.getByRole('button', {name: 'Увеличить', exact: true}).click()
+    assert.equal(requests('catalog').length, beforeZoom)
+    const bounded = ui.waitForResponse(response => {
+        const url = new URL(response.url())
+        return url.pathname == '/api/travel/catalog' && url.searchParams.has('west') && response.ok()
+    })
+    await ui.getByRole('button', {name: 'Искать в этой области'}).click()
+    const mapResponse = await bounded
+    const mapQuery = new URL(mapResponse.url()).searchParams
+    assert.equal(mapQuery.get('q'), 'SSE Test Hotel')
+    assert.equal(mapQuery.get('source'), 'wikidata')
+    for (const edge of ['west', 'east', 'south', 'north']) assert.ok(mapQuery.has(edge) && Number.isFinite(Number(mapQuery.get(edge))))
+    const pageItems = (await mapResponse.json()).items
+    assert.ok(pageItems.length > 0 && pageItems.length <= 12)
+    for (const item of pageItems) {
+        assert.ok(item.longitude >= Number(mapQuery.get('west')) && item.longitude <= Number(mapQuery.get('east')))
+        assert.ok(item.latitude >= Number(mapQuery.get('south')) && item.latitude <= Number(mapQuery.get('north')))
+    }
+    await ui.getByRole('button', {name: 'Показать всё направление'}).click()
+    await ui.locator('.directory-pagination').getByText('1–12 из 15').waitFor()
+    assert.equal(requests('options').length, 0)
     await ui.getByRole('button', {name: 'Дальше'}).click()
     await ui.locator('.directory-pagination').getByText('13–15 из 15').waitFor()
+    assert.equal(requests('catalog').at(-1).searchParams.get('offset'), '12')
     await cards.locator('h3 button', {hasText: targetName}).click()
     const dialog = ui.getByRole('dialog')
     await dialog.getByText('Фото объекта пока нет').waitFor()
     await dialog.getByRole('link', {name: /Booking.com/}).waitFor()
+    const cardId = 'wikidata:' + targetId
+    assert.equal(requests('hotel').at(-1).searchParams.get('hotelId'), cardId)
+    assert.equal(requests('options').at(-1).searchParams.get('hotelId'), cardId)
+    console.log('PASS ' + width + 'px: destination, map box, source, search, 12-result pages and single-hotel detail')
     const optionRequests = () => network.filter(url => url.includes('/api/travel/options?')).length
     const beforeOptions = optionRequests()
     const timeOrigin = await ui.evaluate(() => performance.timeOrigin)
@@ -158,14 +192,35 @@ try {
     assert.equal(optionRequests(), beforeOptions)
     console.log('PASS native EventSource reconnect and reset after restart while filtered hotel stays open')
 
-    publishHotels(renamed.slice(0, 8))
+    // A competing importer holds the writer lock longer than a full file-watch interval.
+    // HTTP must keep serving the last committed version until the new one is published.
+    const writer = new DatabaseSync(path.join(temp, 'catalog.sqlite'))
+    try {
+        writer.exec('BEGIN IMMEDIATE')
+        publishHotels(renamed.slice(0, 8))
+        await delay(1700)
+        const route = '/api/travel/hotel?destination=hurghada&hotelId=' + encodeURIComponent(cardId)
+        const started = performance.now()
+        const response = await fetch(base + route, {signal: AbortSignal.timeout(2000)})
+        assert.equal(response.status, 200)
+        assert.equal((await response.json()).hotel.name, targetName + ' Renamed')
+        console.log('PASS focused hotel HTTP with competing writer: ' + (performance.now() - started).toFixed(2) + ' ms')
+    } finally {
+        writer.close()
+    }
     await dialog.waitFor({state: 'detached'})
     await ui.locator('.directory-pagination').getByText('1–8 из 8').waitFor()
     assert.equal(await cards.count(), 8)
     assert.equal(await ui.locator('.directory-map-pin').count(), 8)
     assert.equal(await ui.evaluate(() => performance.timeOrigin), timeOrigin)
     assert.deepEqual(errors, [])
-    console.log('PASS removed hotel closes its dialog, empty last page returns to valid page and map updates')
+    for (const endpoint of ['catalog', 'hotel', 'options', 'events']) {
+        for (const url of requests(endpoint)) {
+            assert.equal(url.searchParams.get('destination'), 'hurghada')
+            if (endpoint == 'catalog') assert.equal(url.searchParams.get('limit'), '12')
+        }
+    }
+    console.log('PASS concurrent HTTP serves previous data during publication; after commit, removal updates the dialog, page and map')
 } finally {
     await browser?.close()
     await stop()

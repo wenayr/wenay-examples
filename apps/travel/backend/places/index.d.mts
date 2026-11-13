@@ -42,6 +42,7 @@ export interface PlaceSnapshot {
 export const placeSources: PlaceSource[]
 export const placeDestinations: PlaceDestination[]
 export function readPlaceSnapshot(destinationId: string, sourceId: string): PlaceSnapshot
+export function snapshotReference(destinationId: string, sourceId: string): {generation: string, read(): PlaceSnapshot}
 export function snapshotPath(destinationId: string, sourceId: string): URL
 export function encodePlaceSnapshot(snapshot: PlaceSnapshot): string
 export function refreshPlaceDestination(

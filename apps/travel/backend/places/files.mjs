@@ -1,5 +1,5 @@
 import {createHash, randomUUID} from 'node:crypto'
-import {existsSync, mkdirSync, readFileSync, readdirSync, renameSync, rmSync, writeFileSync} from 'node:fs'
+import {existsSync, mkdirSync, readFileSync, readdirSync, renameSync, rmSync, statSync, writeFileSync} from 'node:fs'
 import {fileURLToPath} from 'node:url'
 import {DatabaseSync} from 'node:sqlite'
 import {join, resolve} from 'node:path'
@@ -58,18 +58,27 @@ function decode(path, region, sourceId) {
     return {sourceId, records, fetchedAt: raw.fetchedAt}
 }
 
-export function readPlaceSnapshot(destinationId, sourceId) {
+export function snapshotReference(destinationId, sourceId) {
     const region = regionFor(destinationId, sourceId)
     const directory = runtimeSnapshotDirectory()
+    const [latest] = generations(directory, destinationId, sourceId)
+    if (latest) {
+        return {generation: latest, read: () => decode(join(directory, latest), region, sourceId)}
+    }
+    const path = join(bundled, destinationId + '-' + sourceId + '.json')
+    const stat = statSync(path, {bigint: true, throwIfNoEntry: false})
+    if (!stat) return {generation: 'absent', read: () => ({sourceId, records: [], fetchedAt: null})}
+    const generation = [path, stat.ino, stat.mtimeNs, stat.ctimeNs, stat.size].join(':')
+    return {generation, read: () => decode(path, region, sourceId)}
+}
+
+export function readPlaceSnapshot(destinationId, sourceId) {
     // A concurrent writer may prune a generation between listing and opening it.
     for (let retry = 0; retry < 3; retry++) {
-        const [latest] = generations(directory, destinationId, sourceId)
-        const path = latest ? join(directory, latest) : join(bundled, destinationId + '-' + sourceId + '.json')
         try {
-            return decode(path, region, sourceId)
+            return snapshotReference(destinationId, sourceId).read()
         } catch (error) {
             if (error.code != 'ENOENT') throw error
-            if (!latest) return {sourceId, records: [], fetchedAt: null}
         }
     }
     throw new Error('Place snapshots keep changing during read')
@@ -131,8 +140,15 @@ function publishSnapshot(destinationId, incoming) {
     if (!Number.isSafeInteger(timestamp) || String(timestamp).length != 13) throw new Error('Expected a timestamp for this observation')
     const directory = runtimeSnapshotDirectory()
     mkdirSync(directory, {recursive: true})
-    const existing = readPlaceSnapshot(destinationId, sourceId)
-    if (Date.parse(existing.fetchedAt) > timestamp) return existing
+    const [lastName] = generations(directory, destinationId, sourceId)
+    const lastVersion = Number(lastName?.split('.')[1]?.split('-')[0] ?? 0)
+    // For complete, newer feeds the filename bounds the old observation time.
+    // Open the old rows only to merge a partial reply or compare ambiguous times.
+    let existing
+    if (!lastName || incoming.partial || timestamp < lastVersion) {
+        existing = readPlaceSnapshot(destinationId, sourceId)
+        if (Date.parse(existing.fetchedAt) > timestamp) return existing
+    }
     let records = incoming.records
     if (incoming.partial) {
         const seen = new Set(records.map(hotel => hotel.id))
@@ -140,9 +156,7 @@ function publishSnapshot(destinationId, incoming) {
     }
     const encoded = encodePlaceSnapshot({...incoming, records})
     const hash = createHash('sha256').update(encoded).digest('hex')
-    const [lastName] = generations(directory, destinationId, sourceId)
-    if (lastName?.endsWith('-' + hash + '.json')) return existing
-    const lastVersion = Number(lastName?.split('.')[1]?.split('-')[0] ?? 0)
+    if (lastName?.endsWith('-' + hash + '.json')) return existing ?? {sourceId, records, fetchedAt: incoming.fetchedAt}
     const generation = Math.max(timestamp, lastVersion + 1)
     const name = destinationId + '-' + sourceId + '.' + generation + '-' + hash + '.json'
     const temporary = join(directory, '.' + name + '.' + randomUUID() + '.tmp')
@@ -155,5 +169,5 @@ function publishSnapshot(destinationId, incoming) {
     // Publications never overwrite a newer observation, even across processes.
     const names = generations(directory, destinationId, sourceId)
     for (const old of names.slice(2)) rmSync(join(directory, old), {force: true})
-    return readPlaceSnapshot(destinationId, sourceId)
+    return {sourceId, records, fetchedAt: incoming.fetchedAt}
 }

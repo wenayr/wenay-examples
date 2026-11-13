@@ -8,6 +8,8 @@
     "dev": "vite",
     "start": "node server.mjs",
     "typecheck": "tsc --noEmit",
+    "catalog:prepare": "node scripts/prepare-catalog.ts",
+    "prebuild": "npm run catalog:prepare",
     "build": "tsc --noEmit && vite build --base=./",
     "test": "node --test test/*.test.ts backend/places/*.test.mjs backend/partners/*.test.ts",
     "photos:import": "node scripts/import-property-photos.ts",

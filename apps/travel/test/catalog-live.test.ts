@@ -32,7 +32,7 @@ test('повторный импорт, смена поля, подтверждё
     photo = {url: '/photo', sourceUrl: '/source', credit: 'Author', license: 'CC0', licenseUrl: '/license'}
     catalog.invalidatePhotos(['Q456'])
     catalog.invalidatePhotos(['Q123'])
-    assert.equal(catalog.find(destination, hotel.id)?.photo, photo)
+    assert.deepEqual(catalog.find(destination, hotel.id)?.photo, photo)
     photo = null
     catalog.invalidatePhotos([hotel.id])
     assert.equal(catalog.find(destination, hotel.id)?.photo, null)

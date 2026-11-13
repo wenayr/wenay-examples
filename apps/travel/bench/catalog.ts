@@ -1,92 +1,230 @@
-// Real snapshot codec, lazy destination views, filters and incremental invalidation; no upstream requests.
+// Run the same visitor's HTTP session against a fresh reader; build the index in another process.
 import assert from 'node:assert/strict'
+import {spawnSync} from 'node:child_process'
 import {createHash} from 'node:crypto'
-import {mkdtempSync, rmSync, writeFileSync} from 'node:fs'
+import {once} from 'node:events'
+import {closeSync, mkdtempSync, openSync, readFileSync, readSync, renameSync, rmSync, statSync, writeFileSync} from 'node:fs'
+import {createServer} from 'node:http'
+import type {AddressInfo} from 'node:net'
 import {tmpdir} from 'node:os'
 import {join} from 'node:path'
-import {createPlaceCatalog} from '../backend/catalog.ts'
-import {encodePlaceSnapshot, placeDestinations, readPlaceSnapshot, savePlaceSnapshot, type PlaceDestination} from '../backend/places/index.mjs'
+import {performance} from 'node:perf_hooks'
+import {fileURLToPath} from 'node:url'
+import {encodePlaceSnapshot, placeDestinations, type PlaceDestination} from '../backend/places/index.mjs'
+import type {SupplyCatalogPage, SupplyHotel} from '../src/supply-contract.ts'
 
-const count = Number(process.argv[2] ?? 750_000)
-if (!Number.isSafeInteger(count) || count < 64) throw new RangeError('Укажите не менее 64 записей')
-const temporary = mkdtempSync(join(tmpdir(), 'wenay-travel-bench-'))
-process.env.TRAVEL_SNAPSHOT_DIR = temporary
-const source = {id: 'wikidata', name: 'Wikidata'}
-const regions = placeDestinations.map(region => ({...region, sourceIds: [source.id]}))
-const observed = new Date(Math.max(Date.now(), Date.UTC(2027, 0, 1))).toISOString()
+const app = fileURLToPath(new URL('../', import.meta.url))
+const script = fileURLToPath(import.meta.url)
+const mib = (bytes: number) => +(bytes / 1048576).toFixed(1)
+const duration = (start: number) => +(performance.now() - start).toFixed(2)
 
-function syntheticRecord(id: number, region: PlaceDestination) {
-    const wikidataId = 'Q' + (10000000 + id)
-    return {
-        id: 'wikidata:' + wikidataId, name: 'Synthetic Hotel ' + id, sourceId: source.id, sourceName: source.name,
-        destinationId: region.id, category: 'Hotel', locality: region.name, website: null,
-        latitude: region.latitude, longitude: region.longitude, registrationId: null, wikidataId,
-        sourceUrl: 'https://www.wikidata.org/wiki/' + wikidataId, photo: null, price: null,
-    } as const
-}
-
-function time<T>(operation: () => T) {
-    const start = performance.now()
-    const result = operation()
-    return {result, ms: Number((performance.now() - start).toFixed(2))}
-}
-
-function run() {
+function generateSnapshot(directory: string, count: number) {
+    const fetchedAt = new Date().toISOString()
     let bytes = 0
-    for (const [i, region] of regions.entries()) {
-        const start = Math.floor(i * count / regions.length)
-        const end = Math.floor((i + 1) * count / regions.length)
-        const records = Array.from({length: end - start}, (_, index) => syntheticRecord(start + index, region))
-        const encoded = encodePlaceSnapshot({sourceId: source.id, records, fetchedAt: observed})
-        const checksum = createHash('sha256').update(encoded).digest('hex')
-        const generation = Date.parse(observed) + '-' + checksum
-        writeFileSync(join(temporary, region.id + '-' + source.id + '.' + generation + '.json'), encoded)
-        bytes += Buffer.byteLength(encoded)
+    function makeRecord(i: number, number: number, region: PlaceDestination) {
+        const [west, south, east, north] = region.bbox
+        const columns = Math.max(1, Math.ceil(Math.sqrt(number)))
+        const row = Math.floor(i / columns)
+        const column = i % columns
+        const propertyId = 'way/' + (1000000 + placeDestinations.indexOf(region) * count + i)
+        const kind = i % 3 == 0 ? 'Marina Hotel' : 'Palm Resort'
+        return {
+            id: 'osm:' + propertyId, name: kind + ' ' + i, sourceId: 'osm', sourceName: 'OpenStreetMap',
+            destinationId: region.id, category: 'размещение', locality: region.name, website: null,
+            latitude: +(south + (north - south) * (row + 0.5) / columns).toFixed(6),
+            longitude: +(west + (east - west) * (column + 0.5) / columns).toFixed(6),
+            registrationId: null, wikidataId: null, sourceUrl: 'https://www.openstreetmap.org/' + propertyId,
+            photo: null, price: null,
+        } as const
     }
-    globalThis.gc?.()
-    const residentStart = process.memoryUsage().rss
-    const changes: string[] = []
-    const catalog = createPlaceCatalog({
-        destinations: regions, sources: [source], readSnapshot: readPlaceSnapshot,
-        photo: () => null, onChange: id => changes.push(id),
-    })
-    const region = regions[0]
-    const query = {destination: region, q: '', source: null, box: null, offset: 0, limit: 24}
-    const cold = time(() => catalog.list(query))
-    const warm = time(() => {
-        for (let i = 0; i < 1000; i++) catalog.list({...query, offset: i % cold.result.total})
-    })
-    const selected = cold.result.items[5]
-    const search = time(() => catalog.list({...query, q: selected.name.toLowerCase()}))
-    const byId = time(() => {
-        for (let i = 0; i < 1000; i++) assert.equal(catalog.find(region, selected.id)?.id, selected.id)
-    })
-    const other = time(() => regions.slice(1).reduce((sum, destination) => sum + catalog.list({...query, destination}).total, 0))
-    assert.equal(other.result + cold.result.total, count)
-    const sourceData = readPlaceSnapshot(region.id, source.id)
-    const filtered = sourceData.records.filter(row => row.id != selected.id)
-    const update = time(() => {
-        savePlaceSnapshot(region.id, {...sourceData, records: filtered, fetchedAt: new Date(Date.parse(observed) + 1).toISOString()})
-        catalog.reloadSnapshot(region.id, source.id)
-        assert.equal(catalog.find(region, selected.id), undefined)
-    })
-    const repeat = time(() => catalog.reloadSnapshot(region.id, source.id))
-    assert.deepEqual(changes, [region.id])
-    globalThis.gc?.()
-    const mib = (bytes: number) => Number((bytes / 1048576).toFixed(1))
-    console.log(JSON.stringify({
-        records: count, regions: regions.length, filesMiB: mib(bytes), firstRegionRows: cold.result.total,
-        firstRegionMs: cold.ms, warmPages1000Ms: warm.ms, firstFilteredMs: search.ms, filteredCount: search.result.total,
-        byId1000Ms: byId.ms, remainingRegionsMs: other.ms,
-        removalPersistReloadReindexMs: update.ms, identicalReloadMs: repeat.ms,
-        rssBeforeReaderMiB: mib(residentStart), rssAfterAllRegionsMiB: mib(process.memoryUsage().rss),
-        peakProcessMiB: mib(process.resourceUsage().maxRSS * 1024),
-    }, null, 2))
-    catalog.shutdown()
+    for (const [regionIndex, region] of placeDestinations.entries()) {
+        const first = Math.floor(regionIndex * count / placeDestinations.length)
+        const n = Math.floor((regionIndex + 1) * count / placeDestinations.length) - first
+        for (const sourceId of region.sourceIds) {
+            // Explicit empty sources keep real bundled hotels out of the synthetic fixture.
+            const records = sourceId == 'osm' ? Array.from({length: n}, (_, i) => makeRecord(i, n, region)) : []
+            const encoded = encodePlaceSnapshot({sourceId, fetchedAt, records})
+            const digest = createHash('sha256').update(encoded).digest('hex')
+            const name = region.id + '-' + sourceId + '.' + Date.parse(fetchedAt) + '-' + digest + '.json'
+            writeFileSync(join(directory, name), encoded)
+            bytes += Buffer.byteLength(encoded)
+        }
+    }
+    return bytes
 }
 
-try {
-    run()
-} finally {
-    rmSync(temporary, {recursive: true, force: true})
+// rchar includes cached reads and all files read by this isolated process during the handler.
+// read_bytes counts storage-layer reads reported by Linux; on tmpfs and warm files it can be zero.
+function createReadMeter() {
+    let fd = -1
+    try { fd = openSync('/proc/self/io', 'r') } catch {}
+    const buffer = Buffer.alloc(1024)
+    function sample() {
+        if (fd < 0) return null
+        const bytes = readSync(fd, buffer, 0, buffer.length, 0)
+        const fields = Object.fromEntries(buffer.toString('ascii', 0, bytes).trim().split('\n').map(line => line.split(': ')))
+        return {readCallBytes: Number(fields.rchar), storageBytes: Number(fields.read_bytes), sampleBytes: bytes}
+    }
+    function since(previous: ReturnType<typeof sample>) {
+        const current = sample()
+        if (!previous || !current) return undefined
+        return {
+            processReadCallBytes: current.readCallBytes - previous.readCallBytes - previous.sampleBytes,
+            processStorageReadBytes: current.storageBytes - previous.storageBytes,
+        }
+    }
+    function close() { if (fd >= 0) closeSync(fd) }
+    return {sample, since, close}
 }
+
+async function runReader() {
+    const {createTravelSupply} = await import('../backend/supply.ts')
+    const startBytes = process.memoryUsage().rss
+    const resultOrder = createHash('sha256')
+    const io = createReadMeter()
+    const beforeOpen = io.sample()
+    const construction = performance.now()
+    const supply = createTravelSupply()
+    const setupMs = duration(construction)
+    const openIo = io.since(beforeOpen)
+    let lastRead: ReturnType<typeof io.since>
+    const server = createServer(async (request, response) => {
+        const before = io.sample()
+        await supply.middleware(request, response, () => response.writeHead(404).end())
+        lastRead = io.since(before)
+    })
+    try {
+        server.listen(0, '127.0.0.1')
+        await once(server, 'listening')
+        const base = 'http://127.0.0.1:' + (server.address() as AddressInfo).port + '/api/travel/'
+        const region = {destination: 'hurghada', limit: '12'}
+        const viewport = {...region, west: '33.79', south: '27.18', east: '33.85', north: '27.24', source: 'osm'}
+        const steps: Record<string, unknown>[] = []
+        async function get<T>(label: string, path: string, params: Record<string, string>) {
+            const before = supply.diagnostics()
+            const start = performance.now()
+            const response = await fetch(base + path + '?' + new URLSearchParams(params), {signal: AbortSignal.timeout(30_000)})
+            const raw = await response.text()
+            assert.equal(response.status, 200, raw)
+            const body = JSON.parse(raw) as T
+            const after = supply.diagnostics()
+            const payloadRows = after.payloadReads - before.payloadReads
+            const page = body as SupplyCatalogPage
+            const returned = Array.isArray(page.items) ? page.items.length : Number(Boolean((body as {hotel: unknown}).hotel))
+            if (Array.isArray(page.items)) resultOrder.update(JSON.stringify(page.items.map(h => h.id)))
+            assert.equal(payloadRows, returned, label + ': returned payloads are the only hydrated hotel rows')
+            steps.push({step: label, ms: duration(start), responseBytes: Buffer.byteLength(raw), returned, matches: page.total,
+                payloadRows, payloadBytes: after.payloadBytes - before.payloadBytes, dedupCandidates: after.candidateRows - before.candidateRows,
+                ...lastRead, rssMiB: mib(process.memoryUsage().rss)})
+            return body
+        }
+        const startup = supply.diagnostics()
+        assert.equal(startup.payloadReads, 0, 'no hotel payloads should be hydrated at startup')
+        assert.equal(startup.writes, 0, 'opening the prepared index should not rewrite hotels')
+        const first = await get<SupplyCatalogPage>('destination-page', 'catalog', region)
+        assert.equal(first.items.length, 12)
+        const window = await get<SupplyCatalogPage>('visible-map+source', 'catalog', viewport)
+        assert(window.total > 12)
+        assert(window.items.every(row => row.longitude >= 33.79 && row.longitude <= 33.85 && row.latitude >= 27.18 && row.latitude <= 27.24))
+        assert(window.items.every(row => row.sourceId == viewport.source))
+        const page2 = await get<SupplyCatalogPage>('map-page-two', 'catalog', {...viewport, offset: '12'})
+        assert(page2.items.every(hotel => !window.items.some(firstPageHotel => firstPageHotel.id == hotel.id)))
+        const query = await get<SupplyCatalogPage>('map+source+name', 'catalog', {...viewport, q: 'hotel'})
+        assert(query.items.length > 0)
+        const selected = query.items[0]
+        const nameOnly = await get<SupplyCatalogPage>('name-within-destination', 'catalog', {...region, q: selected.name})
+        assert(nameOnly.items.some(hotel => hotel.id == selected.id))
+        const detail = {destination: region.destination, hotelId: selected.id}
+        const {hotel} = await get<{hotel: SupplyHotel}>('open-card', 'hotel', detail)
+        assert.equal(hotel.id, selected.id)
+        const repeat = await get<SupplyCatalogPage>('return-to-map', 'catalog', {...viewport, q: 'hotel'})
+        assert.deepEqual(repeat.items, query.items)
+
+        // Stage the importer output before observing the cost of publishing its atomic rename.
+        const filename = process.env.TRAVEL_PHOTO_MANIFEST!
+        const photos = JSON.parse(readFileSync(filename, 'utf8')) as Record<string, unknown>
+        const next = filename + '.tmp'
+        photos[selected.id] = {url: 'https://example.org/hotel.webp', sourceUrl: 'https://example.org/hotel',
+            credit: 'Benchmark', license: 'CC0', licenseUrl: 'https://creativecommons.org/publicdomain/zero/1.0/'}
+        writeFileSync(next, JSON.stringify(photos))
+        const signal = new AbortController()
+        const deadline = AbortSignal.any([signal.signal, AbortSignal.timeout(15_000)])
+        const eventQuery = new URLSearchParams({destination: region.destination, since: repeat.revision!})
+        const subscription = await fetch(base + 'events?' + eventQuery, {signal: deadline})
+        assert.equal(subscription.status, 200)
+        const reader = subscription.body!.getReader()
+        const writesBefore = supply.diagnostics().writes
+        const startUpdate = performance.now()
+        const beforeUpdate = io.sample()
+        try {
+            renameSync(next, filename)
+            let frames = ''
+            const decoder = new TextDecoder()
+            while (!frames.includes('event: catalog\n')) {
+                const part = await reader.read()
+                assert(!part.done)
+                frames += decoder.decode(part.value, {stream: true})
+            }
+        } finally {
+            signal.abort()
+            reader.releaseLock()
+        }
+        const notificationMs = duration(startUpdate)
+        const updateIo = io.since(beforeUpdate)
+        const after = await get<{hotel: SupplyHotel}>('updated-card', 'hotel', detail)
+        assert.equal(after.hotel.photo?.credit, 'Benchmark')
+        const diagnostics = supply.diagnostics()
+        const changedHotelWrites = diagnostics.writes - writesBefore
+        assert.equal(changedHotelWrites, 1, 'only the selected property should change')
+        const payloadRegions = Object.keys(diagnostics.byRegion)
+        assert.deepEqual(payloadRegions, [region.destination])
+        return {readerPid: process.pid, setupMs, openIo, startupPayloadRows: startup.payloadReads,
+            startupHotelWrites: startup.writes, rssBeforeSupplyMiB: mib(startBytes), steps, payloadRegions,
+            resultIdOrderSha256: resultOrder.digest('hex'), changedHotelWrites, updateIo, externalPhotoWriteToEventMs: notificationMs}
+    } finally {
+        io.close()
+        await supply.shutdown()
+        server.closeAllConnections()
+        await new Promise<void>(done => server.close(() => done()))
+    }
+}
+
+function run(dataset: string) {
+    const temporary = mkdtempSync(join(tmpdir(), 'wenay-focused-http-'))
+    try {
+        const synthetic = dataset != 'real'
+        let snapshotBytes = 0
+        if (synthetic) {
+            const count = Number(dataset)
+            if (!Number.isSafeInteger(count) || count < 20_000) throw new RangeError('Укажите real или хотя бы 20000 записей')
+            snapshotBytes = generateSnapshot(temporary, count)
+        }
+        const manifest = join(temporary, 'photos.json')
+        const bundledPhotos = join(app, 'backend/property-photo-manifest.json')
+        writeFileSync(manifest, synthetic ? '{}' : readFileSync(bundledPhotos))
+        const index = join(temporary, 'catalog.sqlite')
+        const env = {...process.env, TRAVEL_SNAPSHOT_DIR: temporary, TRAVEL_CATALOG_INDEX_PATH: index,
+            TRAVEL_PHOTO_MANIFEST: manifest, TRAVEL_REFRESH_MODE: 'manual'}
+        function child(command: string, args: string[]) {
+            const result = spawnSync(command, args, {env, cwd: app, encoding: 'utf8', timeout: 600_000})
+            if (result.error) throw result.error
+            if (result.status != 0) throw new Error(result.stderr + result.stdout)
+            return result.stdout.trim()
+        }
+        const prepStart = performance.now()
+        child('npm', ['run', 'catalog:prepare'])
+        const preparationMs = duration(prepStart)
+        const reader = JSON.parse(child(process.execPath, [script, '--reader']))
+        if (synthetic && reader.openIo) {
+            // This coarse guard detects volume-wide startup scans independently of filesystem caching.
+            assert(reader.openIo.processReadCallBytes < snapshotBytes / 4, 'prepared startup read at least a quarter of the source bytes')
+        }
+        return {dataset, regionsInDataset: placeDestinations.length, syntheticSnapshotBytes: snapshotBytes || undefined,
+            indexFileMiB: mib(statSync(index).size), preparationMs, ...reader}
+    } finally {
+        rmSync(temporary, {recursive: true, force: true})
+    }
+}
+
+if (process.argv[2] == '--reader') console.log(JSON.stringify(await runReader()))
+else console.log(JSON.stringify(run(process.argv[2] ?? '750000'), null, 2))

@@ -5,7 +5,7 @@ import {expandPlace, extractPlaces, placeRequest} from './providers.mjs'
 export {placeSources, placeDestinations}
 
 const userAgent = 'WenayTravel/0.1 (+https://github.com/wenayr/wenay-examples)'
-export {encodePlaceSnapshot, readPlaceSnapshot, runtimeSnapshotDirectory, savePlaceSnapshot, snapshotPath, snapshotRegion} from './files.mjs'
+export {encodePlaceSnapshot, readPlaceSnapshot, runtimeSnapshotDirectory, savePlaceSnapshot, snapshotPath, snapshotReference, snapshotRegion} from './files.mjs'
 
 export async function refreshPlaceDestination(destinationId, sourceId, {fetchImpl = fetch, signal} = {}) {
     const region = placeDestinations.find(item => item.id == destinationId)
