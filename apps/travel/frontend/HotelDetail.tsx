@@ -23,7 +23,7 @@ export function HotelDetail({hotel, offer, onOffer, onClose}: {
         <div className="detail-surface">
             <div className="detail-hero"><img src={photo(hotel.destinationId, hotel.hotelId)} alt=""/>
                 <button type="button" className="detail-close" onClick={onClose} aria-label="Закрыть карточку отеля"><Icon name="close"/></button>
-                <div><span><Icon name="pin" size={15}/>{hotel.area}</span><h2 id="detail-title">{hotel.name}</h2></div>
+                <div><span><Icon name="pin" size={15}/>{hotel.area} · Фото направления</span><h2 id="detail-title">{hotel.name}</h2></div>
             </div>
             <div className="detail-content"><p className="detail-copy">{hotel.description}</p>
                 <div className="detail-features">{hotel.features.map(feature => <span key={feature}>{feature}</span>)}</div>

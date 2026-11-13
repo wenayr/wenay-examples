@@ -9,7 +9,7 @@
     "start": "node server.mjs",
     "typecheck": "tsc --noEmit",
     "build": "tsc --noEmit && vite build --base=./",
-    "test": "node --test test/*.test.ts",
+    "test": "node --test test/*.test.ts backend/places/*.test.mjs backend/partners/*.test.ts",
     "demo": "node demo/january.ts"
   },
   "dependencies": {

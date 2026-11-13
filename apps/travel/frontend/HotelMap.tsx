@@ -219,9 +219,8 @@ const places = {
     ],
 } satisfies Record<tAtlasKey, Place[]>
 
-function drawAtlas(map: L.Map, destination: Destination) {
+export function drawAtlas(map: L.Map, key: tAtlasKey) {
     const group = L.layerGroup().addTo(map)
-    const key = destination.id
     for (const land of shores[key]) {
         L.polygon(land, {pane: 'atlas', interactive: false, className: 'atlas-land', smoothFactor: 0.4,
             color: '#8ea992', weight: 1.1, fillColor: '#e8e8d5', fillOpacity: 1}).addTo(group)
@@ -246,7 +245,10 @@ function drawAtlas(map: L.Map, destination: Destination) {
     return group
 }
 
-function fit(map: L.Map, destination: Destination, hotels: readonly MapHotel[]) {
+export function fitHotelPoints(
+    map: L.Map, destination: Pick<Destination, 'latitude' | 'longitude'>,
+    hotels: readonly Pick<MapHotel, 'latitude' | 'longitude'>[],
+) {
     if (!hotels.length) {
         map.setView([destination.latitude, destination.longitude], 12, {animate: false})
         return
@@ -426,7 +428,7 @@ export function HotelMap({hotels, dates, destination, selectedId, onSelect}: Hot
         if (!map) return
         const center = L.latLng(latitude, longitude)
         map.setMaxBounds(center.toBounds(51000))
-        const atlas = drawAtlas(map, {id, name, latitude, longitude})
+        const atlas = drawAtlas(map, id)
         return () => { atlas.remove() }
     }, [id, name, latitude, longitude])
 
@@ -454,7 +456,7 @@ export function HotelMap({hotels, dates, destination, selectedId, onSelect}: Hot
         const key = id + '/' + hotels.map(hotel => hotel.id).sort().join('/')
         if (key != fitKey.current) {
             fitKey.current = key
-            fit(map, {id, name, latitude, longitude}, hotels)
+            fitHotelPoints(map, {latitude, longitude}, hotels)
         }
         const group = L.layerGroup().addTo(map)
         const created = hotels.map(hotel => addHotel(map, group, hotel, dates, () => selectRef.current(hotel.id)))
@@ -490,7 +492,7 @@ export function HotelMap({hotels, dates, destination, selectedId, onSelect}: Hot
                 Подробная карта
             </button>
             <button type="button" title="Показать все отели" aria-label="Показать все отели"
-                onClick={() => instance.current && fit(instance.current, destination, hotels)}>
+                onClick={() => instance.current && fitHotelPoints(instance.current, destination, hotels)}>
                 <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 2H2v4m8-4h4v4M2 10v4h4m4 0h4v-4"/><circle cx="8" cy="8" r="2"/></svg>
             </button>
         </div>

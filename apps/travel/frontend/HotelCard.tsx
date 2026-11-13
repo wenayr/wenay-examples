@@ -17,6 +17,7 @@ export function HotelCard({hotel, singleDay, selected, onOpen}: {
     return <article className={'hotel-card' + (selected ? ' hotel-card--selected' : '')}>
         <div className="card-photo">
             <img loading="lazy" decoding="async" src={photo(hotel.destinationId, hotel.hotelId)} alt=""/>
+            <span className="demo-photo-note">Фото направления</span>
             <span className="card-stars" aria-label={hotel.stars + ' звёзд'}>{hotel.stars} <span aria-hidden="true">★</span></span>
         </div>
         <div className="card-info">

@@ -4,5 +4,5 @@
     "jsx": "react-jsx", "strict": true, "noEmit": true, "allowImportingTsExtensions": true,
     "skipLibCheck": true, "types": ["vite/client", "node", "react", "react-dom"]
   },
-  "include": ["frontend", "demo", "src", "test"]
+  "include": ["frontend", "demo", "src", "backend", "test"]
 }
