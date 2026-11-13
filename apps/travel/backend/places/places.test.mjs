@@ -61,3 +61,16 @@ test('committed reference records have stable source identity, provenance and no
         assert.ok(row.sourceUrl.startsWith('https://'))
     }
 })
+
+test('only a Commons File explicitly connected to the OSM object is a photo candidate', () => {
+    const element = {type: 'way', id: 12, center: {lat: 27.2, lon: 33.8}}
+    const tags = {name: 'Hotel Test', tourism: 'hotel', wikimedia_commons: 'Category:Test'}
+    function file(image) {
+        const records = extractPlaces({elements: [{...element, tags: {...tags, image}}]}, hurghada, 'osm')
+        return records[0].commonsFile
+    }
+    assert.equal(file('https://commons.wikimedia.org/wiki/File:My_Hotel.jpg'), 'File:My Hotel.jpg')
+    assert.equal(file('File:Lobby.webp'), 'File:Lobby.webp')
+    assert.equal(file('https://example.org/wiki/File:My_Hotel.jpg'), null)
+    assert.equal(file('Category:My hotel'), null)
+})

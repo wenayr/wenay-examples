@@ -4,860 +4,1880 @@
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:%D0%9D%D0%B8%D1%86%D1%86%D0%B0._%D0%9E%D1%82%D0%B5%D0%BB%D1%8C_%22%D0%9B%D0%B5_%D0%A0%D0%BE%D1%8F%D0%BB%22_(Le_Royal)_-_panoramio_(1).jpg",
     "credit": "tiger rus",
     "license": "CC BY 3.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by/3.0"
+    "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q104776064",
+    "upstreamPhotoId": "File:Ницца. Отель \"Ле Роял\" (Le Royal) - panoramio (1).jpg",
+    "matchedBy": "wikidata:P18"
+  },
+  "Q106281801": {
+    "credit": "Hanno Lans",
+    "evidenceUrl": "https://commons.wikimedia.org/wiki/Category:Bali_Hotel",
+    "externalHotelId": "Q106281801",
+    "fileVersion": "19e1d96b4cfa104ce71c4a3bdd58b35acad00b72",
+    "license": "CC BY 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/4.0",
+    "matchedBy": "reviewed-commons-category",
+    "provider": "wikimedia-commons",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Bali_Hotel_voorkant_met_logo.jpg",
+    "upstreamPhotoId": "File:Bali Hotel voorkant met logo.jpg",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b5/Bali_Hotel_voorkant_met_logo.jpg/500px-Bali_Hotel_voorkant_met_logo.jpg"
   },
   "Q106947145": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/2b/M%C3%A1laga_-_Hotel_Barcel%C3%B3_M%C3%A1laga_01.jpg/500px-M%C3%A1laga_-_Hotel_Barcel%C3%B3_M%C3%A1laga_01.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:M%C3%A1laga_-_Hotel_Barcel%C3%B3_M%C3%A1laga_01.jpg",
     "credit": "Zarateman",
     "license": "CC0",
-    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/deed.en"
+    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/deed.en",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q106947145",
+    "upstreamPhotoId": "File:Málaga - Hotel Barceló Málaga 01.jpg",
+    "matchedBy": "wikidata:P18"
   },
   "Q106947450": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f7/M%C3%A1laga_-_Hotel_Las_Am%C3%A9ricas.jpg/500px-M%C3%A1laga_-_Hotel_Las_Am%C3%A9ricas.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:M%C3%A1laga_-_Hotel_Las_Am%C3%A9ricas.jpg",
     "credit": "Zarateman",
     "license": "CC0",
-    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/deed.en"
+    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/deed.en",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q106947450",
+    "upstreamPhotoId": "File:Málaga - Hotel Las Américas.jpg",
+    "matchedBy": "wikidata:P18"
   },
   "Q106951720": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b8/San_Andr%C3%A9s%2C_29004_M%C3%A1laga%2C_Spain_-_panoramio_%2812%29.jpg/500px-San_Andr%C3%A9s%2C_29004_M%C3%A1laga%2C_Spain_-_panoramio_%2812%29.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:San_Andr%C3%A9s,_29004_M%C3%A1laga,_Spain_-_panoramio_(12).jpg",
     "credit": "Ricardo Ricote Rodrí…",
     "license": "CC BY 3.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by/3.0"
+    "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q106951720",
+    "upstreamPhotoId": "File:San Andrés, 29004 Málaga, Spain - panoramio (12).jpg",
+    "matchedBy": "wikidata:P18"
   },
   "Q106956517": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/ef/Caleta_Palace_08.JPG/500px-Caleta_Palace_08.JPG",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Caleta_Palace_08.JPG",
     "credit": "Tyk",
     "license": "CC BY-SA 3.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0"
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q106956517",
+    "upstreamPhotoId": "File:Caleta Palace 08.JPG",
+    "matchedBy": "wikidata:P18"
   },
   "Q106979064": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/ac/M%C3%A1laga_-_Hotel_Ilunion_M%C3%A1laga_5.jpg/500px-M%C3%A1laga_-_Hotel_Ilunion_M%C3%A1laga_5.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:M%C3%A1laga_-_Hotel_Ilunion_M%C3%A1laga_5.jpg",
     "credit": "Zarateman",
     "license": "CC0",
-    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/deed.en"
+    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/deed.en",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q106979064",
+    "upstreamPhotoId": "File:Málaga - Hotel Ilunion Málaga 5.jpg",
+    "matchedBy": "wikidata:P18"
   },
   "Q106980191": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/0b/Novotel_M%C3%A1laga.jpg/500px-Novotel_M%C3%A1laga.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Novotel_M%C3%A1laga.jpg",
     "credit": "Tyk",
     "license": "CC BY-SA 3.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0"
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q106980191",
+    "upstreamPhotoId": "File:Novotel Málaga.jpg",
+    "matchedBy": "wikidata:P18"
   },
   "Q106980324": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e0/Hotel_NH_M%C3%A1laga.jpg/500px-Hotel_NH_M%C3%A1laga.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Hotel_NH_M%C3%A1laga.jpg",
     "credit": "Tyk",
     "license": "CC BY-SA 3.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0"
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q106980324",
+    "upstreamPhotoId": "File:Hotel NH Málaga.jpg",
+    "matchedBy": "wikidata:P18"
   },
   "Q106980437": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/6e/M%C3%A1laga_-_Hotel_Ibis_M%C3%A1laga_Centro_Ciudad.jpg/500px-M%C3%A1laga_-_Hotel_Ibis_M%C3%A1laga_Centro_Ciudad.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:M%C3%A1laga_-_Hotel_Ibis_M%C3%A1laga_Centro_Ciudad.jpg",
     "credit": "Zarateman",
     "license": "CC0",
-    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/deed.en"
+    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/deed.en",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q106980437",
+    "upstreamPhotoId": "File:Málaga - Hotel Ibis Málaga Centro Ciudad.jpg",
+    "matchedBy": "wikidata:P18"
   },
   "Q106980544": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c5/Hotel_Ibis_Budger_M%C3%A1laga.jpg/500px-Hotel_Ibis_Budger_M%C3%A1laga.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Hotel_Ibis_Budger_M%C3%A1laga.jpg",
     "credit": "Tyk",
     "license": "CC BY-SA 3.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0"
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q106980544",
+    "upstreamPhotoId": "File:Hotel Ibis Budger Málaga.jpg",
+    "matchedBy": "wikidata:P18"
   },
   "Q106986468": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/71/Calle_Larios_2%2C_M%C3%A1laga_01.jpg/500px-Calle_Larios_2%2C_M%C3%A1laga_01.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Calle_Larios_2,_M%C3%A1laga_01.jpg",
     "credit": "Tyk",
     "license": "CC BY-SA 3.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0"
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q106986468",
+    "upstreamPhotoId": "File:Calle Larios 2, Málaga 01.jpg",
+    "matchedBy": "wikidata:P18"
   },
   "Q106987647": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/30/Calle_Cisneros_15%2C_M%C3%A1laga.jpg/500px-Calle_Cisneros_15%2C_M%C3%A1laga.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Calle_Cisneros_15,_M%C3%A1laga.jpg",
     "credit": "Tyk",
     "license": "CC BY-SA 3.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0"
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q106987647",
+    "upstreamPhotoId": "File:Calle Cisneros 15, Málaga.jpg",
+    "matchedBy": "wikidata:P18"
   },
   "Q106993581": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/64/M%C3%A1laga_-_Sercotel_M%C3%A1laga_10.jpg/500px-M%C3%A1laga_-_Sercotel_M%C3%A1laga_10.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:M%C3%A1laga_-_Sercotel_M%C3%A1laga_10.jpg",
     "credit": "Zarateman",
     "license": "CC0",
-    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/deed.en"
+    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/deed.en",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q106993581",
+    "upstreamPhotoId": "File:Málaga - Sercotel Málaga 10.jpg",
+    "matchedBy": "wikidata:P18"
   },
   "Q108902071": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/eb/Hotel_Casino_Rhodos.jpg/500px-Hotel_Casino_Rhodos.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Hotel_Casino_Rhodos.jpg",
     "credit": "Burkhard Mücke",
     "license": "CC BY-SA 4.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q108902071",
+    "upstreamPhotoId": "File:Hotel Casino Rhodos.jpg",
+    "matchedBy": "wikidata:P18"
   },
   "Q109754214": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/21/At_Tenerife_2020_383.jpg/500px-At_Tenerife_2020_383.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:At_Tenerife_2020_383.jpg",
     "credit": "Photograph by Mike Peel ( www.mikepeel.net ).",
     "license": "CC BY-SA 4.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q109754214",
+    "upstreamPhotoId": "File:At Tenerife 2020 383.jpg",
+    "matchedBy": "wikidata:P18"
   },
   "Q110647164": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/13/Tenerife_2010_-_panoramio_-_Dawid_Glawdzin_%285%29.jpg/500px-Tenerife_2010_-_panoramio_-_Dawid_Glawdzin_%285%29.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Tenerife_2010_-_panoramio_-_Dawid_Glawdzin_(5).jpg",
     "credit": "Dawid Glawdzin",
     "license": "CC BY 3.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by/3.0"
+    "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q110647164",
+    "upstreamPhotoId": "File:Tenerife 2010 - panoramio - Dawid Glawdzin (5).jpg",
+    "matchedBy": "wikidata:P18"
+  },
+  "Q110774963": {
+    "credit": "Traveler100",
+    "evidenceUrl": "https://commons.wikimedia.org/wiki/Category:Ayana_Resort%2C_Bali",
+    "externalHotelId": "Q110774963",
+    "fileVersion": "56c1946bb96c0eb044382247d73ac7c707feb6ba",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+    "matchedBy": "reviewed-commons-category",
+    "provider": "wikimedia-commons",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:AyanaResort01.jpg",
+    "upstreamPhotoId": "File:AyanaResort01.jpg",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/0a/AyanaResort01.jpg/500px-AyanaResort01.jpg"
   },
   "Q110774995": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/bf/Main_swimming_pool_at_Paradisus_by_Meli%C3%A1_Bali.jpg/500px-Main_swimming_pool_at_Paradisus_by_Meli%C3%A1_Bali.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Main_swimming_pool_at_Paradisus_by_Meli%C3%A1_Bali.jpg",
     "credit": "Paradisus Bali",
     "license": "CC BY-SA 4.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q110774995",
+    "upstreamPhotoId": "File:Main swimming pool at Paradisus by Meliá Bali.jpg",
+    "matchedBy": "wikidata:P18"
   },
   "Q110775240": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a3/Jayakarta_Resort_Bali_view_%28outside%29_5.jpg/500px-Jayakarta_Resort_Bali_view_%28outside%29_5.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Jayakarta_Resort_Bali_view_(outside)_5.jpg",
     "credit": "HutheMeow",
     "license": "CC BY-SA 4.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q110775240",
+    "upstreamPhotoId": "File:Jayakarta Resort Bali view (outside) 5.jpg",
+    "matchedBy": "wikidata:P18"
   },
   "Q110911572": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a7/The_Capital_Hotel_Bali_-_Swimming_pool.jpg/500px-The_Capital_Hotel_Bali_-_Swimming_pool.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:The_Capital_Hotel_Bali_-_Swimming_pool.jpg",
     "credit": "M",
     "license": "CC0",
-    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/deed.en"
+    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/deed.en",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q110911572",
+    "upstreamPhotoId": "File:The Capital Hotel Bali - Swimming pool.jpg",
+    "matchedBy": "wikidata:P18"
   },
   "Q111120018": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/3f/149_Alberg_Central_Palma%2C_antic_convent_de_la_Miseric%C3%B2rdia%2C_pl._Quadrado_2_%28Palma%29.jpg/500px-149_Alberg_Central_Palma%2C_antic_convent_de_la_Miseric%C3%B2rdia%2C_pl._Quadrado_2_%28Palma%29.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:149_Alberg_Central_Palma,_antic_convent_de_la_Miseric%C3%B2rdia,_pl._Quadrado_2_(Palma).jpg",
     "credit": "Enric",
     "license": "CC BY-SA 4.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q111120018",
+    "upstreamPhotoId": "File:149 Alberg Central Palma, antic convent de la Misericòrdia, pl. Quadrado 2 (Palma).jpg",
+    "matchedBy": "wikidata:P18"
   },
   "Q111121605": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b9/Old_Town_Munkenhof.jpg/500px-Old_Town_Munkenhof.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Old_Town_Munkenhof.jpg",
     "credit": "MB-one",
     "license": "CC BY-SA 3.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0"
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q111121605",
+    "upstreamPhotoId": "File:Old Town Munkenhof.jpg",
+    "matchedBy": "wikidata:P18"
   },
   "Q111122366": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/3c/Gardiner_House.jpg/500px-Gardiner_House.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Gardiner_House.jpg",
     "credit": "Arturo Francisco Barbero",
     "license": "CC BY-SA 4.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q111122366",
+    "upstreamPhotoId": "File:Gardiner House.jpg",
+    "matchedBy": "wikidata:P18"
   },
   "Q111122953": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/1f/Hotel_OZZ%2C_Nice_%2820260620-IMG_3883%29.jpg/500px-Hotel_OZZ%2C_Nice_%2820260620-IMG_3883%29.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Hotel_OZZ,_Nice_(20260620-IMG_3883).jpg",
     "credit": "Matti Blume",
     "license": "CC BY-SA 4.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/deed.en"
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/deed.en",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q111122953",
+    "upstreamPhotoId": "File:Hotel OZZ, Nice (20260620-IMG 3883).jpg",
+    "matchedBy": "wikidata:P18"
   },
   "Q111122963": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/44/Hostel_Belle_Meuniere.jpg/500px-Hostel_Belle_Meuniere.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Hostel_Belle_Meuniere.jpg",
     "credit": "MB-one",
     "license": "CC BY-SA 4.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q111122963",
+    "upstreamPhotoId": "File:Hostel Belle Meuniere.jpg",
+    "matchedBy": "wikidata:P18"
   },
   "Q111124212": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c6/Galway_-_Eyre_Square_-_The_Galway_Hostel_-_panoramio.jpg/500px-Galway_-_Eyre_Square_-_The_Galway_Hostel_-_panoramio.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Galway_-_Eyre_Square_-_The_Galway_Hostel_-_panoramio.jpg",
     "credit": "Sabine Holzmann",
     "license": "CC BY-SA 3.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0"
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q111124212",
+    "upstreamPhotoId": "File:Galway - Eyre Square - The Galway Hostel - panoramio.jpg",
+    "matchedBy": "wikidata:P18"
+  },
+  "Q111150413": {
+    "credit": "Chris Olszewski",
+    "evidenceUrl": "https://commons.wikimedia.org/wiki/Category:Sofitel_Dubai_The_Obelisk",
+    "externalHotelId": "Q111150413",
+    "fileVersion": "a994cfae5a8dfa9f6b9070d8f8aaed308a0de98e",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "matchedBy": "reviewed-commons-geotag",
+    "provider": "wikimedia-commons",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Entrance_to_Sofitel_Dubai_The_Obelisk,_2024,_03.jpg",
+    "upstreamPhotoId": "File:Entrance to Sofitel Dubai The Obelisk, 2024, 03.jpg",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/10/Entrance_to_Sofitel_Dubai_The_Obelisk%2C_2024%2C_03.jpg/500px-Entrance_to_Sofitel_Dubai_The_Obelisk%2C_2024%2C_03.jpg"
   },
   "Q111150456": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/41/XVA_Art_Hotel.jpg/500px-XVA_Art_Hotel.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:XVA_Art_Hotel.jpg",
     "credit": "Parastoo.Atrsaei",
     "license": "CC BY-SA 4.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q111150456",
+    "upstreamPhotoId": "File:XVA Art Hotel.jpg",
+    "matchedBy": "wikidata:P18"
+  },
+  "Q111331272": {
+    "credit": "ديفيد عادل وهبة خليل 2",
+    "evidenceUrl": "https://commons.wikimedia.org/wiki/Category:Steigenberger_Aldau",
+    "externalHotelId": "Q111331272",
+    "fileVersion": "a796ab265281db229e0aff821fb8f0260ccec011",
+    "license": "CC0",
+    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/deed.en",
+    "matchedBy": "reviewed-commons-category",
+    "provider": "wikimedia-commons",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:%D8%B4%D8%AA%D9%8A%D8%AC%D9%86%D8%A8%D8%B1%D8%AC%D8%B1_%D8%A3%D9%84%D8%AF%D8%A7%D9%88_(%D8%A7%D9%84%D8%A3%D9%87%D9%85)_01.jpg",
+    "upstreamPhotoId": "File:شتيجنبرجر ألداو (الأهم) 01.jpg",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/2e/%D8%B4%D8%AA%D9%8A%D8%AC%D9%86%D8%A8%D8%B1%D8%AC%D8%B1_%D8%A3%D9%84%D8%AF%D8%A7%D9%88_%28%D8%A7%D9%84%D8%A3%D9%87%D9%85%29_01.jpg/500px-%D8%B4%D8%AA%D9%8A%D8%AC%D9%86%D8%A8%D8%B1%D8%AC%D8%B1_%D8%A3%D9%84%D8%AF%D8%A7%D9%88_%28%D8%A7%D9%84%D8%A3%D9%87%D9%85%29_01.jpg"
   },
   "Q111389123": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/17/Molina_Lario.jpg/500px-Molina_Lario.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Molina_Lario.jpg",
     "credit": "Vanbasten 23",
     "license": "CC BY-SA 3.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0"
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q111389123",
+    "upstreamPhotoId": "File:Molina Lario.jpg",
+    "matchedBy": "wikidata:P18"
   },
   "Q111389125": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/18/AC_Hotel_M%C3%A1laga_Palacio_by_Marriott.jpg/500px-AC_Hotel_M%C3%A1laga_Palacio_by_Marriott.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:AC_Hotel_M%C3%A1laga_Palacio_by_Marriott.jpg",
     "credit": "Urci dream",
     "license": "CC BY-SA 3.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0"
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q111389125",
+    "upstreamPhotoId": "File:AC Hotel Málaga Palacio by Marriott.jpg",
+    "matchedBy": "wikidata:P18"
   },
   "Q111389126": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e5/M%C3%A1laga_-_Hotel_Room_Mate_Valeria.jpg/500px-M%C3%A1laga_-_Hotel_Room_Mate_Valeria.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:M%C3%A1laga_-_Hotel_Room_Mate_Valeria.jpg",
     "credit": "Zarateman",
     "license": "CC0",
-    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/deed.en"
+    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/deed.en",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q111389126",
+    "upstreamPhotoId": "File:Málaga - Hotel Room Mate Valeria.jpg",
+    "matchedBy": "wikidata:P18"
   },
   "Q111389127": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d6/Hotel_Mariposa_01.jpg/500px-Hotel_Mariposa_01.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Hotel_Mariposa_01.jpg",
     "credit": "Urci dream",
     "license": "CC BY-SA 4.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q111389127",
+    "upstreamPhotoId": "File:Hotel Mariposa 01.jpg",
+    "matchedBy": "wikidata:P18"
   },
   "Q111389129": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a5/Hotel_Guadalmedina.jpg/500px-Hotel_Guadalmedina.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Hotel_Guadalmedina.jpg",
     "credit": "Urci dream",
     "license": "CC BY-SA 4.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q111389129",
+    "upstreamPhotoId": "File:Hotel Guadalmedina.jpg",
+    "matchedBy": "wikidata:P18"
   },
   "Q111389646": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d2/Nakar_Hotel.jpg/500px-Nakar_Hotel.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Nakar_Hotel.jpg",
     "credit": "Medusalabar",
     "license": "CC BY-SA 4.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q111389646",
+    "upstreamPhotoId": "File:Nakar Hotel.jpg",
+    "matchedBy": "wikidata:P18"
   },
   "Q111389647": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/6b/Hotel_Almudaina.jpg/500px-Hotel_Almudaina.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Hotel_Almudaina.jpg",
     "credit": "Medusalabar",
     "license": "CC BY-SA 4.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q111389647",
+    "upstreamPhotoId": "File:Hotel Almudaina.jpg",
+    "matchedBy": "wikidata:P18"
   },
   "Q111389657": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f1/CuriaDeBunyoli-1.jpg/500px-CuriaDeBunyoli-1.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:CuriaDeBunyoli-1.jpg",
     "credit": "Joan Gené",
     "license": "CC BY-SA 4.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q111389657",
+    "upstreamPhotoId": "File:CuriaDeBunyoli-1.jpg",
+    "matchedBy": "wikidata:P18"
+  },
+  "Q111389686": {
+    "credit": "Foto Fitti",
+    "evidenceUrl": "https://commons.wikimedia.org/wiki/Category:HM_Gran_Fiesta",
+    "externalHotelId": "Q111389686",
+    "fileVersion": "89639bb83d35e84dc442cef7debf35f59b598e41",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+    "matchedBy": "reviewed-commons-geotag",
+    "provider": "wikimedia-commons",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Hotel_HM_gran_fiesta_-_panoramio.jpg",
+    "upstreamPhotoId": "File:Hotel HM gran fiesta - panoramio.jpg",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/8d/Hotel_HM_gran_fiesta_-_panoramio.jpg/500px-Hotel_HM_gran_fiesta_-_panoramio.jpg"
   },
   "Q111389896": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/5b/GF_Gran_Costa_Adeje_-_November_2018.jpg/500px-GF_Gran_Costa_Adeje_-_November_2018.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:GF_Gran_Costa_Adeje_-_November_2018.jpg",
     "credit": "Cs-wolves",
     "license": "CC BY-SA 4.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q111389896",
+    "upstreamPhotoId": "File:GF Gran Costa Adeje - November 2018.jpg",
+    "matchedBy": "wikidata:P18"
   },
   "Q111390393": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/77/Holiday_Inn_Nice%2C_Nice_%2820260621-IMG_3907%29.jpg/500px-Holiday_Inn_Nice%2C_Nice_%2820260621-IMG_3907%29.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Holiday_Inn_Nice,_Nice_(20260621-IMG_3907).jpg",
     "credit": "MB-one",
     "license": "CC BY-SA 4.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q111390393",
+    "upstreamPhotoId": "File:Holiday Inn Nice, Nice (20260621-IMG 3907).jpg",
+    "matchedBy": "wikidata:P18"
   },
   "Q111390394": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/86/Hotel_Grimaldi_by_HappyCulture%2C_Nice_%2820260621-IMG_3908%29.jpg/500px-Hotel_Grimaldi_by_HappyCulture%2C_Nice_%2820260621-IMG_3908%29.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Hotel_Grimaldi_by_HappyCulture,_Nice_(20260621-IMG_3908).jpg",
     "credit": "MB-one",
     "license": "CC BY-SA 4.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q111390394",
+    "upstreamPhotoId": "File:Hotel Grimaldi by HappyCulture, Nice (20260621-IMG 3908).jpg",
+    "matchedBy": "wikidata:P18"
   },
   "Q111399390": {
     "url": "/hotel-photos/q111399390.webp",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Amatara_Wellleisure_Resort.jpg",
     "credit": "Renek78",
     "license": "CC0",
-    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/deed.en"
+    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/deed.en",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q111399390",
+    "upstreamPhotoId": "File:Amatara Wellleisure Resort.jpg",
+    "matchedBy": "manual:verified-property",
+    "fileVersion": "6470d3d68ea7ddb65a1b0d38615b2b85cede1f51"
   },
   "Q111400510": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c0/Jungle_aqua_park_-_panoramio_%283%29.jpg/500px-Jungle_aqua_park_-_panoramio_%283%29.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Jungle_aqua_park_-_panoramio_(3).jpg",
     "credit": "Darek Sołtysiński",
     "license": "CC BY-SA 3.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0"
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q111400510",
+    "upstreamPhotoId": "File:Jungle aqua park - panoramio (3).jpg",
+    "matchedBy": "wikidata:P18"
   },
   "Q111400517": {
     "url": "/hotel-photos/q111400517.webp",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Hurghada_Beach_Albatros_03.jpg",
     "credit": "Olaf Tausch",
     "license": "CC BY 3.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by/3.0"
+    "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q111400517",
+    "upstreamPhotoId": "File:Hurghada Beach Albatros 03.jpg",
+    "matchedBy": "manual:verified-property",
+    "fileVersion": "bdb887cde12662c7736c58481a8ba0a04beb6482"
+  },
+  "Q111400519": {
+    "credit": "Anton Nikiforov",
+    "evidenceUrl": "https://commons.wikimedia.org/wiki/Category:SUNRISE_Garden_Beach_Resort",
+    "externalHotelId": "Q111400519",
+    "fileVersion": "cc1d8f2422d446fff1640d0148a7d052551523bb",
+    "license": "CC BY 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
+    "matchedBy": "reviewed-commons-category",
+    "provider": "wikimedia-commons",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Sunrise_hotel_-_panoramio.jpg",
+    "upstreamPhotoId": "File:Sunrise hotel - panoramio.jpg",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/ca/Sunrise_hotel_-_panoramio.jpg/500px-Sunrise_hotel_-_panoramio.jpg"
+  },
+  "Q111400524": {
+    "credit": "lenok136",
+    "evidenceUrl": "https://commons.wikimedia.org/wiki/Category:Desert_Rose_Resort",
+    "externalHotelId": "Q111400524",
+    "fileVersion": "c36933d5e0c7cf77e8f594231cdb98ed7146021a",
+    "license": "CC BY 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
+    "matchedBy": "reviewed-commons-category",
+    "provider": "wikimedia-commons",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Desert_Rose_2010_Building_6_-_panoramio.jpg",
+    "upstreamPhotoId": "File:Desert Rose 2010 Building 6 - panoramio.jpg",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/3b/Desert_Rose_2010_Building_6_-_panoramio.jpg/500px-Desert_Rose_2010_Building_6_-_panoramio.jpg"
   },
   "Q111400533": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/cc/Hotel_Giftun_-_panoramio.jpg/500px-Hotel_Giftun_-_panoramio.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Hotel_Giftun_-_panoramio.jpg",
     "credit": "1089hruskapetr",
     "license": "CC BY 3.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by/3.0"
+    "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q111400533",
+    "upstreamPhotoId": "File:Hotel Giftun - panoramio.jpg",
+    "matchedBy": "wikidata:P18"
   },
   "Q111400535": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/be/Hurghada%2C_Qesm_Hurghada%2C_Red_Sea_Governorate%2C_Egypt_-_panoramio_%2822%29.jpg/500px-Hurghada%2C_Qesm_Hurghada%2C_Red_Sea_Governorate%2C_Egypt_-_panoramio_%2822%29.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Hurghada,_Qesm_Hurghada,_Red_Sea_Governorate,_Egypt_-_panoramio_(22).jpg",
     "credit": "Almondox",
     "license": "CC BY 3.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by/3.0"
+    "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q111400535",
+    "upstreamPhotoId": "File:Hurghada, Qesm Hurghada, Red Sea Governorate, Egypt - panoramio (22).jpg",
+    "matchedBy": "wikidata:P18"
   },
   "Q111400541": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/0f/Hotel_-_panoramio_-_Supraliminal.jpg/500px-Hotel_-_panoramio_-_Supraliminal.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Hotel_-_panoramio_-_Supraliminal.jpg",
     "credit": "Supraliminal",
     "license": "CC BY 3.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by/3.0"
+    "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q111400541",
+    "upstreamPhotoId": "File:Hotel - panoramio - Supraliminal.jpg",
+    "matchedBy": "wikidata:P18"
+  },
+  "Q111400542": {
+    "credit": "Figure",
+    "evidenceUrl": "https://commons.wikimedia.org/wiki/Category:Hilton_Hurghada_Long_Beach_Hotel",
+    "externalHotelId": "Q111400542",
+    "fileVersion": "921704c12ce361721080e15b5f88e5d6ab1f7e69",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+    "matchedBy": "reviewed-commons-category",
+    "provider": "wikimedia-commons",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Hilton_Hurghada_Long_Beach_Hotel_-_panoramio.jpg",
+    "upstreamPhotoId": "File:Hilton Hurghada Long Beach Hotel - panoramio.jpg",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/48/Hilton_Hurghada_Long_Beach_Hotel_-_panoramio.jpg/500px-Hilton_Hurghada_Long_Beach_Hotel_-_panoramio.jpg"
   },
   "Q111400543": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/52/All_quiet_in_Egypt%2C_only_a_new_government-%29_%C4%92%C4%A3ipt%C4%93_viss_pa_vecam..._Main%C4%ABjusies_tikai_vald%C4%ABba_-%29_-_panoramio.jpg/500px-All_quiet_in_Egypt%2C_only_a_new_government-%29_%C4%92%C4%A3ipt%C4%93_viss_pa_vecam..._Main%C4%ABjusies_tikai_vald%C4%ABba_-%29_-_panoramio.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:All_quiet_in_Egypt,_only_a_new_government-)_%C4%92%C4%A3ipt%C4%93_viss_pa_vecam..._Main%C4%ABjusies_tikai_vald%C4%ABba_-)_-_panoramio.jpg",
     "credit": "Maris Teteris",
     "license": "CC BY 3.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by/3.0"
+    "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q111400543",
+    "upstreamPhotoId": "File:All quiet in Egypt, only a new government-) Ēģiptē viss pa vecam... Mainījusies tikai valdība -) - panoramio.jpg",
+    "matchedBy": "wikidata:P18"
   },
   "Q111400545": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/1d/Sea_Gull_hotel_ve%C4%8Der_-_panoramio.jpg/500px-Sea_Gull_hotel_ve%C4%8Der_-_panoramio.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Sea_Gull_hotel_ve%C4%8Der_-_panoramio.jpg",
     "credit": "1089hruskapetr",
     "license": "CC BY 3.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by/3.0"
+    "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q111400545",
+    "upstreamPhotoId": "File:Sea Gull hotel večer - panoramio.jpg",
+    "matchedBy": "wikidata:P18"
   },
   "Q111400547": {
     "url": "/hotel-photos/q111400547.webp",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Marriott_Hurghada_Hotel_1_-_panoramio.jpg",
     "credit": "Hassan Gaafar",
     "license": "CC BY 3.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by/3.0"
+    "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q111400547",
+    "upstreamPhotoId": "File:Marriott Hurghada Hotel 1 - panoramio.jpg",
+    "matchedBy": "manual:verified-property",
+    "fileVersion": "3eb64d5e0304db5fffac06a2e98a8293626e05ce"
+  },
+  "Q111400553": {
+    "credit": "Tanya Dedyukhina",
+    "evidenceUrl": "https://commons.wikimedia.org/wiki/Category:Sunny_Days_El_Palacio",
+    "externalHotelId": "Q111400553",
+    "fileVersion": "4a069272181169951ca67086570344ecc9d23862",
+    "license": "CC BY 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
+    "matchedBy": "reviewed-commons-category",
+    "provider": "wikimedia-commons",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Sunny_Days_El_Palacio_-_panoramio_(1).jpg",
+    "upstreamPhotoId": "File:Sunny Days El Palacio - panoramio (1).jpg",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/20/Sunny_Days_El_Palacio_-_panoramio_%281%29.jpg/500px-Sunny_Days_El_Palacio_-_panoramio_%281%29.jpg"
+  },
+  "Q111400555": {
+    "credit": "Tanya Dedyukhina",
+    "evidenceUrl": "https://commons.wikimedia.org/wiki/Category:Grand_Horizon_Hotel",
+    "externalHotelId": "Q111400555",
+    "fileVersion": "63b8e2bf8982a1bcb3b05efdda008b62aace2202",
+    "license": "CC BY 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
+    "matchedBy": "reviewed-commons-category",
+    "provider": "wikimedia-commons",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Grand_Azur_Horizon_%D0%9E%D1%82%D0%B5%D0%BB%D1%8C_-_panoramio.jpg",
+    "upstreamPhotoId": "File:Grand Azur Horizon Отель - panoramio.jpg",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/92/Grand_Azur_Horizon_%D0%9E%D1%82%D0%B5%D0%BB%D1%8C_-_panoramio.jpg/500px-Grand_Azur_Horizon_%D0%9E%D1%82%D0%B5%D0%BB%D1%8C_-_panoramio.jpg"
   },
   "Q111400556": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/bd/Hurgada_Arabella_Azur_Resort_-_panoramio.jpg/500px-Hurgada_Arabella_Azur_Resort_-_panoramio.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Hurgada_Arabella_Azur_Resort_-_panoramio.jpg",
     "credit": "Tanya Dedyukhina",
     "license": "CC BY 3.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by/3.0"
+    "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q111400556",
+    "upstreamPhotoId": "File:Hurgada Arabella Azur Resort - panoramio.jpg",
+    "matchedBy": "wikidata:P18"
+  },
+  "Q111400619": {
+    "credit": "rado78",
+    "evidenceUrl": "https://commons.wikimedia.org/wiki/Category:Jaz_Fanara_Resort",
+    "externalHotelId": "Q111400619",
+    "fileVersion": "37e7cda0b50990fc7a3c7d5df03b855a828b1d67",
+    "license": "CC BY 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
+    "matchedBy": "reviewed-commons-category",
+    "provider": "wikimedia-commons",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Iberotel_Club_Fanara_-_Sharm_El_Sheikh_-_panoramio.jpg",
+    "upstreamPhotoId": "File:Iberotel Club Fanara - Sharm El Sheikh - panoramio.jpg",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/79/Iberotel_Club_Fanara_-_Sharm_El_Sheikh_-_panoramio.jpg/500px-Iberotel_Club_Fanara_-_Sharm_El_Sheikh_-_panoramio.jpg"
+  },
+  "Q111400629": {
+    "credit": "Mr.Rosewater",
+    "evidenceUrl": "https://commons.wikimedia.org/wiki/Category:Monte_Carlo_Hotel_Sharm_El_Sheikh",
+    "externalHotelId": "Q111400629",
+    "fileVersion": "15cf4db78b07d8eb47980bfeb675774d5ec42a1b",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "matchedBy": "reviewed-commons-category",
+    "provider": "wikimedia-commons",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Monte_Carlo_Hotel_Sharm_el-Sheikh.jpg",
+    "upstreamPhotoId": "File:Monte Carlo Hotel Sharm el-Sheikh.jpg",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/ba/Monte_Carlo_Hotel_Sharm_el-Sheikh.jpg/500px-Monte_Carlo_Hotel_Sharm_el-Sheikh.jpg"
+  },
+  "Q111400641": {
+    "credit": "Сашка Денисов",
+    "evidenceUrl": "https://commons.wikimedia.org/wiki/Category:Oriental_Rivoli_Hotel_Sharm_el-Sheikh",
+    "externalHotelId": "Q111400641",
+    "fileVersion": "87f395007c92a351bd644f072459e313105ceef2",
+    "license": "CC BY 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
+    "matchedBy": "reviewed-commons-category",
+    "provider": "wikimedia-commons",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Oriental_Rivoli_Hotel_4%5E,_%D0%95%D0%B3%D0%B8%D0%BF%D0%B5%D1%82-%D0%A8%D0%B0%D1%80%D0%BC-%D1%8D%D0%BB%D1%8C-%D0%A8%D0%B5%D0%B9%D1%85_-_panoramio.jpg",
+    "upstreamPhotoId": "File:Oriental Rivoli Hotel 4^, Египет-Шарм-эль-Шейх - panoramio.jpg",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/4a/Oriental_Rivoli_Hotel_4%5E%2C_%D0%95%D0%B3%D0%B8%D0%BF%D0%B5%D1%82-%D0%A8%D0%B0%D1%80%D0%BC-%D1%8D%D0%BB%D1%8C-%D0%A8%D0%B5%D0%B9%D1%85_-_panoramio.jpg/500px-Oriental_Rivoli_Hotel_4%5E%2C_%D0%95%D0%B3%D0%B8%D0%BF%D0%B5%D1%82-%D0%A8%D0%B0%D1%80%D0%BC-%D1%8D%D0%BB%D1%8C-%D0%A8%D0%B5%D0%B9%D1%85_-_panoramio.jpg"
+  },
+  "Q111400650": {
+    "credit": "Рустам Абдрахимов",
+    "evidenceUrl": "https://commons.wikimedia.org/wiki/Category:Pyramisa_Sharm_El_Sheikh_Resort",
+    "externalHotelId": "Q111400650",
+    "fileVersion": "4ef417511ce935323e040291252f5d2352d0f369",
+    "license": "CC BY 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
+    "matchedBy": "reviewed-commons-category",
+    "provider": "wikimedia-commons",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:%D0%A8%D0%B0%D1%80%D0%BC-%D1%8D%D0%BB%D1%8C-%D0%A8%D0%B5%D0%B9%D1%85._%D0%9E%D1%82%D0%B5%D0%BB%D1%8C_Pyramisa_-_panoramio_(1).jpg",
+    "upstreamPhotoId": "File:Шарм-эль-Шейх. Отель Pyramisa - panoramio (1).jpg",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d1/%D0%A8%D0%B0%D1%80%D0%BC-%D1%8D%D0%BB%D1%8C-%D0%A8%D0%B5%D0%B9%D1%85._%D0%9E%D1%82%D0%B5%D0%BB%D1%8C_Pyramisa_-_panoramio_%281%29.jpg/500px-%D0%A8%D0%B0%D1%80%D0%BC-%D1%8D%D0%BB%D1%8C-%D0%A8%D0%B5%D0%B9%D1%85._%D0%9E%D1%82%D0%B5%D0%BB%D1%8C_Pyramisa_-_panoramio_%281%29.jpg"
   },
   "Q111410804": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/50/Dublin%2C_The_Fitzwilliam_Hotel.jpg/500px-Dublin%2C_The_Fitzwilliam_Hotel.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Dublin,_The_Fitzwilliam_Hotel.jpg",
     "credit": "GilPe",
     "license": "CC BY-SA 4.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q111410804",
+    "upstreamPhotoId": "File:Dublin, The Fitzwilliam Hotel.jpg",
+    "matchedBy": "wikidata:P18"
   },
   "Q111410813": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/5b/2009-09-27_Ireland_Dublin_Gresham_Hotel_038a.jpg/500px-2009-09-27_Ireland_Dublin_Gresham_Hotel_038a.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:2009-09-27_Ireland_Dublin_Gresham_Hotel_038a.jpg",
     "credit": "Sir James",
     "license": "CC BY-SA 3.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0"
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q111410813",
+    "upstreamPhotoId": "File:2009-09-27 Ireland Dublin Gresham Hotel 038a.jpg",
+    "matchedBy": "wikidata:P18"
   },
   "Q111410817": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/1d/The_Westin_Hotel%2C_Westmoreland_Street%2C_Dublin_%2814352363542%29.jpg/500px-The_Westin_Hotel%2C_Westmoreland_Street%2C_Dublin_%2814352363542%29.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:The_Westin_Hotel,_Westmoreland_Street,_Dublin_(14352363542).jpg",
     "credit": "Sean MacEntee from Monaghan, Ireland",
     "license": "CC BY 2.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by/2.0"
+    "licenseUrl": "https://creativecommons.org/licenses/by/2.0",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q111410817",
+    "upstreamPhotoId": "File:The Westin Hotel, Westmoreland Street, Dublin (14352363542).jpg",
+    "matchedBy": "wikidata:P18"
   },
   "Q111410829": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/fe/Metro_Hotel_Dublin%2C_Ballymun.jpg/500px-Metro_Hotel_Dublin%2C_Ballymun.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Metro_Hotel_Dublin,_Ballymun.jpg",
     "credit": "Finnfrog99",
     "license": "CC BY-SA 4.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q111410829",
+    "upstreamPhotoId": "File:Metro Hotel Dublin, Ballymun.jpg",
+    "matchedBy": "wikidata:P18"
+  },
+  "Q111410830": {
+    "credit": "Joseph Mischyshyn",
+    "evidenceUrl": "https://commons.wikimedia.org/wiki/Category:Mespil_Hotel",
+    "externalHotelId": "Q111410830",
+    "fileVersion": "4cf869bbd7516675c0cb0c93e5ceb7dd1231ba8c",
+    "license": "CC BY-SA 2.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0",
+    "matchedBy": "reviewed-commons-geotag",
+    "provider": "wikimedia-commons",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Dublin_-_Mespil_Hotel_-_geograph.org.uk_-_1573722.jpg",
+    "upstreamPhotoId": "File:Dublin - Mespil Hotel - geograph.org.uk - 1573722.jpg",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/03/Dublin_-_Mespil_Hotel_-_geograph.org.uk_-_1573722.jpg/500px-Dublin_-_Mespil_Hotel_-_geograph.org.uk_-_1573722.jpg"
   },
   "Q111411774": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a8/Lancaster_Lodge.jpg/500px-Lancaster_Lodge.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Lancaster_Lodge.jpg",
     "credit": "Caoimheen3",
     "license": "CC BY-SA 4.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q111411774",
+    "upstreamPhotoId": "File:Lancaster Lodge.jpg",
+    "matchedBy": "wikidata:P18"
   },
   "Q111415871": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f3/Barut_Lara_Hotel._Main_building_-_panoramio.jpg/500px-Barut_Lara_Hotel._Main_building_-_panoramio.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Barut_Lara_Hotel._Main_building_-_panoramio.jpg",
     "credit": "Anton Nikiforov",
     "license": "CC BY 3.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by/3.0"
+    "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q111415871",
+    "upstreamPhotoId": "File:Barut Lara Hotel. Main building - panoramio.jpg",
+    "matchedBy": "wikidata:P18"
   },
   "Q111471332": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/5d/Le_M%C3%A9ridien_Nice_en_mars_2022.JPG/500px-Le_M%C3%A9ridien_Nice_en_mars_2022.JPG",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Le_M%C3%A9ridien_Nice_en_mars_2022.JPG",
     "credit": "Benoît Prieur",
     "license": "CC0",
-    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/deed.en"
+    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/deed.en",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q111471332",
+    "upstreamPhotoId": "File:Le Méridien Nice en mars 2022.JPG",
+    "matchedBy": "wikidata:P18"
   },
   "Q111662142": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e9/Soho_Boutique_Bah%C3%ADa_M%C3%A1laga_Mural_%28Aryz%2C_2015%29.jpg/500px-Soho_Boutique_Bah%C3%ADa_M%C3%A1laga_Mural_%28Aryz%2C_2015%29.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Soho_Boutique_Bah%C3%ADa_M%C3%A1laga_Mural_(Aryz,_2015).jpg",
     "credit": "Daniel Capilla",
     "license": "CC BY-SA 4.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q111662142",
+    "upstreamPhotoId": "File:Soho Boutique Bahía Málaga Mural (Aryz, 2015).jpg",
+    "matchedBy": "wikidata:P18"
   },
   "Q111662244": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/ff/Blarney_Castle_Hotel.jpg/500px-Blarney_Castle_Hotel.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Blarney_Castle_Hotel.jpg",
     "credit": "Caoimheen3",
     "license": "CC BY-SA 4.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q111662244",
+    "upstreamPhotoId": "File:Blarney Castle Hotel.jpg",
+    "matchedBy": "wikidata:P18"
   },
   "Q111857742": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/8a/Hotel_Magic_Beach_od_mo%C5%99e_-_panoramio.jpg/500px-Hotel_Magic_Beach_od_mo%C5%99e_-_panoramio.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Hotel_Magic_Beach_od_mo%C5%99e_-_panoramio.jpg",
     "credit": "1089hruskapetr",
     "license": "CC BY 3.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by/3.0"
+    "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q111857742",
+    "upstreamPhotoId": "File:Hotel Magic Beach od moře - panoramio.jpg",
+    "matchedBy": "wikidata:P18"
   },
   "Q111857799": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/7f/RasNasraniBaronResort.jpg/500px-RasNasraniBaronResort.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:RasNasraniBaronResort.jpg",
     "credit": "Roland Unger",
     "license": "CC BY-SA 3.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0"
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q111857799",
+    "upstreamPhotoId": "File:RasNasraniBaronResort.jpg",
+    "matchedBy": "wikidata:P18"
   },
   "Q111872262": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/9f/Hotel_Mirador%2C_Palma_de_Mallorca.jpg/500px-Hotel_Mirador%2C_Palma_de_Mallorca.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Hotel_Mirador,_Palma_de_Mallorca.jpg",
     "credit": "Gerd Fahrenhorst",
     "license": "CC BY 4.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by/4.0"
+    "licenseUrl": "https://creativecommons.org/licenses/by/4.0",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q111872262",
+    "upstreamPhotoId": "File:Hotel Mirador, Palma de Mallorca.jpg",
+    "matchedBy": "wikidata:P18"
   },
   "Q111876594": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c0/Morehampton_Townhouse_Dublin_wiecz%C3%B3r_2.jpg/500px-Morehampton_Townhouse_Dublin_wiecz%C3%B3r_2.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Morehampton_Townhouse_Dublin_wiecz%C3%B3r_2.jpg",
     "credit": "Panek",
     "license": "CC BY-SA 4.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q111876594",
+    "upstreamPhotoId": "File:Morehampton Townhouse Dublin wieczór 2.jpg",
+    "matchedBy": "wikidata:P18"
+  },
+  "Q111876624": {
+    "credit": "Galway Arms Inn by N Chadwick",
+    "evidenceUrl": "https://commons.wikimedia.org/wiki/Category:Galway_Arms_Inn%2C_Galway",
+    "externalHotelId": "Q111876624",
+    "fileVersion": "070e05ba38bba701fdde43a27a0391523e3030a2",
+    "license": "CC BY-SA 2.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0",
+    "matchedBy": "reviewed-commons-category",
+    "provider": "wikimedia-commons",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Galway_Arms_Inn_-_geograph.org.uk_-_6428912.jpg",
+    "upstreamPhotoId": "File:Galway Arms Inn - geograph.org.uk - 6428912.jpg",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/9e/Galway_Arms_Inn_-_geograph.org.uk_-_6428912.jpg/500px-Galway_Arms_Inn_-_geograph.org.uk_-_6428912.jpg"
   },
   "Q111876638": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/dd/Achill_House.jpg/500px-Achill_House.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Achill_House.jpg",
     "credit": "Caoimheen3",
     "license": "CC BY-SA 4.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q111876638",
+    "upstreamPhotoId": "File:Achill House.jpg",
+    "matchedBy": "wikidata:P18"
   },
   "Q111876639": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/87/Shandon_Bells_Guest_House.jpg/500px-Shandon_Bells_Guest_House.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Shandon_Bells_Guest_House.jpg",
     "credit": "Caoimheen3",
     "license": "CC BY-SA 4.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q111876639",
+    "upstreamPhotoId": "File:Shandon Bells Guest House.jpg",
+    "matchedBy": "wikidata:P18"
   },
   "Q111876892": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/15/Hotel_66_Nice%2C_Nice_%2820260620-IMG_3882%29.jpg/500px-Hotel_66_Nice%2C_Nice_%2820260620-IMG_3882%29.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Hotel_66_Nice,_Nice_(20260620-IMG_3882).jpg",
     "credit": "MB-one",
     "license": "CC BY-SA 4.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q111876892",
+    "upstreamPhotoId": "File:Hotel 66 Nice, Nice (20260620-IMG 3882).jpg",
+    "matchedBy": "wikidata:P18"
   },
   "Q111876893": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d3/Hotel_Locarno_Nice_-_panoramio.jpg/500px-Hotel_Locarno_Nice_-_panoramio.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Hotel_Locarno_Nice_-_panoramio.jpg",
     "credit": "alpenzoo",
     "license": "CC BY-SA 3.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0"
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q111876893",
+    "upstreamPhotoId": "File:Hotel Locarno Nice - panoramio.jpg",
+    "matchedBy": "wikidata:P18"
   },
   "Q111876901": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/79/%D0%A5%D0%BE%D1%82%D0%B5%D0%BB_%D0%9C%D0%B5%D1%80%D0%B8%D0%B4%D0%B8%D1%98%D0%B0%D0%BD%2C_%D0%9D%D0%B8%D1%86%D0%B0.jpg/500px-%D0%A5%D0%BE%D1%82%D0%B5%D0%BB_%D0%9C%D0%B5%D1%80%D0%B8%D0%B4%D0%B8%D1%98%D0%B0%D0%BD%2C_%D0%9D%D0%B8%D1%86%D0%B0.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:%D0%A5%D0%BE%D1%82%D0%B5%D0%BB_%D0%9C%D0%B5%D1%80%D0%B8%D0%B4%D0%B8%D1%98%D0%B0%D0%BD,_%D0%9D%D0%B8%D1%86%D0%B0.jpg",
     "credit": "Михаило Јовановић",
     "license": "CC BY-SA 4.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q111876901",
+    "upstreamPhotoId": "File:Хотел Меридијан, Ница.jpg",
+    "matchedBy": "wikidata:P18"
   },
   "Q111999117": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c6/Hotelpool_-_panoramio_%281%29.jpg/500px-Hotelpool_-_panoramio_%281%29.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Hotelpool_-_panoramio_(1).jpg",
     "credit": "hh oldman",
     "license": "CC BY 3.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by/3.0"
+    "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q111999117",
+    "upstreamPhotoId": "File:Hotelpool - panoramio (1).jpg",
+    "matchedBy": "wikidata:P18"
   },
   "Q111999122": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c7/%D8%B2%D8%A7%D9%83_%D8%A5%D9%86_20.jpg/500px-%D8%B2%D8%A7%D9%83_%D8%A5%D9%86_20.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:%D8%B2%D8%A7%D9%83_%D8%A5%D9%86_20.jpg",
     "credit": "ديفيد عادل وهبة خليل 2",
     "license": "CC0",
-    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/deed.en"
+    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/deed.en",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q111999122",
+    "upstreamPhotoId": "File:زاك إن 20.jpg",
+    "matchedBy": "wikidata:P18"
+  },
+  "Q111999181": {
+    "credit": "Сашка Денисов",
+    "evidenceUrl": "https://commons.wikimedia.org/wiki/Category:Aqua_Blu_Sharm_El_Sheikh",
+    "externalHotelId": "Q111999181",
+    "fileVersion": "435de2daefed57a32aab734335e59b43a2943382",
+    "license": "CC BY 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
+    "matchedBy": "reviewed-commons-category",
+    "provider": "wikimedia-commons",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:%5Ealbatros_%5ESharmelSheikh_%5EAlbatrosAquaBluSharm_%D0%A8%D0%B0%D1%80%D0%BC-%D1%8D%D0%BB%D1%8C-%D0%A8%D0%B5%D0%B9%D1%85,_Qesm_Sharm_Ash_Sheikh,_%D0%AE%D0%B6%D0%BD%D0%B0%D1%8F_%D0%A1%D0%B8%D0%BD%D0%B0,_%D0%95%D0%B3%D0%B8%D0%BF%D0%B5%D1%82,_%D0%B0%D0%BA%D0%B2%D0%B0%D0%BF%D0%B0%D1%80%D0%BA_%D0%90%D0%BB%D1%8C%D0%B1%D0%B0%D1%82%D1%80%D0%BE%D1%81_-_panoramio.jpg",
+    "upstreamPhotoId": "File:^albatros ^SharmelSheikh ^AlbatrosAquaBluSharm Шарм-эль-Шейх, Qesm Sharm Ash Sheikh, Южная Сина, Египет, аквапарк Альбатрос - panoramio.jpg",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/47/%5Ealbatros_%5ESharmelSheikh_%5EAlbatrosAquaBluSharm_%D0%A8%D0%B0%D1%80%D0%BC-%D1%8D%D0%BB%D1%8C-%D0%A8%D0%B5%D0%B9%D1%85%2C_Qesm_Sharm_Ash_Sheikh%2C_%D0%AE%D0%B6%D0%BD%D0%B0%D1%8F_%D0%A1%D0%B8%D0%BD%D0%B0%2C_%D0%95%D0%B3%D0%B8%D0%BF%D0%B5%D1%82%2C_%D0%B0%D0%BA%D0%B2%D0%B0%D0%BF%D0%B0%D1%80%D0%BA_%D0%90%D0%BB%D1%8C%D0%B1%D0%B0%D1%82%D1%80%D0%BE%D1%81_-_panoramio.jpg/500px-thumbnail.jpg"
+  },
+  "Q111999184": {
+    "credit": "Mr.Rosewater",
+    "evidenceUrl": "https://commons.wikimedia.org/wiki/Category:Melton_Beach_Resort_Hotel_Sharm_el-Sheikh",
+    "externalHotelId": "Q111999184",
+    "fileVersion": "c8096a4c5463451880bc902826c6296e631bd75a",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "matchedBy": "reviewed-commons-category",
+    "provider": "wikimedia-commons",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Melton_Beach_Resort.jpg",
+    "upstreamPhotoId": "File:Melton Beach Resort.jpg",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/aa/Melton_Beach_Resort.jpg/500px-Melton_Beach_Resort.jpg"
   },
   "Q112016185": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/66/Hotel_Nice_Cote_d%27azur%2C_Nice.jpg/500px-Hotel_Nice_Cote_d%27azur%2C_Nice.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Hotel_Nice_Cote_d%27azur,_Nice.jpg",
     "credit": "MB-one",
     "license": "CC BY-SA 4.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q112016185",
+    "upstreamPhotoId": "File:Hotel Nice Cote d'azur, Nice.jpg",
+    "matchedBy": "wikidata:P18"
   },
   "Q114948041": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/70/At_Playa_de_las_Am%C3%A9ricas_2020_021.jpg/500px-At_Playa_de_las_Am%C3%A9ricas_2020_021.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:At_Playa_de_las_Am%C3%A9ricas_2020_021.jpg",
     "credit": "Photograph by Mike Peel ( www.mikepeel.net ).",
     "license": "CC BY-SA 4.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q114948041",
+    "upstreamPhotoId": "File:At Playa de las Américas 2020 021.jpg",
+    "matchedBy": "wikidata:P18"
   },
   "Q115670160": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/3e/2019-7_Three-Cushion_World_Cup-Hotel_Hyatt_Regency-01.jpg/500px-2019-7_Three-Cushion_World_Cup-Hotel_Hyatt_Regency-01.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:2019-7_Three-Cushion_World_Cup-Hotel_Hyatt_Regency-01.jpg",
     "credit": "Carambol – CC-BY-SA-3.0",
     "license": "CC BY-SA 3.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0"
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q115670160",
+    "upstreamPhotoId": "File:2019-7 Three-Cushion World Cup-Hotel Hyatt Regency-01.jpg",
+    "matchedBy": "wikidata:P18"
+  },
+  "Q116116500": {
+    "credit": "Daniel Capilla",
+    "evidenceUrl": "https://commons.wikimedia.org/wiki/Category:H10_Croma_M%C3%A1laga",
+    "externalHotelId": "Q116116500",
+    "fileVersion": "1e72187b1b172ff1fa8dbf825fdeaacfb001e4f9",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "matchedBy": "reviewed-commons-geotag",
+    "provider": "wikimedia-commons",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Hotel_H10_Croma_M%C3%A1laga_01.jpg",
+    "upstreamPhotoId": "File:Hotel H10 Croma Málaga 01.jpg",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/2a/Hotel_H10_Croma_M%C3%A1laga_01.jpg/500px-Hotel_H10_Croma_M%C3%A1laga_01.jpg"
   },
   "Q116764918": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/9b/Paradise_Gardens_Apartments%2C_Sahl_Hasheesh%2C_Egypt%2C_2023.jpg/500px-Paradise_Gardens_Apartments%2C_Sahl_Hasheesh%2C_Egypt%2C_2023.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Paradise_Gardens_Apartments,_Sahl_Hasheesh,_Egypt,_2023.jpg",
     "credit": "Free to use with credit to the photographer: Mosbatho",
     "license": "CC BY 4.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by/4.0"
+    "licenseUrl": "https://creativecommons.org/licenses/by/4.0",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q116764918",
+    "upstreamPhotoId": "File:Paradise Gardens Apartments, Sahl Hasheesh, Egypt, 2023.jpg",
+    "matchedBy": "wikidata:P18"
   },
   "Q116765005": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/7e/A_picture_of_the_renowned_Red_Sea_resort_called_Veranda_designed_by_architect_Saleh_Hamdy-_2013-04-26_23-26.jpg/500px-A_picture_of_the_renowned_Red_Sea_resort_called_Veranda_designed_by_architect_Saleh_Hamdy-_2013-04-26_23-26.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:A_picture_of_the_renowned_Red_Sea_resort_called_Veranda_designed_by_architect_Saleh_Hamdy-_2013-04-26_23-26.jpg",
     "credit": "User:Saleh Hamdy",
     "license": "CC BY-SA 3.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0"
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q116765005",
+    "upstreamPhotoId": "File:A picture of the renowned Red Sea resort called Veranda designed by architect Saleh Hamdy- 2013-04-26 23-26.jpg",
+    "matchedBy": "wikidata:P18"
   },
   "Q117287771": {
     "url": "/hotel-photos/q117287771.webp",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Baz%C3%A9n,_Kings_Hotel,_Pafos,_Kypr_01.jpg",
     "credit": "Fry72, Karel Frydrýšek",
     "license": "CC BY-SA 4.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q117287771",
+    "upstreamPhotoId": "File:Bazén, Kings Hotel, Pafos, Kypr 01.jpg",
+    "matchedBy": "manual:verified-property",
+    "fileVersion": "f978a44ba063778fe2213742ab9236b77cf8bab9"
+  },
+  "Q118731188": {
+    "credit": "Jeff Hitchcock from Seattle, WA, USA",
+    "evidenceUrl": "https://commons.wikimedia.org/wiki/Category:Hotel_Teatro_Romano",
+    "externalHotelId": "Q118731188",
+    "fileVersion": "50b3089086617cfc19122f840ad273c61270760b",
+    "license": "CC BY 2.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/2.0",
+    "matchedBy": "reviewed-commons-category",
+    "provider": "wikimedia-commons",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Hotel_Boutique_Teatro_Romano_(52862004682).jpg",
+    "upstreamPhotoId": "File:Hotel Boutique Teatro Romano (52862004682).jpg",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/02/Hotel_Boutique_Teatro_Romano_%2852862004682%29.jpg/500px-Hotel_Boutique_Teatro_Romano_%2852862004682%29.jpg"
   },
   "Q118812119": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c9/Miracle_Resort_Hotel.jpg/500px-Miracle_Resort_Hotel.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Miracle_Resort_Hotel.jpg",
     "credit": "Jörg Fuhrmann (Intermerker)",
     "license": "CC BY-SA 4.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q118812119",
+    "upstreamPhotoId": "File:Miracle Resort Hotel.jpg",
+    "matchedBy": "wikidata:P18"
   },
   "Q124021041": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b2/Palma._Hostal_Cuba.jpg/500px-Palma._Hostal_Cuba.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Palma._Hostal_Cuba.jpg",
     "credit": "Joan Gené",
     "license": "CC0",
-    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/deed.en"
+    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/deed.en",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q124021041",
+    "upstreamPhotoId": "File:Palma. Hostal Cuba.jpg",
+    "matchedBy": "wikidata:P18"
   },
   "Q127275736": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/13/Hostal_Terminus_Palma.jpg/500px-Hostal_Terminus_Palma.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Hostal_Terminus_Palma.jpg",
     "credit": "Garciman73",
     "license": "CC0",
-    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/deed.en"
+    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/deed.en",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q127275736",
+    "upstreamPhotoId": "File:Hostal Terminus Palma.jpg",
+    "matchedBy": "wikidata:P18"
   },
   "Q13046758": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d8/Clarence_Hotel_-_01.png/500px-Clarence_Hotel_-_01.png",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Clarence_Hotel_-_01.png",
     "credit": "https://www.flickr.com/photos/infomatique/",
     "license": "CC BY-SA 2.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0"
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q13046758",
+    "upstreamPhotoId": "File:Clarence Hotel - 01.png",
+    "matchedBy": "wikidata:P18"
   },
   "Q130748937": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/0d/DoubleTree_by_Hilton_Nice_Centre_Iconic%2C_Nice.jpg/500px-DoubleTree_by_Hilton_Nice_Centre_Iconic%2C_Nice.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:DoubleTree_by_Hilton_Nice_Centre_Iconic,_Nice.jpg",
     "credit": "MB-one",
     "license": "CC BY-SA 4.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q130748937",
+    "upstreamPhotoId": "File:DoubleTree by Hilton Nice Centre Iconic, Nice.jpg",
+    "matchedBy": "wikidata:P18"
+  },
+  "Q131406817": {
+    "credit": "ديفيد عادل وهبة خليل 2",
+    "evidenceUrl": "https://commons.wikimedia.org/wiki/Category:Savoy_Sharm_el_sheikh_Hotel",
+    "externalHotelId": "Q131406817",
+    "fileVersion": "bbffc592445b50f9312f0a1f981daf80a59bde2e",
+    "license": "CC0",
+    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/deed.en",
+    "matchedBy": "reviewed-commons-category",
+    "provider": "wikimedia-commons",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:%D9%86%D8%A7%D9%81%D9%88%D8%B1%D8%A9_%D9%81%D9%8A_%D9%81%D9%86%D8%AF%D9%82_%D8%B3%D8%A7%D9%81%D9%88%D9%8A_%D8%B4%D8%B1%D9%85_%D8%A7%D9%84%D8%B4%D9%8A%D8%AE_1.jpg",
+    "upstreamPhotoId": "File:نافورة في فندق سافوي شرم الشيخ 1.jpg",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/62/%D9%86%D8%A7%D9%81%D9%88%D8%B1%D8%A9_%D9%81%D9%8A_%D9%81%D9%86%D8%AF%D9%82_%D8%B3%D8%A7%D9%81%D9%88%D9%8A_%D8%B4%D8%B1%D9%85_%D8%A7%D9%84%D8%B4%D9%8A%D8%AE_1.jpg/500px-%D9%86%D8%A7%D9%81%D9%88%D8%B1%D8%A9_%D9%81%D9%8A_%D9%81%D9%86%D8%AF%D9%82_%D8%B3%D8%A7%D9%81%D9%88%D9%8A_%D8%B4%D8%B1%D9%85_%D8%A7%D9%84%D8%B4%D9%8A%D8%AE_1.jpg"
+  },
+  "Q131411375": {
+    "credit": "Carambol – CC-BY-SA-3.0",
+    "evidenceUrl": "https://commons.wikimedia.org/wiki/Category:Hotel_Hyatt_Regency%2C_Sharm_el-Sheik%2C_Egypt",
+    "externalHotelId": "Q131411375",
+    "fileVersion": "fdb9505ea1d32b2a741393a14987b865bb9f5b50",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+    "matchedBy": "reviewed-commons-category",
+    "provider": "wikimedia-commons",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:2019-7_Three-Cushion_World_Cup-Hotel_Hyatt_Regency-01.jpg",
+    "upstreamPhotoId": "File:2019-7 Three-Cushion World Cup-Hotel Hyatt Regency-01.jpg",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/3e/2019-7_Three-Cushion_World_Cup-Hotel_Hyatt_Regency-01.jpg/500px-2019-7_Three-Cushion_World_Cup-Hotel_Hyatt_Regency-01.jpg"
+  },
+  "Q131411414": {
+    "credit": "Игорь Филипенко",
+    "evidenceUrl": "https://commons.wikimedia.org/wiki/Category:Continental_Garden_Reef_Resort",
+    "externalHotelId": "Q131411414",
+    "fileVersion": "0ced9b6e0e918be3ae4e0bd8583c88e392f7437b",
+    "license": "CC BY 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
+    "matchedBy": "reviewed-commons-category",
+    "provider": "wikimedia-commons",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Continental_Garden_Reef_-_panoramio.jpg",
+    "upstreamPhotoId": "File:Continental Garden Reef - panoramio.jpg",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/1b/Continental_Garden_Reef_-_panoramio.jpg/500px-Continental_Garden_Reef_-_panoramio.jpg"
+  },
+  "Q131411454": {
+    "credit": "Robert Schediwy",
+    "evidenceUrl": "https://commons.wikimedia.org/wiki/Category:Sharm_Plaza_Hotel",
+    "externalHotelId": "Q131411454",
+    "fileVersion": "dd25093bda977b4a8a014d209e15034531addbc7",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "matchedBy": "reviewed-commons-category",
+    "provider": "wikimedia-commons",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Roman_pool_at_Sharm_Plaza_resort.JPG",
+    "upstreamPhotoId": "File:Roman pool at Sharm Plaza resort.JPG",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e8/Roman_pool_at_Sharm_Plaza_resort.JPG/500px-Roman_pool_at_Sharm_Plaza_resort.JPG"
   },
   "Q131469504": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/3c/Cyrene_Grand_Hotel%2C_Sharm_el-Sheikh_08.jpg/500px-Cyrene_Grand_Hotel%2C_Sharm_el-Sheikh_08.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Cyrene_Grand_Hotel,_Sharm_el-Sheikh_08.jpg",
     "credit": "Mr.Rosewater",
     "license": "CC BY-SA 4.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q131469504",
+    "upstreamPhotoId": "File:Cyrene Grand Hotel, Sharm el-Sheikh 08.jpg",
+    "matchedBy": "wikidata:P18"
+  },
+  "Q131494869": {
+    "credit": "Tanya Dedyukhina",
+    "evidenceUrl": "https://commons.wikimedia.org/wiki/Category:Sultan_Gardens_Resort_Hotel_Sharm_el-Sheikh",
+    "externalHotelId": "Q131494869",
+    "fileVersion": "e884afed170bfee53557c96ed1d0edacc8c412f0",
+    "license": "CC BY 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
+    "matchedBy": "reviewed-commons-category",
+    "provider": "wikimedia-commons",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Sharm_el_Sheikh,_Sultan_Gardens_Resort_-_panoramio_(12).jpg",
+    "upstreamPhotoId": "File:Sharm el Sheikh, Sultan Gardens Resort - panoramio (12).jpg",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a4/Sharm_el_Sheikh%2C_Sultan_Gardens_Resort_-_panoramio_%2812%29.jpg/500px-Sharm_el_Sheikh%2C_Sultan_Gardens_Resort_-_panoramio_%2812%29.jpg"
   },
   "Q131538012": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/6b/%D9%85%D8%B3%D8%A8%D8%AD_%D9%81%D9%8A_%D8%B4%D8%B1%D9%85_%D8%A7%D9%84%D8%B4%D9%8A%D8%AE_01.jpg/500px-%D9%85%D8%B3%D8%A8%D8%AD_%D9%81%D9%8A_%D8%B4%D8%B1%D9%85_%D8%A7%D9%84%D8%B4%D9%8A%D8%AE_01.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:%D9%85%D8%B3%D8%A8%D8%AD_%D9%81%D9%8A_%D8%B4%D8%B1%D9%85_%D8%A7%D9%84%D8%B4%D9%8A%D8%AE_01.jpg",
     "credit": "ديفيد عادل وهبة خليل 2",
     "license": "CC0",
-    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/deed.en"
+    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/deed.en",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q131538012",
+    "upstreamPhotoId": "File:مسبح في شرم الشيخ 01.jpg",
+    "matchedBy": "wikidata:P18"
+  },
+  "Q131549849": {
+    "credit": "ARKADIUSZ MARKIEWICZ",
+    "evidenceUrl": "https://commons.wikimedia.org/wiki/Category:Park_Inn_%28Sharm_el-Sheikh%29",
+    "externalHotelId": "Q131549849",
+    "fileVersion": "27ea55eb8160561f2ac957de49bd5eee5e32b2d7",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+    "matchedBy": "reviewed-commons-category",
+    "provider": "wikimedia-commons",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Park_Inn-basen_-_panoramio.jpg",
+    "upstreamPhotoId": "File:Park Inn-basen - panoramio.jpg",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b1/Park_Inn-basen_-_panoramio.jpg/500px-Park_Inn-basen_-_panoramio.jpg"
   },
   "Q131549995": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/07/Tropicana_Grand_Azure%2C_Sharm_El_Sheikh_-_panoramio_-_Vlad_Shtelts_%28Stelz%29_%2848%29.jpg/500px-Tropicana_Grand_Azure%2C_Sharm_El_Sheikh_-_panoramio_-_Vlad_Shtelts_%28Stelz%29_%2848%29.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Tropicana_Grand_Azure,_Sharm_El_Sheikh_-_panoramio_-_Vlad_Shtelts_(Stelz)_(48).jpg",
     "credit": "Vlad Shtelts (Stelz)",
     "license": "CC BY-SA 3.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0"
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q131549995",
+    "upstreamPhotoId": "File:Tropicana Grand Azure, Sharm El Sheikh - panoramio - Vlad Shtelts (Stelz) (48).jpg",
+    "matchedBy": "wikidata:P18"
   },
   "Q131550208": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/5d/%D0%A8%D0%B0%D1%80%D0%BC-%D0%AD%D0%BB%D1%8C-%D0%A8%D0%B5%D0%B9%D1%85._%D0%94%D0%B5%D0%BA%D0%B0%D0%B1%D1%80%D1%8C_2010_-_panoramio_%2842%29.jpg/500px-%D0%A8%D0%B0%D1%80%D0%BC-%D0%AD%D0%BB%D1%8C-%D0%A8%D0%B5%D0%B9%D1%85._%D0%94%D0%B5%D0%BA%D0%B0%D0%B1%D1%80%D1%8C_2010_-_panoramio_%2842%29.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:%D0%A8%D0%B0%D1%80%D0%BC-%D0%AD%D0%BB%D1%8C-%D0%A8%D0%B5%D0%B9%D1%85._%D0%94%D0%B5%D0%BA%D0%B0%D0%B1%D1%80%D1%8C_2010_-_panoramio_(42).jpg",
     "credit": "Alexander Berezhnoy",
     "license": "CC BY 3.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by/3.0"
+    "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q131550208",
+    "upstreamPhotoId": "File:Шарм-Эль-Шейх. Декабрь 2010 - panoramio (42).jpg",
+    "matchedBy": "wikidata:P18"
   },
   "Q131550231": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/3d/Sharm_El-Sheikh%2C_Qesm_Sharm_Ash_Sheikh%2C_South_Sinai_Governorate%2C_Egypt_-_panoramio_%2837%29.jpg/500px-Sharm_El-Sheikh%2C_Qesm_Sharm_Ash_Sheikh%2C_South_Sinai_Governorate%2C_Egypt_-_panoramio_%2837%29.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Sharm_El-Sheikh,_Qesm_Sharm_Ash_Sheikh,_South_Sinai_Governorate,_Egypt_-_panoramio_(37).jpg",
     "credit": "Андрей Бобровский",
     "license": "CC BY 3.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by/3.0"
+    "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q131550231",
+    "upstreamPhotoId": "File:Sharm El-Sheikh, Qesm Sharm Ash Sheikh, South Sinai Governorate, Egypt - panoramio (37).jpg",
+    "matchedBy": "wikidata:P18"
   },
   "Q132180752": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/4d/12.11.2015-19.11.2015_-_panoramio_%28113%29.jpg/500px-12.11.2015-19.11.2015_-_panoramio_%28113%29.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:12.11.2015-19.11.2015_-_panoramio_(113).jpg",
     "credit": "edykbo",
     "license": "CC BY 3.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by/3.0"
+    "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q132180752",
+    "upstreamPhotoId": "File:12.11.2015-19.11.2015 - panoramio (113).jpg",
+    "matchedBy": "wikidata:P18"
   },
   "Q132181009": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d4/12.11.2015-19.11.2015_-_panoramio_%28100%29.jpg/500px-12.11.2015-19.11.2015_-_panoramio_%28100%29.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:12.11.2015-19.11.2015_-_panoramio_(100).jpg",
     "credit": "edykbo",
     "license": "CC BY 3.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by/3.0"
+    "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q132181009",
+    "upstreamPhotoId": "File:12.11.2015-19.11.2015 - panoramio (100).jpg",
+    "matchedBy": "wikidata:P18"
   },
   "Q133202647": {
     "url": "https://upload.wikimedia.org/wikipedia/commons/0/03/Hotel_Peru_2024.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Hotel_Peru_2024.jpg",
     "credit": "Garciman73",
     "license": "CC0",
-    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/deed.en"
+    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/deed.en",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q133202647",
+    "upstreamPhotoId": "File:Hotel Peru 2024.jpg",
+    "matchedBy": "wikidata:P18"
   },
   "Q134033286": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/90/Palma._Passeig_Mar%C3%ADtim._Edifici_F%C3%A8nix.jpg/500px-Palma._Passeig_Mar%C3%ADtim._Edifici_F%C3%A8nix.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Palma._Passeig_Mar%C3%ADtim._Edifici_F%C3%A8nix.jpg",
     "credit": "Joan Gené",
     "license": "CC BY-SA 4.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q134033286",
+    "upstreamPhotoId": "File:Palma. Passeig Marítim. Edifici Fènix.jpg",
+    "matchedBy": "wikidata:P18"
   },
   "Q134282906": {
     "url": "/hotel-photos/q134282906.webp",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Aladdin_Beach_Resort_Torbogen_-_panoramio.jpg",
     "credit": "hh oldman",
     "license": "CC BY 3.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by/3.0"
+    "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q134282906",
+    "upstreamPhotoId": "File:Aladdin Beach Resort Torbogen - panoramio.jpg",
+    "matchedBy": "manual:verified-property",
+    "fileVersion": "46de34b721795d3670cdd7e3b58fbc6888017239"
   },
   "Q134282925": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/36/Hotel_Alibaba_-_Hurgada_-_panoramio.jpg/500px-Hotel_Alibaba_-_Hurgada_-_panoramio.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Hotel_Alibaba_-_Hurgada_-_panoramio.jpg",
     "credit": "Pavel Špindler",
     "license": "CC BY 3.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by/3.0"
+    "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q134282925",
+    "upstreamPhotoId": "File:Hotel Alibaba - Hurgada - panoramio.jpg",
+    "matchedBy": "wikidata:P18"
   },
   "Q134283052": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/ab/Siva_Grand_Beach%2C_Hurghada_%C3%84gypthen%2C_RED_SEA_HOTELS_EGYPT_-_panoramio.jpg/500px-Siva_Grand_Beach%2C_Hurghada_%C3%84gypthen%2C_RED_SEA_HOTELS_EGYPT_-_panoramio.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Siva_Grand_Beach,_Hurghada_%C3%84gypthen,_RED_SEA_HOTELS_EGYPT_-_panoramio.jpg",
     "credit": "HansPeter",
     "license": "CC BY 3.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by/3.0"
+    "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q134283052",
+    "upstreamPhotoId": "File:Siva Grand Beach, Hurghada Ägypthen, RED SEA HOTELS EGYPT - panoramio.jpg",
+    "matchedBy": "wikidata:P18"
+  },
+  "Q134294671": {
+    "credit": "vbif333",
+    "evidenceUrl": "https://commons.wikimedia.org/wiki/Category:Mirage_Bay_Resort_%26_Aqua_Park",
+    "externalHotelId": "Q134294671",
+    "fileVersion": "f7a2e6f868f474f7604db19dcb6d8eda38303cb5",
+    "license": "CC BY 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
+    "matchedBy": "reviewed-commons-category",
+    "provider": "wikimedia-commons",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Lilly_land_Beach_Club,_Hurghada_-_panoramio_-_vbif333_(2).jpg",
+    "upstreamPhotoId": "File:Lilly land Beach Club, Hurghada - panoramio - vbif333 (2).jpg",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/41/Lilly_land_Beach_Club%2C_Hurghada_-_panoramio_-_vbif333_%282%29.jpg/500px-Lilly_land_Beach_Club%2C_Hurghada_-_panoramio_-_vbif333_%282%29.jpg"
   },
   "Q134300106": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d7/Hurghada_The_Grand_Resort.jpg/500px-Hurghada_The_Grand_Resort.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Hurghada_The_Grand_Resort.jpg",
     "credit": "Szombat78",
     "license": "CC0",
-    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/deed.en"
+    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/deed.en",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q134300106",
+    "upstreamPhotoId": "File:Hurghada The Grand Resort.jpg",
+    "matchedBy": "wikidata:P18"
+  },
+  "Q134307576": {
+    "credit": "Marcin Drozd",
+    "evidenceUrl": "https://commons.wikimedia.org/wiki/Category:Titanic_Beach_Resort",
+    "externalHotelId": "Q134307576",
+    "fileVersion": "28dd999f399b8e7272d8cb83e85da20584252d64",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+    "matchedBy": "reviewed-commons-category",
+    "provider": "wikimedia-commons",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Hurghada_-_Titanic_Beach_-_panoramio_(1).jpg",
+    "upstreamPhotoId": "File:Hurghada - Titanic Beach - panoramio (1).jpg",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/16/Hurghada_-_Titanic_Beach_-_panoramio_%281%29.jpg/500px-Hurghada_-_Titanic_Beach_-_panoramio_%281%29.jpg"
   },
   "Q134312574": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e5/Jasmine_Hotel_%28Eingang%29_-_panoramio.jpg/500px-Jasmine_Hotel_%28Eingang%29_-_panoramio.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Jasmine_Hotel_(Eingang)_-_panoramio.jpg",
     "credit": "hh oldman",
     "license": "CC BY 3.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by/3.0"
+    "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q134312574",
+    "upstreamPhotoId": "File:Jasmine Hotel (Eingang) - panoramio.jpg",
+    "matchedBy": "wikidata:P18"
   },
   "Q134316924": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e1/Hurghada%2C_Qesm_Hurghada%2C_Red_Sea_Governorate%2C_Egypt_-_panoramio_%2860%29.jpg/500px-Hurghada%2C_Qesm_Hurghada%2C_Red_Sea_Governorate%2C_Egypt_-_panoramio_%2860%29.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Hurghada,_Qesm_Hurghada,_Red_Sea_Governorate,_Egypt_-_panoramio_(60).jpg",
     "credit": "Almondox",
     "license": "CC BY 3.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by/3.0"
+    "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q134316924",
+    "upstreamPhotoId": "File:Hurghada, Qesm Hurghada, Red Sea Governorate, Egypt - panoramio (60).jpg",
+    "matchedBy": "wikidata:P18"
   },
   "Q138684359": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a6/Aya_-_panoramio.jpg/500px-Aya_-_panoramio.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Aya_-_panoramio.jpg",
     "credit": "Foto Fitti",
     "license": "CC BY-SA 3.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0"
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q138684359",
+    "upstreamPhotoId": "File:Aya - panoramio.jpg",
+    "matchedBy": "wikidata:P18"
   },
   "Q139379343": {
     "url": "/hotel-photos/q139379343.webp",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Seashell_Apartments,_Pafos,_distrikt_Pafos,_Kypr.jpg",
     "credit": "Fry72, Karel Frydrýšek",
     "license": "CC BY-SA 4.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q139379343",
+    "upstreamPhotoId": "File:Seashell Apartments, Pafos, distrikt Pafos, Kypr.jpg",
+    "matchedBy": "manual:verified-property",
+    "fileVersion": "a55836095563b99466a18ddfb8ece17b5da4b89b"
   },
   "Q140428487": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/ea/Hotel_Costa_Azul%2C_Palma_de_Mallorca.jpg/500px-Hotel_Costa_Azul%2C_Palma_de_Mallorca.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Hotel_Costa_Azul,_Palma_de_Mallorca.jpg",
     "credit": "Gerd Fahrenhorst",
     "license": "CC BY 4.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by/4.0"
+    "licenseUrl": "https://creativecommons.org/licenses/by/4.0",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q140428487",
+    "upstreamPhotoId": "File:Hotel Costa Azul, Palma de Mallorca.jpg",
+    "matchedBy": "wikidata:P18"
   },
   "Q1975806": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/4f/Mardan_Palace.JPG/500px-Mardan_Palace.JPG",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Mardan_Palace.JPG",
     "credit": "FoxZh",
     "license": "CC BY-SA 4.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q1975806",
+    "upstreamPhotoId": "File:Mardan Palace.JPG",
+    "matchedBy": "wikidata:P18"
   },
   "Q24284732": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/60/Burlington_Hotel_Dublin_2008.jpg/500px-Burlington_Hotel_Dublin_2008.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Burlington_Hotel_Dublin_2008.jpg",
     "credit": "Red Agenda",
     "license": "CC BY 2.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by/2.0"
+    "licenseUrl": "https://creativecommons.org/licenses/by/2.0",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q24284732",
+    "upstreamPhotoId": "File:Burlington Hotel Dublin 2008.jpg",
+    "matchedBy": "wikidata:P18"
+  },
+  "Q30307361": {
+    "credit": "anagh",
+    "evidenceUrl": "https://commons.wikimedia.org/wiki/Category:Hilton_Hurghada_Plaza",
+    "externalHotelId": "Q30307361",
+    "fileVersion": "32af2ca304dbac068c7a1cb21ccba623b039b8e2",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+    "matchedBy": "reviewed-commons-category",
+    "provider": "wikimedia-commons",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Garden,_Hilton_Hurghada_Plaza,_New_Year,_2010-2011_-_panoramio.jpg",
+    "upstreamPhotoId": "File:Garden, Hilton Hurghada Plaza, New Year, 2010-2011 - panoramio.jpg",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e7/Garden%2C_Hilton_Hurghada_Plaza%2C_New_Year%2C_2010-2011_-_panoramio.jpg/500px-Garden%2C_Hilton_Hurghada_Plaza%2C_New_Year%2C_2010-2011_-_panoramio.jpg"
   },
   "Q3061807": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/6a/Le_Regina_Nice_1.jpg/500px-Le_Regina_Nice_1.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Le_Regina_Nice_1.jpg",
     "credit": "mwanasimba",
     "license": "CC BY-SA 2.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0"
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q3061807",
+    "upstreamPhotoId": "File:Le Regina Nice 1.jpg",
+    "matchedBy": "wikidata:P18"
   },
   "Q31277862": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/5d/Corner_of_Kreutzwaldi_and_Gonsiori_streets_in_Tallinn.jpg/500px-Corner_of_Kreutzwaldi_and_Gonsiori_streets_in_Tallinn.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Corner_of_Kreutzwaldi_and_Gonsiori_streets_in_Tallinn.jpg",
     "credit": "Андрей Романенко",
     "license": "CC BY-SA 4.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q31277862",
+    "upstreamPhotoId": "File:Corner of Kreutzwaldi and Gonsiori streets in Tallinn.jpg",
+    "matchedBy": "wikidata:P18"
   },
   "Q3145430": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a9/Hotel_Boscolo_Exedra_%28Nice%29_en_mars_2022.JPG/500px-Hotel_Boscolo_Exedra_%28Nice%29_en_mars_2022.JPG",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Hotel_Boscolo_Exedra_(Nice)_en_mars_2022.JPG",
     "credit": "Benoît Prieur",
     "license": "CC0",
-    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/deed.en"
+    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/deed.en",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q3145430",
+    "upstreamPhotoId": "File:Hotel Boscolo Exedra (Nice) en mars 2022.JPG",
+    "matchedBy": "wikidata:P18"
+  },
+  "Q42307408": {
+    "credit": "Unique Hotels",
+    "evidenceUrl": "https://commons.wikimedia.org/wiki/Category:Kreutzwald_Hotel_Tallinn",
+    "externalHotelId": "Q42307408",
+    "fileVersion": "08cdf33d235ac2c04157896ceca89468be2fcb6a",
+    "license": "CC BY-SA 2.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0",
+    "matchedBy": "reviewed-commons-category",
+    "provider": "wikimedia-commons",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Hotel_Lobby_-_Kreutzwald_Hotel_Tallinn.jpg",
+    "upstreamPhotoId": "File:Hotel Lobby - Kreutzwald Hotel Tallinn.jpg",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/95/Hotel_Lobby_-_Kreutzwald_Hotel_Tallinn.jpg/500px-Hotel_Lobby_-_Kreutzwald_Hotel_Tallinn.jpg"
+  },
+  "Q42307420": {
+    "credit": "Unique Hotels",
+    "evidenceUrl": "https://commons.wikimedia.org/wiki/Category:The_von_Stackelberg_Hotel_Tallinn",
+    "externalHotelId": "Q42307420",
+    "fileVersion": "777f98fe0ad00b86660200a6574dfd4290bde421",
+    "license": "CC BY-SA 2.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0",
+    "matchedBy": "reviewed-commons-category",
+    "provider": "wikimedia-commons",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Von_Stackelberg_Hotel_Tallinn_entrance.jpg",
+    "upstreamPhotoId": "File:Von Stackelberg Hotel Tallinn entrance.jpg",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/68/Von_Stackelberg_Hotel_Tallinn_entrance.jpg/500px-Von_Stackelberg_Hotel_Tallinn_entrance.jpg"
+  },
+  "Q42318937": {
+    "credit": "Erko",
+    "evidenceUrl": "https://commons.wikimedia.org/wiki/Category:Lillek%C3%BCla_hotel",
+    "externalHotelId": "Q42318937",
+    "fileVersion": "92f388f0478839a25971820b7a0e3ac8694a01cc",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "matchedBy": "reviewed-commons-category",
+    "provider": "wikimedia-commons",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Lillek%C3%BCla_hotell.jpg",
+    "upstreamPhotoId": "File:Lilleküla hotell.jpg",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/2f/Lillek%C3%BCla_hotell.jpg/500px-Lillek%C3%BCla_hotell.jpg"
+  },
+  "Q42319785": {
+    "credit": "Axel Cotón Gutiérrez",
+    "evidenceUrl": "https://commons.wikimedia.org/wiki/Category:Tallink_City_Hotel",
+    "externalHotelId": "Q42319785",
+    "fileVersion": "1d82220f9ce0f068dcc70340b3599cc4c614d71d",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "matchedBy": "reviewed-commons-category",
+    "provider": "wikimedia-commons",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Tallink_City_Hotel_01.jpg",
+    "upstreamPhotoId": "File:Tallink City Hotel 01.jpg",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/36/Tallink_City_Hotel_01.jpg/500px-Tallink_City_Hotel_01.jpg"
   },
   "Q4739921": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/de/D85_0192_Amanpuri_Phuket_Thailand_Photographed_by_Trisorn_Triboon.jpg/500px-D85_0192_Amanpuri_Phuket_Thailand_Photographed_by_Trisorn_Triboon.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:D85_0192_Amanpuri_Phuket_Thailand_Photographed_by_Trisorn_Triboon.jpg",
     "credit": "Tris T7",
     "license": "CC BY 3.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by/3.0"
+    "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q4739921",
+    "upstreamPhotoId": "File:D85 0192 Amanpuri Phuket Thailand Photographed by Trisorn Triboon.jpg",
+    "matchedBy": "wikidata:P18"
   },
   "Q5034985": {
     "url": "/hotel-photos/q5034985.webp",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Cape_Panwa_Hotel_in_Phuket.jpg",
     "credit": "Renek78",
     "license": "CC0",
-    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/deed.en"
+    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/deed.en",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q5034985",
+    "upstreamPhotoId": "File:Cape Panwa Hotel in Phuket.jpg",
+    "matchedBy": "manual:verified-property",
+    "fileVersion": "9db97d2c8d7a1d5654dd9d7a30bdf3bea365d4b1"
   },
   "Q5135071": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b9/Clontarf_Castle_-_geograph.org.uk_-_395705.jpg/500px-Clontarf_Castle_-_geograph.org.uk_-_395705.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Clontarf_Castle_-_geograph.org.uk_-_395705.jpg",
     "credit": "JP",
     "license": "CC BY-SA 2.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0"
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q5135071",
+    "upstreamPhotoId": "File:Clontarf Castle - geograph.org.uk - 395705.jpg",
+    "matchedBy": "wikidata:P18"
   },
   "Q5475503": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/0f/Four_Seasons_Dublin.jpg/500px-Four_Seasons_Dublin.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Four_Seasons_Dublin.jpg",
     "credit": "UggBoy♥UggGirl",
     "license": "CC BY 2.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by/2.0"
+    "licenseUrl": "https://creativecommons.org/licenses/by/2.0",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q5475503",
+    "upstreamPhotoId": "File:Four Seasons Dublin.jpg",
+    "matchedBy": "wikidata:P18"
   },
   "Q55049687": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/63/County_Dublin_-_Golf_Links_Hotel_%28Portmarnock%29_-_20180929111308.jpg/500px-County_Dublin_-_Golf_Links_Hotel_%28Portmarnock%29_-_20180929111308.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:County_Dublin_-_Golf_Links_Hotel_(Portmarnock)_-_20180929111308.jpg",
     "credit": "Dvcireland",
     "license": "CC BY-SA 4.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q55049687",
+    "upstreamPhotoId": "File:County Dublin - Golf Links Hotel (Portmarnock) - 20180929111308.jpg",
+    "matchedBy": "wikidata:P18"
   },
   "Q55641869": {
     "url": "/hotel-photos/q55641869.webp",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Sri_Panwa_Phuket,_Vichit,_Thailand_(Unsplash).jpg",
     "credit": "David Hieb davehieb",
     "license": "CC0",
-    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/deed.en"
+    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/deed.en",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q55641869",
+    "upstreamPhotoId": "File:Sri Panwa Phuket, Vichit, Thailand (Unsplash).jpg",
+    "matchedBy": "manual:verified-property",
+    "fileVersion": "0aa243750a321c7048798811d52736ac6daa99fb"
   },
   "Q5607580": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/5b/2009-09-27_Ireland_Dublin_Gresham_Hotel_038a.jpg/500px-2009-09-27_Ireland_Dublin_Gresham_Hotel_038a.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:2009-09-27_Ireland_Dublin_Gresham_Hotel_038a.jpg",
     "credit": "Sir James",
     "license": "CC BY-SA 3.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0"
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q5607580",
+    "upstreamPhotoId": "File:2009-09-27 Ireland Dublin Gresham Hotel 038a.jpg",
+    "matchedBy": "wikidata:P18"
   },
   "Q56295549": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/09/Hotel_St_Petersburg.jpg/500px-Hotel_St_Petersburg.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Hotel_St_Petersburg.jpg",
     "credit": "Olaf Meister",
     "license": "CC BY-SA 4.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q56295549",
+    "upstreamPhotoId": "File:Hotel St Petersburg.jpg",
+    "matchedBy": "wikidata:P18"
+  },
+  "Q5903404": {
+    "credit": "Zarateman",
+    "evidenceUrl": "https://commons.wikimedia.org/wiki/Category:Hotel_M%C3%A1laga_Palacio",
+    "externalHotelId": "Q5903404",
+    "fileVersion": "a2d4987030155c741b21620ecaa2da44cb6930a1",
+    "license": "CC0",
+    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/deed.en",
+    "matchedBy": "reviewed-commons-category",
+    "provider": "wikimedia-commons",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:M%C3%A1laga_-_AC_Hotel_M%C3%A1laga_Palacio.jpg",
+    "upstreamPhotoId": "File:Málaga - AC Hotel Málaga Palacio.jpg",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/59/M%C3%A1laga_-_AC_Hotel_M%C3%A1laga_Palacio.jpg/500px-M%C3%A1laga_-_AC_Hotel_M%C3%A1laga_Palacio.jpg"
   },
   "Q59491232": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/58/Bewley%27s_Hotel.JPG/500px-Bewley%27s_Hotel.JPG",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Bewley%27s_Hotel.JPG",
     "credit": "DubhEire",
     "license": "CC0",
-    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/deed.en"
+    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/deed.en",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q59491232",
+    "upstreamPhotoId": "File:Bewley's Hotel.JPG",
+    "matchedBy": "wikidata:P18"
+  },
+  "Q6058109": {
+    "credit": "Hoteles Santos",
+    "evidenceUrl": "https://commons.wikimedia.org/wiki/Category:Hotel_Miramar_%28M%C3%A1laga%29",
+    "externalHotelId": "Q6058109",
+    "fileVersion": "e81afcf04470a5026fa210ee09b667f55e9aaeea",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "matchedBy": "reviewed-commons-category",
+    "provider": "wikimedia-commons",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Fachada_Sur_Gran_Hotel_Miramar_(M%C3%A1laga).jpg",
+    "upstreamPhotoId": "File:Fachada Sur Gran Hotel Miramar (Málaga).jpg",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d4/Fachada_Sur_Gran_Hotel_Miramar_%28M%C3%A1laga%29.jpg/500px-Fachada_Sur_Gran_Hotel_Miramar_%28M%C3%A1laga%29.jpg"
   },
   "Q67098756": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d9/Albatros_Citadel_Resort.jpg/500px-Albatros_Citadel_Resort.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Albatros_Citadel_Resort.jpg",
     "credit": "Rabax63",
     "license": "CC BY-SA 4.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0"
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q67098756",
+    "upstreamPhotoId": "File:Albatros Citadel Resort.jpg",
+    "matchedBy": "wikidata:P18"
   },
   "Q6819555": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/49/Meriton_Grand_Hotel_-_Tallinn_-_panoramio.jpg/500px-Meriton_Grand_Hotel_-_Tallinn_-_panoramio.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Meriton_Grand_Hotel_-_Tallinn_-_panoramio.jpg",
     "credit": "giggel",
     "license": "CC BY 3.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by/3.0"
+    "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q6819555",
+    "upstreamPhotoId": "File:Meriton Grand Hotel - Tallinn - panoramio.jpg",
+    "matchedBy": "wikidata:P18"
   },
   "Q6820312": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/92/TheMerrionHotel.jpg/500px-TheMerrionHotel.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:TheMerrionHotel.jpg",
     "credit": "DubhEire",
     "license": "CC0",
-    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/deed.en"
+    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/deed.en",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q6820312",
+    "upstreamPhotoId": "File:TheMerrionHotel.jpg",
+    "matchedBy": "wikidata:P18"
   },
   "Q6913020": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c5/MorningtonHouse.jpg/500px-MorningtonHouse.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:MorningtonHouse.jpg",
     "credit": "DubhEire",
     "license": "CC0",
-    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/deed.en"
+    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/deed.en",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q6913020",
+    "upstreamPhotoId": "File:MorningtonHouse.jpg",
+    "matchedBy": "wikidata:P18"
   },
   "Q743147": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/24/Le_Negresco.jpg/500px-Le_Negresco.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Le_Negresco.jpg",
     "credit": "Anna M. Stevenson",
     "license": "CC BY-SA 3.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0"
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q743147",
+    "upstreamPhotoId": "File:Le Negresco.jpg",
+    "matchedBy": "wikidata:P18"
   },
   "Q7493317": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/1e/Shelbourne%2C-Dublin.jpg/500px-Shelbourne%2C-Dublin.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Shelbourne,-Dublin.jpg",
     "credit": "Type17",
     "license": "CC BY-SA 3.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/"
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q7493317",
+    "upstreamPhotoId": "File:Shelbourne,-Dublin.jpg",
+    "matchedBy": "wikidata:P18"
   },
   "Q7588294": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/04/St._Helen%27s%2C_Booterstown%2C_closer.JPG/500px-St._Helen%27s%2C_Booterstown%2C_closer.JPG",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:St._Helen%27s,_Booterstown,_closer.JPG",
     "credit": "DubhEire",
     "license": "CC BY-SA 3.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0"
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q7588294",
+    "upstreamPhotoId": "File:St. Helen's, Booterstown, closer.JPG",
+    "matchedBy": "wikidata:P18"
   },
   "Q7842601": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/ef/Trinity_Capital_Hotel.JPG/500px-Trinity_Capital_Hotel.JPG",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Trinity_Capital_Hotel.JPG",
     "credit": "DubhEire",
     "license": "CC0",
-    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/deed.en"
+    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/deed.en",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q7842601",
+    "upstreamPhotoId": "File:Trinity Capital Hotel.JPG",
+    "matchedBy": "wikidata:P18"
   },
   "Q7848562": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/5c/Tryp-Bellver-Palma.jpg/500px-Tryp-Bellver-Palma.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Tryp-Bellver-Palma.jpg",
     "credit": "FDV",
     "license": "CC BY-SA 3.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0"
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q7848562",
+    "upstreamPhotoId": "File:Tryp-Bellver-Palma.jpg",
+    "matchedBy": "wikidata:P18"
   },
   "Q87050950": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/45/Davenport_%28Merrion_Hall%29%2C_Merrion_Street.JPG/500px-Davenport_%28Merrion_Hall%29%2C_Merrion_Street.JPG",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Davenport_(Merrion_Hall),_Merrion_Street.JPG",
     "credit": "DubhEire",
     "license": "CC0",
-    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/deed.en"
+    "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/deed.en",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q87050950",
+    "upstreamPhotoId": "File:Davenport (Merrion Hall), Merrion Street.JPG",
+    "matchedBy": "wikidata:P18"
   },
   "Q96062339": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/3e/Hotel_H10_Conquistador%2C_Tenerife%2C_Canary_Islands%2C_Spain._-_panoramio.jpg/500px-Hotel_H10_Conquistador%2C_Tenerife%2C_Canary_Islands%2C_Spain._-_panoramio.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Hotel_H10_Conquistador,_Tenerife,_Canary_Islands,_Spain._-_panoramio.jpg",
     "credit": "Николай Максимович",
     "license": "CC BY 3.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by/3.0"
+    "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q96062339",
+    "upstreamPhotoId": "File:Hotel H10 Conquistador, Tenerife, Canary Islands, Spain. - panoramio.jpg",
+    "matchedBy": "wikidata:P18"
   },
   "Q96062942": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/20/H10_las_palmeras_hotel_Tenerife_-_panoramio.jpg/500px-H10_las_palmeras_hotel_Tenerife_-_panoramio.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:H10_las_palmeras_hotel_Tenerife_-_panoramio.jpg",
     "credit": "Radi1981",
     "license": "CC BY 3.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by/3.0"
+    "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q96062942",
+    "upstreamPhotoId": "File:H10 las palmeras hotel Tenerife - panoramio.jpg",
+    "matchedBy": "wikidata:P18"
   },
   "Q98413026": {
     "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a7/Pool_2%2C_Hotel_Andorra_-_panoramio.jpg/500px-Pool_2%2C_Hotel_Andorra_-_panoramio.jpg",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Pool_2,_Hotel_Andorra_-_panoramio.jpg",
     "credit": "Peter Bach",
     "license": "CC BY-SA 3.0",
-    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0"
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+    "provider": "wikimedia-commons",
+    "externalHotelId": "Q98413026",
+    "upstreamPhotoId": "File:Pool 2, Hotel Andorra - panoramio.jpg",
+    "matchedBy": "wikidata:P18"
+  },
+  "osm:node:13868917721": {
+    "credit": "HutheMeow",
+    "evidenceUrl": "https://commons.wikimedia.org/wiki/Category:Beyond_Resort_Kata",
+    "externalHotelId": "osm:node:13868917721",
+    "fileVersion": "fc9666f560aaea2a4f6306e9f370a221d63eca14",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "matchedBy": "reviewed-commons-geotag",
+    "provider": "wikimedia-commons",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Beyond_Resort_Kata_(lobby)_1.jpg",
+    "upstreamPhotoId": "File:Beyond Resort Kata (lobby) 1.jpg",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/94/Beyond_Resort_Kata_%28lobby%29_1.jpg/500px-Beyond_Resort_Kata_%28lobby%29_1.jpg"
+  },
+  "osm:node:701508408": {
+    "credit": "Andy Mitchell from Glasgow, UK",
+    "evidenceUrl": "https://commons.wikimedia.org/wiki/Category:Nai_Yang_Beach_Resort",
+    "externalHotelId": "osm:node:701508408",
+    "fileVersion": "05d571ca2bb51cc1f39403fa0ebd7c9b9ce3990b",
+    "license": "CC BY-SA 2.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0",
+    "matchedBy": "reviewed-commons-geotag",
+    "provider": "wikimedia-commons",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Nai_Yang_Beach_Resort,_Phuket_(4448624054).jpg",
+    "upstreamPhotoId": "File:Nai Yang Beach Resort, Phuket (4448624054).jpg",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b6/Nai_Yang_Beach_Resort%2C_Phuket_%284448624054%29.jpg/500px-Nai_Yang_Beach_Resort%2C_Phuket_%284448624054%29.jpg"
+  },
+  "osm:relation:12204074": {
+    "credit": "blatniczky",
+    "evidenceUrl": "https://commons.wikimedia.org/wiki/Category:Sonesta_Beach",
+    "externalHotelId": "osm:relation:12204074",
+    "fileVersion": "72601da710241d74f3d32a3855af9d07c01cc340",
+    "license": "CC BY 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
+    "matchedBy": "reviewed-commons-geotag",
+    "provider": "wikimedia-commons",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Sonesta_Beach_in_Naama_Bay_-_panoramio_(3).jpg",
+    "upstreamPhotoId": "File:Sonesta Beach in Naama Bay - panoramio (3).jpg",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/bc/Sonesta_Beach_in_Naama_Bay_-_panoramio_%283%29.jpg/500px-Sonesta_Beach_in_Naama_Bay_-_panoramio_%283%29.jpg"
+  },
+  "osm:way:156936586": {
+    "credit": "Burkhard Mücke",
+    "evidenceUrl": "https://commons.wikimedia.org/wiki/Category:Hotel_Mediterranean_%28Rhodes%29",
+    "externalHotelId": "osm:way:156936586",
+    "fileVersion": "60c78955050c551b669473d5e5a9c5f5495df655",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "matchedBy": "reviewed-commons-geotag",
+    "provider": "wikimedia-commons",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:2023-09-17_Rhodos-Stadt_02.jpg",
+    "upstreamPhotoId": "File:2023-09-17 Rhodos-Stadt 02.jpg",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/ff/2023-09-17_Rhodos-Stadt_02.jpg/500px-2023-09-17_Rhodos-Stadt_02.jpg"
+  },
+  "osm:way:99750726": {
+    "credit": "Alx R",
+    "evidenceUrl": "https://commons.wikimedia.org/wiki/Category:Ali_Baba_Palace",
+    "externalHotelId": "osm:way:99750726",
+    "fileVersion": "f516b65b326625708d2d88d27973a86ace40dd7a",
+    "license": "CC BY 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
+    "matchedBy": "reviewed-commons-geotag",
+    "provider": "wikimedia-commons",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Egypt,_Hurghada,_Ali_Baba_Palace_-_panoramio_-_Alx_R_(2).jpg",
+    "upstreamPhotoId": "File:Egypt, Hurghada, Ali Baba Palace - panoramio - Alx R (2).jpg",
+    "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/9d/Egypt%2C_Hurghada%2C_Ali_Baba_Palace_-_panoramio_-_Alx_R_%282%29.jpg/500px-Egypt%2C_Hurghada%2C_Ali_Baba_Palace_-_panoramio_-_Alx_R_%282%29.jpg"
   }
 }

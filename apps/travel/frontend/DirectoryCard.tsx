@@ -15,9 +15,15 @@ export function safeHref(value: string | null | undefined) {
 export function PropertyPhoto({hotel}: {hotel: SupplyHotel}) {
     const [failed, setFailed] = useState('')
     const photo = hotel.photo
-    if (photo && safeHref(photo.url) && failed != photo.url) {
+    let imageSrc = safeHref(photo?.url)
+    if (imageSrc && photo?.fileVersion) {
+        const asset = new URL(imageSrc)
+        asset.searchParams.set('v', photo.fileVersion)
+        imageSrc = asset.href
+    }
+    if (photo && imageSrc && failed != imageSrc) {
         return <figure className="property-photo">
-            <img loading="lazy" decoding="async" src={photo.url} alt={hotel.name} onError={() => setFailed(photo.url)}/>
+            <img loading="lazy" decoding="async" src={imageSrc} alt={hotel.name} onError={() => setFailed(imageSrc!)}/>
             <figcaption><a href={safeHref(photo.sourceUrl)} target="_blank" rel="noopener noreferrer">{photo.credit}</a>
                 {' · '}<a href={safeHref(photo.licenseUrl)} target="_blank" rel="noopener noreferrer">{photo.license}</a></figcaption>
         </figure>

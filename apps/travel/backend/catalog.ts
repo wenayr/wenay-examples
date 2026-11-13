@@ -1,3 +1,4 @@
+import {isDeepStrictEqual} from 'node:util'
 import type {SupplyCatalogPage, SupplyDestination, SupplyHotel, SupplySource} from '../src/supply-contract.ts'
 
 export interface PlaceRegion extends SupplyDestination {
@@ -21,8 +22,9 @@ interface CatalogDeps {
     destinations: readonly PlaceRegion[]
     sources: readonly PlaceSource[]
     readSnapshot: (destination: string, source: string) => PlaceDataset
-    refresh: (destination: string, source: string, options: {signal: AbortSignal}) => Promise<PlaceDataset>
+    refresh?: (destination: string, source: string, options: {signal: AbortSignal}) => Promise<PlaceDataset>
     photo: (hotel: SupplyHotel) => SupplyHotel['photo']
+    onChange?: (destination: string) => void
     now?: () => number
 }
 
@@ -77,13 +79,71 @@ function deduplicate(records: SupplyHotel[]) {
     return kept
 }
 
-function contains(query: PlaceQuery, hotel: SupplyHotel) {
+function compareHotels(a: SupplyHotel, b: SupplyHotel) {
+    const withPhoto = Number(Boolean(b.photo)) - Number(Boolean(a.photo))
+    return withPhoto || order.compare(a.name, b.name) || a.id.localeCompare(b.id)
+}
+
+interface IndexedHotel {
+    hotel: SupplyHotel
+    text: string
+}
+
+function contains(query: PlaceQuery, row: IndexedHotel) {
     if (query.box) {
         const [west, south, east, north] = query.box
-        if (hotel.longitude < west || hotel.longitude > east) return false
-        if (hotel.latitude < south || hotel.latitude > north) return false
+        if (row.hotel.longitude < west || row.hotel.longitude > east) return false
+        if (row.hotel.latitude < south || row.hotel.latitude > north) return false
     }
-    return normalized(hotel.name + ' ' + (hotel.locality ?? '') + ' ' + (hotel.category ?? '')).includes(query.q)
+    return row.text.includes(query.q)
+}
+
+function createRegionIndex(datasets: CachedDataset[], photo: CatalogDeps['photo']) {
+    const rows: IndexedHotel[] = []
+    const byId = new Map<string, SupplyHotel>()
+    const linkedEntities = new Set<string>()
+    const matching = new Map<string, SupplyHotel[]>()
+    for (const entry of datasets) {
+        for (const place of entry.data.records) {
+            const image = place.photo ?? photo(place)
+            const hotel = image != place.photo ? {...place, photo: image} : place
+            const text = normalized(hotel.name + ' ' + (hotel.locality ?? '') + ' ' + (hotel.category ?? ''))
+            rows.push({hotel, text})
+            byId.set(hotel.id, hotel)
+            if (hotel.wikidataId) linkedEntities.add(hotel.wikidataId)
+        }
+    }
+    // Filter before deduplication: another provider's matching row can have different coordinates or labels.
+    rows.sort((a, b) => Number(Boolean(b.hotel.photo)) - Number(Boolean(a.hotel.photo)))
+    const all = deduplicate(rows.map(row => row.hotel)).sort(compareHotels)
+    function search(query: PlaceQuery) {
+        if (!query.source && !query.q && !query.box) return all
+        const key = JSON.stringify([query.source, query.q, query.box])
+        const cached = matching.get(key)
+        if (cached) return cached
+        const found = rows.filter(row => (!query.source || row.hotel.sourceId == query.source) && contains(query, row))
+        const result = deduplicate(found.map(row => row.hotel)).sort(compareHotels)
+        if (matching.size >= 8) matching.delete(matching.keys().next().value!)
+        matching.set(key, result)
+        return result
+    }
+    function includesPhotoKey(key: string) {
+        const entity = key.startsWith('wikidata:') ? key.slice('wikidata:'.length) : key
+        return byId.has(key) || linkedEntities.has(entity) || byId.has('wikidata:' + entity)
+    }
+    return {byId, search, includesPhotoKey}
+}
+
+function sameRecords(previous: SupplyHotel[], incoming: SupplyHotel[]) {
+    if (previous == incoming) return true
+    if (previous.length != incoming.length) return false
+    const current = new Map(previous.map(row => [row.id, row]))
+    if (current.size != previous.length) return isDeepStrictEqual(previous, incoming)
+    for (const row of incoming) {
+        if (!isDeepStrictEqual(current.get(row.id), row)) return false
+        current.delete(row.id)
+    }
+    return true
 }
 
 export function createPlaceCatalog(deps: CatalogDeps) {
@@ -92,15 +152,32 @@ export function createPlaceCatalog(deps: CatalogDeps) {
     const shutdown = new AbortController()
     const blockedUntil = new Map<string, number>()
     let running = 0
+    const indexes = new Map<string, ReturnType<typeof createRegionIndex>>()
+    const active = new Map<string, PlaceRegion>()
+
+    function changed(destination: string) {
+        indexes.delete(destination)
+        deps.onChange?.(destination)
+    }
+
+    function apply(destination: string, entry: CachedDataset, incoming: PlaceDataset) {
+        const differs = !sameRecords(entry.data.records, incoming.records)
+        entry.data = incoming
+        if (differs) changed(destination)
+    }
+
 
     function get(destination: PlaceRegion, source: string) {
         const key = destination.id + ':' + source
         let entry = cache.get(key)
         if (!entry) {
             const data = deps.readSnapshot(destination.id, source)
-            entry = {data, due: 0, pending: false, wasLive: false, failed: false}
+            const due = data.fetchedAt ? Date.parse(data.fetchedAt) + freshFor : 0
+            entry = {data, due, pending: false, wasLive: false, failed: false}
             cache.set(key, entry)
         }
+        const refresh = deps.refresh
+        if (!refresh) return entry
         if (entry.pending || now() < entry.due || running >= 3) return entry
         if (shutdown.signal.aborted || now() < (blockedUntil.get(source) ?? 0)) return entry
         const current = entry
@@ -108,8 +185,10 @@ export function createPlaceCatalog(deps: CatalogDeps) {
         running++
         // One request per destination/provider for all filters, map moves and simultaneous visitors.
         const signal = AbortSignal.any([shutdown.signal, AbortSignal.timeout(35_000)])
-        void Promise.resolve().then(() => deps.refresh(destination.id, source, {signal})).then(data => {
-            current.data = data
+        void Promise.resolve().then(() => refresh(destination.id, source, {signal})).then(data => {
+            if (shutdown.signal.aborted) return
+            if (Date.parse(data.fetchedAt ?? '') < Date.parse(current.data.fetchedAt ?? '')) return
+            apply(destination.id, current, data)
             current.wasLive = true
             current.failed = false
             current.due = now() + freshFor
@@ -126,6 +205,7 @@ export function createPlaceCatalog(deps: CatalogDeps) {
     }
 
     function collect(destination: PlaceRegion) {
+        active.set(destination.id, destination)
         return destination.sourceIds.map(id => {
             const source = deps.sources.find(item => item.id == id)
             const entry = get(destination, id)
@@ -139,37 +219,58 @@ export function createPlaceCatalog(deps: CatalogDeps) {
                 ...source, id, name: source?.name ?? id, status, updatedAt: entry.data.fetchedAt, description,
                 attribution: id == 'osm' ? '© OpenStreetMap contributors' : source?.name,
             }
-            return {state, records: entry.data.records}
+            return {state, entry}
         })
+    }
+
+    function regionIndex(destination: PlaceRegion, datasets: CachedDataset[]) {
+        const cached = indexes.get(destination.id)
+        if (cached) return cached
+        const index = createRegionIndex(datasets, deps.photo)
+        indexes.set(destination.id, index)
+        return index
     }
 
     function list(query: PlaceQuery): SupplyCatalogPage {
         const batch = collect(query.destination)
-        const matching = batch.filter(item => !query.source || item.state.id == query.source)
-        const found = matching.flatMap(item => item.records.filter(hotel => contains(query, hotel)))
-        const enriched = found.map(hotel => ({...hotel, price: null, photo: hotel.photo ?? deps.photo(hotel)}))
-        // A verified photo stays attached to its own provider record when nearby duplicates collapse.
-        enriched.sort((a, b) => Number(Boolean(b.photo)) - Number(Boolean(a.photo)))
-        const items = deduplicate(enriched).sort((a, b) => {
-            const withPhoto = Number(Boolean(b.photo)) - Number(Boolean(a.photo))
-            return withPhoto || order.compare(a.name, b.name) || a.id.localeCompare(b.id)
-        })
+        const index = regionIndex(query.destination, batch.map(item => item.entry))
+        const items = index.search(query)
         const end = query.offset + query.limit
         return {
             destination: query.destination, total: items.length, nextOffset: end < items.length ? end : null,
-            sources: batch.map(item => item.state),
-            items: items.slice(query.offset, end),
+            sources: batch.map(item => item.state), items: items.slice(query.offset, end),
         }
     }
 
     function find(destination: PlaceRegion, id: string) {
-        for (const item of collect(destination)) {
-            const match = item.records.find(hotel => hotel.id == id)
-            if (match) return match
+        const batch = collect(destination)
+        return regionIndex(destination, batch.map(item => item.entry)).byId.get(id)
+    }
+
+    function reloadSnapshot(destination: string, source: string) {
+        const entry = cache.get(destination + ':' + source)
+        if (!entry) return
+        const data = deps.readSnapshot(destination, source)
+        apply(destination, entry, data)
+        entry.due = data.fetchedAt ? Date.parse(data.fetchedAt) + freshFor : 0
+        entry.failed = false
+    }
+
+    function invalidatePhotos(changedKeys: readonly string[]) {
+        if (!changedKeys.length) return
+        // An invalidated region reads the latest photo manifest when it next rebuilds its view.
+        for (const [destination, index] of indexes) {
+            if (changedKeys.some(index.includesPhotoKey)) changed(destination)
         }
     }
 
-    return {list, find, shutdown: () => shutdown.abort(), destinations: deps.destinations}
+    function refreshActive(destination: string) {
+        const region = active.get(destination)
+        if (region) for (const id of region.sourceIds) get(region, id)
+    }
+
+    return {list, find, reloadSnapshot, invalidatePhotos, refreshActive, shutdown: () => shutdown.abort(), destinations: deps.destinations}
+
 }
 
 export function searchPhrase(input: string) {

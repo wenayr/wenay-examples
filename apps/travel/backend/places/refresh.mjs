@@ -1,21 +1,15 @@
-import {mkdir, rename, writeFile} from 'node:fs/promises'
-import {encodePlaceSnapshot, placeDestinations, placeSources, refreshPlaceDestination, snapshotPath} from './index.mjs'
+import {placeDestinations, placeSources, refreshAndSavePlaceDestination} from './index.mjs'
 
 const [source, destination] = process.argv.slice(2)
 if (source && !placeSources.some(entry => entry.id == source)) throw new Error('Unknown source')
 if (destination && !placeDestinations.some(entry => entry.id == destination)) throw new Error('Unknown destination')
-await mkdir(new URL('./snapshots/', import.meta.url), {recursive: true})
 
 // Each public service gets at most one concurrent request; a failed fetch leaves its last snapshot intact.
 async function refreshSource(sourceId) {
     const regions = placeDestinations.filter(item => item.sourceIds.includes(sourceId) && (!destination || item.id == destination))
     for (const region of regions) {
         try {
-            const snapshot = await refreshPlaceDestination(region.id, sourceId)
-            const target = snapshotPath(region.id, sourceId)
-            const temporary = new URL(target.href + '.' + process.pid + '.tmp')
-            await writeFile(temporary, encodePlaceSnapshot(snapshot))
-            await rename(temporary, target)
+            const snapshot = await refreshAndSavePlaceDestination(region.id, sourceId)
             console.log(sourceId, region.id, snapshot.records.length, snapshot.fetchedAt)
         } catch (error) {
             process.exitCode = 1

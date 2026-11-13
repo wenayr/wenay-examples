@@ -55,6 +55,23 @@ const accommodationTypes = {
     hotel: 'Отель', hostel: 'Хостел', motel: 'Мотель', apartment: 'Апартаменты', guest_house: 'Гостевой дом', resort: 'Курортный отель',
 }
 
+// Only a file actually linked on this OSM feature is eligible for the importer's rights check.
+function explicitCommonsFile(value) {
+    if (typeof value != 'string') return null
+    let title = value.trim()
+    if (!title.startsWith('File:')) {
+        try {
+            const url = new URL(title)
+            if (url.hostname != 'commons.wikimedia.org' || !['https:', 'http:'].includes(url.protocol)
+                || !url.pathname.startsWith('/wiki/File:')) return null
+            title = decodeURIComponent(url.pathname.slice('/wiki/'.length))
+        } catch {
+            return null
+        }
+    }
+    return /^File:[^|;<>\n\r]+\.(jpe?g|png|webp)$/i.test(title) ? title.replaceAll('_', ' ') : null
+}
+
 function normalizeOsm(raw, region) {
     if (raw.remark || !Array.isArray(raw.elements)) throw new Error('Incomplete Overpass response')
     const result = []
@@ -70,6 +87,7 @@ function normalizeOsm(raw, region) {
             propertyId, name, latitude: point.lat, longitude: point.lon, category,
             locality: cleanName(tags['addr:city']) || region.name, website: safeWebsite(tags.website || tags['contact:website']),
             wikidataId: /^Q\d+$/.test(tags.wikidata ?? '') ? tags.wikidata : null,
+            commonsFile: explicitCommonsFile(tags.wikimedia_commons) ?? explicitCommonsFile(tags.image),
         })
     }
     return result

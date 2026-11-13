@@ -26,6 +26,7 @@ export interface ReferencePlace {
     sourceName: string
     sourceUrl: string
     registrationId: string | null
+    commonsFile?: string | null
     wikidataId: string | null
     website: string | null
     price: null
@@ -33,6 +34,7 @@ export interface ReferencePlace {
 }
 export interface PlaceSnapshot {
     sourceId: string
+    partial?: boolean
     records: ReferencePlace[]
     fetchedAt: string | null
 }
@@ -45,3 +47,8 @@ export function encodePlaceSnapshot(snapshot: PlaceSnapshot): string
 export function refreshPlaceDestination(
     destinationId: string, sourceId: string, options?: {fetchImpl?: typeof fetch, signal?: AbortSignal},
 ): Promise<PlaceSnapshot>
+
+export function runtimeSnapshotDirectory(): string
+export function snapshotRegion(filename: string): {destinationId: string, sourceId: string} | null
+export function savePlaceSnapshot(destinationId: string, snapshot: PlaceSnapshot): PlaceSnapshot
+export const refreshAndSavePlaceDestination: typeof refreshPlaceDestination

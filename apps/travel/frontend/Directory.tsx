@@ -4,7 +4,7 @@ import {DirectoryCard} from './DirectoryCard.tsx'
 import {DirectoryMap, type tMapBounds} from './DirectoryMap.tsx'
 import {DirectoryDetail} from './DirectoryDetail.tsx'
 import {Rates, SourceCredits, SourceLine} from './DirectoryOffers.tsx'
-import {directoryUrl, useDirectoryQuery} from './directory-query.ts'
+import {directoryUrl, useDirectoryEvents, useDirectoryQuery} from './directory-query.ts'
 import {createDirectoryPreferences, directoryDefaults, shiftDate, type DirectoryPreferences} from './directory-preferences.ts'
 import {Icon} from './Icons.tsx'
 import {photo, hotelCount} from './presentation.ts'
@@ -66,11 +66,28 @@ function Browse({destinations, initial}: {destinations: SupplyDestination[], ini
     const packagesAnchor = useRef<HTMLDivElement>(null)
     const range = bounds ? {west: bounds[0], south: bounds[1], east: bounds[2], north: bounds[3]} : undefined
     const url = directoryUrl('catalog', {destination: destination.id, q: prefs.search, source: prefs.source, limit: pageSize, offset, ...range})
-    const query = useDirectoryQuery<SupplyCatalogPage>(url)
+    const [refresh, setRefresh] = useState(0)
+    const query = useDirectoryQuery<SupplyCatalogPage>(url, refresh)
+    const detailUrl = open ? directoryUrl('hotel', {destination: destination.id, hotelId: open.id}) : null
+    const detail = useDirectoryQuery<{hotel: SupplyHotel | null}>(detailUrl, refresh)
     const response = query.data
     const [lastPage, setLastPage] = useState<SupplyCatalogPage | undefined>()
     const stable = response ?? (lastPage?.destination.id == destination.id ? lastPage : undefined)
     const items = response?.items ?? []
+    useDirectoryEvents(destination.id, stable?.revision, () => setRefresh(previous => previous + 1))
+    useEffect(() => {
+        if (open && detail.data?.hotel === null) {
+            setOpen(null)
+            setSelection('')
+        }
+    }, [open, detail.data])
+    useEffect(() => {
+        // A removal can empty the last page while a visitor is looking at it.
+        if (response && offset > 0 && offset >= response.total) {
+            setOffset(Math.max(0, Math.floor((response.total - 1) / pageSize) * pageSize))
+        }
+    }, [offset, response])
+    const visibleHotel = detail.data ? detail.data.hotel : open
     useEffect(() => {
         if (response) setLastPage(response)
     }, [response])
@@ -211,7 +228,7 @@ function Browse({destinations, initial}: {destinations: SupplyDestination[], ini
         <footer className="travel-footer"><strong>Wenay Travel</strong><span>Эстония</span>
             <a href={import.meta.env.BASE_URL + 'hotel-photos/credits.html'}>Фотографии отелей</a>
             <a href={import.meta.env.BASE_URL + 'images/credits.html'}>Фотографии направлений</a></footer>
-        {open && <DirectoryDetail key={open.id} hotel={open} destination={destination} prefs={prefs} onClose={() => setOpen(null)}/>}
+        {visibleHotel && <DirectoryDetail key={visibleHotel.id} hotel={visibleHotel} destination={destination} prefs={prefs} onClose={() => setOpen(null)}/>}
     </>
 }
 

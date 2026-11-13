@@ -1,8 +1,8 @@
-import {useEffect, useState} from 'react'
+import {useEffect, useEffectEvent, useState} from 'react'
 
-type ResponseState<T> = {key: string, data: T} | {key: string, error: string}
+interface ResponseState<T> {key: string, data?: T, error?: string}
 
-export function useDirectoryQuery<T>(url: string | null) {
+export function useDirectoryQuery<T>(url: string | null, refresh = 0) {
     const [result, setResult] = useState<ResponseState<T> | null>(null)
     const [attempt, setAttempt] = useState(0)
     useEffect(() => {
@@ -16,25 +16,62 @@ export function useDirectoryQuery<T>(url: string | null) {
                 const data: T = await response.json()
                 if (!controller.signal.aborted) setResult({key: current, data})
             } catch {
-                if (!controller.signal.aborted) setResult({key: current, error: 'Не удалось получить данные каталога.'})
+                if (!controller.signal.aborted) setResult(previous => ({
+                    key: current, data: previous?.key == current ? previous.data : undefined,
+                    error: 'Не удалось получить данные каталога.',
+                }))
             }
         }
         void load()
         return () => controller.abort()
-    }, [url, attempt])
+    }, [url, attempt, refresh])
     function retry() {
-        setResult(null)
         setAttempt(n => n + 1)
     }
     const visible = result?.key == url ? result : null
     return {
-        data: visible && 'data' in visible ? visible.data : undefined,
-        error: visible && 'error' in visible ? visible.error : undefined,
+        data: visible?.data, error: visible?.error,
         retry,
     }
 }
 
-export function directoryUrl(path: 'destinations' | 'catalog' | 'options', query: Record<string, string | number | undefined> = {}) {
+// The same-origin REST API supplies snapshots. EventSource only signals invalidation;
+// the browser reconnects with Last-Event-ID and the server replays or resets this region.
+export function useDirectoryEvents(destination: string, revision: string | undefined, invalidate: () => void) {
+    const readCursor = useEffectEvent(() => revision)
+    const refresh = useEffectEvent(invalidate)
+    const ready = Boolean(revision)
+    useEffect(() => {
+        if (!ready) return
+        const events = new EventSource(directoryUrl('events', {destination, since: readCursor()}))
+        let disconnected = false
+        let timer: ReturnType<typeof setTimeout> | undefined
+        function schedule() {
+            if (timer !== undefined) return
+            timer = setTimeout(() => {
+                timer = undefined
+                refresh()
+            }, 60)
+        }
+        // An update may have arrived just before the socket or its subsequent GET failed.
+        events.onopen = () => {
+            if (disconnected) schedule()
+            disconnected = false
+        }
+        events.onerror = () => { disconnected = true }
+        // Reporting an offline/online transition differs between browsers. Also retry a lost GET.
+        window.addEventListener('online', schedule)
+        events.addEventListener('catalog', schedule)
+        events.addEventListener('reset', schedule)
+        return () => {
+            clearTimeout(timer)
+            window.removeEventListener('online', schedule)
+            events.close()
+        }
+    }, [destination, ready])
+}
+
+export function directoryUrl(path: 'destinations' | 'catalog' | 'hotel' | 'options' | 'events', query: Record<string, string | number | undefined> = {}) {
     const params = new URLSearchParams()
     for (const [key, value] of Object.entries(query)) {
         if (value != null && value !== '') params.set(key, String(value))

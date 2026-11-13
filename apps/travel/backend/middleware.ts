@@ -1,4 +1,5 @@
 import type {IncomingMessage, ServerResponse} from 'node:http'
+import type {createCatalogEvents} from './catalog-events.ts'
 import type {SupplyHotel, SupplyOptions} from '../src/supply-contract.ts'
 import {createPlaceCatalog, searchPhrase, type PlaceQuery, type PlaceRegion} from './catalog.ts'
 
@@ -8,6 +9,7 @@ interface SupplyDeps {
         hotel: SupplyHotel | null, destination: PlaceRegion,
         checkIn: string | null, checkOut: string | null, adults: number,
     }) => Promise<SupplyOptions>
+    events?: ReturnType<typeof createCatalogEvents>
     today?: () => string
 }
 
@@ -60,11 +62,22 @@ export function createSupplyMiddleware(deps: SupplyDeps) {
         const url = new URL(raw, 'http://localhost/')
         const params = url.searchParams
         if (url.pathname == '/api/travel/destinations') return json(response, 200, {destinations: deps.catalog.destinations})
-        if (!['/api/travel/catalog', '/api/travel/options'].includes(url.pathname)) return json(response, 404, {error: 'Маршрут не найден.'})
+        const routes = ['/api/travel/catalog', '/api/travel/hotel', '/api/travel/events', '/api/travel/options']
+        if (!routes.includes(url.pathname)) return json(response, 404, {error: 'Маршрут не найден.'})
         const id = params.get('destination') ?? deps.catalog.destinations[0]?.id
         const destination = deps.catalog.destinations.find(region => region.id == id)
         if (!destination) return json(response, 404, {error: 'Направление не найдено.'})
         try {
+            if (url.pathname == '/api/travel/events') {
+                if (!deps.events) return json(response, 503, {error: 'Подписка недоступна.'})
+                return deps.events.subscribe(request, response, destination.id, params.get('since'))
+            }
+            if (url.pathname == '/api/travel/hotel') {
+                const key = params.get('hotelId')
+                if (!key || key.length > 200) throw new RangeError('Укажите идентификатор отеля.')
+                const hotel = deps.catalog.find(destination, key) ?? null
+                return json(response, 200, {hotel, revision: deps.events?.revision(destination.id)})
+            }
             if (url.pathname == '/api/travel/catalog') {
                 const source = params.get('source') || null
                 if (source && !destination.sourceIds.includes(source)) throw new RangeError('Источник для этого направления недоступен.')
@@ -72,10 +85,11 @@ export function createSupplyMiddleware(deps: SupplyDeps) {
                 if (phrase.length > 120) throw new RangeError('Слишком длинный поисковый запрос.')
                 const query = {
                     q: searchPhrase(phrase), source, box: mapBox(params), destination,
-                    offset: numberParam(params.get('offset'), 0, 100_000, 0),
+                    offset: numberParam(params.get('offset'), 0, Number.MAX_SAFE_INTEGER, 0),
                     limit: numberParam(params.get('limit'), 24, 100, 1),
                 }
-                return json(response, 200, deps.catalog.list(query))
+                const page = deps.catalog.list(query)
+                return json(response, 200, {...page, revision: deps.events?.revision(destination.id)})
             }
             const hotelId = params.get('hotelId')
             const hotel = hotelId ? deps.catalog.find(destination, hotelId) : null

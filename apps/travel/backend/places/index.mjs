@@ -1,52 +1,16 @@
-import {readFileSync} from 'node:fs'
+import {fetchAndPublish} from './files.mjs'
 import {placeSources, placeDestinations} from './registry.mjs'
 import {expandPlace, extractPlaces, placeRequest} from './providers.mjs'
 
 export {placeSources, placeDestinations}
 
 const userAgent = 'WenayTravel/0.1 (+https://github.com/wenayr/wenay-examples)'
-const snapshotColumns = ['propertyId', 'name', 'latitude', 'longitude', 'category', 'locality', 'website', 'wikidataId']
-
-function regionFor(destinationId, sourceId) {
-    const region = placeDestinations.find(item => item.id == destinationId)
-    if (!region?.sourceIds.includes(sourceId)) throw new RangeError('Unknown destination or source')
-    return region
-}
-
-export function snapshotPath(destinationId, sourceId) {
-    regionFor(destinationId, sourceId)
-    return new URL('./snapshots/' + destinationId + '-' + sourceId + '.json', import.meta.url)
-}
-
-export function encodePlaceSnapshot(snapshot) {
-    const prefix = snapshot.sourceId + ':'
-    const rows = snapshot.records.map(record => {
-        const compact = {...record, propertyId: record.id.slice(prefix.length)}
-        return snapshotColumns.map(key => compact[key])
-    })
-    return JSON.stringify({version: 1, fetchedAt: snapshot.fetchedAt, rows}) + '\n'
-}
-
-export function readPlaceSnapshot(destinationId, sourceId) {
-    const region = regionFor(destinationId, sourceId)
-    const path = snapshotPath(destinationId, sourceId)
-    let raw
-    try {
-        raw = JSON.parse(readFileSync(path, 'utf8'))
-    } catch (error) {
-        if (error.code == 'ENOENT') return {sourceId, records: [], fetchedAt: null}
-        throw error
-    }
-    if (raw.version != 1 || !Array.isArray(raw.rows)) throw new Error('Unknown place snapshot format')
-    const records = raw.rows.map(row => {
-        const fields = Object.fromEntries(snapshotColumns.map((key, i) => [key, row[i]]))
-        return expandPlace(fields, region, sourceId)
-    })
-    return {sourceId, records, fetchedAt: raw.fetchedAt}
-}
+export {encodePlaceSnapshot, readPlaceSnapshot, runtimeSnapshotDirectory, savePlaceSnapshot, snapshotPath, snapshotRegion} from './files.mjs'
 
 export async function refreshPlaceDestination(destinationId, sourceId, {fetchImpl = fetch, signal} = {}) {
-    const region = regionFor(destinationId, sourceId)
+    const region = placeDestinations.find(item => item.id == destinationId)
+    if (!region?.sourceIds.includes(sourceId)) throw new RangeError('Unknown destination or source')
+    const fetchedAt = new Date().toISOString()
     const timer = AbortSignal.timeout(35_000)
     const requestSignal = signal ? AbortSignal.any([timer, signal]) : timer
     const accept = sourceId == 'failte' ? 'text/csv, */*;q=0.5' : 'application/json, application/sparql-results+json'
@@ -57,5 +21,11 @@ export async function refreshPlaceDestination(destinationId, sourceId, {fetchImp
     }
     const raw = sourceId == 'failte' ? await response.text() : await response.json()
     const records = extractPlaces(raw, region, sourceId).map(item => expandPlace(item, region, sourceId))
-    return {sourceId, records, fetchedAt: new Date().toISOString()}
+    const partial = sourceId == 'osm' && raw.elements.length >= 1000
+    const limited = sourceId == 'wikidata' && raw.results.bindings.length >= 350
+    return {sourceId, records, fetchedAt, partial: partial || limited}
+}
+
+export async function refreshAndSavePlaceDestination(destinationId, sourceId, options) {
+    return fetchAndPublish(destinationId, sourceId, () => refreshPlaceDestination(destinationId, sourceId, options), options?.signal)
 }

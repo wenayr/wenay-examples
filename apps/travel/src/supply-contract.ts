@@ -8,6 +8,7 @@ export interface SupplyDestination {
 }
 
 export interface SupplyPhoto {
+    fileVersion?: string
     url: string
     sourceUrl: string
     credit: string
@@ -23,6 +24,7 @@ export interface SupplyHotel {
     locality: string | null
     category: string | null
     sourceId: string
+    commonsFile?: string | null
     wikidataId?: string | null
     sourceName: string
     sourceUrl: string
@@ -44,6 +46,7 @@ export interface SupplySource {
 }
 
 export interface SupplyCatalogPage {
+    revision?: string
     destination: SupplyDestination
     sources: SupplySource[]
     items: SupplyHotel[]
