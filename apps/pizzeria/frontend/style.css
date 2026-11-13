@@ -1,0 +1,296 @@
+@import url('wenay-react2/styles/tokens');
+/* Organizer palette in the pizzeria workspace. The extra body specificity keeps
+   these contextual values independent of stylesheet evaluation order. */
+body .work-app{--work-ink:#353126;--work-muted:#756f61;--work-accent:#a94729;--work-accent-hover:#8f371f;--work-line:#e1ddd1;--work-surface:#fffdf8;--work-soft:#f1eee6}
+body .work-app .work-heading{padding-top:8px}
+body .work-app .work-lane{border-color:#e4dfd2;background:#f0ede5}
+body .work-app .work-lane>h3 span{background:#e3ddd0;color:#6a6253}
+body .work-app .work-card{border-color:#dfdbcf;background:#fffefb;box-shadow:0 3px 12px #4c3a1d0b}
+body .work-app .work-card:hover{border-color:#cfc7b7}
+body .work-app .work-card.urgent{border-left-color:#b84223}
+body .work-app .work-avatar{background:#efe2c8;color:#8f3b24}
+@media(max-width:700px){body .work-app .work-heading{align-items:flex-start}
+body .work-app .work-heading>.work-toolbar{width:100%}
+body .work-app .work-heading>.work-toolbar button{flex:1}
+}
+
+:root{font-family:Inter,system-ui,sans-serif;color:#28261f;background:#f6f4ee;font-synthesis:none}
+*{box-sizing:border-box}
+body{margin:0}
+button,input{font:inherit}
+button{cursor:pointer;border:1px solid #d9d7cd;border-radius:9px;padding:10px 16px;background:#fff;color:#292820}
+button:hover{background:#eeeae0}
+button:disabled{opacity:.45;cursor:not-allowed}
+.primary{background:#b84223;color:white;border-color:#b84223}
+.primary:hover{background:#96321b}
+header{display:flex;justify-content:space-between;align-items:center;padding:23px 5%;border-bottom:1px solid #dfddd4;background:#fffdf7}
+.brand{font-size:29px;font-weight:900;letter-spacing:3px;color:#b84223;text-decoration:none}
+.brand span{display:block;font-size: 12px;letter-spacing:1px;font-weight:500;color:#777}
+.identity{display:flex;align-items:center;gap:15px;font-size:13px}
+.online{color:#377548}
+.offline{color:#ad6d24}
+main{max-width:1250px;margin:auto;padding:0 32px 60px}
+.hero{display:flex;align-items:center;justify-content:space-between;padding:48px 0 38px;gap:30px}
+.hero h1{font-size:clamp(34px,4.4vw,60px);line-height:1.06;max-width:700px;margin:20px 0;font-weight:780;letter-spacing:-2px}
+.hero p{color:#6e6d61}
+.eyebrow{font-size: 12px;letter-spacing:2px}
+.pizza{font-size:145px;background:#ebd9af;border-radius:50%;width:245px;height:245px;display:grid;place-items:center;transform:rotate(-13deg)}
+h2{font-size:25px;letter-spacing:-.6px}
+h3{margin:10px 0;font-size:20px}
+section{margin-bottom:35px}
+.panel{border:1px solid #e3dfd2;background:#fffdf8;border-radius:16px;padding:24px}
+.login{display:grid;grid-template-columns:1fr 1fr;gap:35px}
+.login form,.row{display:flex;flex-wrap:wrap;gap:12px;align-items:end}
+label{display:flex;flex-direction:column;gap:7px;font-size:13px;flex:1}
+input:not([type=checkbox]){padding:12px;border:1px solid #d5d1c5;border-radius:8px;background:white;min-width:100px;width:100%}
+small{color:#79766c}
+p{line-height:1.6}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:18px}
+.food{height:125px;display:grid;place-items:center;font-size:88px;background:#f1e8d5;border-radius:10px}
+.menu p{color:#8a8475;font-size:13px}
+.menu footer,.order footer{display:flex;align-items:center;justify-content:space-between;margin-top:20px;gap:10px}
+.section-title{display:flex;align-items:center;justify-content:space-between}
+.section-title span{font-size:13px;color:#777}
+.checkout{display:flex;align-items:center;gap:25px;margin-top:20px;flex-wrap:wrap}
+.checkout>div{min-width:200px}
+.checkout small{width:100%}
+.badge{display:inline-block;padding:5px 10px;border-radius:20px;background:#f0dfad;font-size:12px}
+.delivered,.ready{background:#dceacd}
+.cancelled{background:#ddd}
+.delivering{background:#d5e5f4}
+.check{display:inline-flex;flex-direction:row;margin:8px}
+.empty{padding:30px;border:1px dashed #ccc;border-radius:12px;color:#777;width:100%}
+.alert,.notice{padding:16px;border-radius:10px;background:#f7ddd4}
+.alert{display:flex;justify-content:space-between}
+.notice{background:#e0edda}
+.bottom{text-align:center;font-size:12px;color:#8a8576;padding:25px;border-top:1px solid #ddd}
+ol{padding-left:20px;font-size:13px}
+li{padding:4px}
+@media(max-width:700px){main{padding:0 18px 35px}
+.pizza{display:none}
+.login{grid-template-columns:1fr}
+header{align-items:start}
+.identity{flex-wrap:wrap;max-width:170px;gap:6px}
+.brand span{max-width:140px}
+.hero{padding-top:25px}
+.checkout{align-items:stretch;flex-direction:column}
+.row{flex-direction:column;align-items:stretch}
+.hero h1{letter-spacing:-1px}
+}
+
+
+select{font:inherit;padding:12px;border:1px solid #d5d1c5;border-radius:8px;background:white;width:100%}
+.table-scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;margin:16px 0 24px;text-align:left}
+th,td{padding:12px;border-bottom:1px solid #e3dfd2;vertical-align:top}
+th{font-size:13px;color:#6e6d61}
+.batch{padding:18px;border:1px solid #e3dfd2;border-radius:10px;min-width:0}
+.expired{color:#b84223;font-weight:700}
+.recipe-line{margin:12px 0}
+details{margin-top:24px}
+summary{cursor:pointer}
+select,input{max-width:100%}
+.batch .row label{min-width:120px}
+
+
+.location-bar{display:flex;align-items:center;gap:24px;padding:16px 5%;background:#e8dfcc}
+.location-bar label{flex:0 1 320px}
+.location-bar span{font-size:13px;color:#625c4e}
+@media(max-width:700px){.location-bar{align-items:stretch;flex-direction:column;gap:8px}
+.location-bar label{flex:auto}
+}
+
+
+/* Dish cards and the shared customer preview */
+textarea,select{font:inherit}
+textarea{resize:vertical;width:100%;padding:12px;border:1px solid #d5d1c5;border-radius:8px;background:white}
+fieldset{border:0;padding:0;margin:0;min-width:0}
+.dish-editor-layout{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(260px,1fr);gap:28px;align-items:start}
+.dish-editor-layout form label{margin:12px 0}
+.dish-preview{position:sticky;top:20px}
+.dish-photo{width:100%;height:auto;aspect-ratio:4/3;object-fit:cover;border-radius:10px;display:block;background:#f1e8d5}
+.photo-empty{display:grid;place-items:center;color:#807b6a}
+.menu{display:flex;flex-direction:column;min-width:0}
+.menu footer{margin-top:auto;padding-top:20px}
+.menu .dish-description{color:#514b40;white-space:pre-line}
+.dish-composition{overflow-wrap:anywhere;white-space:pre-line}
+.dish-photo-editor{margin:28px 0}
+.photo-editor-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px}
+.photo-editor-grid img,.photo-presets img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:8px}
+.photo-editor-grid button{font-size:12px;padding:8px}
+.photo-presets{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:10px}
+.photo-presets button{padding:6px}
+.photo-presets span{display:block;font-size:12px;margin:7px 0}
+.photo-thumbnails{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+.photo-thumbnails button{width:52px;height:42px;padding:2px}
+.photo-thumbnails button[aria-pressed=true]{border:2px solid #b84223}
+.photo-thumbnails img{width:100%;height:100%;object-fit:cover;border-radius:5px}
+.catalog-cover{width:100%;height:140px;object-fit:cover;border-radius:8px}
+.dish-editor-layout .row>label{min-width:130px}
+.dish-editor-layout input[type=file]{max-width:100%;font-size:12px}
+.dish-preview h3{margin-top:0}
+.dish-preview .menu h3{margin-top:16px}
+@media(max-width:850px){.dish-editor-layout{grid-template-columns:1fr}
+.dish-preview{position:static}
+.dish-preview>.menu{max-width:440px}
+.photo-presets{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+
+
+.hero.staff-hero{padding:18px 0 10px;margin-bottom:12px}
+.staff-hero h1{font-size:34px;letter-spacing:-1px;margin:10px 0}
+.staff-hero p{margin:8px 0}
+.hero[hidden]{display:none}
+.work-nav button[aria-pressed=true]{background:#a94729;color:#fff;border-color:#a94729}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid #be8459;outline-offset:2px}
+
+
+/* Customer menu and staff workspace share controls, with distinct emphasis. */
+:root {font-size: 16px}
+button {min-height: 44px; font-size: 14px; font-weight: 600}
+input:not([type=checkbox]), select, textarea {font-size: 16px; min-height: 44px}
+label {font-size: 14px; min-width: 0}
+a:focus-visible, summary:focus-visible {outline: 3px solid #be8459; outline-offset: 3px}
+header {gap: 24px}
+.brand {letter-spacing: 2px; white-space: nowrap}
+.brand span {font-size: 12px; color: #655e51}
+.identity {flex-wrap: wrap; justify-content: flex-end; gap: 10px 15px; color: #514d42}
+.identity small {font-size: 12px}
+.hero {display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(280px, 1fr); gap: 42px; padding: 35px 0 45px}
+.hero h1 {font-size: clamp(35px, 4.4vw, 58px); line-height: 1.1; margin: 18px 0; max-width: 670px}
+.hero p:not(.eyebrow) {font-size: 17px; max-width: 570px; color: #5b564b}
+.hero-link {display: inline-flex; align-items: center; gap: 32px; margin-top: 14px; border-radius: 9px; background: #b84223; color: #fff; text-decoration: none; padding: 13px 20px; font-size: 15px; font-weight: 650}
+.hero-link:hover {background: #96321b}
+.pizza {display: block; transform: none; width: 100%; height: auto; margin: 0; background: transparent; font-size: 13px; border-radius: 20px; overflow: hidden}
+.pizza img {display: block; width: 100%; aspect-ratio: 1.12; object-fit: cover; border-radius: 20px}
+.pizza figcaption {color: #665c4e; padding: 10px 0 0; text-align: right; font-size: 12px}
+.login {gap: 34px; align-items: start; box-shadow: 0 5px 20px #624a2505}
+.login h2 {margin-top: 0; font-size: 25px}
+.login p {color: #5c564a; font-size: 15px}
+.login form {display: grid; grid-template-columns: 1fr 1fr; gap: 14px}
+.login form > label {min-width: 0}
+.login form > button {width: 100%}
+.demo-accounts {margin-top: 16px; font-size: 13px; color: #645d4e}
+.demo-accounts small {display: block; margin-top: 12px; line-height: 1.8; font-size: 12px}
+#menu {scroll-margin-top: 24px}
+.section-title {gap: 20px; flex-wrap: wrap}
+.section-title h2 {font-size: 30px}
+.section-title span {color: #625a4b; font-size: 14px}
+.cards {grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 22px}
+.menu {box-shadow: 0 5px 20px #624a2506}
+.menu h3 {font-size: 23px; margin-top: 20px}
+.menu p {font-size: 14px; color: #665e4e}
+.menu footer {border-top: 1px solid #e7e0d2; margin-top: auto; padding-top: 18px}
+.checkout {border-left: 4px solid #b84223}
+.checkout > div {flex: 1 1 260px}
+.checkout > label {flex: 1 1 240px}
+.checkout > div > p {display: flex; justify-content: space-between; align-items: center; gap: 14px}
+.checkout > div > p.cart-empty {display: block; color: #696153; font-size: 14px; max-width: 440px}
+.checkout > div > p > button {padding: 3px 14px; flex-shrink: 0; font-size: 20px}
+.checkout > div > b {font-size: 24px; font-variant-numeric: tabular-nums}
+.checkout > small {font-size: 13px}
+.order {display: flex; flex-direction: column; min-width: 0}
+.order footer {margin-top: auto; padding-top: 18px; flex-wrap: wrap}
+.order > p {overflow-wrap: anywhere; font-size: 15px}
+.order ol {font-size: 14px; color: #5c564b}
+.order > b {font-size: 24px}
+.alert {align-items: center; gap: 16px; overflow-wrap: anywhere}
+.empty {background: #fffdf7; color: #5e594c; line-height: 1.7}
+.staff-hero {display: block}
+.staff-hero h1 {font-size: 34px}
+@media (max-width: 850px) {
+    .hero {gap: 24px; grid-template-columns: minmax(0, 1fr) minmax(230px, .8fr)}
+    .hero h1 {font-size: 40px}
+    .login {grid-template-columns: 1fr}
+}
+@media (max-width: 700px) {
+    header {flex-wrap: wrap; align-items: center; gap: 16px; padding: 18px}
+    .identity {max-width: none; gap: 8px 12px}
+    .hero {grid-template-columns: 1fr; padding: 24px 0 30px; gap: 24px}
+    .hero h1 {font-size: 38px}
+    .hero p:not(.eyebrow) {font-size: 16px}
+    .pizza {display: block; max-width: 460px}
+    .pizza img {aspect-ratio: 1.65}
+    .hero-link {margin-top: 8px}
+    .login form {grid-template-columns: 1fr}
+    .login {padding: 22px}
+    .cards {grid-template-columns: 1fr}
+    .section-title {gap: 0; margin-bottom: 20px}
+    .section-title h2 {margin-bottom: 8px}
+    .checkout > div, .checkout > label {flex: auto; min-width: 0; width: 100%}
+    .checkout {gap: 18px}
+    .staff-hero h1 {font-size: 30px}
+    .alert {align-items: flex-start; flex-direction: column}
+}
+@media (prefers-reduced-motion: reduce) {
+    * {scroll-behavior: auto !important; transition: none !important}
+}
+
+/* The menu and order compose one workspace instead of a long sequence of panels. */
+.customer-nav {display: flex; align-items: center; gap: 22px; font-size: 14px; margin-left: auto}
+.customer-nav a {color: #65513e; text-decoration: none; padding: 10px 0; white-space: nowrap}
+.customer-nav a:hover {color: #a23b20}
+.menu-workspace {display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 26px; align-items: start}
+.menu-workspace > div {min-width: 0}
+.menu-workspace .cards {grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px}
+.menu-workspace .menu {padding: 18px}
+.menu-workspace .menu h3 {font-size: 22px}
+.menu-workspace .dish-photo {aspect-ratio: 1.3}
+.menu-order-link {font-size: 13px; color: #9f3c23; font-weight: 650; text-decoration: none; padding: 10px 0}
+.order-unavailable {font-size: 12px; color: #766755; max-width: 120px}
+.order-sidebar {position: sticky; top: 24px; min-width: 0; display: grid; gap: 18px}
+.order-guide {margin: 0; background: #efe8d8; border-color: #e3d7bf}
+.order-guide h3 {font-size: 24px; margin: 10px 0 24px}
+.order-guide ol {list-style: decimal-leading-zero; padding-left: 26px; margin: 0; color: #9d432c}
+.order-guide li {padding: 0 0 18px 5px}
+.order-guide li:last-child {padding-bottom: 0}
+.order-guide strong {font-size: 15px; color: #463b2c}
+.order-guide li p {font-size: 14px; color: #675a47; margin: 5px 0 0; line-height: 1.65}
+.order-guide .hero-link {font-size: 14px; display: flex; justify-content: center; margin-top: 26px; padding: 12px}
+.order-payment {font-size: 12px; color: #685b48; margin: 18px 0 0; line-height: 1.7}
+.order-location {padding: 18px 22px; border-left: 3px solid #ba8a57; background: #f0ebe0}
+.order-location > span {font-size: 12px; color: #6e6352; display: block}
+.order-location > strong {font-size: 16px; display: block; margin: 5px 0; overflow-wrap: anywhere}
+.order-location > p {font-size: 13px; color: #72644f; margin: 8px 0 0}
+.order-cart {display: grid; gap: 19px; margin: 0; padding: 24px; border-left: 1px solid #d8c9b5; border-top: 4px solid #b84223; box-shadow: 0 8px 32px #6346210d}
+.order-cart > div, .order-cart > label {min-width: 0; width: 100%; flex: auto}
+.order-cart > div > h3 {font-size: 24px; margin: 10px 0 22px; display: flex; align-items: baseline; justify-content: space-between; gap: 12px}
+.order-cart h3 > span {font-size: 13px; font-weight: 500; color: #73634d; white-space: nowrap}
+.order-cart > div > p.cart-empty {margin-bottom: 24px}
+.cart-line {display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 5px 14px; padding: 16px 0; border-bottom: 1px solid #e5dccd}
+.cart-line > strong {font-size: 14px; line-height: 1.5}
+.cart-line > span {font-size: 12px; color: #766750; grid-column: 1}
+.cart-quantity {grid-column: 2; grid-row: 1 / span 2; display: flex; align-items: center; gap: 9px}
+.cart-quantity button {font-size: 20px; padding: 3px 8px; min-height: 36px; min-width: 32px; border-radius: 6px}
+.cart-quantity > span {font-size: 14px; min-width: 15px; text-align: center}
+.cart-total {display: flex; justify-content: space-between; align-items: center; margin-top: 21px; gap: 15px}
+.cart-total > span {font-size: 15px; color: #65553f}
+.cart-total > b {font-size: 27px; font-variant-numeric: tabular-nums}
+.order-cart > button {width: 100%; min-height: 47px}
+.order-cart > small {font-size: 12px; line-height: 1.7}
+#order-cart, #order-account, #queue-myOrders {scroll-margin-top: 24px}
+.order-progress {display: flex; list-style: none; padding: 0; margin: 17px 0; gap: 5px}
+.order-progress li {flex: 1; padding: 8px 0 0; font-size: 12px; line-height: 1.4; color: #8a7f6d; border-top: 3px solid #e5dfd3}
+.order-progress li.complete {border-color: #9db58d; color: #49663a}
+.order-progress li.current {border-color: #b84223; color: #9a351d; font-weight: 700}
+.order-history {margin: 16px 0}
+.order-history summary {font-size: 13px; color: #756348}
+.order-history ol {padding-left: 20px}
+@media (max-width: 1100px) {
+    .customer-nav {margin-left: 0; flex-wrap: wrap; gap: 17px}
+    .menu-workspace {grid-template-columns: minmax(0, 1fr) 300px; gap: 20px}
+    .menu-workspace .cards {grid-template-columns: 1fr}
+    .order-cart {padding: 20px}
+}
+@media (max-width: 750px) {
+    .menu-workspace {grid-template-columns: 1fr; gap: 24px}
+    .menu-workspace .cards {grid-template-columns: 1fr}
+    .order-sidebar {position: static}
+    .customer-nav {order: 3; width: 100%; border-top: 1px solid #e5dfd3; padding-top: 5px}
+    .order-guide ol {display: grid; gap: 0}
+    .order-guide {padding: 24px}
+    .order-progress {flex-wrap: wrap; gap: 8px}
+    .order-progress li {min-width: 70px}
+    .cart-quantity button {min-height: 40px; min-width: 36px}
+    .section-title h2 {margin-top: 9px}
+}

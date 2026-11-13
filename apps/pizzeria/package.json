@@ -1,0 +1,54 @@
+{
+  "name": "wenay-pizzeria",
+  "version": "0.10.0",
+  "private": true,
+  "scripts": {
+    "build": "vite build frontend --outDir ../public && npm run build:organizer",
+    "start": "tsx backend/main.ts",
+    "dev": "vite frontend --host 127.0.0.1",
+    "typecheck": "tsc --noEmit",
+    "test": "tsx backend/account-id-check.ts && tsx backend/inventory-check.ts && tsx backend/host-check.ts && tsx backend/check.ts && tsx backend/network-check.ts && tsx organizer/check.ts && npm run test:peer && npm run test:collaboration && npm run test:canvas && npm run test:communication && npm run test:backup",
+    "test:backup": "tsx backend/backup-check.ts",
+    "start:network": "tsx backend/network.ts",
+    "test:network": "tsx backend/network-check.ts",
+    "build:organizer": "vite build organizer --outDir ../organizer-public",
+    "start:organizer": "tsx organizer/server.ts",
+    "start:organizer:node": "tsx organizer/node.ts",
+    "dev:organizer": "vite organizer --host 127.0.0.1",
+    "test:organizer": "tsx organizer/check.ts",
+    "test:peer-contract": "tsx organizer/peer-contract-check.ts",
+    "test:peer": "tsx organizer/peer-contract-check.ts && tsx organizer/peer-close-repro.ts --expect-fixed && tsx organizer/peer-network-check.ts --expect-fixed",
+    "repro:peer-close": "tsx organizer/peer-close-repro.ts",
+    "repro:peer-network": "tsx organizer/peer-network-check.ts",
+    "test:collaboration": "tsx organizer/collaboration-check.ts && tsx organizer/session-peer-check.ts",
+    "test:canvas": "tsx organizer/canvas-check.ts",
+    "test:communication": "tsx organizer/screen-check.ts && tsx organizer/chat-check.ts && tsx organizer/assistant-check.ts && tsx organizer/ai-persistence-check.ts && tsx organizer/media-generation-repro.ts --expect-fixed",
+    "test:ai-persistence": "tsx organizer/ai-persistence-check.ts",
+    "test:media-browser": "tsx organizer/media-browser-check.ts",
+    "repro:media-generation": "tsx organizer/media-generation-repro.ts",
+    "repro:ai-restart": "tsx organizer/ai-restart-repro.ts"
+  },
+  "dependencies": {
+    "express": "5.2.1",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "socket.io": "4.8.3",
+    "socket.io-client": "4.8.3",
+    "swagger-ui-dist": "5.32.14",
+    "wenay-calls": "1.0.0",
+    "wenay-common2": "3.1.1",
+    "wenay-react2": "5.0.0"
+  },
+  "devDependencies": {
+    "@types/express": "5.0.6",
+    "@types/node": "26.1.2",
+    "@types/react": "19.2.18",
+    "@types/react-dom": "19.2.4",
+    "tsx": "4.23.1",
+    "typescript": "7.0.2",
+    "vite": "8.2.2"
+  },
+  "engines": {
+    "node": ">=22.12"
+  }
+}

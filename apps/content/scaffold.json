@@ -1,0 +1,49 @@
+{
+    "files": [
+        "backend/ai-checkpoint.ts",
+        "backend/assistant-check.ts",
+        "backend/assistant-resource.ts",
+        "backend/check.ts",
+        "backend/domain-check.ts",
+        "backend/domain.ts",
+        "backend/files-resource.ts",
+        "backend/identity.ts",
+        "backend/model.ts",
+        "backend/node.ts",
+        "backend/process-resource.ts",
+        "backend/public-http.ts",
+        "backend/published-contract.ts",
+        "backend/resource-check.ts",
+        "backend/runtime.ts",
+        "backend/server.ts",
+        "backend/service.ts",
+        "frontend/article.tsx",
+        "frontend/assistant.tsx",
+        "frontend/contracts.ts",
+        "frontend/editor.tsx",
+        "frontend/env.d.ts",
+        "frontend/index.html",
+        "frontend/main.tsx",
+        "frontend/media.tsx",
+        "frontend/review.tsx",
+        "frontend/style.css",
+        "frontend/vite.config.ts",
+        "shared/react/command-action.ts",
+        "shared/react/replay-view.ts",
+        "shared/react/service-action.ts",
+        "shared/react/service-session.ts",
+        "shared/react/service-view.tsx"
+    ],
+    "optional": [
+        "README.md",
+        "API.md",
+        ".env.example",
+        "Dockerfile",
+        ".dockerignore"
+    ],
+    "skip": {
+        "backend/integration-check.ts": "поднимает соседний support исходного репозитория",
+        "PASSPORT.md": "паспорт каталога примеров: ссылается на STATUS и отчёты репозитория",
+        "backend/backup-check.ts": "запускает scripts/backup.mjs и restore.mjs из корня каталога примеров"
+    }
+}

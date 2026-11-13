@@ -1,0 +1,7 @@
+{
+    "maxLine": 160,
+    "exclude": [
+        "scripts/create-saas-example.mjs",
+        "scripts/scaffold-check.mjs"
+    ]
+}

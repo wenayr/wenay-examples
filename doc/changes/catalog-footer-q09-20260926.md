@@ -1,0 +1,30 @@
+# Q09: актуальная строка библиотек в витрине
+
+26 сентября 2026, managed INTEGRATION `codex/examples-integration-20260926`.
+
+В browser приёмке обнаружен пропуск миграции: index.html показывал common2 2.21.1 /
+react2 3.5.1 при фактических 3.1.1 / 5.0.0. Исправлена только эта статическая строка;
+generated products.js не правился. npm view обоих пакетов 26 сентября 2026 около
+19:32 UTC подтвердил 3.1.1 и 5.0.0. При следующем обновлении строку нужно обновлять вместе с зависимостями.
+
+Root browser: десять карточек из штатного generator, Northstar «Сценарий и запуск»
+показывает роли, проверки, ограничения и команду создания копии; Escape закрывает карточку.
+После reload footer показывает актуальные версии. Console errors: []. Own loopback
+server 38777; первый запуск на 57789 завершился EACCES, без изменения network protections.
+[Снимок footer](../reports/catalog-library-footer-20260926.png) сохранён на текущем UI.
+
+Состояние карточек на момент screenshot берётся из принятого baseline check:all4956;
+новый post-transfer check:all18952 ещё выполняется. Catalog checks в этом прогоне
+ещё не начались на момент HTML правки и проверят уже изменённое дерево.
+Q09 целиком не принят: карточки явно обозначены «Схема сценария», это не свежие screenshots
+девяти работающих продуктов. Snapshot/fallback/skip и полная screenshot matrix остаются отдельными шагами.
+
+После run18952 root повторно загрузил штатно сгенерированные карточки; console errors [].
+Own tab закрыт, server остановлен Ctrl+C (PTY exit1 — явная остановка);
+после завершения число listening sockets на38777 равно0. Пользовательские вкладки не менялись.
+
+Позднейшая проверка: Catalog typecheck/test в18952 PASS, но общий run EXIT1
+из-за Chat scaffold metadata. После отдельного исправления14d0276 новый полный
+run95073 PASS EXIT0, включая Catalog typecheck0.8/test0.4с;
+[отчёт](examples-post-transfer-gate-20260926.md). Исторические временные отметки
+выше относятся к моменту screenshot, а не к текущему acceptance.

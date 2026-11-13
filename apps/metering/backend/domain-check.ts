@@ -1,0 +1,162 @@
+import assert from 'node:assert/strict'
+import {createServiceLeader} from 'wenay-common2/service/server'
+import {createMeteringRuntime} from './runtime'
+import {createMeteringService} from './service'
+import {meteringRoles, meteringWorkspace} from './domain'
+
+async function main() {
+    let clock = Date.UTC(2026, 8, 30, 23, 50)
+    const runtime = createMeteringRuntime({now: () => clock})
+    const leader = createServiceLeader({definition: runtime.definition, selfUrl: () => 'http://localhost'})
+    const close = runtime.mount({store: leader.line.control.store, system: leader.corridor.system})
+    const state = () => leader.line.control.store.snapshot()
+    const signal = new AbortController()
+    const context = (account: string) => ({
+        principal: {account, roles: meteringRoles(state(), account, clock)},
+        sessionId: account,
+        resourceId: 'test',
+        signal: signal.signal
+    })
+    const owner = leader.corridor.fragment('owner'), outsider = leader.corridor.fragment('outsider')
+    const keys = runtime.definition.resources.keys.open(context('owner'))
+    const otherKeys = runtime.definition.resources.keys.open(context('outsider'))
+    const auditKeys = runtime.definition.resources.keys.open(context('auditor'))
+    const orgId = 'northstar'
+    try {
+        const scopes = ['usage:write', 'usage:read'] as ('usage:write' | 'usage:read')[]
+        const input = {requestId: 'writer-key', orgId, label: 'Support and documents', scopes, days: 90}
+        const issued = await keys.facade.control.issue(input)
+        assert(issued.secret)
+        const repeated = await keys.facade.control.issue(input)
+        assert.equal(repeated.secret, null, 'plaintext shown once, lost response requires issuing a new key')
+        assert.equal(repeated.id, issued.id)
+        assert.equal(JSON.stringify(state()).includes(issued.secret), false, 'API secret not present in replicated state')
+        assert.equal(JSON.stringify(leader.line.control.store.snapshot()).includes(issued.secret), false)
+        await assert.rejects(keys.facade.control.issue({...input, label: 'conflicting request'}), /другими параметрами/)
+        await assert.rejects(auditKeys.facade.control.issue({...input, requestId: 'auditor-key'}), /доступа/)
+        await assert.rejects(keys.facade.control.issue({...input, requestId: 'other-tenant', orgId: 'harbor'}), /доступа/)
+        const login = runtime.definition.access.login.resolve
+        assert.equal(login(state(), {account: issued.account, password: issued.secret}), issued.account)
+        assert.equal(login(state(), {account: issued.account, password: 'x'.repeat(43)}), null)
+        assert.equal(login(state(), {account: '__proto__', password: 'owner-pass'}), null)
+        const api = leader.corridor.fragment(issued.account)
+        const reads = runtime.definition.resources.usage.open(context(issued.account))
+        assert.equal(reads.facade.control.identity().orgId, orgId)
+        const keyPrincipal = {account: issued.account, roles: meteringRoles(state(), issued.account, clock)}
+        assert.throws(
+            () => leader.access.snapshot('workspace', keyPrincipal),
+            /forbidden/,
+            'API keys use fresh guarded reads, not cached workspace subscriptions'
+        )
+        await owner.budgetConfigure('limit', {orgId, monthlyUnits: 10, concurrent: 2})
+        await assert.rejects(owner.usageRecord('owner-write', {eventId: 'event-1', metric: 'search', units: 2, reference: 'query-1'}), /forbidden/)
+        const forged = {
+            id: 'a'.repeat(64), orgId, actor: 'owner', label: 'fake',
+            hash: 'b'.repeat(64), scopes: ['usage:write' as const], days: 1
+        }
+        await assert.rejects(owner.keyRegister('forged-key', forged), /forbidden/)
+        await assert.rejects(api.usageRecord('fraction', {eventId: 'fraction', metric: 'search', units: 0.5, reference: ''}), /целым/)
+        const event = {eventId: 'search:first', metric: 'search' as const, units: 2, reference: 'query-1'}
+        const first = await api.usageRecord('record-once', event)
+        assert.equal(first.orgId, orgId)
+        assert.equal(first.fresh, true)
+        const duplicate = await api.usageRecord('another-rpc-same-event', event)
+        assert.equal(duplicate.id, first.id)
+        assert.equal(duplicate.fresh, false)
+        assert.equal(state().periods['northstar:2026-09'].used, 2)
+        await assert.rejects(api.usageRecord('conflict', {...event, units: 3}), /другого содержимого/)
+        const races = await Promise.allSettled([
+            api.usageReserve('reserve-a', {eventId: 'document:a', metric: 'document', units: 7, reference: 'file-a'}),
+            api.usageReserve('reserve-b', {eventId: 'document:b', metric: 'document', units: 7, reference: 'file-b'})
+        ])
+        assert.equal(races.filter(result => result.status == 'fulfilled').length, 1, 'one atomic winner at quota limit')
+        const reserved = (races.find(result => result.status == 'fulfilled') as PromiseFulfilledResult<Awaited<ReturnType<typeof api.usageReserve>>>).value
+        assert.equal(state().periods['northstar:2026-09'].reserved, 7)
+        await api.usageRelease('release-race', {eventId: reserved.eventId, reason: 'Не начинали внешнюю обработку'})
+        assert.equal(state().periods['northstar:2026-09'].reserved, 0)
+        const reserveInput = {eventId: 'document:stable', metric: 'document' as const, units: 3, reference: 'file-stable'}
+        const reserve = await api.usageReserve('stable-rpc', reserveInput)
+        assert.equal(reserve.fresh, true)
+        const replay = await api.usageReserve('stable-rpc', reserveInput)
+        const note = 'receipt replays original fresh flag; consumers need a NEW RPC id for a new intent'
+        assert.deepEqual(replay, reserve, note)
+        assert.equal((await api.usageReserve('new-intent', reserveInput)).fresh, false)
+        await api.usageReserve('reserve-second', {eventId: 'document:second', metric: 'document', units: 3, reference: ''})
+        await assert.rejects(api.usageReserve('third-slot', {eventId: 'document:third', metric: 'document', units: 1, reference: ''}), /параллельных/)
+        await api.usageUncertain('unknown', {eventId: 'document:stable', reason: 'Провайдер не подтвердил исход'})
+        assert.equal(state().periods['northstar:2026-09'].reserved, 6, 'unknown result retains quota')
+        assert.equal(state().periods['northstar:2026-09'].active, 2)
+        await assert.rejects(api.usageSettle('too-much', {eventId: 'document:stable', units: 4}), /превышает/)
+        await api.usageSettle('settle-known', {eventId: 'document:stable', units: 2})
+        await api.usageSettle('settle-known-again', {eventId: 'document:stable', units: 2})
+        assert.equal(state().periods['northstar:2026-09'].used, 4)
+        await assert.rejects(api.usageSettle('settle-conflict', {eventId: 'document:stable', units: 1}), /другим количеством/)
+        await assert.rejects(api.usageRelease('cannot-release-spent', {eventId: 'document:stable', reason: 'bad'}), /нельзя освободить/)
+        await api.usageRelease('release-second', {eventId: 'document:second', reason: 'Обработка не выполнялась'})
+        assert.equal(state().periods['northstar:2026-09'].active, 0)
+        const readOnly = await keys.facade.control.issue({...input, requestId: 'read-only', label: 'Read only', scopes: ['usage:read']})
+        await assert.rejects(leader.corridor.fragment(readOnly.account).usageRecord('read-write', {...event, eventId: 'not-allowed'}), /forbidden/)
+        const limitedRead = runtime.definition.resources.usage.open(context(readOnly.account))
+        const page = limitedRead.facade.control.read({period: '2026-09', limit: 1})
+        assert.equal(page.events.length, 1)
+        assert(page.next)
+        assert.equal(limitedRead.facade.control.read({period: '2026-09', limit: 1, beforeId: page.next}).events.length, 1)
+        const other = await otherKeys.facade.control.issue({...input, requestId: 'harbor-key', orgId: 'harbor', label: 'Harbor'})
+        const otherApi = leader.corridor.fragment(other.account)
+        await assert.rejects(otherApi.usageSettle('cross-tenant', {eventId: 'document:stable', units: 2}), /организации/)
+        await otherApi.usageRecord('same-local-id-other-tenant', event)
+        assert.equal(state().periods['harbor:2026-09'].used, 2)
+        assert.equal(reads.facade.control.read({period: '2026-09', limit: 100}).events.some(value => value.orgId == 'harbor'), false)
+        await assert.rejects(outsider.keyRevoke('cross-revoke', {orgId, id: issued.id}), /доступа/)
+
+        await owner.budgetConfigure('one-slot', {orgId, monthlyUnits: 10, concurrent: 1})
+        await api.usageReserve('month-boundary', {eventId: 'document:month-boundary', metric: 'document', units: 4, reference: ''})
+        clock = Date.UTC(2026, 9, 1, 0, 1)
+        const october = {eventId: 'document:october', metric: 'document', units: 1, reference: ''} as const
+        await assert.rejects(api.usageReserve('new-month-still-busy', october), /параллельных/)
+        await api.usageSettle('finish-prior-month', {eventId: 'document:month-boundary', units: 3})
+        assert.equal(state().periods['northstar:2026-09'].used, 7, 'settlement belongs to original reservation period')
+        await api.usageRecord('october-new', {...event, eventId: 'search:october', units: 3})
+        assert.equal(state().periods['northstar:2026-10'].used, 3)
+
+        const restoredService = createMeteringService({now: () => clock})
+        const restored = createServiceLeader({definition: {...restoredService.definition, initial: state()}, selfUrl: () => 'http://localhost'})
+        try {
+            const replay = await restored.corridor.fragment(issued.account).usageRecord('after-restoration', event)
+            assert.equal(replay.fresh, false)
+            const periods = restored.line.control.store.snapshot().periods
+            const note = 'ledger identity survives ordinary command-receipt replacement'
+            assert.equal(periods['northstar:2026-09'].used, 7, note)
+        } finally {restored.control.close()}
+        const expiring = await keys.facade.control.issue({...input, requestId: 'expires', days: 1, label: 'Temporary'})
+        const retained = runtime.definition.resources.usage.open(context(expiring.account))
+        assert.equal(retained.facade.control.identity().orgId, orgId)
+        clock += 86400_000
+        assert.equal(login(state(), {account: expiring.account, password: expiring.secret!}), null)
+        assert.throws(() => retained.facade.control.identity(), /недействителен/)
+        assert.throws(() => retained.facade.control.read({period: '2026-10', limit: 5}), /недействителен/)
+        await assert.rejects(leader.corridor.fragment(expiring.account).usageRecord('expired-write', {...event, eventId: 'expired'}), /forbidden/)
+        await owner.keyRevoke('revoke-main', {orgId, id: issued.id})
+        await assert.rejects(api.usageRecord('retained-after-revoke', {...event, eventId: 'revoked'}), /forbidden/)
+        assert.throws(() => reads.facade.control.identity(), /недействителен/)
+        assert.equal(login(state(), {account: issued.account, password: issued.secret}), null)
+        assert.equal(meteringWorkspace(state(), {account: 'auditor', roles: ['owner']}, clock).organizations[0].role, 'auditor')
+        assert.equal(JSON.stringify(meteringWorkspace(state(), {account: 'owner', roles: ['owner']}, clock)).includes('"hash"'), false)
+        retained.close()
+        limitedRead.close()
+        reads.close()
+        console.log('PASS metering: hash-only single-display keys, standard login/scopes, tenant isolation, semantic event dedup/conflict, atomic quota/concurrency, reservations/settle/release/unknown, cross-month accounting, restored ledger, retained-session expiry/revoke and bounded fresh reads')
+    } finally {
+        signal.abort()
+        keys.close()
+        otherKeys.close()
+        auditKeys.close()
+        await close()
+        leader.control.close()
+    }
+}
+
+main().catch(function failed(error) {
+    console.error(error)
+    process.exitCode = 1
+})

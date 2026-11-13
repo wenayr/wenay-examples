@@ -1,0 +1,11 @@
+**
+!package.json
+!package-lock.json
+!backend/**
+!organizer/**
+!shared/**
+!public/**
+!Dockerfile
+**/*check.ts
+**/*repro.ts
+backend/ui-fixture.ts

@@ -1,0 +1,16 @@
+**
+!package.json
+!package-lock.json
+!backend/**
+!organizer/**
+!shared/**
+!public/**
+!organizer-public/**
+!Dockerfile
+!boot.mjs
+organizer/README.md
+**/*check.ts
+**/*preview.ts
+**/*fixture.tsx
+**/*repro.ts
+**/*check.html

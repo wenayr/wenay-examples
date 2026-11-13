@@ -1,0 +1,10 @@
+**
+!package.json
+!package-lock.json
+!backend/**
+!shared/**
+!organizer/**
+!public/**
+!Dockerfile
+**/*check.ts
+**/*repro.ts

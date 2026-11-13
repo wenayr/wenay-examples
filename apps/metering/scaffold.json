@@ -1,0 +1,49 @@
+{
+    "files": [
+        "backend/billing-domain.ts",
+        "backend/billing-model.ts",
+        "backend/check.ts",
+        "backend/client-contract.ts",
+        "backend/domain-check.ts",
+        "backend/domain.ts",
+        "backend/identity.ts",
+        "backend/model.ts",
+        "backend/node.ts",
+        "backend/process-resource.ts",
+        "backend/provider-http.ts",
+        "backend/runtime.ts",
+        "backend/server.ts",
+        "backend/service.ts",
+        "backend/webhook-check.ts",
+        "backend/webhook-resource.ts",
+        "frontend/contracts.ts",
+        "frontend/env.d.ts",
+        "frontend/index.html",
+        "frontend/keys.tsx",
+        "frontend/ledger.tsx",
+        "frontend/main.tsx",
+        "frontend/playground.tsx",
+        "frontend/style.css",
+        "frontend/vite.config.ts",
+        "frontend/webhooks.tsx",
+        "shared/react/command-action.ts",
+        "shared/react/deferred-panel.tsx",
+        "shared/react/replay-view.ts",
+        "shared/react/service-action.ts",
+        "shared/react/service-session.ts",
+        "shared/react/service-view.tsx"
+    ],
+    "optional": [
+        "README.md",
+        "API.md",
+        "Dockerfile",
+        ".dockerignore",
+        ".env.example"
+    ],
+    "skip": {
+        "backend/documents-machine-integration-check.ts": "cross-app fixture исходного репозитория: поднимает настоящий Documents и Counter, не экспортируется standalone",
+        "backend/integration-check.ts": "поднимает соседние support и documents исходного репозитория",
+        "PASSPORT.md": "паспорт каталога примеров: ссылается на STATUS и отчёты репозитория",
+        "backend/backup-check.ts": "запускает scripts/backup.mjs и restore.mjs из корня каталога примеров"
+    }
+}

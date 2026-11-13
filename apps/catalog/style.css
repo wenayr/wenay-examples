@@ -1,0 +1,206 @@
+:root {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    color: #232824;
+    background: #f9f8f4;
+    font-synthesis: none;
+    --muted: #626961;
+    --line: #dcded5;
+    --accent: #ad4028;
+}
+* {box-sizing: border-box}
+html {scroll-behavior: smooth; scroll-padding-top: 24px}
+body {margin: 0; font-size: 16px; line-height: 1.6}
+button, input {font: inherit}
+button, a, input {-webkit-tap-highlight-color: transparent}
+button {cursor: pointer}
+button:disabled {cursor: wait}
+a {color: inherit; text-underline-offset: 4px}
+button:focus-visible, a:focus-visible, input:focus-visible {outline: 3px solid #b84a31; outline-offset: 5px}
+button, a {touch-action: manipulation}
+h1, h2, h3, p {margin: 0}
+h1, h2, h3 {text-wrap: balance}
+.wrap {max-width: 1320px; margin-inline: auto; padding-inline: 48px}
+.sr-only {position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap}
+.skip-link {position: fixed; top: -100px; left: 20px; z-index: 20; background: #fff; padding: 12px 20px}
+.skip-link:focus {top: 12px}
+.site-header {min-height: 100px; display: flex; align-items: center; justify-content: space-between; gap: 24px; border-bottom: 1px solid var(--line)}
+.brand {font-size: 32px; font-weight: 750; letter-spacing: -1.8px; text-decoration: none; display: inline-flex; align-items: baseline}
+.brand-dot {color: var(--accent)}
+.brand-caption {font-size: 12px; font-weight: 500; color: var(--muted); letter-spacing: .4px; border-left: 1px solid var(--line); padding-left: 16px; margin-left: 18px}
+.site-header nav {display: flex; align-items: center; gap: 32px; font-size: 14px}
+.site-header nav a {text-decoration: none; padding-block: 12px}
+.site-header nav a:hover {color: var(--accent)}
+.header-link span {margin-left: 14px}
+.hero {display: grid; grid-template-columns: 1.2fr 1fr; gap: 65px; padding-block: 80px 70px; align-items: center}
+.eyebrow {font-size: 12px; letter-spacing: 1.7px; font-weight: 650; line-height: 1.5; color: var(--muted)}
+.hero .eyebrow {display: flex; align-items: center; gap: 10px}
+.signal-dot {width: 7px; height: 7px; border-radius: 50%; background: var(--accent)}
+h1 {font-size: clamp(48px, 5.2vw, 72px); font-weight: 560; letter-spacing: -3.8px; line-height: 1.08; margin: 25px 0}
+h1 em {font-family: Georgia, serif; color: var(--accent); font-weight: 400; letter-spacing: -3px}
+.intro {max-width: 510px; font-size: 18px; color: var(--muted); line-height: 1.75}
+.button {display: inline-flex; align-items: center; justify-content: space-between; gap: 35px; text-decoration: none; border: 1px solid transparent; border-radius: 4px; padding: 13px 20px; font-size: 15px; font-weight: 600; min-height: 48px}
+.primary {background: #283c30; color: #fff}
+.primary:hover {background: #1c2c22}
+.hero .button {margin-top: 30px}
+.hero-note {color: var(--muted); font-size: 12px; margin-top: 18px}
+.scenario {background: #efeee5; border: 1px solid #e3e2d6; border-radius: 5px; padding: 28px 30px 16px; transform: rotate(1deg)}
+.scenario > * {transform: rotate(-1deg)}
+.scenario-top {display: flex; justify-content: space-between; gap: 12px; font-size: 12px; letter-spacing: .5px; color: #5a6658; margin-bottom: 28px}
+.scenario h2 {font-size: 26px; line-height: 1.25; font-weight: 550; letter-spacing: -.7px}
+.journey {list-style: none; margin: 28px 0 14px; padding: 0; display: grid; gap: 10px}
+.journey li {display: flex; align-items: flex-start; gap: 12px; padding: 17px 14px; background: #fdfdf9; border: 1px solid #e0e3d9; border-radius: 4px}
+.journey li:nth-child(2) {margin-left: 15px}
+.journey li:nth-child(3) {background: #e0e8d6; border-color: #d2ddc8}
+.step-number {font-size: 12px; color: #53664d; font-variant-numeric: tabular-nums; padding-top: 3px}
+.journey strong {font-size: 14px; font-weight: 600; line-height: 1.45; display: block}
+.journey p {font-size: 12px; color: #566150; line-height: 1.5; margin-top: 4px}
+.journey-mark, .journey-check {margin-left: auto; color: #426337}
+.text-button {padding: 14px 0; border: 0; background: transparent; color: #30482e; text-align: left; font-size: 14px; font-weight: 600; display: flex; justify-content: space-between; width: 100%; gap: 15px; min-height: 44px}
+.text-button:hover {color: var(--accent)}
+.catalog-intro {display: flex; align-items: center; justify-content: space-between; gap: 24px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); padding-block: 24px; color: var(--muted); font-size: 14px}
+.catalog-intro p:nth-child(2) {display: flex; align-items: center; gap: 16px; color: #323d30}
+.catalog-intro strong {font-size: 36px; font-weight: 500; letter-spacing: -1.5px; line-height: 1}
+.catalog-intro p:last-child {font-size: 13px}
+.products {padding-top: 64px}
+.section-heading {display: flex; align-items: flex-end; justify-content: space-between; gap: 28px}
+.section-heading .eyebrow {margin-bottom: 12px}
+.section-heading h2 {font-size: 38px; font-weight: 550; line-height: 1.2; letter-spacing: -1.5px}
+.search {display: flex; gap: 12px; align-items: center; border-bottom: 1px solid #899081; min-width: 300px; padding: 8px 0}
+.search > span[aria-hidden] {font-size: 28px; line-height: 1}
+.search input {border: 0; background: transparent; color: #263124; min-width: 0; width: 100%; padding: 4px; font-size: 14px; min-height: 36px}
+.search input::placeholder {color: var(--muted)}
+.catalog-toolbar {margin-top: 34px; display: flex; align-items: center; flex-wrap: wrap; gap: 18px; justify-content: space-between}
+.filters {display: flex; flex-wrap: wrap; gap: 7px}
+.filters button {font-size: 13px; background: transparent; border: 1px solid #d4d9cd; border-radius: 4px; padding: 10px 14px; min-height: 44px; color: #535e4c}
+.filters button:hover {background: #ebeee5}
+.filters button[aria-pressed=true] {background: #283c30; border-color: #283c30; color: white}
+.verified-filter {font-size: 12px; display: flex; align-items: center; gap: 8px; cursor: pointer; min-height: 44px; color: var(--muted)}
+.verified-filter input {width: 17px; height: 17px; accent-color: #283c30}
+.result-count {font-size: 12px; color: var(--muted); margin-block: 17px}
+.cards {display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px}
+.card {background: #fffefa; border: 1px solid #dfe1d8; border-radius: 5px; padding: 25px 25px 16px; display: flex; flex-direction: column; transition: border-color .15s, box-shadow .15s}
+.card:hover {border-color: #a8b19b; box-shadow: 0 6px 20px #283b3010}
+.card-top {display: flex; align-items: center; gap: 12px; margin-bottom: 24px}
+.product-mark {display: flex; width: 42px; height: 42px; flex: 0 0 42px; align-items: center; justify-content: center; color: var(--product-accent); background: var(--product-wash); border-radius: 9px; font-family: Georgia, serif; font-size: 26px}
+.product-name {font-weight: 600; font-size: 14px; line-height: 1.4}
+.product-kind {font-size: 12px; color: var(--muted); line-height: 1.5; display: block; margin-top: 2px}
+.card h3 {font-size: 22px; font-weight: 550; letter-spacing: -.5px; line-height: 1.3; margin-bottom: 12px}
+.card-description {color: var(--muted); font-size: 14px; line-height: 1.7; margin-bottom: 18px}
+.process-tags {display: flex; flex-wrap: wrap; gap: 6px; list-style: none; padding: 0; margin: auto 0 22px}
+.process-tags li {font-size: 12px; border: 1px solid #e0e4d9; padding: 3px 7px; border-radius: 3px; color: #5c6654; background: #f7f8f2}
+.card-bottom {border-top: 1px solid #e6e7df}
+.card-state {font-size: 12px; color: #697260; margin-bottom: 5px}
+.card-state.pending {color: #906236}
+.catalog-note {font-size: 13px; color: var(--muted); margin: 23px 0 0; max-width: 850px}
+.empty-state {grid-column: 1 / -1; border: 1px dashed #b3bda6; border-radius: 5px; text-align: center; padding: 45px 24px; background: #f1f3e9}
+.empty-state h3 {font-size: 24px; font-weight: 500; margin-bottom: 10px}
+.empty-state p {color: var(--muted); margin-bottom: 20px}
+.empty-state button {background: #fff; border: 1px solid #a6b599; padding: 10px 18px; border-radius: 4px; min-height: 44px}
+.start-section {padding-block: 76px 72px}
+.section-index {font-size: 13px; color: var(--muted); letter-spacing: 2px}
+.start-steps {list-style: none; padding: 0; margin: 32px 0 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 36px}
+.start-steps li {border-top: 1px solid #cfd5c5; padding-top: 20px}
+.start-steps li > span {font-size: 12px; color: var(--accent)}
+.start-steps h3 {font-size: 19px; font-weight: 600; margin: 12px 0 10px}
+.start-steps p {font-size: 14px; color: var(--muted); line-height: 1.8}
+.foundation {background: #263b30; color: #f9f9f2}
+.foundation-inner {display: grid; grid-template-columns: 1fr 1fr; gap: 100px; padding-block: 60px}
+.foundation .eyebrow {color: #bfcbb7}
+.foundation h2 {font-size: 40px; font-weight: 450; letter-spacing: -1.4px; line-height: 1.2; margin: 22px 0}
+.foundation-intro {font-size: 15px; color: #c7d0be; max-width: 370px; line-height: 1.8}
+.principles {display: grid; gap: 22px}
+.principles article {display: flex; align-items: flex-start; gap: 20px; padding-bottom: 22px; border-bottom: 1px solid #52664f}
+.principles article:last-child {padding: 0; border: 0}
+.principles article > span {font-size: 12px; color: #b4c0a6; padding-top: 4px}
+.principles h3 {font-size: 17px; font-weight: 550; margin-bottom: 7px}
+.principles p {font-size: 14px; color: #c7d0be; line-height: 1.65}
+.site-footer {display: flex; align-items: center; gap: 24px; justify-content: space-between; padding-block: 30px; font-size: 12px; color: var(--muted)}
+.site-footer .brand {color: #263b30; font-size: 28px}
+.site-footer > a:last-child {text-decoration: none; padding-block: 12px}
+dialog {width: min(760px, calc(100% - 32px)); max-height: calc(100dvh - 40px); overflow-y: auto; border: 1px solid #cbd4c1; border-radius: 8px; padding: 38px; color: #263124; background: #fffef9; box-shadow: 0 30px 100px #15261e40}
+dialog::backdrop {background: #19271fc4; backdrop-filter: blur(3px)}
+.close {position: absolute; top: 12px; right: 12px; background: #f1f3eb; border: 1px solid #dfe5d6; border-radius: 50%; width: 42px; height: 42px; color: #3f4e36; font-size: 26px; line-height: 1}
+dialog .eyebrow {padding-right: 30px; margin-bottom: 15px}
+dialog h2 {font-size: 32px; font-weight: 550; letter-spacing: -1px; line-height: 1.2; padding-right: 14px; margin-bottom: 15px}
+dialog h3 {font-size: 19px; font-weight: 600; margin: 27px 0 12px}
+dialog p, dialog li {font-size: 15px; color: #56634e; line-height: 1.75}
+dialog ol {padding-left: 23px}
+dialog li {padding-left: 7px; margin-block: 10px}
+dialog pre {white-space: pre-wrap; overflow-wrap: anywhere; font-size: 13px; line-height: 1.75; padding: 18px; background: #263b30; color: #eef3e7; border-radius: 5px; margin-bottom: 8px}
+.command-controls {display: flex; gap: 14px; align-items: center; margin-bottom: 15px}
+.copy-button {font-size: 13px; border: 1px solid #ccd6bf; background: #f3f6ed; color: #354c29; border-radius: 4px; padding: 9px 14px; min-height: 44px}
+.copy-feedback {font-size: 12px; color: #4e653f}
+.launch-note {border-left: 3px solid #ad4028; padding: 9px 14px; background: #f7eee6; margin-block: 16px}
+.detail-open {margin-top: 12px}
+.documentation-link {display: inline-block; font-size: 14px; padding: 10px 0; margin-top: 10px}
+.technical-details {border-top: 1px solid #dbe2d2; margin-top: 28px; padding-top: 18px}
+.technical-details summary {font-size: 15px; font-weight: 600; cursor: pointer; padding-block: 6px}
+.technical-details h3 {font-size: 16px; margin-top: 18px}
+.technical-details p {font-size: 13px}
+.check-date {margin-top: 10px}
+.check-results {display: grid; gap: 4px; list-style: none; padding: 0; margin: 10px 0}
+.check-results li {font-size: 13px; margin: 0; padding: 0}
+@media (min-width: 1450px) {.hero {gap: 90px}}
+@media (max-width: 1050px) {
+    .wrap {padding-inline: 30px}
+    .hero {gap: 30px; padding-block: 55px}
+    h1 {font-size: 56px; letter-spacing: -3px}
+    .scenario {padding: 22px 22px 12px}
+    .scenario-number {display: none}
+    .cards {grid-template-columns: repeat(2, minmax(0, 1fr))}
+    .foundation-inner {gap: 45px}
+}
+@media (max-width: 700px) {
+    .wrap {padding-inline: 22px}
+    .site-header {min-height: 78px; gap: 12px}
+    .brand {font-size: 29px}
+    .brand-caption {font-size: 12px; margin-left: 10px; padding-left: 10px}
+    .site-header nav {gap: 18px; font-size: 13px}
+    .site-header nav a:not(:first-child) {display: none}
+    .hero {grid-template-columns: 1fr; padding-block: 38px; gap: 35px}
+    h1 {font-size: clamp(44px, 9.5vw, 64px); letter-spacing: -2.6px; margin-block: 22px}
+    h1 em {letter-spacing: -2px}
+    .intro {font-size: 16px; max-width: 550px}
+    .hero .button {margin-top: 24px}
+    .scenario {transform: none; padding: 24px 20px 12px}
+    .scenario > * {transform: none}
+    .scenario-top {margin-bottom: 20px}
+    .scenario-number {display: inline}
+    .scenario h2 {font-size: 25px}
+    .journey {margin-top: 22px}
+    .journey li:nth-child(2) {margin-left: 0}
+    .catalog-intro {gap: 18px; padding-block: 20px; font-size: 12px}
+    .catalog-intro p:last-child {display: none}
+    .catalog-intro p:nth-child(2) {gap: 10px; max-width: 140px; line-height: 1.4}
+    .catalog-intro strong {font-size: 30px}
+    .products {padding-top: 40px}
+    .section-heading {align-items: flex-start; flex-direction: column; gap: 23px}
+    .section-heading h2 {font-size: 32px; letter-spacing: -1px}
+    .search {width: 100%; min-width: 0}
+    .search input {font-size: 16px}
+    .catalog-toolbar {gap: 10px; margin-top: 23px}
+    .filters {gap: 6px}
+    .filters button {padding: 9px 11px; font-size: 12px}
+    .cards {grid-template-columns: 1fr; gap: 14px}
+    .card {padding: 23px 22px 15px}
+    .card-top {margin-bottom: 20px}
+    .card h3 {font-size: 24px}
+    .process-tags {margin-top: 2px}
+    .catalog-note {font-size: 12px}
+    .start-section {padding-block: 48px}
+    .section-index {display: none}
+    .start-steps {grid-template-columns: 1fr; gap: 24px; margin-top: 25px}
+    .start-steps h3 {margin-top: 8px}
+    .foundation-inner {grid-template-columns: 1fr; gap: 35px; padding-block: 40px}
+    .foundation h2 {font-size: 36px}
+    .foundation-intro {max-width: none}
+    .site-footer {flex-wrap: wrap; gap: 12px; padding-block: 24px}
+    .site-footer p {order: 3; width: 100%}
+    dialog {padding: 30px 22px; width: calc(100% - 20px); max-height: calc(100dvh - 24px)}
+    dialog h2 {font-size: 28px}
+    .command-controls {align-items: flex-start; flex-direction: column; gap: 8px}
+}
+@media (prefers-reduced-motion: reduce) {
+    html {scroll-behavior: auto}
+    * {transition: none !important}
+}

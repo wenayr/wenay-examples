@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Подключиться к Chat</title>
+    <link rel="stylesheet" href="setup.css">
+    <script src="setup.js" defer></script>
+</head>
+<body>
+    <main>
+        <h1>Подключиться к Chat</h1>
+        <p>Введите адрес, который выдал администратор. Аккаунт и пароль вводятся на сервере после подключения.</p>
+        <form>
+            <label for="origin">HTTPS адрес сервера</label>
+            <input id="origin" type="url" required maxlength="2048" placeholder="https://chat.example.test"
+                autocomplete="off" spellcheck="false" aria-describedby="hint" autofocus>
+            <p id="hint">Только адрес сервера, без пути и завершающего /. Пример не является работающим сервером.</p>
+            <button type="submit">Подключиться</button>
+        </form>
+        <p id="message" role="status" aria-live="polite"></p>
+        <p>Приложение сохраняет только адрес. «Сервер → Сменить сервер / выйти» очищает текущую сессию.
+            Даже прежний сервер после этого потребует новый вход.</p>
+    </main>
+</body>
+</html>

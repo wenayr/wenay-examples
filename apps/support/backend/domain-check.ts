@@ -1,0 +1,171 @@
+import assert from 'node:assert/strict'
+import {createServiceLeader} from 'wenay-common2/service/server'
+import {createSupportService} from './service'
+import {searchWorkspace, supportRoles, workspaceView} from './domain'
+
+async function main() {
+    let clock = Date.UTC(2026, 8, 10, 12)
+    const {definition} = createSupportService({now: () => clock})
+    const leader = createServiceLeader({definition, selfUrl: () => 'http://localhost'})
+    let next = 0
+    function execute<K extends keyof typeof definition.commands>(
+        account: string,
+        command: K,
+        input: Parameters<typeof definition.commands[K]['apply']>[1],
+        requestId = 'domain-' + ++next
+    ) {
+        return leader.corridor.execute(account, command, requestId, input as never)
+    }
+    const state = () => leader.line.control.store.snapshot()
+    const view = (account: string) => workspaceView(state(), {account, roles: supportRoles(state(), account)})
+    try {
+        assert.equal(definition.access.login.resolve(state(), {account: 'owner', password: 'owner-pass'}), 'owner')
+        assert.equal(definition.access.login.resolve(state(), {account: '__proto__', password: 'owner-pass'}), null)
+        assert.equal(view('customer').tickets.length, 1)
+        assert.equal(view('customer').tickets[0].messages.length, 1, 'private notes excluded')
+        assert.equal(view('customer').articles.length, 2)
+        assert.equal(view('customer').audit.length, 0)
+        assert.equal(view('agent').tickets.length, 2)
+        assert.deepEqual(view('outsider').organizations.map(org => org.id), ['harbor'])
+        assert.equal(view('owner').organizations.some(org => org.id == 'harbor'), false)
+        assert.equal(JSON.stringify(view('owner')).includes('tokenHash'), false)
+        assert.equal(JSON.stringify(view('owner')).includes('secret'), false)
+        assert.equal(searchWorkspace(state(), 'customer', 'northstar', 'Черновик').articles.length, 0)
+        assert.equal(searchWorkspace(state(), 'customer', 'northstar', 'Проверьте').tickets.length, 0)
+        assert.throws(() => searchWorkspace(state(), 'owner', 'harbor', ''), /доступа/)
+        const claimed = workspaceView(state(), {account: 'customer', roles: ['owner']}).tickets
+        const rolesNote = 'projection does not trust stale or caller-provided roles'
+        assert.deepEqual(claimed, view('customer').tickets, rolesNote)
+        assert.throws(() => searchWorkspace(state(), '__proto__', 'northstar', ''), /доступа/)
+        await assert.rejects(execute('owner', 'ticketCreate', {orgId: '__proto__', subject: 'x', body: 'x', priority: 'normal'}), /доступа/)
+
+        const crossTenant = {
+            orgId: 'northstar', id: 'ticket-welcome', revision: 1,
+            body: 'cross tenant', private: false
+        }
+        await assert.rejects(execute('outsider', 'ticketReply', crossTenant), /доступа/)
+        const otherCustomer = {
+            orgId: 'northstar', id: 'ticket-export', revision: 1,
+            body: 'other customer', private: false
+        }
+        await assert.rejects(execute('customer', 'ticketReply', otherCustomer), /недоступно/)
+        const privateNote = {
+            orgId: 'northstar', id: 'ticket-welcome', revision: 1,
+            body: 'private', private: true
+        }
+        await assert.rejects(execute('customer', 'ticketReply', privateNote), /заметки/)
+        await assert.rejects(execute('owner', 'memberRole', {orgId: 'northstar', account: 'owner', role: 'revoked'}), /последнего владельца/)
+        await assert.rejects(execute('lead', 'inviteCreate', {orgId: 'northstar', role: 'lead', hours: 1}), /владелец/)
+
+        const ticketInput = {orgId: 'northstar', subject: 'Проверка доставки', body: 'Не пришло письмо с подтверждением', priority: 'normal' as const}
+        const created = await execute('customer', 'ticketCreate', ticketInput, 'stable-create')
+        assert.deepEqual(await execute('customer', 'ticketCreate', ticketInput, 'stable-create'), created, 'library receipt deduplicates')
+        await assert.rejects(execute('outsider', 'ticketCreate', ticketInput, 'stable-create'), /доступа/, 'receipts scoped to authenticated account')
+        assert.equal(state().tickets[created.id].createdAt, clock)
+        assert.equal(state().tickets[created.id].dueAt, clock + 86400_000)
+        assert.equal(Object.values(state().tickets).filter(ticket => ticket.subject == ticketInput.subject).length, 1)
+        const competing = await Promise.allSettled([
+            execute('agent', 'ticketAssign', {orgId: 'northstar', id: created.id, revision: 1, assignee: 'agent'}),
+            execute('lead', 'ticketAssign', {orgId: 'northstar', id: created.id, revision: 1, assignee: 'lead'})
+        ])
+        assert.equal(competing.filter(result => result.status == 'fulfilled').length, 1, 'one assignment at a revision')
+        await execute('agent', 'ticketReply', {orgId: 'northstar', id: created.id, revision: 2, body: 'Техническая заметка без доступа клиенту', private: true})
+        assert.equal(state().tickets[created.id].firstResponseAt, undefined, 'private note is not a customer response')
+        assert.equal(view('customer').tickets.find(ticket => ticket.id == created.id)?.messages.length, 1)
+        await execute('agent', 'ticketReply', {orgId: 'northstar', id: created.id, revision: 3, body: 'Проверяем доставку, скоро вернёмся.', private: false})
+        assert.equal(state().tickets[created.id].status, 'waiting')
+        assert.equal(state().tickets[created.id].firstResponseAt, clock)
+        await assert.rejects(execute('agent', 'ticketDue', {orgId: 'northstar', id: created.id, revision: 4, dueAt: clock + 3600_000}), /зафиксирован/)
+        await execute('customer', 'ticketStatus', {orgId: 'northstar', id: created.id, revision: 4, status: 'resolved', priority: 'normal'})
+        const escalation = {
+            orgId: 'northstar', id: created.id, revision: 5,
+            status: 'waiting', priority: 'urgent'
+        } as const
+        await assert.rejects(execute('customer', 'ticketStatus', escalation), /Клиент/)
+        const urgent = await execute('customer', 'ticketCreate', {...ticketInput, subject: 'Срочное обращение', priority: 'urgent'})
+        assert.equal(state().tickets[urgent.id].dueAt, clock + 3600_000)
+        await assert.rejects(execute('customer', 'ticketDue', {orgId: 'northstar', id: urgent.id, revision: 1, dueAt: clock + 7200_000}), /forbidden/)
+        await assert.rejects(execute('agent', 'ticketDue', {orgId: 'northstar', id: urgent.id, revision: 1, dueAt: clock - 1}), /будущем/)
+        await execute('agent', 'ticketDue', {orgId: 'northstar', id: urgent.id, revision: 1, dueAt: clock + 7200_000})
+        assert.equal(state().tickets[urgent.id].dueAt, clock + 7200_000)
+        await assert.rejects(execute('agent', 'ticketDue', {orgId: 'northstar', id: urgent.id, revision: 1, dueAt: clock + 10800_000}), /уже изменена/)
+
+        const saved = await execute('agent', 'articleSave', {
+            orgId: 'northstar',
+            id: '',
+            revision: 0,
+            title: 'Проверка почты',
+            body: 'Проверьте папку со спамом.'
+        })
+        assert.equal(view('customer').articles.some(article => article.id == saved.id), false)
+        await assert.rejects(execute('agent', 'articlePublish', {orgId: 'northstar', id: saved.id, revision: 1, status: 'published'}), /forbidden/)
+        await execute('lead', 'articlePublish', {orgId: 'northstar', id: saved.id, revision: 1, status: 'published'})
+        assert.equal(view('customer').articles.some(article => article.id == saved.id), true)
+        await execute('agent', 'articleSave', {
+            orgId: 'northstar',
+            id: saved.id,
+            revision: 2,
+            title: 'Проверка почты',
+            body: 'Обновлённый текст до согласования.'
+        })
+        assert.equal(view('customer').articles.some(article => article.id == saved.id), false, 'edited publication requires review again')
+        await assert.rejects(execute('lead', 'articlePublish', {orgId: 'northstar', id: saved.id, revision: 2, status: 'published'}), /уже изменена/)
+        assert.deepEqual(state().articles[saved.id].history?.map(version => version.revision), [1, 2])
+        await assert.rejects(execute('agent', 'articleRestore', {orgId: 'northstar', id: saved.id, revision: 3, version: 1}), /forbidden/)
+        await assert.rejects(execute('lead', 'articleRestore', {orgId: 'northstar', id: saved.id, revision: 3, version: 1000}), /недоступна/)
+        await execute('lead', 'articleRestore', {orgId: 'northstar', id: saved.id, revision: 3, version: 1})
+        assert.equal(state().articles[saved.id].body, 'Проверьте папку со спамом.')
+        assert.equal(state().articles[saved.id].status, 'draft', 'restore always requires a new publication review')
+        await execute('lead', 'articlePublish', {orgId: 'northstar', id: saved.id, revision: 4, status: 'published'})
+        assert.equal(view('customer').articles.find(article => article.id == saved.id)?.history.length, 0)
+        const visible = JSON.stringify(view('customer'))
+        const draftNote = 'published article does not leak old unapproved draft'
+        assert.equal(visible.includes('Обновлённый текст до согласования.'), false, draftNote)
+        assert(view('agent').articles.find(article => article.id == saved.id)?.history.some(version => version.body == 'Обновлённый текст до согласования.'))
+        for (let index = 0; index < 22; index++) {
+            await execute('agent', 'articleSave', {orgId: 'northstar', id: saved.id, revision: 5 + index, title: 'Проверка почты', body: 'Редакция ' + index})
+        }
+        assert.equal(state().articles[saved.id].history?.length, 20)
+        await assert.rejects(execute('lead', 'articleRestore', {orgId: 'northstar', id: saved.id, revision: 27, version: 1}), /недоступна/)
+
+        const invitation = await execute('owner', 'inviteCreate', {orgId: 'northstar', role: 'agent', hours: 1})
+        assert.equal(JSON.stringify(view('owner')).includes(invitation.token), false)
+        assert.equal(JSON.stringify(state()).includes(invitation.token), false, 'plaintext invite token is not domain state')
+        await execute('outsider', 'inviteAccept', {token: invitation.token})
+        assert.equal(view('outsider').organizations.length, 2)
+        await assert.rejects(execute('outsider', 'inviteAccept', {token: invitation.token}), /недоступно/)
+        await execute('owner', 'memberRole', {orgId: 'northstar', account: 'outsider', role: 'revoked'})
+        assert.deepEqual(view('outsider').organizations.map(org => org.id), ['harbor'])
+        const stale = {
+            orgId: 'northstar', id: created.id, revision: 5,
+            body: 'stale cached access', private: false
+        }
+        await assert.rejects(execute('outsider', 'ticketReply', stale), /доступа/)
+        const expired = await execute('lead', 'inviteCreate', {orgId: 'northstar', role: 'customer', hours: 1})
+        clock += 3600_000
+        await assert.rejects(execute('outsider', 'inviteAccept', {token: expired.token}), /истекло/)
+        const revoked = await execute('owner', 'inviteCreate', {orgId: 'northstar', role: 'agent', hours: 1})
+        await execute('owner', 'inviteRevoke', {orgId: 'northstar', id: revoked.id})
+        await assert.rejects(execute('outsider', 'inviteAccept', {token: revoked.token}), /недоступно/)
+        const beforeDemotion = await execute('lead', 'inviteCreate', {orgId: 'northstar', role: 'customer', hours: 1}, 'lead-old-invite')
+        await execute('owner', 'memberRole', {orgId: 'northstar', account: 'lead', role: 'agent'})
+        assert.equal(state().invites[beforeDemotion.id].revoked, true, 'demoting invitation issuer invalidates their outstanding tokens')
+        const invite = {orgId: 'northstar', role: 'customer' as const, hours: 1}
+        const replay = await execute('lead', 'inviteCreate', invite, 'lead-old-invite')
+        assert.deepEqual(replay, beforeDemotion, 'receipt returns original operation result')
+        await assert.rejects(execute('outsider', 'inviteAccept', {token: beforeDemotion.token}), /недоступно/)
+        const org = await execute('customer', 'orgCreate', {name: 'Моя независимая команда'})
+        assert.equal(view('customer').organizations.find(value => value.id == org.id)?.role, 'owner')
+        await assert.rejects(execute('customer', 'memberRole', {orgId: 'northstar', account: 'agent', role: 'revoked'}), /доступа/)
+        assert(view('owner').audit.length > 10)
+        assert.equal(view('agent').audit.length, 0)
+        console.log('PASS support domain: five roles, tenant/private-note isolation, owner protection, invitations expiry/revocation, receipts, concurrent revisions, article history/restore/privacy/retention, first-response deadlines, immediate membership reauthorization')
+    } finally {
+        leader.control.close()
+    }
+}
+
+main().catch(function failed(error) {
+    console.error(error)
+    process.exitCode = 1
+})

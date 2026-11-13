@@ -1,0 +1,61 @@
+name: check
+
+on: [push, pull_request]
+
+concurrency:
+  group: check-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: apps/*/package-lock.json
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Установить зависимости приложений
+        run: |
+          for app in apps/*/; do
+            if [ -f "$app/package.json" ]; then
+              (cd "$app" && npm ci --no-audit --no-fund)
+            fi
+          done
+
+      # hosting поднимает настоящие контейнеры, поэтому в CI он помечен пропущенным,
+      # а не пройденным. Пиццерия проверяется целиком: её набор идёт около минуты
+      # локально и Docker не требует.
+      - name: Проверить каталог
+        env:
+          RUN_ALL_SKIP: hosting
+        run: npm run check:apps
+
+      - name: Типы и сборка hosting
+        run: node scripts/run-all.mjs typecheck build --only=hosting
+
+      # Результат CI отличается от локальной live-среды: пропуск должен быть виден
+      # в артефакте STATUS, после чего read-only gate сверяет именно этот профиль.
+      - name: Сформировать результаты текущего профиля
+        if: always()
+        run: npm run status
+
+      - name: Проверить витрину текущего профиля
+        run: node scripts/run-all.mjs test --only=catalog
+
+      - name: Проверить общий код и документацию
+        run: npm run check:repo
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: status
+          path: |
+            doc/STATUS.md
+            work/run-all/

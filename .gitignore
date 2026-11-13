@@ -7,3 +7,11 @@ coverage/
 *.log
 .DS_Store
 work/
+
+# Сборка и данные приложений. Общий шаблон `*-data` покрывает и будущие
+# приложения: каталог данных называется по сервису (support-data, docs-data).
+apps/*/public/
+apps/*/vendor/
+apps/*/data/
+apps/*/*-data/
+apps/*/organizer-public/
