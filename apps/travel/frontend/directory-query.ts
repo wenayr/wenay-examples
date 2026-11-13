@@ -71,7 +71,7 @@ export function useDirectoryEvents(destination: string, revision: string | undef
     }, [destination, ready])
 }
 
-export function directoryUrl(path: 'destinations' | 'catalog' | 'hotel' | 'options' | 'events', query: Record<string, string | number | undefined> = {}) {
+export function directoryUrl(path: 'destinations' | 'catalog' | 'hotel' | 'options' | 'events' | 'packages' | 'package-calendar', query: Record<string, string | number | undefined> = {}) {
     const params = new URLSearchParams()
     for (const [key, value] of Object.entries(query)) {
         if (value != null && value !== '') params.set(key, String(value))

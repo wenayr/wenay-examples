@@ -1,0 +1,96 @@
+{
+  "checkedOn": "2026-11-13",
+  "locations": [
+    {
+      "destination": "hurghada",
+      "id": 1061,
+      "latitude": 27.26083928002099,
+      "longitude": 33.821086618060235,
+      "source": "https://www.tez-tour.com/hotel.html?id=1061"
+    },
+    {
+      "destination": "hurghada",
+      "id": 609,
+      "latitude": 27.211764797350774,
+      "longitude": 33.841491365081765,
+      "source": "https://www.tez-tour.com/hotel.html?id=609"
+    },
+    {
+      "destination": "hurghada",
+      "id": 73557,
+      "latitude": 27.243637628349457,
+      "longitude": 33.841337296122674,
+      "source": "https://www.tez-tour.com/hotel.html?id=73557"
+    },
+    {
+      "destination": "sharm",
+      "id": 125158,
+      "latitude": 27.92128520688138,
+      "longitude": 34.32220398178106,
+      "source": "https://www.tez-tour.com/hotel.html?id=125158"
+    },
+    {
+      "destination": "sharm",
+      "id": 156182,
+      "latitude": 28.028468731177572,
+      "longitude": 34.43427740325933,
+      "source": "https://www.tez-tour.com/hotel.html?id=156182"
+    },
+    {
+      "destination": "sharm",
+      "id": 155459,
+      "latitude": 27.90948207370435,
+      "longitude": 34.31889950027471,
+      "source": "https://www.tez-tour.com/hotel.html?id=155459"
+    },
+    {
+      "destination": "sharm",
+      "id": 108275,
+      "latitude": 27.86984446365143,
+      "longitude": 34.3136209129334,
+      "source": "https://www.tez-tour.com/hotel.html?id=108275"
+    },
+    {
+      "destination": "sharm",
+      "id": 105791,
+      "latitude": 27.86153579538193,
+      "longitude": 34.288601267242484,
+      "source": "https://www.tez-tour.com/hotel.html?id=105791"
+    },
+    {
+      "destination": "rhodes",
+      "id": 3015538,
+      "latitude": 36.4130186,
+      "longitude": 28.123917699999993,
+      "source": "https://www.tez-tour.com/hotel.html?id=3015538"
+    },
+    {
+      "destination": "rhodes",
+      "id": 310359,
+      "latitude": 36.44912010516764,
+      "longitude": 28.216686269905836,
+      "source": "https://www.tez-tour.com/hotel.html?id=310359"
+    },
+    {
+      "destination": "rhodes",
+      "id": 10599996,
+      "latitude": 36.4529229,
+      "longitude": 28.2216782,
+      "source": "https://www.tez-tour.com/hotel.html?id=10599996"
+    },
+    {
+      "destination": "rhodes",
+      "id": 131753,
+      "latitude": 36.4500532,
+      "longitude": 28.2200595,
+      "source": "https://www.tez-tour.com/hotel.html?id=131753"
+    },
+    {
+      "destination": "rhodes",
+      "id": 7003347,
+      "latitude": 36.42004283333066,
+      "longitude": 28.132031237434376,
+      "source": "https://www.tez-tour.com/hotel.html?id=7003347"
+    }
+  ]
+}

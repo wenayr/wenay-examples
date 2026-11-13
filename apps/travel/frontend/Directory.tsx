@@ -7,6 +7,7 @@ import {Rates, SourceCredits, SourceLine} from './DirectoryOffers.tsx'
 import {directoryUrl, useDirectoryEvents, useDirectoryQuery} from './directory-query.ts'
 import {createDirectoryPreferences, directoryDefaults, shiftDate, type DirectoryPreferences} from './directory-preferences.ts'
 import {Icon} from './Icons.tsx'
+import {packageHash} from './package-preferences.ts'
 import {photo, hotelCount} from './presentation.ts'
 
 const pageSize = 12
@@ -63,7 +64,6 @@ function Browse({destinations, initial}: {destinations: SupplyDestination[], ini
     const [showRates, setShowRates] = useState(false)
     const mapAnchor = useRef<HTMLDivElement>(null)
     const gridAnchor = useRef<HTMLDivElement>(null)
-    const packagesAnchor = useRef<HTMLDivElement>(null)
     const range = bounds ? {west: bounds[0], south: bounds[1], east: bounds[2], north: bounds[3]} : undefined
     const url = directoryUrl('catalog', {destination: destination.id, q: prefs.search, source: prefs.source, limit: pageSize, offset, ...range})
     const [refresh, setRefresh] = useState(0)
@@ -138,11 +138,6 @@ function Browse({destinations, initial}: {destinations: SupplyDestination[], ini
         mapAnchor.current?.scrollIntoView({block: 'nearest'})
     }
 
-    function showPackages() {
-        setShowRates(true)
-        packagesAnchor.current?.scrollIntoView()
-    }
-
     function selectMarker(id: string) {
         const hotel = items.find(item => item.id == id)
         if (hotel) showHotel(hotel)
@@ -192,7 +187,7 @@ function Browse({destinations, initial}: {destinations: SupplyDestination[], ini
                 <div className="directory-results">
                     <div className="directory-summary"><div><p>{destination.country}</p><h2>Отели и размещение</h2></div>
                         <div className="directory-summary-actions">
-                            <button type="button" onClick={showPackages}>Пакетные туры ↓</button>
+                            <a href={packageHash(destination.id)}>Пакетные туры →</a>
                             <span aria-live="polite">{response ? hotelCount(response.total) : (query.error || 'Загрузка…')}</span></div></div>
                     <div className="directory-columns">
                         <section className="directory-map-panel" aria-label="Отели на карте" ref={mapAnchor}>
@@ -220,8 +215,8 @@ function Browse({destinations, initial}: {destinations: SupplyDestination[], ini
                         </div>
                     </div>
                     {response && <SourceLine sources={response.sources}/>}
-                    <div ref={packagesAnchor}><PackageOffers key={destination.id} destination={destination} prefs={prefs}
-                        shown={showRates} setShown={setShowRates}/></div>
+                    <PackageOffers key={destination.id} destination={destination} prefs={prefs}
+                        shown={showRates} setShown={setShowRates}/>
                 </div>
             </div>
         </main>

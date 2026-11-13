@@ -7,6 +7,7 @@ import {createCatalogEvents} from './catalog-events.ts'
 import {observeCatalogFiles} from './catalog-files.ts'
 import {openCatalogStorage} from './catalog-storage.ts'
 import {createCatalogImporter} from './catalog-import.ts'
+import {createPackages} from './packages.ts'
 
 export function createTravelSupply() {
     const photos = createPropertyPhotos({lazy: true})
@@ -52,5 +53,6 @@ export function createTravelSupply() {
         const stats = storage.index.stats()
         return {...stats, writes: stats.writes + importer.writes()}
     }
-    return {middleware: createSupplyMiddleware({catalog, events, partners: getPartnerOptions}), diagnostics, shutdown}
+    const middleware = createSupplyMiddleware({catalog, events, partners: getPartnerOptions, packages: createPackages()})
+    return {middleware, diagnostics, shutdown}
 }

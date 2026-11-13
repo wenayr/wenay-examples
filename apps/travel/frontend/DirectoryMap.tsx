@@ -8,9 +8,10 @@ import {Icon} from './Icons.tsx'
 
 export type tMapBounds = readonly [west: number, south: number, east: number, north: number]
 
+type MapProperty = Pick<SupplyHotel, 'id' | 'name' | 'latitude' | 'longitude'> & {priceLabel?: string, tooltip?: string}
 interface DirectoryMapProps {
     destination: SupplyDestination
-    hotels: readonly SupplyHotel[]
+    hotels: readonly MapProperty[]
     selectedId: string | null
     onSelect: (id: string) => void
     onSearchArea: (bounds: tMapBounds) => void
@@ -46,18 +47,19 @@ function addBase(map: L.Map, id: string, onLimited: () => void) {
     return group
 }
 
-function addProperty(group: L.LayerGroup, hotel: SupplyHotel, index: number, select: () => void) {
+function addProperty(group: L.LayerGroup, hotel: MapProperty, index: number, select: () => void) {
     const label = document.createElement('span')
-    label.className = 'directory-map-number'
-    label.textContent = String(index + 1)
-    const icon = L.divIcon({className: 'directory-map-pin', html: label, iconSize: [30, 30], iconAnchor: [15, 15]})
+    label.className = 'directory-map-number' + (hotel.priceLabel ? ' package-map-price' : '')
+    label.textContent = hotel.priceLabel ?? String(index + 1)
+    const width = hotel.priceLabel ? 84 : 30
+    const icon = L.divIcon({className: 'directory-map-pin', html: label, iconSize: [width, 30], iconAnchor: [width / 2, 15]})
     const marker = L.marker([hotel.latitude, hotel.longitude], {icon, title: hotel.name, keyboard: true, autoPanOnFocus: false})
         .on('click', select).addTo(group)
     const name = document.createElement('span')
-    name.textContent = hotel.name
+    name.textContent = hotel.tooltip ?? hotel.name
     marker.bindTooltip(name, {className: 'directory-map-tooltip', direction: 'top', offset: [0, -12]})
     const node = marker.getElement()
-    node?.setAttribute('aria-label', hotel.name)
+    node?.setAttribute('aria-label', name.textContent)
     node?.addEventListener('keydown', function selectWithSpace(event) {
         if (event.key != ' ') return
         event.preventDefault()

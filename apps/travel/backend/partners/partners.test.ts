@@ -87,3 +87,36 @@ test('a successful empty supplier response omits departureCityId and results in 
     assert.equal(result.offers.length, 0)
     assert.equal(result.sources[0].status, 'live')
 })
+
+test('датированное окно фильтрует минимум, выбранный день возвращает разные тарифы одного отеля по ID', async () => {
+    const {createTezInventory} = await import('./tez-inventory.ts')
+    const request = {destinationId: 'hurghada', first: '2027-01-15', last: '2027-01-31', nights: 7, adults: 2, minTotal: 140000, maxTotal: 145000}
+    const fares = ['1384', '1412'].map((value, i) => {
+        const row = tariff(5734, value)
+        row[6] = ['', 'SAND BEACH 3 *', '', 1061]
+        row[8] = [2471 + i]
+        return row
+    })
+    const calls: URL[] = []
+    const inventory = createTezInventory({now: clock, fetch: async url => {
+        const supplier = new URL(String(url))
+        calls.push(supplier)
+        const data = supplier.searchParams.has('hotelId') ? fares : fares.slice(1)
+        return Response.json({success: true, departureCityId: 3746, data, info: [['More results', 'false']]})
+    }})
+    const window = await inventory.window(request)
+    assert.equal(calls[0].searchParams.get('priceMin'), '1400')
+    assert.equal(window.quotes[0].latitude, 27.26083928002099)
+    assert.equal(window.quotes[0].total, 141200)
+    assert.equal(window.quotes[0].stars, 3)
+    assert.equal(window.complete, false)
+    const day = await inventory.day(request, 'tez:1061', '2027-01-24')
+    assert.equal(calls[1].searchParams.get('hotelId'), '1061')
+    assert.equal(calls[1].searchParams.get('groupByHotel'), null)
+    assert.deepEqual(day.quotes.map(quote => quote.total), [138400, 141200])
+    assert.equal(new Set(day.quotes.map(quote => quote.id)).size, 2)
+    assert.equal(day.complete, true)
+    const cached = await inventory.day({...request, minTotal: 0}, 'tez:1061', '2027-01-24')
+    assert.equal(cached.quotes, day.quotes)
+    assert.equal(calls.length, 2)
+})

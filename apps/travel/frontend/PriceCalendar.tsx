@@ -1,13 +1,22 @@
 import {useState, type CSSProperties} from 'react'
-import type {searchTours, TourOffer} from '../src/search-tours.ts'
 import './calendar.css'
 
-type CalendarDay = ReturnType<typeof searchTours>[number]['calendar'][number]
+interface CalendarFare {id: string, total: number}
 
-interface PriceCalendarProps {
-  days: CalendarDay[]
+interface CalendarDay<T extends CalendarFare = CalendarFare> {
+  departure: string
+  lowest: T | null
+  inBudget: T | null
+  highest?: T | null
+  complete?: boolean
+  status?: 'quoted' | 'empty' | 'unknown'
+  checkedAt?: string | null
+}
+
+interface PriceCalendarProps<T extends CalendarFare> {
+  days: CalendarDay<T>[]
   selectedOfferId: string | null
-  onSelect: (offer: TourOffer) => void
+  onSelect: (offer: T) => void
 }
 
 const euros = new Intl.NumberFormat('ru-RU', {
@@ -25,8 +34,9 @@ function dateLabel(iso: string) {
 }
 
 function quoteDescription(day: CalendarDay) {
+  if (day.status === 'unknown') return 'Нет подтверждённых данных'
   if (!day.lowest) return 'Предложений нет'
-  if (!day.inBudget) return 'Минимум ' + price(day.lowest.total) + ' · вне бюджета'
+  if (!day.inBudget) return 'Минимум ' + price(day.lowest.total) + ' · нет полученного тарифа в бюджете'
   if (day.inBudget.total !== day.lowest.total) {
     return 'В бюджете ' + price(day.inBudget.total) + ' · минимум дня ' + price(day.lowest.total)
   }
@@ -60,23 +70,22 @@ function trendPath(days: CalendarDay[], field: 'lowest' | 'inBudget', y: (total:
   }).join(' ')
 }
 
-export function PriceCalendar({days, selectedOfferId, onSelect}: PriceCalendarProps) {
+export function PriceCalendar<T extends CalendarFare>({days, selectedOfferId, onSelect}: PriceCalendarProps<T>) {
   const [inspectedDate, setInspectedDate] = useState<string | null>(null)
   const selected = days.find(day => day.inBudget && day.inBudget.id === selectedOfferId)
   const inspected = days.find(day => day.departure === inspectedDate) ?? selected
+  if (days.length == 1) {
+    const day = days[0]
+    return <section className="travel-calendar" aria-label="Стоимость на дату вылета">
+      <h3>Стоимость на дату вылета</h3>
+      <p>{dateLabel(day.departure)} · <strong>{quoteDescription(day)}</strong></p>
+      {day.checkedAt && <time dateTime={day.checkedAt}>Проверено {new Date(day.checkedAt).toLocaleString('ru-RU')}</time>}
+    </section>
+  }
   if (!days.some(day => day.lowest)) {
     return <section className="travel-calendar" aria-label="Стоимость по датам вылета">
       <h3>Стоимость по датам вылета</h3>
-      <p>На выбранные даты нет предложений.</p>
-    </section>
-  }
-
-  if (days.length == 1) {
-    const day = days[0]
-    const priceForDate = day.inBudget ?? day.lowest
-    return <section className="travel-calendar" aria-label="Стоимость на дату вылета">
-      <h3>Стоимость на дату вылета</h3>
-      <p>{dateLabel(day.departure)} · <strong>{priceForDate && price(priceForDate.total)}</strong></p>
+      <p>{days.some(day => day.status === 'unknown') ? 'Поставщик пока не подтвердил цены на выбранные даты.' : 'На выбранные даты нет предложений.'}</p>
     </section>
   }
 
@@ -121,7 +130,7 @@ export function PriceCalendar({days, selectedOfferId, onSelect}: PriceCalendarPr
               <span className="travel-calendar__points" aria-hidden="true">
                 {day.lowest && <i className="travel-calendar__low-dot" style={{top: y(day.lowest.total) + '%'}} />}
                 {day.inBudget && <i className="travel-calendar__budget-dot" style={{top: y(day.inBudget.total) + '%'}} />}
-                {!day.lowest && <i className="travel-calendar__missing">–</i>}
+                {!day.lowest && <i className="travel-calendar__missing">{day.status === 'unknown' ? '?' : '–'}</i>}
               </span>
               <span className="travel-calendar__date" aria-hidden="true">{Number(day.departure.slice(-2))}</span>
             </button>
@@ -131,7 +140,10 @@ export function PriceCalendar({days, selectedOfferId, onSelect}: PriceCalendarPr
     </div>
     <div className="travel-calendar__details" aria-live="polite">
       {inspected
-        ? <><strong>{dateLabel(inspected.departure)}</strong><span>{quoteDescription(inspected)}</span></>
+        ? <><strong>{dateLabel(inspected.departure)}</strong><span>{quoteDescription(inspected)}</span>
+          {inspected.highest && inspected.highest.total !== inspected.lowest?.total && <span>До {price(inspected.highest.total)} среди полученных тарифов</span>}
+          {inspected.status === 'quoted' && inspected.complete === false && <span>Частичная выборка</span>}
+          {inspected.checkedAt && <time dateTime={inspected.checkedAt}>Проверено {new Date(inspected.checkedAt).toLocaleString('ru-RU')}</time>}</>
         : <span>Выберите дату вылета на графике.</span>}
     </div>
   </section>

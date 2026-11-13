@@ -1,4 +1,5 @@
 import type {SupplyOffer, SupplySource} from '../../src/supply-contract.ts'
+import {allowTezSearch} from './tez-access.ts'
 
 const oneDay = 86_400_000
 const searchEndpoint = 'https://search.tezapi.eu/tariffsearch/getResult'
@@ -84,7 +85,6 @@ interface SearchResult {offers: SupplyOffer[], source: SupplySource}
 export function createTezProvider(deps: {fetch: typeof fetch, now: () => Date}) {
     const cache = new Map<string, {expires: number, result: SearchResult}>()
     const pending = new Map<string, Promise<SearchResult>>()
-    const starts: number[] = []
     const status = {id: 'tez', name: 'TEZ TOUR Eesti'}
     function empty(description: string, state: 'handoff' | 'unavailable' = 'unavailable'): SearchResult {
         return {offers: [], source: {...status, status: state, updatedAt: null, description}}
@@ -113,9 +113,7 @@ export function createTezProvider(deps: {fetch: typeof fetch, now: () => Date}) 
         }
         const inflight = pending.get(request.url)
         if (inflight) return inflight
-        while (starts.length && starts[0] <= now.getTime() - 60000) starts.shift()
-        if (starts.length >= 45) return empty('Достигнут лимит запросов к поставщику. Повторите через минуту.')
-        starts.push(now.getTime())
+        if (!allowTezSearch(deps.fetch, now.getTime())) return empty('Достигнут лимит запросов к поставщику. Повторите через минуту.')
         const work = fetchSearch(request)
         pending.set(request.url, work)
         try {
