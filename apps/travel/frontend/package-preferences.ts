@@ -16,7 +16,8 @@ export function packageDefaults(today = new Date().toISOString().slice(0, 10)) {
 export type PackagePreferences = ReturnType<typeof packageDefaults>
 
 function whole(value: unknown, min: number, max: number): value is number {
-    return typeof value === 'number' && Number.isSafeInteger(value) && value >= min && value <= max
+    if (typeof value !== 'number' || !Number.isSafeInteger(value)) return false
+    return value >= min && value <= max
 }
 
 export function supportsPackage(value: unknown) {
@@ -27,7 +28,7 @@ export function packageHash(destination: string) {
     return supportsPackage(destination) ? '#packages/' + destination : '#packages'
 }
 
-function restore(raw: unknown) {
+export function restorePackagePreferences(raw: unknown) {
     const today = new Date().toISOString().slice(0, 10)
     const state = packageDefaults(today)
     if (!raw || typeof raw !== 'object') return state
@@ -49,7 +50,7 @@ function restore(raw: unknown) {
 
 export async function loadPackages() {
     try {
-        return restore(await localStorageCache.get(storageKey))
+        return restorePackagePreferences(await localStorageCache.get(storageKey))
     } catch {
         return packageDefaults()
     }

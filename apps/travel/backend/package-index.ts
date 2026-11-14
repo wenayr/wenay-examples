@@ -1,6 +1,7 @@
 import type {
     PackageDayPrices, PackageFare, PackageHotel, PackageMarker, PackageSearchResults, PackageSummary
 } from '../src/package-contract.ts'
+import {boundary, createRangeIndex, type IndexSlice} from './range-index.ts'
 
 type DateBudget = {
     firstDeparture: string
@@ -15,169 +16,133 @@ export interface PackageQuery extends DateBudget {
     limit: number
 }
 
+type IndexedFare = PackageFare & {hotelId: string}
 interface Observations {
     hotels: readonly PackageHotel[]
-    offers: readonly (PackageFare & {hotelId: string})[]
-}
-interface IndexedHotel {
-    details: PackageHotel
-    faresByDay: Map<string, PackageFare[]>
-    departures: string[]
+    offers: readonly IndexedFare[]
 }
 interface Match {
     hotel: PackageHotel
     best: PackageFare
     maxTotal: number
 }
-
 const markerLimit = 200
 
-/** First index where the predicate stops holding in a sorted array. */
-function boundary<T>(values: readonly T[], before: (value: T) => boolean) {
-    let left = 0
-    let right = values.length
-    while (left < right) {
-        const middle = Math.floor((left + right) / 2)
-        if (before(values[middle])) left = middle + 1
-        else right = middle
-    }
-    return left
-}
-
-function compareFares(a: PackageFare, b: PackageFare) {
+function fareOrder(a: PackageFare, b: PackageFare) {
     if (a.total != b.total) return a.total - b.total
-    if (a.id == b.id) return 0
-    return a.id < b.id ? -1 : 1
+    return a.id < b.id ? -1 : a.id > b.id ? 1 : 0
 }
-
-function firstInBudget(fares: readonly PackageFare[], budget: DateBudget) {
-    const first = boundary(fares, fare => fare.total < budget.minTotal)
-    const fare = fares[first]
-    return fare && fare.total <= budget.maxTotal ? fare : null
+function fareIndex(fares: readonly IndexedFare[]) {
+    return createRangeIndex(fares, fare => fare.departure, fare => fare.total, fareOrder)
 }
-
-function makeHotelIndex({hotels, offers}: Observations) {
-    const byId = new Map<string, IndexedHotel>()
-    for (const hotel of hotels) {
-        byId.set(hotel.id, {details: {...hotel}, faresByDay: new Map(), departures: []})
-    }
-    for (const {id, hotelId, departure, total} of offers) {
-        const hotel = byId.get(hotelId)
-        if (!hotel || !Number.isSafeInteger(total) || total < 0) continue
-        let day = hotel.faresByDay.get(departure)
-        if (!day) {
-            day = []
-            hotel.faresByDay.set(departure, day)
-            hotel.departures.push(departure)
-        }
-        day.push(Object.freeze({id, departure, total}))
-    }
-    for (const hotel of byId.values()) {
-        hotel.departures.sort()
-        for (const day of hotel.faresByDay.values()) day.sort(compareFares)
-    }
-    return byId
+function prices(index: ReturnType<typeof fareIndex>, query: DateBudget) {
+    return index(query.firstDeparture, query.lastDeparture, query.minTotal, query.maxTotal)
 }
-
-function axisIndex(hotels: Iterable<IndexedHotel>, axis: 'latitude' | 'longitude') {
-    const points: {coordinate: number, hotel: IndexedHotel}[] = []
-    for (const hotel of hotels) {
-        const {latitude, longitude} = hotel.details
-        if (latitude == null || longitude == null) continue
-        if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) continue
-        points.push({coordinate: axis == 'latitude' ? latitude : longitude, hotel})
-    }
-    return points.sort((a, b) => a.coordinate - b.coordinate)
+function count<T>(slices: readonly IndexSlice<T>[]) {
+    return slices.reduce((total, slice) => total + slice.end - slice.start, 0)
 }
-
-function axisRange(points: ReturnType<typeof axisIndex>, min: number, max: number) {
-    const start = boundary(points, point => point.coordinate < min)
-    const end = boundary(points, point => point.coordinate <= max)
-    return {points, start, end}
-}
-
-function* inBox(
-    box: NonNullable<PackageQuery['box']>, latitudes: ReturnType<typeof axisIndex>, longitudes: ReturnType<typeof axisIndex>
-) {
-    const [west, south, east, north] = box
-    const lat = axisRange(latitudes, south, north)
-    const lon = axisRange(longitudes, west, east)
-    const alongLatitude = lat.end - lat.start < lon.end - lon.start
-    const {points, start, end} = alongLatitude ? lat : lon
-    for (let cursor = start; cursor < end; cursor++) {
-        const {hotel} = points[cursor]
-        const coordinate = alongLatitude ? hotel.details.longitude! : hotel.details.latitude!
-        const inside = alongLatitude ? coordinate >= west && coordinate <= east : coordinate >= south && coordinate <= north
-        if (inside) yield hotel
+function* points<T>(slices: readonly IndexSlice<T>[]) {
+    for (const {entries, start, end} of slices) {
+        for (let i = start; i < end; i++) yield entries[i]
     }
 }
-
-function priceRange(hotel: IndexedHotel, query: DateBudget): Match | null {
-    const start = boundary(hotel.departures, date => date < query.firstDeparture)
-    let best: PackageFare | null = null
-    let maxTotal = 0
-    for (let i = start; i < hotel.departures.length; i++) {
-        const date = hotel.departures[i]
-        if (date > query.lastDeparture) break
-        const fares = hotel.faresByDay.get(date)!
-        const first = firstInBudget(fares, query)
-        if (!first) continue
-        if (!best || compareFares(first, best) < 0) best = first
-        const end = boundary(fares, fare => fare.total <= query.maxTotal)
-        maxTotal = Math.max(maxTotal, fares[end - 1].total)
-    }
-    return best ? {hotel: hotel.details, best, maxTotal} : null
+function located(hotel: PackageHotel): hotel is PackageHotel & {latitude: number, longitude: number} {
+    return Number.isFinite(hotel.latitude) && Number.isFinite(hotel.longitude)
+}
+export function matchesPackageHotel(hotel: PackageHotel, filter: Pick<PackageQuery, 'minStars' | 'box'>) {
+    if ((hotel.stars ?? 0) < filter.minStars) return false
+    if (!filter.box) return true
+    const [west, south, east, north] = filter.box
+    return located(hotel) && hotel.longitude >= west && hotel.longitude <= east && hotel.latitude >= south && hotel.latitude <= north
 }
 
+function publicFare({id, departure, total}: PackageFare): PackageFare { return {id, departure, total} }
 function summary({hotel, best, maxTotal}: Match): PackageSummary {
     const {id, name, stars, latitude, longitude, url} = hotel
-    return {hotelId: id, name, stars, latitude, longitude, url, best, minTotal: best.total, maxTotal}
+    return {hotelId: id, name, stars, latitude, longitude, url, best: publicFare(best), minTotal: best.total, maxTotal}
 }
 
 /** One immutable snapshot per supplier trip context and observed departure window. */
 export function createOfferIndex(observations: Observations) {
-    const byId = makeHotelIndex(observations)
-    const latitudes = axisIndex(byId.values(), 'latitude')
-    const longitudes = axisIndex(byId.values(), 'longitude')
+    const hotels = new Map(observations.hotels.map(hotel => [hotel.id, {...hotel}]))
+    const byHotel = new Map<string, IndexedFare[]>()
+    const offers: IndexedFare[] = []
+    for (const {id, hotelId, departure, total} of observations.offers) {
+        if (!hotels.has(hotelId) || !Number.isSafeInteger(total) || total < 0) continue
+        const fare = {id, hotelId, departure, total}
+        offers.push(fare)
+        const group = byHotel.get(hotelId)
+        if (group) group.push(fare)
+        else byHotel.set(hotelId, [fare])
+    }
+    const hotelPrices = new Map([...byHotel].map(([id, group]) => [id, fareIndex(group)]))
+    const geoPoints = [...hotels.values()].filter(located)
+    const geography = createRangeIndex(geoPoints, hotel => hotel.latitude, hotel => hotel.longitude)
+    const allPrices = fareIndex(offers)
+    const byStars = [...hotels.values()].sort((a, b) => (a.stars ?? 0) - (b.stars ?? 0))
 
     function search(query: PackageQuery): PackageSearchResults {
-        const candidates = query.box ? inBox(query.box, latitudes, longitudes) : byId.values()
-        const matches: Match[] = []
-        for (const hotel of candidates) {
-            if ((hotel.details.stars ?? 0) < query.minStars) continue
-            const match = priceRange(hotel, query)
-            if (match) matches.push(match)
+        const box = query.box
+        const area = box && geography(box[1], box[3], box[0], box[2])
+        const tariffs = prices(allPrices, query)
+        const start = boundary(byStars, hotel => (hotel.stars ?? 0) < query.minStars)
+        const stars = [{entries: byStars, start, end: byStars.length}]
+        const candidates = area && count(area) < byStars.length - start ? area : stars
+        const matches = new Map<string, Match>()
+        function record(hotel: PackageHotel, cheapest: PackageFare, highest: number) {
+            const current = matches.get(hotel.id)
+            if (!current) matches.set(hotel.id, {hotel, best: cheapest, maxTotal: highest})
+            else {
+                if (fareOrder(cheapest, current.best) < 0) current.best = cheapest
+                current.maxTotal = Math.max(current.maxTotal, highest)
+            }
         }
-        matches.sort((a, b) => a.best.total - b.best.total || a.hotel.id.localeCompare(b.hotel.id))
+        if (count(candidates) <= count(tariffs)) {
+            for (const hotel of points(candidates)) {
+                if (!matchesPackageHotel(hotel, query)) continue
+                const index = hotelPrices.get(hotel.id)
+                if (!index) continue
+                for (const {entries, start, end} of prices(index, query)) {
+                    record(hotel, entries[start], entries[end - 1].total)
+                }
+            }
+        } else {
+            for (const fare of points(tariffs)) {
+                const hotel = hotels.get(fare.hotelId)!
+                if (matchesPackageHotel(hotel, query)) record(hotel, fare, fare.total)
+            }
+        }
+        const sorted = [...matches.values()].sort((a, b) => a.best.total - b.best.total || a.hotel.id.localeCompare(b.hotel.id))
         const markers: PackageMarker[] = []
         let markersTruncated = false
-        for (const {hotel, best, maxTotal} of matches) {
-            const {id, name, latitude, longitude, stars} = hotel
-            if (latitude == null || longitude == null) continue
+        for (const {hotel, best, maxTotal} of sorted) {
+            if (!located(hotel)) continue
             if (markers.length == markerLimit) {
                 markersTruncated = true
                 break
             }
-            markers.push({hotelId: id, name, latitude, longitude, stars, minTotal: best.total, maxTotal})
+            markers.push({hotelId: hotel.id, name: hotel.name, latitude: hotel.latitude, longitude: hotel.longitude,
+                stars: hotel.stars, minTotal: best.total, maxTotal})
         }
         const end = query.offset + query.limit
-        const items = matches.slice(query.offset, end).map(summary)
-        const total = matches.length
-        return {items, total, markers, markersTruncated, nextOffset: end < total ? end : null}
+        const items = sorted.slice(query.offset, end).map(summary)
+        return {items, total: sorted.length, markers, markersTruncated, nextOffset: end < sorted.length ? end : null}
     }
 
     function calendar(query: DateBudget, hotelId: string): PackageDayPrices[] {
-        const hotel = byId.get(hotelId)
+        const index = hotelPrices.get(hotelId)
         const first = Date.parse(query.firstDeparture + 'T00:00:00Z')
         const last = Date.parse(query.lastDeparture + 'T00:00:00Z')
         const days: PackageDayPrices[] = []
         for (let day = first; day <= last; day += 86_400_000) {
             const departure = new Date(day).toISOString().slice(0, 10)
-            const fares = hotel?.faresByDay.get(departure)
-            const lowest = fares?.[0] ?? null
-            const highest = fares?.at(-1) ?? null
-            const inBudget = fares ? firstInBudget(fares, query) : null
-            days.push({departure, lowest, highest, inBudget})
+            // A single departure is one leaf, sorted by price and then fare ID.
+            const entries = index?.(departure, departure, 0, Infinity)[0]?.entries ?? []
+            const position = boundary(entries, fare => fare.total < query.minTotal)
+            const inBudget = entries[position]
+            days.push({departure, lowest: entries.length ? publicFare(entries[0]) : null,
+                inBudget: inBudget && inBudget.total <= query.maxTotal ? publicFare(inBudget) : null,
+                highest: entries.length ? publicFare(entries[entries.length - 1]) : null})
         }
         return days
     }

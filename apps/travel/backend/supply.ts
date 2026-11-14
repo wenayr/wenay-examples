@@ -8,6 +8,8 @@ import {observeCatalogFiles} from './catalog-files.ts'
 import {openCatalogStorage} from './catalog-storage.ts'
 import {createCatalogImporter} from './catalog-import.ts'
 import {createPackages} from './packages.ts'
+import {createFlights} from './flights/index.ts'
+import {createTravelAssistant} from './assistant.ts'
 
 export function createTravelSupply() {
     const photos = createPropertyPhotos({lazy: true})
@@ -47,12 +49,15 @@ export function createTravelSupply() {
         events.close()
         catalog.shutdown()
         storage.close()
-        return importer.shutdown()
+        return Promise.all([importer.shutdown(), assistant.close()])
     }
     function diagnostics() {
         const stats = storage.index.stats()
         return {...stats, writes: stats.writes + importer.writes()}
     }
-    const middleware = createSupplyMiddleware({catalog, events, partners: getPartnerOptions, packages: createPackages()})
+    const packages = createPackages()
+    const flights = createFlights({fetch, now: () => new Date(), duffelToken: process.env.DUFFEL_ACCESS_TOKEN})
+    const assistant = createTravelAssistant({catalog, packages, flights})
+    const middleware = createSupplyMiddleware({catalog, events, partners: getPartnerOptions, packages, assistant, flights})
     return {middleware, diagnostics, shutdown}
 }

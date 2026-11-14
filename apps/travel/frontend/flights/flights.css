@@ -1,0 +1,43 @@
+.flight-home {max-width:1120px;padding-block:clamp(20px,3vw,42px)}
+.flight-home>header {margin-bottom:20px}
+.flight-home>header p {display:flex;align-items:center;gap:7px;color:var(--green);font-size:13px;margin:0}
+.flight-home h1 {font:500 clamp(40px,5vw,70px)/1.05 Georgia,serif;letter-spacing:-.05em;margin:7px 0}
+.flight-home>header>span,.flight-note,.flight-query-summary,.flight-section-heading>span {color:var(--muted)}
+.flight-form,.flight-calendar,.flight-offer,.flight-handoff,.flight-empty,.flight-resume {border:1px solid var(--rule);border-radius:15px;padding:clamp(15px,2vw,25px);background:white}
+.flight-form .discover-segments {margin-top:0}
+.flight-fields {display:flex;flex-wrap:wrap;gap:10px}
+.flight-fields label {flex:1 1 120px;min-width:0;display:grid;align-content:start;gap:5px;font-size:13px;font-weight:650}
+.flight-fields select,.flight-fields input {width:100%;min-width:0;max-width:100%;height:40px;padding:7px 8px;border:1px solid #aabcb0;border-radius:7px;color:var(--ink);background:white;font:inherit}
+.flight-fields small,.flight-offer small,.flight-day small {font-size:11px;color:var(--muted);font-weight:400}
+.flight-form-actions,.flight-section-heading,.flight-resume,.flight-offer-heading,.flight-leg {display:flex;align-items:center;flex-wrap:wrap;gap:10px;justify-content:space-between}
+.flight-form-actions {margin-top:14px;font-size:13px}
+.flight-form-actions label {display:flex;align-items:center;gap:6px}
+.search-flight,.flight-handoff a {display:inline-flex;align-items:center;gap:8px;padding:10px 15px;border-radius:9px;background:var(--green);color:white;border:0;font:600 14px system-ui,sans-serif;text-decoration:none}
+.flight-results {margin-top:22px}
+.flight-results h2 {font:500 clamp(29px,3.2vw,44px)/1.1 Georgia,serif;letter-spacing:-.04em;margin:0 0 5px}
+.flight-query-summary {margin:0;font-size:14px}
+.flight-results>section {margin-top:20px}
+.flight-section-heading {align-items:baseline;margin-bottom:12px}
+.flight-results h3 {margin:0;font:500 24px/1.15 Georgia,serif}
+.flight-section-heading>span,.flight-note,.flight-handoff p {font-size:13px}
+.flight-day-grid {display:grid;grid-template-columns:repeat(auto-fit,minmax(104px,1fr));gap:8px}
+.flight-day {overflow-wrap:anywhere}
+.flight-day button {display:grid;align-content:start;gap:5px;text-align:left;border:1px solid var(--rule);border-radius:8px;padding:9px;background:#f5f7f1;width:100%;color:var(--ink)}
+.flight-day button[aria-pressed=true] {background:#e2eee4;border-color:var(--green)}
+.flight-day span,.flight-day a {font-size:12px}.flight-day a,.flight-resume a {color:var(--green)}
+.flight-day strong {font-size:19px}.flight-day a {display:inline-block;margin-top:5px}
+.flight-benchmark {font-size:12px;line-height:1.4;color:#43614e}.flight-benchmark b {color:#14563d}
+.flight-note {margin-bottom:0}.flight-offers {display:grid;grid-template-columns:repeat(auto-fit,minmax(min(290px,100%),1fr));gap:10px}
+.flight-offer-heading {align-items:start}.flight-offer-heading>div {display:grid;gap:2px}
+.flight-offer-heading>div:last-child {text-align:right}.flight-offer-heading strong {font-size:19px;color:var(--green)}
+.flight-leg {font-size:13px;padding:10px 0;border-bottom:1px solid var(--rule)}
+.flight-empty {font-size:14px}.flight-handoff {background:#e9f0e7}
+.flight-handoff div {display:flex;gap:8px;flex-wrap:wrap}
+.flight-handoff a {font-size:13px}.flight-resume {justify-content:start}.flight-resume a {margin-left:auto;font-weight:650}
+.flight-resume p {margin:4px 0;font-size:13px}
+@media(max-width:600px){.flight-fields {display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.flight-day-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.flight-form-actions{align-items:start;flex-direction:column}}
+.flight-route-quote {margin-top:15px;padding:15px 18px;border:1px solid #c2d5d3;border-left:4px solid #40726b;border-radius:9px;background:#edf4f1}
+.flight-route-quote p {margin:8px 0}
+.flight-route-quote strong {font-size:21px;color:var(--green)}
+.flight-route-quote div {display:flex;align-items:baseline;flex-wrap:wrap;gap:6px 12px;font-size:13px}
+.flight-route-quote a {color:var(--green)}.flight-route-quote time {font-size:11px;color:var(--muted)}

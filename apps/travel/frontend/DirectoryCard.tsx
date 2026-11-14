@@ -1,4 +1,4 @@
-import {useState} from 'react'
+import {useState, type ReactNode} from 'react'
 import type {SupplyHotel} from '../src/supply-contract.ts'
 import {Icon} from './Icons.tsx'
 
@@ -31,8 +31,9 @@ export function PropertyPhoto({hotel}: {hotel: SupplyHotel}) {
     return <div className="property-no-photo"><Icon name="pin" size={25}/><span>Фото объекта пока нет</span></div>
 }
 
-export function DirectoryCard({hotel, index, selected, onOpen, onLocate}: {
+export function DirectoryCard({hotel, index, selected, onOpen, onLocate, save}: {
     hotel: SupplyHotel
+    save: ReactNode
     index: number
     selected: boolean
     onOpen: (hotel: SupplyHotel) => void
@@ -50,6 +51,7 @@ export function DirectoryCard({hotel, index, selected, onOpen, onLocate}: {
                     <Icon name="map" size={15}/> {index}
                 </button>
             </div>
+            {save}
         </div>
     </article>
 }

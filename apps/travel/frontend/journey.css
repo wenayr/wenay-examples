@@ -1,0 +1,80 @@
+.site-mast .mast-inner {gap:20px;height:auto;min-height:67px}
+.site-mast .travel-pages {flex:1;margin:0;gap:clamp(12px,1.6vw,26px);white-space:nowrap}
+.site-mast .wordmark {white-space:nowrap}
+.mast-trip {display:inline-flex;align-items:center;gap:7px;text-decoration:none;color:var(--green);font-size:14px;font-weight:650}
+.mast-trip b {background:var(--green);color:white;border-radius:20px;min-width:20px;text-align:center;padding:2px 5px;font-size:11px}
+.mast-trip[aria-current=page] {text-decoration:underline;text-underline-offset:4px}
+.discover-home {max-width:1270px}
+.discover-hero {display:grid;grid-template-columns:1fr 1fr;border-radius:24px;overflow:hidden;border:1px solid #ccd9ca;background:#e8eee3;min-height:330px}
+.discover-intro {padding:clamp(23px,4vw,58px);align-self:center}
+.discover-departure,.discover-intro h1,.discover-subtitle {margin:0}
+.discover-departure {display:flex;align-items:center;gap:7px;color:#345c4d;font-size:13px}
+.discover-intro h1 {font:500 clamp(40px,4.6vw,76px)/.99 Georgia,serif;letter-spacing:-.06em;margin:15px 0}
+.discover-subtitle {font-size:clamp(14px,1.2vw,18px);line-height:1.45;color:#38554a}
+.discover-request {margin-top:26px}
+.discover-request label {display:block;font-size:12px;font-weight:650;margin-bottom:6px}
+.discover-request>div,.place-search {display:flex;align-items:center;background:#fff;border:1px solid #bfccbf;border-radius:10px}
+.discover-request>div {padding:5px;box-shadow:0 4px 10px #143b290a}
+.discover-request input,.place-search input {color:var(--ink);min-width:0;width:100%;border:0;background:none;padding:9px 6px;font-size:13px}
+.discover-request button {border:0;border-radius:7px;background:var(--green);color:white;display:grid;place-items:center;width:38px;height:38px;flex-shrink:0}
+.discover-cover {position:relative;display:block;min-height:180px;background:#547677;overflow:hidden;color:#fff}
+.discover-cover img,.place-tile-photo img {position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.discover-cover:after,.place-tile-photo:after {content:'';position:absolute;inset:0;background:linear-gradient(0deg,#102f32bf,transparent 64%)}
+.discover-cover>span {position:absolute;bottom:26px;left:28px;z-index:1;font-size:13px}
+.discover-cover b {display:flex;align-items:center;gap:12px;font:500 36px/1.25 Georgia,serif}
+.discover-jumps {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:16px 0 clamp(23px,3vw,48px)}
+.discover-jumps a,.place-tile {background:#fff;border:1px solid var(--rule);border-radius:12px;display:flex;align-items:center;gap:13px;color:var(--ink);text-decoration:none}
+.discover-jumps a {padding:17px 20px}
+.discover-jumps a>svg:first-child {color:var(--green);flex-shrink:0}
+.discover-jumps a>svg:last-child,.place-tile>svg {margin-left:auto;flex-shrink:0}
+.discover-jumps strong,.discover-jumps small,.place-tile strong,.place-tile small {display:block}
+.discover-jumps strong {font-size:15px}.discover-jumps small,.place-tile small {font-size:12px;color:var(--muted);margin-top:3px}
+.discover-head {display:flex;align-items:center;justify-content:space-between;gap:13px}
+.discover-head h2 {font:500 clamp(32px,3.3vw,48px)/1.1 Georgia,serif;letter-spacing:-.045em;margin:0}
+.place-search {padding:1px 8px}
+.discover-segments,.browse-views {display:flex;align-items:center;gap:4px;margin:11px 0 14px}
+.discover-segments button,.browse-views button {border:1px solid var(--rule);background:white;color:var(--green);padding:7px 11px;border-radius:20px;font-size:12px}
+.discover-segments button[aria-pressed=true],.browse-views button[aria-pressed=true] {color:white;background:var(--green);border-color:var(--green)}
+.place-tiles {display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.place-tile {position:relative;overflow:hidden;min-height:79px;padding:14px 17px}
+.place-tile strong {font:500 23px/1.2 Georgia,serif;letter-spacing:-.025em}
+.place-tile-photo {color:white;background:#315c55}.place-tile-photo:after {background:linear-gradient(90deg,#173d41dc,#122e2e52)}
+.place-tile-photo span,.place-tile-photo svg {position:relative;z-index:1}.place-tile-photo small {color:#fff}
+.travel-link,.browse-quick a {background:none;border:0;color:var(--green);text-decoration:underline;text-underline-offset:3px;padding:0;font:inherit;cursor:pointer}
+.browse-quick {display:flex;align-items:center;gap:14px;flex-wrap:wrap;font-size:13px;margin:10px 0}
+.browse-views {display:none}
+.travel-footer .footer-links {margin-left:auto;display:flex;gap:13px;flex-wrap:wrap}
+@media(max-width:900px) {
+ .site-mast .mast-inner {flex-wrap:wrap;gap:5px 12px;padding:10px 0 0}
+ .site-mast .travel-pages {order:3;flex-basis:100%;gap:17px;overflow-x:auto}
+ .site-mast .travel-pages a {flex-shrink:0}
+ .mast-trip {margin-left:auto}
+ .place-tiles {grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+@media(max-width:700px) {
+ .discover-hero {grid-template-columns:minmax(0,1fr);border-radius:16px;min-height:0}
+ .discover-intro {padding:22px}
+ .discover-cover {min-height:150px;max-height:180px}
+ .discover-cover>span {bottom:13px;left:20px}.discover-cover b {font-size:25px}
+ .discover-jumps {gap:6px;grid-template-columns:1fr;margin-top:9px}
+ .discover-jumps a {padding:9px 13px}.discover-jumps a span {display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 7px}
+ .discover-jumps small {margin:0}
+ .place-tiles {grid-template-columns:repeat(2,minmax(0,1fr))}
+ .place-tile {padding:10px;min-height:66px}.place-tile strong {font-size:18px}
+ .discover-head {align-items:start;flex-wrap:wrap}.place-search {max-width:100%}
+}
+@media(max-width:640px) {
+ .site-mast .travel-pages {gap:15px}
+ .site-mast .mast-inner {height:auto;min-height:0}
+ .directory-columns[data-view=list]>.directory-map-panel,.directory-columns[data-view=map]>.directory-card-column {display:none}
+ .browse-views {display:flex}.browse-views button {display:flex;align-items:center;gap:5px}
+ .travel-footer .footer-links {margin-left:0}
+}
+.package-fare-actions {display:flex;align-items:center;flex-wrap:wrap;gap:9px 16px;margin:14px 0}
+.package-fare-actions .travel-link {font-size:13px}
+.calendar-preview {width:100%;margin-top:7px;display:grid;gap:6px;padding:10px 12px;border:1px solid var(--rule);border-radius:9px;background:var(--paper);text-align:left}
+.preview-heading {display:flex;justify-content:space-between;align-items:baseline;gap:6px;flex-wrap:wrap;color:var(--ink);font-size:13px}
+.preview-heading>span {color:var(--green);font-weight:650}.calendar-preview small {font-size:11px;color:var(--muted)}
+.preview-series {display:flex;align-items:end;gap:3px;height:24px;padding-bottom:1px;border-bottom:1px solid var(--rule)}
+.preview-series i {flex:1;min-width:0}.preview-budget,.preview-outside {height:var(--point-height);border-radius:2px 2px 0 0}
+.preview-budget {background:var(--green)}.preview-outside {background:#b7ad90}.preview-gap {font:11px system-ui,sans-serif;text-align:center;color:#53675c}

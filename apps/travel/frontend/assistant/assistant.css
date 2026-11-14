@@ -1,0 +1,72 @@
+.assistant-home {max-width:1090px;padding-block:clamp(22px,4vw,50px) 46px}
+.assistant-heading {max-width:750px;margin-bottom:24px}
+.assistant-heading h1 {margin:0;font:500 clamp(35px,4.5vw,62px)/1.05 Georgia,serif;letter-spacing:-.05em}
+.assistant-heading p,.assistant-intro p,.assistant-itinerary>p,.assistant-options>p {color:var(--muted);line-height:1.55}
+.assistant-heading p {max-width:65ch;margin:10px 0 0}
+.assistant-layout {display:grid;grid-template-columns:minmax(0,1.65fr) minmax(235px,.8fr);align-items:start;gap:clamp(12px,2vw,25px)}
+.assistant-dialogue,.assistant-itinerary {min-width:0;background:var(--paper);border:1px solid var(--rule);border-radius:17px}
+.assistant-dialogue {padding:clamp(16px,2.2vw,30px)}
+.assistant-itinerary {padding:clamp(15px,2vw,23px);position:sticky;top:18px}
+.assistant-itinerary h2,.assistant-intro h2 {margin:0;font:500 26px/1.15 Georgia,serif;letter-spacing:-.035em}
+.assistant-intro h2 {font-size:clamp(25px,2.8vw,34px)}
+.assistant-itinerary>p,.assistant-intro p,.assistant-options>p {margin:8px 0;font-size:14px}
+.assistant-itinerary figure {margin:18px 0 0}
+.assistant-itinerary img {display:block;aspect-ratio:3/1.8;width:100%;height:auto;object-fit:cover;border-radius:9px}
+.assistant-itinerary figcaption {display:flex;justify-content:space-between;margin-top:6px;color:var(--muted);font-size:12px}
+.assistant-itinerary a,.assistant-toolbar button,.assistant-refresh,.assistant-edit {color:var(--green)}
+.assistant-itinerary dl {margin:14px 0}
+.assistant-itinerary dl div {display:flex;gap:12px;align-items:baseline;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--rule)}
+.assistant-itinerary dt {font-size:13px;color:var(--muted)}
+.assistant-itinerary dd {font-size:13px;font-weight:600;text-align:right;margin:0;overflow-wrap:anywhere}
+.assistant-symbol {display:grid;place-items:center;background:#e6f0e5;color:var(--green);border-radius:50%;width:47px;height:47px;margin-bottom:14px}
+.assistant-prompts,.assistant-send-row,.assistant-toolbar,.assistant-edit,.assistant-primary,.assistant-flight {display:flex;align-items:center}
+.assistant-prompts {gap:7px;flex-wrap:wrap;margin:17px 0 0}
+.assistant-prompts button {display:inline-flex;align-items:center;gap:5px;background:#f3f6ee;border:1px solid #cbd9cb;border-radius:9px;color:#244f47;padding:8px 10px;font-size:13px}
+.assistant-dialogue button:hover:not(:disabled),.assistant-edit:hover {filter:brightness(.94)}
+.assistant-dialogue button:disabled,.assistant-edit:disabled {cursor:default;opacity:.58}
+.assistant-toolbar {justify-content:space-between;gap:10px;border-bottom:1px solid var(--rule);padding-bottom:10px;margin-bottom:12px}
+.assistant-toolbar span {font-weight:650}
+.assistant-toolbar button,.assistant-refresh,.assistant-edit {padding:5px 0;font-size:13px;background:transparent;border:0;text-decoration:underline;text-underline-offset:3px}
+.assistant-edit,.assistant-refresh {display:inline-flex;align-items:center;gap:7px}
+.assistant-refresh {margin-top:9px}
+.assistant-history {max-height:min(56vh,540px);overflow-y:auto;overscroll-behavior-y:contain;scrollbar-gutter:stable;padding:4px 8px 2px 0}
+.assistant-turn {display:grid;gap:12px}
+.assistant-turn+.assistant-turn {margin-top:16px}
+.assistant-question,.assistant-answer {max-width:95%;min-width:0;border-radius:12px;padding:11px 14px;font-size:14px;line-height:1.5}
+.assistant-question {justify-self:end;background:#eaf2e7}
+.assistant-answer {justify-self:start;background:#f4f5f0}
+.assistant-question>span,.assistant-answer>span {display:flex;align-items:center;gap:5px;color:#465f52;font-size:11px;font-weight:700}
+.assistant-answer time {margin-left:4px;font-weight:400}
+.assistant-question>p,.assistant-answer>p {margin:4px 0 0;white-space:pre-wrap;overflow-wrap:anywhere}
+.assistant-compose {border-top:1px solid var(--rule);margin-top:20px;padding-top:18px}
+.assistant-compose label {display:block;margin-bottom:7px;font-size:14px;font-weight:650}
+.assistant-compose textarea {display:block;width:100%;resize:vertical;min-height:76px;padding:11px 12px;border-radius:9px;border:1px solid #a9c0b2;color:var(--ink);font:inherit;font-size:15px;background:white}
+.assistant-compose textarea:focus-visible {outline:3px solid #ba7137;outline-offset:2px}
+.assistant-send-row {justify-content:space-between;gap:8px;margin-top:10px}
+.assistant-send-row>span {color:var(--muted);font-size:13px}
+.assistant-primary {justify-content:center;gap:8px;border:0;background:var(--green);color:white;font-size:14px;font-weight:650;border-radius:9px;padding:10px 14px}
+.assistant-error {margin:12px 0 0;color:#883a25;line-height:1.5}
+.assistant-options {margin-top:15px;padding:17px;border:1px solid var(--rule);border-radius:11px}
+.assistant-options h3 {margin:0;font:500 22px/1.2 Georgia,serif}
+.assistant-option-list {list-style:none;margin:10px 0 13px;padding:0}
+.assistant-option-list li {border-top:1px solid var(--rule)}
+.assistant-option-list button {display:flex;justify-content:space-between;align-items:center;gap:10px;text-align:left;width:100%;border:0;background:white;color:var(--ink);padding:11px 0}
+.assistant-option-list button:hover {color:var(--green)}
+.assistant-option-list button>span {min-width:0;overflow-wrap:anywhere}
+.assistant-option-list small {display:block;color:var(--muted);margin-top:2px;font-size:11px;font-weight:400}
+.assistant-option-list .assistant-amount {font-weight:700;text-align:right;flex-shrink:0;color:var(--green);font-variant-numeric:tabular-nums}
+.assistant-options>.assistant-primary {margin-top:9px}
+.assistant-options .directory-sources {margin-bottom:0}
+.assistant-flight {gap:17px;margin-top:12px;color:var(--green);font-weight:700;font-size:23px}
+@media(max-width:700px) {
+    .assistant-layout {grid-template-columns:minmax(0,1fr)}
+    .assistant-itinerary {position:static}
+    .assistant-itinerary figure {display:none}
+    .assistant-home {padding-top:22px}
+    .assistant-heading {margin-bottom:15px}
+    .assistant-history {max-height:44dvh}
+    .assistant-option-list button,.assistant-prompts button,.assistant-primary,.assistant-edit {min-height:40px}
+}
+.assistant-airports {min-width:0;margin-inline:0}
+.assistant-airports legend {padding-inline:4px;font:500 22px/1.2 Georgia,serif}
+.assistant-airports>.assistant-primary {margin-top:12px}

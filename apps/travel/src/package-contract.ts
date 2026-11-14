@@ -62,3 +62,18 @@ export interface PackageCalendar {
     source: SupplySource
     days: PackageDay[]
 }
+
+export const packageComparisonLimit = 3
+
+export interface PackageComparisonItem {
+    hotelId: string
+    hotel: PackageHotel | null
+    day: PackageDay
+    source: SupplySource
+    status: 'in-budget' | 'outside-budget' | 'empty' | 'unknown' | 'filtered'
+}
+
+export interface PackageComparison {
+    departure: string
+    items: PackageComparisonItem[]
+}

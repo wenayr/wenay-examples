@@ -1,4 +1,4 @@
-import {useEffect, useRef, useState} from 'react'
+import {useEffect, useEffectEvent, useRef, useState} from 'react'
 import * as L from 'leaflet'
 import type {GeoJsonObject} from 'geojson'
 import {destinations} from '../demo/catalog.ts'
@@ -77,6 +77,11 @@ export function DirectoryMap({destination, hotels, selectedId, onSelect, onSearc
     const [tileError, setTileError] = useState(false)
     const [limited, setLimited] = useState(false)
     const fitted = useRef(false)
+    const fitVisibleHotels = useEffectEvent((map: L.Map) => {
+        if (fitted.current || !hotels.length || !map.getSize().x) return
+        fitHotelPoints(map, destination, hotels)
+        fitted.current = true
+    })
     useEffect(() => { select.current = onSelect }, [onSelect])
 
     useEffect(() => {
@@ -89,7 +94,10 @@ export function DirectoryMap({destination, hotels, selectedId, onSelect, onSearc
         map.attributionControl.addAttribution('<a href="https://www.naturalearthdata.com/">Natural Earth</a>')
         L.control.zoom({position: 'bottomleft', zoomInTitle: 'Увеличить', zoomOutTitle: 'Уменьшить'}).addTo(map)
         L.control.scale({imperial: false, position: 'bottomright'}).addTo(map)
-        const observer = new ResizeObserver(() => map.invalidateSize({pan: false}))
+        const observer = new ResizeObserver(() => {
+            map.invalidateSize({pan: false})
+            fitVisibleHotels(map)
+        })
         observer.observe(host.current)
         return () => {
             observer.disconnect()
@@ -131,10 +139,7 @@ export function DirectoryMap({destination, hotels, selectedId, onSelect, onSearc
     useEffect(() => {
         const map = mapRef.current
         if (!map) return
-        if (!fitted.current && hotels.length) {
-            fitHotelPoints(map, {latitude, longitude}, hotels)
-            fitted.current = true
-        }
+        fitVisibleHotels(map)
         const group = L.layerGroup().addTo(map)
         const index = markers.current
         hotels.forEach((hotel, n) => {

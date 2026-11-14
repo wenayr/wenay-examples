@@ -79,13 +79,18 @@ export function PriceCalendar<T extends CalendarFare>({days, selectedOfferId, on
     return <section className="travel-calendar" aria-label="Стоимость на дату вылета">
       <h3>Стоимость на дату вылета</h3>
       <p>{dateLabel(day.departure)} · <strong>{quoteDescription(day)}</strong></p>
+      {day.inBudget && selectedOfferId !== day.inBudget.id && <button className="travel-link" type="button"
+        onClick={() => { if (day.inBudget) onSelect(day.inBudget) }}>Выбрать этот тариф</button>}
       {day.checkedAt && <time dateTime={day.checkedAt}>Проверено {new Date(day.checkedAt).toLocaleString('ru-RU')}</time>}
     </section>
   }
   if (!days.some(day => day.lowest)) {
+    const unknown = days.filter(day => day.status === 'unknown').length
+    const checked = days.length - unknown
     return <section className="travel-calendar" aria-label="Стоимость по датам вылета">
       <h3>Стоимость по датам вылета</h3>
-      <p>{days.some(day => day.status === 'unknown') ? 'Поставщик пока не подтвердил цены на выбранные даты.' : 'На выбранные даты нет предложений.'}</p>
+      {checked > 0 && <p>Дат без предложений после проверки · {checked}.</p>}
+      {unknown > 0 && <p>Дат без подтверждённого ответа · {unknown}.</p>}
     </section>
   }
 
@@ -141,7 +146,8 @@ export function PriceCalendar<T extends CalendarFare>({days, selectedOfferId, on
     <div className="travel-calendar__details" aria-live="polite">
       {inspected
         ? <><strong>{dateLabel(inspected.departure)}</strong><span>{quoteDescription(inspected)}</span>
-          {inspected.highest && inspected.highest.total !== inspected.lowest?.total && <span>До {price(inspected.highest.total)} среди полученных тарифов</span>}
+          {inspected.highest && inspected.highest.total !== inspected.lowest?.total && <span>
+            До {price(inspected.highest.total)} среди полученных тарифов</span>}
           {inspected.status === 'quoted' && inspected.complete === false && <span>Частичная выборка</span>}
           {inspected.checkedAt && <time dateTime={inspected.checkedAt}>Проверено {new Date(inspected.checkedAt).toLocaleString('ru-RU')}</time>}</>
         : <span>Выберите дату вылета на графике.</span>}

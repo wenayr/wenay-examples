@@ -1,4 +1,4 @@
-import {useEffect, useRef} from 'react'
+import {useEffect, useRef, type ReactNode} from 'react'
 import type {SupplyDestination, SupplyHotel, SupplyOptions} from '../src/supply-contract.ts'
 import type {DirectoryPreferences} from './directory-preferences.ts'
 import {directoryUrl, useDirectoryQuery} from './directory-query.ts'
@@ -6,7 +6,8 @@ import {HotelOptions} from './DirectoryOffers.tsx'
 import {PropertyPhoto, safeHref} from './DirectoryCard.tsx'
 import {Icon} from './Icons.tsx'
 
-export function DirectoryDetail({hotel, destination, prefs, onClose}: {
+export function DirectoryDetail({hotel, destination, prefs, onClose, save}: {
+    save: ReactNode
     hotel: SupplyHotel
     destination: SupplyDestination
     prefs: DirectoryPreferences
@@ -34,6 +35,7 @@ export function DirectoryDetail({hotel, destination, prefs, onClose}: {
                 <a href={safeHref(hotel.sourceUrl)} target="_blank" rel="noopener noreferrer">{hotel.sourceName}</a>
                 {hotel.website && <a href={safeHref(hotel.website)} target="_blank" rel="noopener noreferrer">Сайт объекта ↗</a>}
             </div>
+            {save}
             <h3>Даты и цены</h3>
             <p className="directory-period">{fmt.format(new Date(prefs.checkIn + 'T00:00:00Z'))} — {fmt.format(new Date(prefs.checkOut + 'T00:00:00Z'))}
                 {' · Взрослых: '}{prefs.adults}</p>

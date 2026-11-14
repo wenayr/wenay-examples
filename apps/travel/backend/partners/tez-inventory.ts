@@ -26,6 +26,7 @@ export interface TezQuote {
 }
 export interface TezObservation {
     quotes: readonly TezQuote[]
+    byFareId: ReadonlyMap<string, TezQuote>
     source: SupplySource
     generation: string
     complete: boolean
@@ -122,12 +123,12 @@ function decode(payload: unknown, request: Request, checkedAt: string): TezObser
     const more = observed.some(item => Array.isArray(item) && item[0] == 'More results' && String(item[1]) == 'true')
     const emptyDay = !payload.data.length && !more
     const complete = Boolean(request.hotelId) && (emptyDay || lastPage && offers.size == payload.data.length)
-    return {quotes, generation: hash([request.url, quotes, complete]), complete, source: {...source, status: 'live', updatedAt: checkedAt, description}}
+    return {quotes, byFareId: offers, generation: hash([request.url, quotes, complete]), complete, source: {...source, status: 'live', updatedAt: checkedAt, description}}
 }
 
 function missing(message: string, handoff = false): TezObservation {
     const status = handoff ? 'handoff' : 'unavailable'
-    return {quotes: [], generation: 'none', complete: false, source: {...source, status, updatedAt: null, description: message}}
+    return {quotes: [], byFareId: new Map(), generation: 'none', complete: false, source: {...source, status, updatedAt: null, description: message}}
 }
 
 export function createTezInventory(deps: {fetch: typeof fetch, now: () => Date}) {
@@ -142,13 +143,13 @@ export function createTezInventory(deps: {fetch: typeof fetch, now: () => Date})
         if (!result.source.updatedAt) return result
         return {...result, source: {...result.source, status: 'cached', description: message}}
     }
-    async function read(input: TezWindow, hotelId?: string, date?: string): Promise<TezObservation> {
+    async function read(input: TezWindow, hotelId?: string, date?: string, forceFresh = false): Promise<TezObservation> {
         const now = deps.now()
         const request = buildRequest(input, now.toISOString().slice(0, 10), hotelId, date)
         if (!request) return missing('Публичный поиск TEZ не настроен для этого маршрута, состава или периода.', true)
         const search = request
         const prior = cache.get(request.url)
-        if (prior && prior.until > now.getTime()) return cached(prior.result)
+        if (!forceFresh && prior && prior.until > now.getTime()) return cached(prior.result)
         const waiting = inflight.get(request.url)
         if (waiting) return waiting
         function failed(message: string) {
@@ -172,5 +173,5 @@ export function createTezInventory(deps: {fetch: typeof fetch, now: () => Date})
         inflight.set(request.url, work)
         return work
     }
-    return {window: (input: TezWindow) => read(input), day: (input: TezWindow, hotelId: string, date: string) => read(input, hotelId, date)}
+    return {window: (input: TezWindow) => read(input), day: (input: TezWindow, hotelId: string, date: string, forceFresh = false) => read(input, hotelId, date, forceFresh)}
 }

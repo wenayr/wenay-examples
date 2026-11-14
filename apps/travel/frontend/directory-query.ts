@@ -12,7 +12,15 @@ export function useDirectoryQuery<T>(url: string | null, refresh = 0) {
         async function load() {
             try {
                 const response = await fetch(current, {signal: controller.signal})
-                if (!response.ok) throw new Error('HTTP ' + response.status)
+                if (!response.ok) {
+                    const body: unknown = await response.json().catch(() => null)
+                    const message = body && typeof body === 'object' && 'error' in body ? body.error : ''
+                    if (typeof message === 'string' && message) {
+                        if (!controller.signal.aborted) setResult({key: current, error: message})
+                        return
+                    }
+                    throw new Error('HTTP ' + response.status)
+                }
                 const data: T = await response.json()
                 if (!controller.signal.aborted) setResult({key: current, data})
             } catch {
@@ -71,7 +79,10 @@ export function useDirectoryEvents(destination: string, revision: string | undef
     }, [destination, ready])
 }
 
-export function directoryUrl(path: 'destinations' | 'catalog' | 'hotel' | 'options' | 'events' | 'packages' | 'package-calendar', query: Record<string, string | number | undefined> = {}) {
+type DirectoryEndpoint = 'destinations' | 'catalog' | 'hotel' | 'options' | 'events' | 'packages'
+    | 'package-calendar' | 'package-compare' | 'package-recheck' | 'flights' | 'airports'
+
+export function directoryUrl(path: DirectoryEndpoint, query: Record<string, string | number | undefined> = {}) {
     const params = new URLSearchParams()
     for (const [key, value] of Object.entries(query)) {
         if (value != null && value !== '') params.set(key, String(value))
