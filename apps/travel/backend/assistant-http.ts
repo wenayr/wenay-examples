@@ -10,7 +10,7 @@ function failure(response: ServerResponse, mcp: boolean, status: number, message
     response.end(JSON.stringify(body))
 }
 
-function allowedOrigin(request: IncomingMessage) {
+export function allowedOrigin(request: IncomingMessage) {
     if (!request.headers.origin) return true
     try {
         const origin = new URL(request.headers.origin)
@@ -18,13 +18,13 @@ function allowedOrigin(request: IncomingMessage) {
     } catch { return false }
 }
 
-async function readJson(request: IncomingMessage) {
-    if (Number(request.headers['content-length']) > maxBody) throw new RangeError()
+export async function readJson(request: IncomingMessage, limit = maxBody) {
+    if (Number(request.headers['content-length']) > limit) throw new RangeError()
     const chunks: Buffer[] = []
     let size = 0
     for await (const chunk of request.iterator({destroyOnReturn: false})) {
         size += chunk.length
-        if (size > maxBody) throw new RangeError()
+        if (size > limit) throw new RangeError()
         chunks.push(chunk)
     }
     return JSON.parse(Buffer.concat(chunks).toString('utf8')) as unknown

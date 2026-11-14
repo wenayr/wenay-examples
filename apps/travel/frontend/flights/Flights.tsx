@@ -1,4 +1,4 @@
-import {useEffect, useState, type FormEvent} from 'react'
+import {useEffect, useRef, useState, type FormEvent} from 'react'
 import type {FlightBenchmark, FlightDay, FlightOffer, FlightQuery, FlightSearch, FlightSlice} from '../../src/flight-contract.ts'
 import type {SupplySource} from '../../src/supply-contract.ts'
 import {SourceLine} from '../DirectoryOffers.tsx'
@@ -12,6 +12,7 @@ import {AirportPicker} from './AirportPicker.tsx'
 import {ExactFlightDetails, PublishedPrices, SavedFlightPrices} from './FlightPrices.tsx'
 import {flightQueryKey} from './comparison.ts'
 import {AirlineSites} from './FlightSources.tsx'
+import {providerQueryLink} from '../provider-client.ts'
 import {defaultFlight, flightError, flightForRoute, flightLink, flightParams, loadFlight, saveFlight} from './preferences.ts'
 import './flights.css'
 
@@ -100,6 +101,7 @@ function FlightResults({query, onDate, refresh}: {query: FlightQuery, onDate: (d
     const quotes = data.routeQuotes ?? (data.routeQuote ? [data.routeQuote] : [])
     const calendars = data.calendars ?? [{providerId: 'airbaltic', providerName: 'airBaltic', rows: data.calendar, source: reference}]
     return <section className="flight-results" aria-label="Результаты поиска">
+        {search.loading && <p className="flight-note" role="status">Обновляем цены, показаны последние данные этого маршрута…</p>}
         <h2>{query.origin} → {query.destination}</h2>
         <p className="flight-query-summary">{dateLabel(query.departure)}{query.returnDate ? ' — ' + dateLabel(query.returnDate) : ' · в одну сторону'}
             {' · взрослых ' + query.adults}{query.checkedBag && ' · с багажом'}</p>
@@ -128,6 +130,8 @@ function FlightForm({initial, auto}: {initial: FlightQuery, auto: boolean}) {
     const [query, setQuery] = useState<FlightQuery | null>(auto && !flightError(initial) ? initial : null)
     const [refresh, setRefresh] = useState(0)
     const [error, setError] = useState('')
+    const submitted = useRef(auto && !flightError(initial) ? JSON.stringify(initial) : '')
+    const draftKey = JSON.stringify(draft)
     const today = new Date().toISOString().slice(0, 10)
     useEffect(() => { if (query) void saveFlight(query) }, [query])
     function update(fields: Partial<FlightQuery>) {
@@ -138,11 +142,34 @@ function FlightForm({initial, auto}: {initial: FlightQuery, auto: boolean}) {
         const reason = flightError(next)
         setError(reason)
         if (reason) return
+        submitted.current = JSON.stringify(next)
         setDraft(next)
         setQuery(next)
         setRefresh(n => n + 1)
         window.history.replaceState(null, '', flightLink(next))
     }
+    useEffect(() => {
+        if (flightError(draft) || draftKey == submitted.current) return
+        const timer = setTimeout(() => {
+            if (draftKey != submitted.current) submit(draft)
+        }, 500)
+        return () => clearTimeout(timer)
+    }, [draftKey])
+    useEffect(() => {
+        if (!query) return
+        let checked = Date.now()
+        function refreshPrices() {
+            if (document.hidden || Date.now() - checked < 60_000) return
+            checked = Date.now()
+            setRefresh(value => value + 1)
+        }
+        const timer = setInterval(refreshPrices, 60_000)
+        document.addEventListener('visibilitychange', refreshPrices)
+        return () => {
+            clearInterval(timer)
+            document.removeEventListener('visibilitychange', refreshPrices)
+        }
+    }, [JSON.stringify(query)])
     function search(event: FormEvent<HTMLFormElement>) {
         event.preventDefault()
         submit(draft)
@@ -179,7 +206,8 @@ function FlightForm({initial, auto}: {initial: FlightQuery, auto: boolean}) {
         {error && <p role="alert">{error}</p>}
     </form>
     {query && <><div className="browse-quick">
-        <a href={travelHash('assistant', undefined, {...flightParams(query), kind: 'flights'})}>Уточнить маршрут в помощнике</a></div>
+        <a href={travelHash('assistant', undefined, {...flightParams(query), kind: 'flights'})}>Уточнить маршрут в помощнике</a>
+        <a href={providerQueryLink({...query, kind: 'flights', currency: 'EUR'})}>Сравнить все источники</a></div>
         <FlightResults query={query} refresh={refresh} onDate={departure => submit({...query, departure})}/></>}
     </>
 }
@@ -208,6 +236,6 @@ export function Flights({route}: {route: TravelRoute}) {
     const base = useSavedFlight(defaultFlight)
     return <main className="travel-home flight-home"><header><p><Icon name="plane" size={16}/> Самостоятельная поездка</p>
         <h1>Авиабилеты</h1><span>Сравните авиакомпании, цены и условия на свой маршрут.</span></header>
-        {base && <FlightForm initial={flightForRoute(base, route.query)} auto={route.query.has('departure')}/>}
+        {base && <FlightForm initial={flightForRoute(base, route.query)} auto/>}
     </main>
 }

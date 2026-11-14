@@ -5,6 +5,9 @@ import {SourceLine, sourceStatus} from '../DirectoryOffers.tsx'
 import {hotelCount} from '../presentation.ts'
 import {validDate} from '../directory-preferences.ts'
 import {safeHref} from '../DirectoryCard.tsx'
+import {providerQueryLink} from '../provider-client.ts'
+import type {ProviderSearch} from '../../src/provider-contract.ts'
+import {priceBasisNames, priceTypeNames, providerMoney, providerTime} from '../ProviderResults.tsx'
 
 export type AssistantSearch =
     | {kind: 'packages' | 'catalog', query: Partial<TravelChatQuery>, hotelId?: string, hotelName?: string, fareId?: string}
@@ -31,6 +34,19 @@ function FlightSummary({search}: {search?: FlightSearch}) {
     </>
 }
 
+function ProviderSummary({search}: {search: ProviderSearch}) {
+    return <>
+        {!!search.offers.length && <ul className="assistant-option-list">{search.offers.slice(0, 3).map(offer => <li key={offer.providerId + offer.id}>
+            <a href={safeHref(offer.bookingUrl || offer.sourceUrl)} target="_blank" rel="noopener noreferrer">
+                <span><strong>{offer.title}</strong><small>{offer.providerId} · {priceBasisNames[offer.price.basis]}</small>
+                    <small>{priceTypeNames[offer.price.type ?? 'unknown']} · проверено {providerTime(offer.checkedAt)}</small></span>
+                <span className="assistant-amount">{offer.accuracy != 'live-offer' && 'От '}
+                    {providerMoney(offer.price.amount, offer.price.currency)}</span>
+            </a></li>)}</ul>}
+        <p>Источников в поиске · {search.results.length}. Условия каждого предложения доступны в полном сравнении.</p>
+    </>
+}
+
 export function Options({result, query, onApply}: {
     result: TravelChatResult, query: Partial<TravelChatQuery>, onApply: (action: AssistantSearch) => void
 }) {
@@ -39,9 +55,10 @@ export function Options({result, query, onApply}: {
         <div className="assistant-flight"><span>{result.query.origin}</span><Icon name="plane"/><span>{result.query.destination}</span></div>
         <p>{dateText(result.query.departure)}{result.query.returnDate && <> — {dateText(result.query.returnDate)}</>} · взрослых: {result.query.adults}
             {result.query.checkedBag && ' · с багажом'}</p>
-        <FlightSummary search={result.search}/>
-        <button className="assistant-primary" type="button" onClick={() => onApply({kind: 'flights', query: result.query})}>
-            Сравнить авиакомпании и цены <Icon name="arrow" size={16}/></button>
+        {result.providerSearch ? <ProviderSummary search={result.providerSearch}/> : <FlightSummary search={result.search}/>}
+        <a className="assistant-primary" href={providerQueryLink(result.providerSearch?.query ?? {...result.query, kind: 'flights', currency: 'EUR'})}>
+            Сравнить все источники <Icon name="arrow" size={16}/></a>
+        <button type="button" className="travel-link" onClick={() => onApply({kind: 'flights', query: result.query})}>Календарь соседних дат</button>
     </section>
     return <section className="assistant-options">
         <h3>{result.kind === 'packages' ? 'Пакетные туры' : 'Отели на карте'}</h3>

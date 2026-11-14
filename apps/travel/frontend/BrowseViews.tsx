@@ -3,8 +3,8 @@ import {Icon} from './Icons.tsx'
 
 const views = {list: 'Список', map: 'Карта'} as const
 type View = keyof typeof views
-export function useBrowseViews() {
-    const [view, setView] = useState<View>('list')
+export function useBrowseViews(initial: View = 'list') {
+    const [view, setView] = useState<View>(initial)
     return {view, setView}
 }
 

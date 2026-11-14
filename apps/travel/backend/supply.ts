@@ -10,6 +10,7 @@ import {createCatalogImporter} from './catalog-import.ts'
 import {createPackages} from './packages.ts'
 import {createFlights} from './flights/index.ts'
 import {createTravelAssistant} from './assistant.ts'
+import {createProviderRegistry} from './providers/index.ts'
 
 export function createTravelSupply() {
     const photos = createPropertyPhotos({lazy: true})
@@ -57,7 +58,8 @@ export function createTravelSupply() {
     }
     const packages = createPackages()
     const flights = createFlights({fetch, now: () => new Date(), duffelToken: process.env.DUFFEL_ACCESS_TOKEN})
-    const assistant = createTravelAssistant({catalog, packages, flights})
-    const middleware = createSupplyMiddleware({catalog, events, partners: getPartnerOptions, packages, assistant, flights})
+    const providers = createProviderRegistry({fetch, now: () => new Date(), env: process.env})
+    const assistant = createTravelAssistant({catalog, packages, flights, providers})
+    const middleware = createSupplyMiddleware({catalog, events, partners: getPartnerOptions, packages, assistant, flights, providers})
     return {middleware, diagnostics, shutdown}
 }

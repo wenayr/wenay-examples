@@ -1,4 +1,4 @@
-import {useEffect, useState} from 'react'
+import {useEffect, useRef, useState} from 'react'
 import type {FlightQuery} from '../src/flight-contract.ts'
 import type {TravelChatQuery} from '../src/assistant-contract.ts'
 import type {createTravelSearch} from './state.ts'
@@ -14,19 +14,45 @@ import {Flights, FlightResume} from './flights/Flights.tsx'
 import {flightLink} from './flights/preferences.ts'
 import {travelHash, travelPages, travelRoute, type TravelRoute} from './navigation.ts'
 import {shiftDate, validDate} from './directory-preferences.ts'
+import {ProviderMarketplace} from './ProviderMarketplace.tsx'
+import {ProviderDashboard} from './ProviderDashboard.tsx'
+import {AgencyGuides} from './AgencyGuides.tsx'
+import {SavedSupply} from './SavedSupply.tsx'
 import './directory.css'
 import './journey.css'
 
-const mainPages = ['discover','catalog','packages','flights','assistant'] as const satisfies (keyof typeof travelPages)[]
+const mainPages = ['catalog', 'packages', 'flights', 'deals'] as const satisfies (keyof typeof travelPages)[]
+const morePages = ['discover', 'prices', 'assistant'] as const satisfies (keyof typeof travelPages)[]
+const agencyPages = ['providers', 'guides'] as const satisfies (keyof typeof travelPages)[]
 
 function TopBar({page}: {page: TravelRoute['page']}) {
     const count = useTripCount()
+    const more = useRef<HTMLDetailsElement>(null)
+    function closeMore() {
+        if (more.current) more.current.open = false
+    }
+    useEffect(closeMore, [page])
     return <header className="site-mast"><div className="mast-inner">
         <a className="wordmark" href="#discover" aria-label="Wenay Travel, главная">
             <span className="brand-icon"><Icon name="compass" size={23}/></span>Wenay <em>Travel</em>
         </a>
         <nav aria-label="Разделы Wenay Travel" className="travel-pages">
-            {mainPages.map(key => <a key={key} href={travelHash(key)} aria-current={page === key ? 'page' : undefined}>{travelPages[key]}</a>)}
+            {mainPages.map(key => <a key={key} href={travelHash(key)} aria-current={page === key ? 'page' : undefined}>
+                {key == 'deals' ? 'Горящие' : travelPages[key]}</a>)}
+            <details className="travel-more" ref={more} onBlur={event => {
+                if (!event.currentTarget.contains(event.relatedTarget)) event.currentTarget.open = false
+            }} onKeyDown={event => {
+                if (event.key != 'Escape') return
+                event.currentTarget.open = false
+                event.currentTarget.querySelector('summary')?.focus()
+            }}>
+                <summary data-current={[...morePages, ...agencyPages].some(key => key == page) || undefined}>Ещё</summary>
+                <div className="travel-more-links">{morePages.map(key =>
+                    <a key={key} href={travelHash(key)} onClick={closeMore} aria-current={page == key ? 'page' : undefined}>{travelPages[key]}</a>)}
+                    <span>Для агентства</span>{agencyPages.map(key =>
+                        <a key={key} href={travelHash(key)} onClick={closeMore} aria-current={page == key ? 'page' : undefined}>{travelPages[key]}</a>)}
+                </div>
+            </details>
         </nav>
         <a className="mast-trip" href="#trip" aria-current={page === 'trip' ? 'page' : undefined}><Icon name="suitcase" size={18}/>
             Моя поездка{count > 0 && <b>{count}</b>}</a>
@@ -36,6 +62,7 @@ function TopBar({page}: {page: TravelRoute['page']}) {
 function Footer() {
     return <footer className="travel-footer"><strong>Wenay Travel</strong><span>Таллин, Эстония · EUR</span>
         <div className="footer-links"><a href="#demo">Демо туров</a>
+            <a href="#providers">Источники и подключение</a><a href="#guides">Гиды агентства</a>
             <a href={import.meta.env.BASE_URL + 'hotel-photos/credits.html'}>Фотографии отелей</a>
             <a href={import.meta.env.BASE_URL + 'images/credits.html'}>Фотографии направлений</a></div></footer>
 }
@@ -95,27 +122,106 @@ function resume(item: TripItem) {
 
 export function App({store}: {store: ReturnType<typeof createTravelSearch>}) {
     const [location, setLocation] = useState(() => ({hash: window.location.hash, visit: 0}))
+    const content = useRef<HTMLDivElement>(null)
     useEffect(() => {
+        const previousRestoration = window.history.scrollRestoration
+        window.history.scrollRestoration = 'manual'
+        let restoring = false
+        let observer: ResizeObserver | undefined
+        let restoreTimer: ReturnType<typeof setTimeout> | undefined
+        let saveTimer: ReturnType<typeof setTimeout> | undefined
+        let frame = 0
+        function remember() {
+            if (restoring) return
+            const state = window.history.state
+            window.history.replaceState({...state, travelScroll: {x: window.scrollX, y: window.scrollY}}, '')
+        }
+        function stopRestore() {
+            observer?.disconnect()
+            clearTimeout(restoreTimer)
+            cancelAnimationFrame(frame)
+            restoring = false
+        }
+        function restore() {
+            stopRestore()
+            const stored = window.history.state?.travelScroll
+            const x = Number.isFinite(stored?.x) ? Math.max(0, stored.x) : 0
+            const y = Number.isFinite(stored?.y) ? Math.max(0, stored.y) : 0
+            restoring = true
+            function attempt(force = false) {
+                if (!restoring) return
+                const available = document.documentElement.scrollHeight - window.innerHeight
+                if (!force && available < y) return
+                window.scrollTo(x, y)
+                stopRestore()
+                remember()
+            }
+            frame = requestAnimationFrame(() => {
+                attempt()
+                if (restoring) {
+                    observer = new ResizeObserver(() => attempt())
+                    if (content.current) observer.observe(content.current)
+                }
+            })
+            restoreTimer = setTimeout(() => attempt(true), 5000)
+        }
+        function moved() {
+            clearTimeout(saveTimer)
+            saveTimer = setTimeout(remember, 120)
+        }
+        function userInteraction() {
+            if (!restoring) return
+            stopRestore()
+            remember()
+        }
         function navigate() {
+            clearTimeout(saveTimer)
             const hash = window.location.hash
             setLocation(current => ({hash, visit: current.visit + 1}))
-            window.scrollTo(0, 0)
+            restore()
         }
+        restore()
         window.addEventListener('hashchange', navigate)
-        return () => window.removeEventListener('hashchange', navigate)
+        window.addEventListener('scroll', moved, {passive: true})
+        document.addEventListener('click', remember, true)
+        document.addEventListener('pointerdown', userInteraction, true)
+        document.addEventListener('wheel', userInteraction, {capture: true, passive: true})
+        document.addEventListener('keydown', userInteraction, true)
+        return () => {
+            stopRestore()
+            clearTimeout(saveTimer)
+            window.history.scrollRestoration = previousRestoration
+            window.removeEventListener('hashchange', navigate)
+            window.removeEventListener('scroll', moved)
+            document.removeEventListener('click', remember, true)
+            document.removeEventListener('pointerdown', userInteraction, true)
+            document.removeEventListener('wheel', userInteraction, true)
+            document.removeEventListener('keydown', userInteraction, true)
+        }
     }, [])
     const route = travelRoute(location.hash)
     useEffect(() => { document.title = travelPages[route.page] + ' · Wenay Travel' }, [route.page])
     return <TripProvider>
+        <a className="travel-skip" href="#travel-content" onClick={event => {
+            event.preventDefault()
+            content.current?.focus()
+            content.current?.scrollIntoView({block: 'start'})
+        }}>Перейти к содержимому</a>
         <TopBar page={route.page}/>
+        <div id="travel-content" ref={content} tabIndex={-1}>
         {route.page === 'discover' && <Discover/>}
         {route.page === 'packages' && <PackageSearch key={location.visit} route={route}/>}
         {route.page === 'catalog' && <Directory key={location.visit} route={route}/>}
         {route.page === 'demo' && <DemoTours store={store}/>}
         {route.page === 'flights' && <Flights key={location.visit} route={route}/>}
+        {route.page === 'prices' && <ProviderMarketplace key={location.visit} route={route}/>}
+        {route.page === 'deals' && <ProviderMarketplace key={location.visit} route={route} deals/>}
+        {route.page === 'providers' && <ProviderDashboard/>}
+        {route.page === 'guides' && <AgencyGuides route={route}/>}
         {route.page === 'assistant' && <TravelAssistant key={location.visit} initialMessage={route.query.get('message') ?? ''}
             initialContext={assistantContext(route)} onApply={applySearch}/>}
-        {route.page === 'trip' && <TripPlan onResume={resume} flightSection={<FlightResume/>}/>}
+        {route.page === 'trip' && <TripPlan onResume={resume} flightSection={<><FlightResume/><SavedSupply/></>}/>}
+        </div>
         {route.page !== 'demo' && <Footer/>}
     </TripProvider>
 }

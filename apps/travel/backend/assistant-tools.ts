@@ -9,11 +9,15 @@ import type {TravelChatQuery, TravelChatResult} from '../src/assistant-contract.
 import {packageQuery} from './travel-query.ts'
 import {readFlightQuery} from './flights/index.ts'
 import {findAirports} from './flights/airports.ts'
+import type {createProviderRegistry} from './providers/index.ts'
+import {readProviderQuery} from './providers/query.ts'
+import type {ProviderQuery} from '../src/provider-contract.ts'
 
 export interface AssistantDeps {
     catalog: Pick<ReturnType<typeof createPlaceCatalog>, 'list' | 'destinations'>
     packages?: Pick<ReturnType<typeof createPackages>, 'calendar' | 'search'>
     flights?: {search: (query: FlightQuery) => Promise<FlightSearch>}
+    providers?: Pick<ReturnType<typeof createProviderRegistry>, 'list' | 'search'>
     today?: () => string
     model?: {key: string, name: string, fetch: typeof fetch} | null
 }
@@ -77,8 +81,32 @@ export function createAssistantTools(deps: AssistantDeps) {
     }, readOnly('Search any route by airport IATA codes. Published routeQuotes are estimates for the whole party, with source and unknown baggage explicit. ' +
         'Only comparison groups contain identical flights with matching known conditions. Calendars are one adult one way. Recheck before purchase.',
         schema(flightProperties, ['origin', 'destination', 'departure'])))
+    const list_providers = describeMethod(() => {
+        if (!deps.providers) throw new Error('Реестр источников недоступен.')
+        return deps.providers.list()
+    }, readOnly('List independent executable flight, hotel and package providers, their capabilities, activation and current status. No secret values are returned.', schema({}, [])))
+    const providerProperties = {
+        kind: {type: 'string', enum: ['flights', 'hotels', 'packages', 'deals']},
+        origin: {type: 'string', maxLength: 120}, destination: {type: 'string', maxLength: 120},
+        departure: dateSchema, returnDate: {anyOf: [dateSchema, {type: 'null'}]}, checkIn: dateSchema, checkOut: dateSchema,
+        adults: integer(1, 9), rooms: integer(1, 9), nights: integer(1, 30), checkedBag: {type: 'boolean'}, currency: {type: 'string', pattern: '^[A-Z]{3}$'},
+        latitude: {type: 'number', minimum: -90, maximum: 90}, longitude: {type: 'number', minimum: -180, maximum: 180},
+        radiusKm: {type: 'number', exclusiveMinimum: 0},
+        nationality: {type: 'string', pattern: '^[A-Z]{2}$'}, bookerCountry: {type: 'string', pattern: '^[A-Z]{2}$'},
+        country: {type: 'string', pattern: '^[A-Z]{2}$'}, adultAges: {type: 'array', items: integer(18, 120), maxItems: 9},
+        providers: {type: 'array', items: {type: 'string', maxLength: 60}, maxItems: 40},
+        providerRefs: {type: 'object', additionalProperties: {type: 'object', properties: {
+            hotelIds: {type: 'array', maxItems: 100, items: {type: 'string', maxLength: 120}}, destinationId: {type: 'string', maxLength: 120}
+        }, additionalProperties: false}}, limit: integer(1, 100), offset: integer(0, Number.MAX_SAFE_INTEGER),
+    }
+    const search_travel_offers = describeMethod(async (input: ProviderQuery) => {
+        if (!deps.providers) throw new Error('Поиск по источникам недоступен.')
+        return deps.providers.search(readProviderQuery(input, today()))
+    }, readOnly('Search independently configured flight, hotel, package and proven-deal providers. Prices remain in original currency and basis. ' +
+        'Hotel provider IDs are unrelated to open-directory IDs. Missing access or query fields are explicit. Sandbox prices are excluded.',
+        schema(providerProperties, ['kind'])))
     const facade = createMcpFacadeServer({name: 'wenay-travel', version: '1.0.0', strict: true, readOnly: true,
-        object: {list_destinations, search_hotels, search_packages, hotel_calendar, find_airports, search_flights},
+        object: {list_destinations, search_hotels, search_packages, hotel_calendar, find_airports, search_flights, list_providers, search_travel_offers},
         resources: false, policy: {concurrency: () => 'parallel'}})
     async function mcp(req: IncomingMessage, res: ServerResponse, body: unknown) {
         const server = facade.control.server()

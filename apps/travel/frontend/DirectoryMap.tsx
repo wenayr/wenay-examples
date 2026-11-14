@@ -15,6 +15,8 @@ interface DirectoryMapProps {
     selectedId: string | null
     onSelect: (id: string) => void
     onSearchArea: (bounds: tMapBounds) => void
+    world?: boolean
+    bounds?: tMapBounds | null
 }
 
 // Natural Earth 1:10m land (world-atlas 2.0.2), roads and urban areas. Each local GeoJSON
@@ -68,38 +70,67 @@ function addProperty(group: L.LayerGroup, hotel: MapProperty, index: number, sel
     return marker
 }
 
-export function DirectoryMap({destination, hotels, selectedId, onSelect, onSearchArea}: DirectoryMapProps) {
+export function DirectoryMap({destination, hotels, selectedId, onSelect, onSearchArea, world = false, bounds}: DirectoryMapProps) {
     const host = useRef<HTMLDivElement>(null)
     const mapRef = useRef<L.Map | null>(null)
     const markers = useRef(new Map<string, L.Marker>())
     const select = useRef(onSelect)
-    const [detailed, setDetailed] = useState(false)
+    const [detailed, setDetailed] = useState(world)
     const [tileError, setTileError] = useState(false)
     const [limited, setLimited] = useState(false)
     const fitted = useRef(false)
     const fitVisibleHotels = useEffectEvent((map: L.Map) => {
-        if (fitted.current || !hotels.length || !map.getSize().x) return
+        const positioned = bounds || fitted.current
+        const empty = !hotels.length || !map.getSize().x
+        if (positioned || empty) return
         fitHotelPoints(map, destination, hotels)
         fitted.current = true
+    })
+    const searchVisibleArea = useEffectEvent((map: L.Map) => {
+        const area = map.getBounds()
+        onSearchArea([area.getWest(), area.getSouth(), area.getEast(), area.getNorth()])
     })
     useEffect(() => { select.current = onSelect }, [onSelect])
 
     useEffect(() => {
         if (!host.current) return
-        const map = L.map(host.current, {minZoom: 8, maxZoom: 18, zoomSnap: .25, zoomControl: false, scrollWheelZoom: false})
+        const map = L.map(host.current, {minZoom: world ? 2 : 8, maxZoom: 18, zoomSnap: .25, zoomControl: false, scrollWheelZoom: false})
         mapRef.current = map
         map.createPane('atlas').style.zIndex = '170'
         map.createPane('atlasPlaces').style.zIndex = '180'
         map.attributionControl.setPrefix(false)
-        map.attributionControl.addAttribution('<a href="https://www.naturalearthdata.com/">Natural Earth</a>')
+        if (!world) map.attributionControl.addAttribution('<a href="https://www.naturalearthdata.com/">Natural Earth</a>')
         L.control.zoom({position: 'bottomleft', zoomInTitle: 'Увеличить', zoomOutTitle: 'Уменьшить'}).addTo(map)
         L.control.scale({imperial: false, position: 'bottomright'}).addTo(map)
+        let userMove = false
+        let pending: ReturnType<typeof setTimeout> | undefined
+        function intent(event: Event) {
+            if (event instanceof KeyboardEvent && !['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', '+', '-', '='].includes(event.key)) return
+            clearTimeout(pending)
+            userMove = true
+        }
+        function moved() {
+            if (!userMove) return
+            userMove = false
+            clearTimeout(pending)
+            pending = setTimeout(() => searchVisibleArea(map), 400)
+        }
+        const canvas = host.current
+        canvas.addEventListener('pointerdown', intent, true)
+        canvas.addEventListener('wheel', intent, {capture: true, passive: true})
+        canvas.addEventListener('keydown', intent, true)
+        map.on('moveend', moved)
         const observer = new ResizeObserver(() => {
             map.invalidateSize({pan: false})
             fitVisibleHotels(map)
         })
         observer.observe(host.current)
         return () => {
+            clearTimeout(pending)
+            map.off('moveend', moved)
+            canvas.removeEventListener('pointerdown', intent, true)
+            canvas.removeEventListener('wheel', intent, true)
+            canvas.removeEventListener('keydown', intent, true)
             observer.disconnect()
             map.remove()
             mapRef.current = null
@@ -113,10 +144,28 @@ export function DirectoryMap({destination, hotels, selectedId, onSelect, onSearc
         if (!map) return
         fitted.current = false
         setLimited(false)
-        map.setView([latitude, longitude], 12, {animate: false})
-        const base = addBase(map, id, () => setLimited(true))
+        const zoom = world ? 9 : 12
+        const initialized = Number.isFinite(map.getZoom())
+        const matchesCenter = initialized && map.getCenter().distanceTo([latitude, longitude]) < 10
+        if (!world || !matchesCenter) {
+            map.setView([latitude, longitude], world && latitude == 0 && longitude == 0 ? 2 : zoom, {animate: false})
+        }
+        const base = world ? L.layerGroup().addTo(map) : addBase(map, id, () => setLimited(true))
         return () => { base.remove() }
     }, [id, latitude, longitude])
+
+    useEffect(() => {
+        const map = mapRef.current
+        if (!map) return
+        if (!bounds) {
+            fitted.current = false
+            return
+        }
+        const [west, south, east, north] = bounds
+        const area = L.latLngBounds([south, west], [north, east])
+        if (!map.getBounds().equals(area, 0.0001)) map.fitBounds(area, {animate: false})
+        fitted.current = true
+    }, [bounds, id])
 
     useEffect(() => {
         const map = mapRef.current
@@ -174,7 +223,7 @@ export function DirectoryMap({destination, hotels, selectedId, onSelect, onSearc
     return <section className="hotel-map directory-map" aria-label={'Карта объектов · ' + name}>
         <div className="hotel-map__canvas" ref={host} aria-label="Карта, стрелки для перемещения"/>
         <div className="hotel-map__tools">
-            <button type="button" onClick={searchArea}>Искать в этой области</button>
+            <button type="button" onClick={searchArea}>Обновить эту область</button>
             <button type="button" title="Уличная карта OpenStreetMap" aria-label="Уличная карта OpenStreetMap" aria-pressed={detailed}
                 onClick={() => setDetailed(value => !value)}><Icon name="map"/></button>
             <button type="button" title="Показать объекты выдачи" aria-label="Показать объекты выдачи"

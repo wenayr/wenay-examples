@@ -8,6 +8,8 @@ import {readFlightQuery, type createFlights} from './flights/index.ts'
 import type {createTravelAssistant} from './assistant.ts'
 import type {createPackages} from './packages.ts'
 import {createPlaceCatalog, searchPhrase, type PlaceRegion} from './catalog.ts'
+import {serveProviders} from './providers/http.ts'
+import type {createProviderRegistry} from './providers/index.ts'
 
 interface SupplyDeps {
     catalog: ReturnType<typeof createPlaceCatalog>
@@ -19,6 +21,7 @@ interface SupplyDeps {
     packages?: ReturnType<typeof createPackages>
     assistant?: ReturnType<typeof createTravelAssistant>
     flights?: ReturnType<typeof createFlights>
+    providers?: ReturnType<typeof createProviderRegistry>
     today?: () => string
 }
 
@@ -40,6 +43,9 @@ export function createSupplyMiddleware(deps: SupplyDeps) {
         const url = new URL(raw, 'http://localhost/')
         if (url.pathname == '/api/travel/chat' || url.pathname == '/api/travel/mcp') {
             return serveAssistant({request, response, assistant: deps.assistant, mcp: url.pathname.endsWith('/mcp')})
+        }
+        if (['/api/travel/providers', '/api/travel/provider-search', '/api/travel/deals'].includes(url.pathname)) {
+            return serveProviders({request, response, url, providers: deps.providers, today: deps.today?.() ?? new Date().toISOString().slice(0, 10)})
         }
         if (request.method != 'GET') {
             response.setHeader('Allow', 'GET')

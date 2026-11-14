@@ -5,6 +5,8 @@ import {directoryUrl, useDirectoryQuery} from './directory-query.ts'
 import {HotelOptions} from './DirectoryOffers.tsx'
 import {PropertyPhoto, safeHref} from './DirectoryCard.tsx'
 import {Icon} from './Icons.tsx'
+import {providerQueryParams} from './provider-client.ts'
+import {travelHash} from './navigation.ts'
 
 export function DirectoryDetail({hotel, destination, prefs, onClose, save}: {
     save: ReactNode
@@ -40,6 +42,10 @@ export function DirectoryDetail({hotel, destination, prefs, onClose, save}: {
             <p className="directory-period">{fmt.format(new Date(prefs.checkIn + 'T00:00:00Z'))} — {fmt.format(new Date(prefs.checkOut + 'T00:00:00Z'))}
                 {' · Взрослых: '}{prefs.adults}</p>
             {options.data && <HotelOptions data={options.data}/>}
+            <a className="provider-nearby-link" href={travelHash('prices', undefined, {...providerQueryParams({kind: 'hotels', destination: destination.name,
+                latitude: hotel.latitude, longitude: hotel.longitude, radiusKm: 3, adults: prefs.adults, rooms: 1,
+                checkIn: prefs.checkIn, checkOut: prefs.checkOut, currency: 'EUR'}), hotelName: hotel.name, returnTo: window.location.hash})}>
+                Сравнить цены на размещение в этом районе →</a>
             {options.error && <div role="status">{options.error} <button type="button" onClick={options.retry}>Повторить</button></div>}
             {!options.error && !options.data && <div role="status">Проверяем варианты у поставщиков…</div>}
         </div>

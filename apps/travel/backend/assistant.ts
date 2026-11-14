@@ -72,6 +72,11 @@ const euros = new Intl.NumberFormat('ru-RU', {style: 'currency', currency: 'EUR'
 function summary(result: TravelChatResult, context: Partial<TravelChatQuery>, place: string) {
     if (result.kind === 'flights') {
         const title = `Маршрут ${result.query.origin} → ${result.query.destination} на ${result.query.departure}. `
+        if (result.providerSearch) {
+            const prices = result.providerSearch.offers.length
+            return title + `Получено ценовых вариантов: ${prices}. Откройте общее сравнение источников, ` +
+                'чтобы проверить валюту, цену за группу или человека, багаж и актуальность.'
+        }
         const quotes = result.search?.routeQuotes ?? []
         if (quotes.length) {
             const minimum = Math.min(...quotes.map(quote => quote.total))
@@ -148,8 +153,9 @@ export function createTravelAssistant(deps: AssistantDeps) {
             if (!flight.departure) return ask('Когда нужен вылет? Можно написать «завтра» или назвать дату.')
             try {
                 const query = readFlightQuery(travelParams(flight), today)
-                const search = await deps.flights?.search(query)
-                const result = {kind: 'flights', query, ...(search ? {search} : {})} as const
+                const providerSearch = await deps.providers?.search({kind: 'flights', ...query})
+                const search = providerSearch ? undefined : await deps.flights?.search(query)
+                const result = {kind: 'flights', query, ...(search ? {search} : {}), ...(providerSearch ? {providerSearch} : {})} as const
                 return {mode, context, result, message: summary(result, context, '')}
             } catch (error) {
                 if (error instanceof RangeError) return ask(error.message)

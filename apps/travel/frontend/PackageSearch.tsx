@@ -6,17 +6,18 @@ import {safeHref} from './DirectoryCard.tsx'
 import {SourceLine, sourceStatus} from './DirectoryOffers.tsx'
 import {directoryUrl, useDirectoryQuery} from './directory-query.ts'
 import {dateLabel, hotelCount, photo} from './presentation.ts'
-import {loadPackages, packageHash, packageQuery, savePackages, supportsPackage, type PackagePreferences} from './package-preferences.ts'
+import {loadPackages, packageQuery, savePackages, supportsPackage, type PackagePreferences} from './package-preferences.ts'
 import {PackageFilters} from './PackageFilters.tsx'
 import {PriceCalendar} from './PriceCalendar.tsx'
 import {CalendarPreview} from './CalendarPreview.tsx'
-import {packagesForRoute, travelHash, type TravelRoute} from './navigation.ts'
+import {browseFields, browseForRoute, dismissTravelDetail, openTravelDetail, packagesForRoute, replaceTravelHash, travelHash, type TravelRoute} from './navigation.ts'
 import {BrowseViews, useBrowseViews} from './BrowseViews.tsx'
 import {packageTrip} from './trip/model.ts'
 import {SaveTripButton} from './trip/TripPlan.tsx'
 import type {SupplySource} from '../src/supply-contract.ts'
 import {Icon} from './Icons.tsx'
 import {shiftDate} from './directory-preferences.ts'
+import {providerQueryLink} from './provider-client.ts'
 
 const euros = new Intl.NumberFormat('ru-RU', {style: 'currency', currency: 'EUR', minimumFractionDigits: 0, maximumFractionDigits: 2})
 const pageSize = 12
@@ -116,16 +117,17 @@ function TourCard({item, prefs, destination, source, selected, onOpen, onLocate}
     </article>
 }
 
-function BrowsePackages({initial, destinations, initialHotelName, openHotel}: {
-    initial: PackagePreferences, destinations: SupplyDestination[], initialHotelName: string, openHotel: boolean,
+function BrowsePackages({initial, destinations, initialHotelName, openHotel, route}: {
+    initial: PackagePreferences, destinations: SupplyDestination[], initialHotelName: string, openHotel: boolean, route: TravelRoute,
 }) {
-    const [prefs, setPrefs] = useState(initial)
+    const initialBrowse = browseForRoute(route, pageSize)
+    const [prefs, setPrefs] = useState({...initial, hotelId: initialBrowse.selection || initial.hotelId})
     const destination = destinations.find(d => d.id === prefs.destination) ?? destinations[0]
-    const [bounds, setBounds] = useState<tMapBounds | null>(null)
-    const [offset, setOffset] = useState(0)
+    const [bounds, setBounds] = useState<tMapBounds | null>(initialBrowse.bounds)
+    const [offset, setOffset] = useState(initialBrowse.offset)
     const [open, setOpen] = useState<{hotelId: string, name: string} | null>(
         openHotel && initial.hotelId ? {hotelId: initial.hotelId, name: initialHotelName || 'Выбранный отель'} : null)
-    const views = useBrowseViews()
+    const views = useBrowseViews(initialBrowse.view)
     const [preview, setPreview] = useState<PackageCalendar | null>(null)
     const map = useRef<HTMLElement>(null)
     const range = bounds && {west: bounds[0], south: bounds[1], east: bounds[2], north: bounds[3]}
@@ -147,11 +149,18 @@ function BrowsePackages({initial, destinations, initialHotelName, openHotel}: {
         return markers
     }, [data, prefs.hotelId])
     useEffect(() => { void savePackages(prefs) }, [prefs])
+    function searchLink(detail = open, selected = prefs.hotelId) {
+        const {destination, ...filters} = prefs
+        const browse = browseFields({bounds, offset, selection: selected, view: views.view})
+        return travelHash('packages', destination, {...filters, ...browse, hotelId: detail?.hotelId, hotelName: detail?.name})
+    }
+    useEffect(() => {
+        replaceTravelHash(searchLink())
+    }, [prefs, bounds, offset, views.view, open])
     function change(patch: Partial<PackagePreferences>) {
         setPreview(null)
         if (patch.destination !== undefined) {
             setBounds(null)
-            window.history.replaceState(null, '', packageHash(patch.destination))
         }
         setOffset(0)
         setOpen(null)
@@ -160,10 +169,9 @@ function BrowsePackages({initial, destinations, initialHotelName, openHotel}: {
     function searchArea(area: tMapBounds | null) {
         setBounds(area)
         setOffset(0)
-        setOpen(null)
-        if (area) views.setView('list')
     }
     function show(hotel: {hotelId: string, name: string}) {
+        openTravelDetail(searchLink(hotel, hotel.hotelId))
         setOpen(hotel)
         setPrefs(current => ({...current, hotelId: hotel.hotelId, fareId: current.hotelId === hotel.hotelId ? current.fareId : ''}))
     }
@@ -185,6 +193,18 @@ function BrowsePackages({initial, destinations, initialHotelName, openHotel}: {
                 <div className="browse-quick">
                     <a href={assistant}>Уточнить в помощнике</a>
                     <a href={catalog}>Отели без перелёта</a>
+                    <a href={providerQueryLink({kind: 'packages', origin: 'TLL', destination: prefs.destination,
+                        departure: prefs.firstDeparture, returnDate: shiftDate(prefs.firstDeparture, prefs.nights), adults: prefs.adults,
+                        checkIn: prefs.firstDeparture, checkOut: shiftDate(prefs.firstDeparture, prefs.nights), currency: 'EUR'})}>
+                        Сравнить поставщиков на {dateLabel(prefs.firstDeparture)}</a>
+                </div>
+                <div className="browse-context" aria-label="Текущие параметры поиска туров">
+                    <span>{dateLabel(prefs.firstDeparture)} — {dateLabel(prefs.lastDeparture)}</span>
+                    <span>{rangeLabel(prefs.minTotal, prefs.maxTotal)} за группу</span>
+                    {prefs.minStars > 0 && <button type="button" onClick={() => change({minStars: 0})}>
+                        От {prefs.minStars} ★<Icon name="close" size={12}/></button>}
+                    {bounds && <button type="button" onClick={() => searchArea(null)}>
+                        Область на карте<Icon name="close" size={12}/></button>}
                 </div>
                 <BrowseViews {...views}/>
                 <div className="directory-columns" data-view={views.view}>
@@ -194,7 +214,7 @@ function BrowsePackages({initial, destinations, initialHotelName, openHotel}: {
                                 const hotel = data?.markers.find(m => m.hotelId === id) ?? data?.items.find(item => item.hotelId === id)
                                 if (hotel) show(hotel)
                             }}
-                            onSearchArea={searchArea}/>
+                            onSearchArea={searchArea} bounds={bounds}/>
                         {!open && preview && points.some(marker => marker.id === preview.hotel.id) && prefs.hotelId === preview.hotel.id &&
                             <CalendarPreview calendar={preview} onOpen={() => show({hotelId: preview.hotel.id, name: preview.hotel.name})}/>}
                         {bounds && <button type="button" className="directory-area-reset" onClick={() => searchArea(null)}>Показать всё направление</button>}
@@ -232,7 +252,8 @@ function BrowsePackages({initial, destinations, initialHotelName, openHotel}: {
                     <SourceLine sources={[data.source]}/></>}
             </div>
         </div>
-        {open && <PackageDetail key={open.hotelId} hotel={open} destination={destination} prefs={prefs} onClose={() => setOpen(null)}
+        {open && <PackageDetail key={open.hotelId} hotel={open} destination={destination} prefs={prefs}
+            onClose={() => dismissTravelDetail(() => setOpen(null))}
             onCalendar={setPreview}
             onDate={date => change({firstDeparture:date, lastDeparture:date})}
             onFare={fareId => setPrefs(current => ({...current, fareId}))}/>}
@@ -256,5 +277,5 @@ export function PackageSearch({route}: {route: TravelRoute}) {
     const destination = destinations.find(place => place.id === requested)?.id ?? destinations[0].id
     const initial = packagesForRoute(stored, {...route, destination})
     return <BrowsePackages destinations={destinations} initial={initial} initialHotelName={route.query.get('hotelName') ?? ''}
-        openHotel={route.query.has('hotelId')}/>
+        openHotel={route.query.has('hotelId')} route={route}/>
 }

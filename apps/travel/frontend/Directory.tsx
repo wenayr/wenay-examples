@@ -8,11 +8,11 @@ import {directoryUrl, useDirectoryEvents, useDirectoryQuery} from './directory-q
 import {createDirectoryPreferences, directoryDefaults, shiftDate, type DirectoryPreferences} from './directory-preferences.ts'
 import {Icon} from './Icons.tsx'
 import {supportsPackage} from './package-preferences.ts'
-import {directoryForRoute, travelHash, type TravelRoute} from './navigation.ts'
+import {browseFields, browseForRoute, directoryForRoute, dismissTravelDetail, openTravelDetail, replaceTravelHash, travelHash, type TravelRoute} from './navigation.ts'
 import {BrowseViews, useBrowseViews} from './BrowseViews.tsx'
 import {directoryTrip} from './trip/model.ts'
 import {SaveTripButton} from './trip/TripPlan.tsx'
-import {photo, hotelCount} from './presentation.ts'
+import {dateLabel, photo, hotelCount} from './presentation.ts'
 
 const pageSize = 12
 const prefsStore = createDirectoryPreferences()
@@ -55,16 +55,19 @@ function PackageOffers({destination, prefs, shown, setShown}: {
     </section>
 }
 
-function Browse({destinations, initial, initialHotel}: {destinations: SupplyDestination[], initial: DirectoryPreferences, initialHotel: string}) {
+function Browse({destinations, initial, initialHotel, route}: {
+    destinations: SupplyDestination[], initial: DirectoryPreferences, initialHotel: string, route: TravelRoute,
+}) {
+    const initialBrowse = browseForRoute(route, pageSize)
     const validInitial = destinations.some(place => place.id == initial.destination)
     const [prefs, setPrefs] = useState(() => ({...initial, destination: validInitial ? initial.destination : destinations[0].id}))
     const destination = destinations.find(place => place.id == prefs.destination) ?? destinations[0]
     const [draft, setDraft] = useState(prefs.search)
-    const [offset, setOffset] = useState(0)
-    const [bounds, setBounds] = useState<tMapBounds | null>(null)
-    const [selection, setSelection] = useState(initialHotel)
+    const [offset, setOffset] = useState(initialBrowse.offset)
+    const [bounds, setBounds] = useState<tMapBounds | null>(initialBrowse.bounds)
+    const [selection, setSelection] = useState(initialBrowse.selection)
     const [detailId, setDetailId] = useState(initialHotel)
-    const views = useBrowseViews()
+    const views = useBrowseViews(initialBrowse.view)
     const [detailNotice, setDetailNotice] = useState('')
     const [open, setOpen] = useState<SupplyHotel | null>(null)
     const [filtersOpen, setFiltersOpen] = useState(false)
@@ -115,6 +118,14 @@ function Browse({destinations, initial, initialHotel}: {destinations: SupplyDest
         return () => clearTimeout(timer)
     }, [draft, prefs.search])
     useEffect(() => { void prefsStore.save(prefs) }, [prefs])
+    function searchLink(hotelId = detailId, selected = selection) {
+        const {destination, ...filters} = prefs
+        const browse = browseFields({bounds, offset, selection: selected, view: views.view})
+        return travelHash('catalog', destination, {...filters, ...browse, hotelId: hotelId || undefined})
+    }
+    useEffect(() => {
+        replaceTravelHash(searchLink())
+    }, [prefs, bounds, offset, selection, views.view, detailId])
 
     function update(next: Partial<DirectoryPreferences>) {
         setPrefs(previous => ({...previous, ...next}))
@@ -123,7 +134,6 @@ function Browse({destinations, initial, initialHotel}: {destinations: SupplyDest
         closeHotel()
         setDetailNotice('')
         if (next.destination) {
-            window.history.replaceState(null, '', travelHash('catalog', next.destination))
             setBounds(null)
             setDraft('')
             setPrefs(previous => ({...previous, source: '', search: ''}))
@@ -133,8 +143,6 @@ function Browse({destinations, initial, initialHotel}: {destinations: SupplyDest
     function searchArea(next: tMapBounds | null) {
         setBounds(next)
         setOffset(0)
-        setSelection('')
-        if (next) views.setView('list')
     }
 
     function changePage(next: number) {
@@ -144,6 +152,7 @@ function Browse({destinations, initial, initialHotel}: {destinations: SupplyDest
     }
 
     function showHotel(hotel: SupplyHotel) {
+        openTravelDetail(searchLink(hotel.id, hotel.id))
         setSelection(hotel.id)
         setDetailNotice('')
         setDetailId(hotel.id)
@@ -218,13 +227,22 @@ function Browse({destinations, initial, initialHotel}: {destinations: SupplyDest
                             <span aria-live="polite">{response ? hotelCount(response.total) : (query.error || 'Загрузка…')}</span></div></div>
                     <div className="browse-quick"><a href="#discover">Все направления</a>
                         <a href={assistant}>Уточнить в помощнике</a></div>
+                    <div className="browse-context" aria-label="Текущие параметры поиска отелей">
+                        <span>{dateLabel(prefs.checkIn)} — {dateLabel(prefs.checkOut)} · взрослых: {prefs.adults}</span>
+                        {prefs.search && <button type="button" onClick={() => setDraft('')} aria-label="Убрать поиск по названию">
+                            {prefs.search}<Icon name="close" size={12}/></button>}
+                        {prefs.source && <button type="button" onClick={() => update({source: ''})} aria-label="Показать все источники">
+                            {stable?.sources.find(source => source.id == prefs.source)?.name ?? prefs.source}<Icon name="close" size={12}/></button>}
+                        {bounds && <button type="button" onClick={() => searchArea(null)}>
+                            Область на карте<Icon name="close" size={12}/></button>}
+                    </div>
                     {detailNotice && <p role="status">{detailNotice}</p>}
                     {detailId && !visibleHotel && detail.error && <SearchFailure message={detail.error} onRetry={detail.retry}/>}
                     <BrowseViews {...views}/>
                     <div className="directory-columns" data-view={views.view}>
                         <section className="directory-map-panel" aria-label="Отели на карте" ref={mapAnchor}>
                             <DirectoryMap destination={destination} hotels={items} selectedId={selection || null}
-                                onSelect={selectMarker} onSearchArea={searchArea}/>
+                                onSelect={selectMarker} onSearchArea={searchArea} bounds={bounds}/>
                             {response && <SourceCredits sources={response.sources}/>}
                             {bounds && <button type="button" className="directory-area-reset" onClick={() => searchArea(null)}>
                                 Показать всё направление</button>}
@@ -253,7 +271,8 @@ function Browse({destinations, initial, initialHotel}: {destinations: SupplyDest
                 </div>
             </div>
         </main>
-        {visibleHotel && <DirectoryDetail key={visibleHotel.id} hotel={visibleHotel} destination={destination} prefs={prefs} onClose={closeHotel}
+        {visibleHotel && <DirectoryDetail key={visibleHotel.id} hotel={visibleHotel} destination={destination} prefs={prefs}
+            onClose={() => dismissTravelDetail(closeHotel)}
             save={<SaveTripButton item={directoryTrip(visibleHotel, destination, prefs,
                 stable?.sources.find(source => source.id === visibleHotel.sourceId)?.updatedAt)}/>}/>}
     </>
@@ -271,5 +290,5 @@ export function Directory({route}: {route: TravelRoute}) {
     if (!query.data || !prefs) return <main className="travel-home"><h1>Каталог отелей</h1><p role="status">Загружаем направления…</p></main>
     if (!query.data.destinations.length) return <main className="travel-home"><h1>Каталог отелей</h1><p>У поставщиков пока нет направлений.</p></main>
     return <Browse destinations={query.data.destinations} initial={directoryForRoute(prefs, route)}
-        initialHotel={route.query.get('hotelId') ?? ''}/>
+        initialHotel={route.query.get('hotelId') ?? ''} route={route}/>
 }
