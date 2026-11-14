@@ -42,6 +42,7 @@ export interface SupplySource {
     attribution?: string
     status: 'live' | 'cached' | 'unavailable' | 'handoff' | 'requires-access'
     updatedAt: string | null
+    retryAt?: string
     description: string
 }
 

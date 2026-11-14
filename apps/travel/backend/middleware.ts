@@ -10,6 +10,7 @@ import type {createPackages} from './packages.ts'
 import {createPlaceCatalog, searchPhrase, type PlaceRegion} from './catalog.ts'
 import {serveProviders} from './providers/http.ts'
 import type {createProviderRegistry} from './providers/index.ts'
+import {tezHotelGallery} from './partners/tez-media.ts'
 
 interface SupplyDeps {
     catalog: ReturnType<typeof createPlaceCatalog>
@@ -53,6 +54,16 @@ export function createSupplyMiddleware(deps: SupplyDeps) {
             return json(response, 405, {error: 'Используйте GET.'})
         }
         const params = url.searchParams
+        if (url.pathname == '/api/travel/package-gallery') {
+            try {
+                const gallery = tezHotelGallery(readHotelId(params.get('hotelId')))
+                if (!gallery) return json(response, 404, {error: 'Фотографии этого отеля пока не найдены у поставщика.'})
+                return json(response, 200, gallery)
+            } catch (error) {
+                if (error instanceof RangeError) return json(response, 400, {error: error.message})
+                return json(response, 503, {error: 'Не удалось прочитать фотографии отеля.'})
+            }
+        }
         if (url.pathname == '/api/travel/destinations') return json(response, 200, {destinations: deps.catalog.destinations})
         if (url.pathname == '/api/travel/airports') {
             const phrase = params.get('q') ?? ''
@@ -76,7 +87,7 @@ export function createSupplyMiddleware(deps: SupplyDeps) {
         }
         const routes = ['/api/travel/catalog', '/api/travel/hotel', '/api/travel/events', '/api/travel/options',
             '/api/travel/packages', '/api/travel/package-calendar', '/api/travel/package-compare', '/api/travel/package-recheck',
-            '/api/travel/package-trends']
+            '/api/travel/package-trends', '/api/travel/package-matrix']
         if (!routes.includes(url.pathname)) return json(response, 404, {error: 'Маршрут не найден.'})
         const id = params.get('destination') ?? deps.catalog.destinations[0]?.id
         const destination = deps.catalog.destinations.find(region => region.id == id)
@@ -91,6 +102,12 @@ export function createSupplyMiddleware(deps: SupplyDeps) {
                 const cancel = () => controller.abort()
                 response.once('close', cancel)
                 try {
+                    if (url.pathname == '/api/travel/package-matrix') {
+                        const values = params.get('nightsValues') ?? String(trip.nights)
+                        if (!/^\d{1,2}(,\d{1,2}){0,5}$/.test(values)) throw new RangeError('Укажите длительность в ночах через запятую.')
+                        return json(response, 200, await deps.packages.matrix(trip, readHotelId(params.get('hotelId')),
+                            values.split(',').map(Number), controller.signal))
+                    }
                     if (url.pathname == '/api/travel/package-trends') {
                         const requested = params.get('hotelIds')
                         const ids = requested ? requested.split(',').map(readHotelId) : undefined

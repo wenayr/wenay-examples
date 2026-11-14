@@ -7,6 +7,7 @@ import {recheckFare} from './recheck.ts'
 import {createOfferIndex, matchesPackageHotel} from './package-index.ts'
 import {createTezInventory} from './partners/tez-inventory.ts'
 import {createPackageTrends} from './package-trends.ts'
+import {createPackageMatrix} from './package-matrix.ts'
 import {tezHotelMedia} from './partners/tez-media.ts'
 
 type Provider = ReturnType<typeof createTezInventory>
@@ -51,6 +52,8 @@ export function createPackages(provider: Provider = createTezInventory({fetch, n
     // A successful supplier observation establishes a property identity for later empty-day responses.
     // Prices and availability always come from the distinct observation for the selected trip and day.
     const knownHotels = new Map<string, PackageHotel>()
+    const priceMatrix = createPackageMatrix({provider,
+        knownHotel: (destination, id) => knownHotels.has(destination + '/' + id) || Boolean(tezHotelMedia(id).photo)})
     function remember(destination: string, hotels: Map<string, PackageHotel>) {
         for (const [id, hotel] of hotels) {
             const key = destination + '/' + id
@@ -145,5 +148,5 @@ export function createPackages(provider: Provider = createTezInventory({fetch, n
     function recheck(trip: Trip, filter: Filter, hotelId: string, departure: string, fareId: string) {
         return recheckFare(provider, trip, filter, hotelId, departure, fareId)
     }
-    return {search, calendar, compare, recheck, trends}
+    return {search, calendar, compare, recheck, trends, matrix: priceMatrix.read}
 }
