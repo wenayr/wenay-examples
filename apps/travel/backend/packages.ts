@@ -7,6 +7,7 @@ import {recheckFare} from './recheck.ts'
 import {createOfferIndex, matchesPackageHotel} from './package-index.ts'
 import {createTezInventory} from './partners/tez-inventory.ts'
 import {createPackageTrends} from './package-trends.ts'
+import {tezHotelMedia} from './partners/tez-media.ts'
 
 type Provider = ReturnType<typeof createTezInventory>
 type Trip = Parameters<Provider['window']>[0]
@@ -18,7 +19,7 @@ function prepare(observation: Observation) {
     for (const quote of observation.quotes) {
         if (hotels.has(quote.hotelId)) continue
         const {hotelId: id, name, latitude, longitude, stars, url, coordinateSource} = quote
-        hotels.set(id, {id, name, latitude, longitude, stars, url, coordinateSource})
+        hotels.set(id, {id, name, latitude, longitude, stars, url, coordinateSource, ...tezHotelMedia(id)})
     }
     const index = createOfferIndex({hotels: [...hotels.values()], offers: observation.quotes})
     return {hotels, index}
@@ -67,8 +68,8 @@ export function createPackages(provider: Provider = createTezInventory({fetch, n
         prepared.set(generation, entry)
         return entry
     }
-    async function window(trip: Trip) {
-        const data = await provider.window(trip)
+    async function window(trip: Trip, signal?: AbortSignal) {
+        const data = await provider.window(trip, signal)
         const key = JSON.stringify([trip.destinationId, trip.first, trip.last, trip.nights, trip.adults, trip.minTotal, trip.maxTotal])
         return {data, ...observed(trip.destinationId, key, data)}
     }
@@ -87,7 +88,7 @@ export function createPackages(provider: Provider = createTezInventory({fetch, n
     }
     async function dayQuote(trip: Trip, filter: Filter, hotelId: string, departure: string, signal?: AbortSignal) {
         signal?.throwIfAborted()
-        const data = await provider.day({...trip, minTotal: 0, maxTotal: packageMaxTotal}, hotelId, departure)
+        const data = await provider.day({...trip, minTotal: 0, maxTotal: packageMaxTotal}, hotelId, departure, false, signal)
         signal?.throwIfAborted()
         const key = JSON.stringify([trip.destinationId, hotelId, departure, trip.nights, trip.adults])
         const batch = observed(trip.destinationId, key, data)
@@ -119,7 +120,7 @@ export function createPackages(provider: Provider = createTezInventory({fetch, n
     }
 
     async function calendar(trip: Trip, filter: Filter, hotelId: string, signal?: AbortSignal): Promise<PackageCalendar | null> {
-        const batch = await window(trip)
+        const batch = await window(trip, signal)
         const hotel = batch.hotels.get(hotelId) ?? knownHotels.get(trip.destinationId + '/' + hotelId)
         if (!hotel) {
             if (batch.data.source.status == 'unavailable') throw new Error('Поставщик не ответил.')

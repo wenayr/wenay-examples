@@ -1,0 +1,4718 @@
+{
+  "checkedOn": "2026-11-14",
+  "hotels": [
+    {
+      "id": 511,
+      "name": "DESERT ROSE 5 *",
+      "siteHotelId": 2075,
+      "source": "https://www.tez-tour.com/hotel.html?id=511",
+      "gallerySource": "https://www.tez-tour.com/data/siteGalleries.html?siteHotelId=2075&lang=ru",
+      "thumbnail": {
+        "url": "https://s.tez-tour.com/hotel/2075/DR_Lobby_Overview_1_8328_middle.jpg",
+        "caption": "DESERT ROSE 5 *",
+        "source": "https://www.tez-tour.com/hotel.html?id=511",
+        "verification": {
+          "status": 200,
+          "contentType": "image/jpeg",
+          "bytes": 67302,
+          "checkedAt": "2026-11-14T05:01:33.616Z"
+        }
+      },
+      "photos": [
+        {
+          "url": "https://s.tez-tour.com/hotel/2075/DR_Lobby_Overview_1_8328_middle.jpg",
+          "caption": "DESERT ROSE 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=511",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 67302,
+            "checkedAt": "2026-11-14T05:01:33.616Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/2075/DRR_Palm_Kids_2139_middle.jpg",
+          "caption": "DESERT ROSE 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=511",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 56110,
+            "checkedAt": "2026-11-14T05:01:33.599Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/2075/DRR_Aqua_park_2_3213_middle.jpg",
+          "caption": "DESERT ROSE 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=511",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 78872,
+            "checkedAt": "2026-11-14T05:01:35.561Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/2075/RE_20250224_Del_Mar_0069-HDR_1342_middle.jpg",
+          "caption": "DESERT ROSE 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=511",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 83271,
+            "checkedAt": "2026-11-14T05:01:39.074Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/2075/Premium_Room_7_9530_middle.jpg",
+          "caption": "DESERT ROSE 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=511",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 44985,
+            "checkedAt": "2026-11-14T05:01:38.691Z"
+          }
+        }
+      ],
+      "rights": "supplier-permission-required"
+    },
+    {
+      "id": 554,
+      "name": "PHARAOH AZUR RESORT 4 *",
+      "siteHotelId": 2297,
+      "source": "https://www.tez-tour.com/hotel.html?id=554",
+      "gallerySource": "https://www.tez-tour.com/data/siteGalleries.html?siteHotelId=2297&lang=ru",
+      "thumbnail": {
+        "url": "https://s.tez-tour.com/hotel/2297/1311785680053_middle.jpg",
+        "caption": "PHARAOH AZUR RESORT 4 *",
+        "source": "https://www.tez-tour.com/hotel.html?id=554",
+        "verification": {
+          "status": 200,
+          "contentType": "image/jpeg",
+          "bytes": 95188,
+          "checkedAt": "2026-11-14T05:01:23.260Z"
+        }
+      },
+      "photos": [
+        {
+          "url": "https://s.tez-tour.com/hotel/2297/1311785680053_middle.jpg",
+          "caption": "PHARAOH AZUR RESORT 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=554",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 95188,
+            "checkedAt": "2026-11-14T05:01:23.260Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/2297/Pool_View_Room_3_3636_middle.jpg",
+          "caption": "PHARAOH AZUR RESORT 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=554",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 45364,
+            "checkedAt": "2026-11-14T05:01:28.581Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/2297/Standard_Room_View_2173_middle.jpg",
+          "caption": "PHARAOH AZUR RESORT 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=554",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 73834,
+            "checkedAt": "2026-11-14T05:01:28.745Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/2297/110153242_4789_middle.jpg",
+          "caption": "PHARAOH AZUR RESORT 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=554",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 42545,
+            "checkedAt": "2026-11-14T05:01:28.389Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/2297/Pool_View_Room__2__6204_middle.jpg",
+          "caption": "PHARAOH AZUR RESORT 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=554",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 43310,
+            "checkedAt": "2026-11-14T05:01:28.220Z"
+          }
+        }
+      ],
+      "rights": "supplier-permission-required"
+    },
+    {
+      "id": 595,
+      "name": "BEACH ALBATROS RESORT HURGHADA 4 *",
+      "siteHotelId": 2186,
+      "source": "https://www.tez-tour.com/hotel.html?id=595",
+      "gallerySource": "https://www.tez-tour.com/data/siteGalleries.html?siteHotelId=2186&lang=ru",
+      "thumbnail": {
+        "url": "https://s.tez-tour.com/hotel/2186/Aqua_Park_19_773_middle.jpg",
+        "caption": "BEACH ALBATROS RESORT HURGHADA 4 *",
+        "source": "https://www.tez-tour.com/hotel.html?id=595",
+        "verification": {
+          "status": 200,
+          "contentType": "image/jpeg",
+          "bytes": 74099,
+          "checkedAt": "2026-11-14T05:01:24.020Z"
+        }
+      },
+      "photos": [
+        {
+          "url": "https://s.tez-tour.com/hotel/2186/Aqua_Park_19_773_middle.jpg",
+          "caption": "BEACH ALBATROS RESORT HURGHADA 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=595",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 74099,
+            "checkedAt": "2026-11-14T05:01:24.020Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/2186/Sidi_Ali_Restaurant_3_6413_middle.jpg",
+          "caption": "BEACH ALBATROS RESORT HURGHADA 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=595",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 72706,
+            "checkedAt": "2026-11-14T05:01:24.007Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/2186/Bungalow_Garden_View_1_5467_middle.jpg",
+          "caption": "BEACH ALBATROS RESORT HURGHADA 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=595",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 59921,
+            "checkedAt": "2026-11-14T05:01:23.810Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/2186/Surf_Pool_3_786_middle.jpg",
+          "caption": "BEACH ALBATROS RESORT HURGHADA 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=595",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 67373,
+            "checkedAt": "2026-11-14T05:01:23.422Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/2186/Standard_Room_Sea_View_1_8293_middle.jpg",
+          "caption": "BEACH ALBATROS RESORT HURGHADA 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=595",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 55174,
+            "checkedAt": "2026-11-14T05:01:23.048Z"
+          }
+        }
+      ],
+      "rights": "supplier-permission-required"
+    },
+    {
+      "id": 597,
+      "name": "JAZ ELITE CASA DEL MAR BEACH 5 *",
+      "siteHotelId": 725,
+      "source": "https://www.tez-tour.com/hotel.html?id=597",
+      "gallerySource": "https://www.tez-tour.com/data/siteGalleries.html?siteHotelId=725&lang=ru",
+      "thumbnail": {
+        "url": "https://s.tez-tour.com/hotel/725/beach-1-202121511_4215_middle.jpg",
+        "caption": "JAZ ELITE CASA DEL MAR BEACH 5 *",
+        "source": "https://www.tez-tour.com/hotel.html?id=597",
+        "verification": {
+          "status": 200,
+          "contentType": "image/jpeg",
+          "bytes": 70254,
+          "checkedAt": "2026-11-14T05:01:28.360Z"
+        }
+      },
+      "photos": [
+        {
+          "url": "https://s.tez-tour.com/hotel/725/beach-1-202121511_4215_middle.jpg",
+          "caption": "JAZ ELITE CASA DEL MAR BEACH 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=597",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 70254,
+            "checkedAt": "2026-11-14T05:01:28.360Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/725/infinity-pool-1-202121511_8639_middle.jpg",
+          "caption": "JAZ ELITE CASA DEL MAR BEACH 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=597",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 57906,
+            "checkedAt": "2026-11-14T05:01:29.113Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/725/Triple-Deluxe-Queen-Bed-pool-view-1063EE-202121511_9849_middle.jpg",
+          "caption": "JAZ ELITE CASA DEL MAR BEACH 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=597",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 59946,
+            "checkedAt": "2026-11-14T05:01:34.778Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/725/gym-202121511_7039_middle.jpg",
+          "caption": "JAZ ELITE CASA DEL MAR BEACH 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=597",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 56877,
+            "checkedAt": "2026-11-14T05:01:33.825Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/725/tennis-202122211_381_middle.jpg",
+          "caption": "JAZ ELITE CASA DEL MAR BEACH 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=597",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 67273,
+            "checkedAt": "2026-11-14T05:01:33.416Z"
+          }
+        }
+      ],
+      "rights": "supplier-permission-required"
+    },
+    {
+      "id": 599,
+      "name": "SWISS INN RESORT HURGHADA 5 *",
+      "siteHotelId": 1536,
+      "source": "https://www.tez-tour.com/hotel.html?id=599",
+      "gallerySource": "https://www.tez-tour.com/data/siteGalleries.html?siteHotelId=1536&lang=ru",
+      "thumbnail": {
+        "url": "https://s.tez-tour.com/hotel/1536/DSC_7073_8478_middle.jpg",
+        "caption": "SWISS INN RESORT HURGHADA 5 *",
+        "source": "https://www.tez-tour.com/hotel.html?id=599",
+        "verification": {
+          "status": 200,
+          "contentType": "image/jpeg",
+          "bytes": 87975,
+          "checkedAt": "2026-11-14T05:01:38.907Z"
+        }
+      },
+      "photos": [
+        {
+          "url": "https://s.tez-tour.com/hotel/1536/DSC_7073_8478_middle.jpg",
+          "caption": "SWISS INN RESORT HURGHADA 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=599",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 87975,
+            "checkedAt": "2026-11-14T05:01:38.907Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/1536/Aquapool_in_Morning_9715_middle.jpg",
+          "caption": "SWISS INN RESORT HURGHADA 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=599",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 72844,
+            "checkedAt": "2026-11-14T05:01:39.303Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/1536/Family_Suite_Twin_Room_3__1343_middle.jpg",
+          "caption": "SWISS INN RESORT HURGHADA 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=599",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 49272,
+            "checkedAt": "2026-11-14T05:01:38.682Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/1536/Family_Suite_Bathroom__4__3809_middle.jpg",
+          "caption": "SWISS INN RESORT HURGHADA 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=599",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 52508,
+            "checkedAt": "2026-11-14T05:01:39.255Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/1536/DSC_7077_1480_middle.jpg",
+          "caption": "SWISS INN RESORT HURGHADA 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=599",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 64831,
+            "checkedAt": "2026-11-14T05:01:45.813Z"
+          }
+        }
+      ],
+      "rights": "supplier-permission-required"
+    },
+    {
+      "id": 601,
+      "name": "LE PACHA 4 *",
+      "siteHotelId": 777,
+      "source": "https://www.tez-tour.com/hotel.html?id=601",
+      "gallerySource": "https://www.tez-tour.com/data/siteGalleries.html?siteHotelId=777&lang=ru",
+      "thumbnail": {
+        "url": "https://s.tez-tour.com/hotel/777/374921003_8849_middle.jpg",
+        "caption": "LE PACHA 4 *",
+        "source": "https://www.tez-tour.com/hotel.html?id=601",
+        "verification": {
+          "status": 200,
+          "contentType": "image/jpeg",
+          "bytes": 70592,
+          "checkedAt": "2026-11-14T05:01:45.790Z"
+        }
+      },
+      "photos": [
+        {
+          "url": "https://s.tez-tour.com/hotel/777/374921003_8849_middle.jpg",
+          "caption": "LE PACHA 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=601",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 70592,
+            "checkedAt": "2026-11-14T05:01:45.790Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/777/Le-Pacha-all_2692_middle.jpg",
+          "caption": "LE PACHA 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=601",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 94084,
+            "checkedAt": "2026-11-14T05:01:45.441Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/777/Main-rest1_147_middle.jpg",
+          "caption": "LE PACHA 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=601",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 78690,
+            "checkedAt": "2026-11-14T05:01:43.642Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/777/Le-Pacha_1454_middle.jpg",
+          "caption": "LE PACHA 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=601",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 51749,
+            "checkedAt": "2026-11-14T05:01:44.031Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/777/Std-Room-_6071_middle.JPG",
+          "caption": "LE PACHA 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=601",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 72496,
+            "checkedAt": "2026-11-14T05:01:43.673Z"
+          }
+        }
+      ],
+      "rights": "supplier-permission-required"
+    },
+    {
+      "id": 607,
+      "name": "SUNNY DAYS PALMA DE MIRETTE 4 *",
+      "siteHotelId": 3661,
+      "source": "https://www.tez-tour.com/hotel.html?id=607",
+      "gallerySource": "https://www.tez-tour.com/data/siteGalleries.html?siteHotelId=3661&lang=ru",
+      "thumbnail": {
+        "url": "https://s.tez-tour.com/hotel/3661/A_8739_middle.JPG",
+        "caption": "SUNNY DAYS PALMA DE MIRETTE 4 *",
+        "source": "https://www.tez-tour.com/hotel.html?id=607",
+        "verification": {
+          "status": 200,
+          "contentType": "image/jpeg",
+          "bytes": 63956,
+          "checkedAt": "2026-11-14T05:01:48.846Z"
+        }
+      },
+      "photos": [
+        {
+          "url": "https://s.tez-tour.com/hotel/3661/A_8739_middle.JPG",
+          "caption": "SUNNY DAYS PALMA DE MIRETTE 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=607",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 63956,
+            "checkedAt": "2026-11-14T05:01:48.846Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/3661/_ETO0828_5159_middle.jpg",
+          "caption": "SUNNY DAYS PALMA DE MIRETTE 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=607",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 37864,
+            "checkedAt": "2026-11-14T05:01:48.485Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/3661/D_7931_middle.JPG",
+          "caption": "SUNNY DAYS PALMA DE MIRETTE 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=607",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 65669,
+            "checkedAt": "2026-11-14T05:01:48.841Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/3661/Overview_4_8001_middle.jpg",
+          "caption": "SUNNY DAYS PALMA DE MIRETTE 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=607",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 61956,
+            "checkedAt": "2026-11-14T05:01:49.236Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/3661/P1288215_5923_middle.jpg",
+          "caption": "SUNNY DAYS PALMA DE MIRETTE 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=607",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 78815,
+            "checkedAt": "2026-11-14T05:01:49.214Z"
+          }
+        }
+      ],
+      "rights": "supplier-permission-required"
+    },
+    {
+      "id": 609,
+      "name": "DEXON ROMA HOTEL 3 *",
+      "siteHotelId": 3271,
+      "source": "https://www.tez-tour.com/hotel.html?id=609",
+      "gallerySource": "https://www.tez-tour.com/data/siteGalleries.html?siteHotelId=3271&lang=ru",
+      "thumbnail": {
+        "url": "https://s.tez-tour.com/hotel/3271/DEXON_@_El-Hadaba_Entrance_3_8497_middle.jpg",
+        "caption": "DEXON ROMA HOTEL 3 *",
+        "source": "https://www.tez-tour.com/hotel.html?id=609",
+        "verification": {
+          "status": 200,
+          "contentType": "image/jpeg",
+          "bytes": 62596,
+          "checkedAt": "2026-11-14T05:01:49.055Z"
+        }
+      },
+      "photos": [
+        {
+          "url": "https://s.tez-tour.com/hotel/3271/DEXON_@_El-Hadaba_Entrance_3_8497_middle.jpg",
+          "caption": "DEXON ROMA HOTEL 3 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=609",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 62596,
+            "checkedAt": "2026-11-14T05:01:49.055Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/3271/DEXON_Lobby_Area_5_8616_middle.jpg",
+          "caption": "DEXON ROMA HOTEL 3 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=609",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 51755,
+            "checkedAt": "2026-11-14T05:01:54.459Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/3271/Orange_&_Aden_Beach_Overview_1956_middle.jpg",
+          "caption": "DEXON ROMA HOTEL 3 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=609",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 83032,
+            "checkedAt": "2026-11-14T05:01:54.456Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/3271/Lobby_Bar_4_1391_middle.jpg",
+          "caption": "DEXON ROMA HOTEL 3 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=609",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 80398,
+            "checkedAt": "2026-11-14T05:01:54.670Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/3271/DSC07798_560_middle.jpg",
+          "caption": "DEXON ROMA HOTEL 3 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=609",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 76842,
+            "checkedAt": "2026-11-14T05:01:54.864Z"
+          }
+        }
+      ],
+      "rights": "supplier-permission-required"
+    },
+    {
+      "id": 611,
+      "name": "PICKALBATROS WHITE BEACH RESORT HURGHADA 5 *",
+      "siteHotelId": 4119,
+      "source": "https://www.tez-tour.com/hotel.html?id=611",
+      "gallerySource": "https://www.tez-tour.com/data/siteGalleries.html?siteHotelId=4119&lang=ru",
+      "thumbnail": {
+        "url": "https://s.tez-tour.com/hotel/4119/Overview_9_4935_middle.jpg",
+        "caption": "PICKALBATROS WHITE BEACH RESORT HURGHADA 5 *",
+        "source": "https://www.tez-tour.com/hotel.html?id=611",
+        "verification": {
+          "status": 200,
+          "contentType": "image/jpeg",
+          "bytes": 84305,
+          "checkedAt": "2026-11-14T05:01:54.267Z"
+        }
+      },
+      "photos": [
+        {
+          "url": "https://s.tez-tour.com/hotel/4119/Overview_9_4935_middle.jpg",
+          "caption": "PICKALBATROS WHITE BEACH RESORT HURGHADA 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=611",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 84305,
+            "checkedAt": "2026-11-14T05:01:54.267Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/4119/Entrance_2_9643_middle.jpg",
+          "caption": "PICKALBATROS WHITE BEACH RESORT HURGHADA 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=611",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 74207,
+            "checkedAt": "2026-11-14T05:01:54.457Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/4119/Soprano_Restaurant_2_8842_middle.jpg",
+          "caption": "PICKALBATROS WHITE BEACH RESORT HURGHADA 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=611",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 70500,
+            "checkedAt": "2026-11-14T05:02:00.846Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/4119/Olympus_Bar_5_8317_middle.jpg",
+          "caption": "PICKALBATROS WHITE BEACH RESORT HURGHADA 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=611",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 76694,
+            "checkedAt": "2026-11-14T05:01:59.322Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/4119/Sports_Bar_4_3432_middle.jpg",
+          "caption": "PICKALBATROS WHITE BEACH RESORT HURGHADA 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=611",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 71339,
+            "checkedAt": "2026-11-14T05:02:00.443Z"
+          }
+        }
+      ],
+      "rights": "supplier-permission-required"
+    },
+    {
+      "id": 986,
+      "name": "SEA GULL RESORT 4+ *",
+      "siteHotelId": 3894,
+      "source": "https://www.tez-tour.com/hotel.html?id=986",
+      "gallerySource": "https://www.tez-tour.com/data/siteGalleries.html?siteHotelId=3894&lang=ru",
+      "thumbnail": {
+        "url": "https://s.tez-tour.com/hotel/3894/P1255456_4328_middle.jpg",
+        "caption": "SEA GULL RESORT 4+ *",
+        "source": "https://www.tez-tour.com/hotel.html?id=986",
+        "verification": {
+          "status": 200,
+          "contentType": "image/jpeg",
+          "bytes": 82075,
+          "checkedAt": "2026-11-14T05:01:59.874Z"
+        }
+      },
+      "photos": [
+        {
+          "url": "https://s.tez-tour.com/hotel/3894/P1255456_4328_middle.jpg",
+          "caption": "SEA GULL RESORT 4+ *",
+          "source": "https://www.tez-tour.com/hotel.html?id=986",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 82075,
+            "checkedAt": "2026-11-14T05:01:59.874Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/3894/Seagull_Club2_668_middle.jpg",
+          "caption": "SEA GULL RESORT 4+ *",
+          "source": "https://www.tez-tour.com/hotel.html?id=986",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 96121,
+            "checkedAt": "2026-11-14T05:01:59.907Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/3894/6J3A6946-HDR_7422_middle.jpg",
+          "caption": "SEA GULL RESORT 4+ *",
+          "source": "https://www.tez-tour.com/hotel.html?id=986",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 118182,
+            "checkedAt": "2026-11-14T05:01:59.894Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/3894/6J3A5668_138_middle.jpg",
+          "caption": "SEA GULL RESORT 4+ *",
+          "source": "https://www.tez-tour.com/hotel.html?id=986",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 96094,
+            "checkedAt": "2026-11-14T05:02:05.324Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/3894/Family_Room__5__8317_middle.jpg",
+          "caption": "SEA GULL RESORT 4+ *",
+          "source": "https://www.tez-tour.com/hotel.html?id=986",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 50626,
+            "checkedAt": "2026-11-14T05:02:05.141Z"
+          }
+        }
+      ],
+      "rights": "supplier-permission-required"
+    },
+    {
+      "id": 992,
+      "name": "MOVENPICK HURGHADA (EX. MERCURE HURGHADA) 4 *",
+      "siteHotelId": 3638,
+      "source": "https://www.tez-tour.com/hotel.html?id=992",
+      "gallerySource": "https://www.tez-tour.com/data/siteGalleries.html?siteHotelId=3638&lang=ru",
+      "thumbnail": {
+        "url": "https://s.tez-tour.com/hotel/3638/MERCURE-HURGHADA_164_picture_10012024_1247_659e7fab5ec699_29671522_2844_middle.jpg",
+        "caption": "MOVENPICK HURGHADA (EX. MERCURE HURGHADA) 4 *",
+        "source": "https://www.tez-tour.com/hotel.html?id=992",
+        "verification": {
+          "status": 200,
+          "contentType": "image/jpeg",
+          "bytes": 89276,
+          "checkedAt": "2026-11-14T05:02:05.514Z"
+        }
+      },
+      "photos": [
+        {
+          "url": "https://s.tez-tour.com/hotel/3638/MERCURE-HURGHADA_164_picture_10012024_1247_659e7fab5ec699_29671522_2844_middle.jpg",
+          "caption": "MOVENPICK HURGHADA (EX. MERCURE HURGHADA) 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=992",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 89276,
+            "checkedAt": "2026-11-14T05:02:05.514Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/3638/Main_Restaurant__3__2521_middle.jpg",
+          "caption": "MOVENPICK HURGHADA (EX. MERCURE HURGHADA) 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=992",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 52194,
+            "checkedAt": "2026-11-14T05:02:05.357Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/3638/Superior_Twin_Room_5718_middle.jpg",
+          "caption": "MOVENPICK HURGHADA (EX. MERCURE HURGHADA) 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=992",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 39668,
+            "checkedAt": "2026-11-14T05:02:04.937Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/3638/SPA__2__5213_middle.jpg",
+          "caption": "MOVENPICK HURGHADA (EX. MERCURE HURGHADA) 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=992",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 74707,
+            "checkedAt": "2026-11-14T05:02:05.716Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/3638/Snack_Bar__2__3763_middle.jpg",
+          "caption": "MOVENPICK HURGHADA (EX. MERCURE HURGHADA) 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=992",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 61112,
+            "checkedAt": "2026-11-14T05:02:13.852Z"
+          }
+        }
+      ],
+      "rights": "supplier-permission-required"
+    },
+    {
+      "id": 1050,
+      "name": "SUNNY DAYS MIRETTE FAMILY AQUA PARK RESORT 3 *",
+      "siteHotelId": 2069,
+      "source": "https://www.tez-tour.com/hotel.html?id=1050",
+      "gallerySource": "https://www.tez-tour.com/data/siteGalleries.html?siteHotelId=2069&lang=ru",
+      "thumbnail": {
+        "url": "https://s.tez-tour.com/hotel/2069/Mirette_Overview_2_9921_middle.jpg",
+        "caption": "SUNNY DAYS MIRETTE FAMILY AQUA PARK RESORT 3 *",
+        "source": "https://www.tez-tour.com/hotel.html?id=1050",
+        "verification": {
+          "status": 200,
+          "contentType": "image/jpeg",
+          "bytes": 62304,
+          "checkedAt": "2026-11-14T05:02:10.551Z"
+        }
+      },
+      "photos": [
+        {
+          "url": "https://s.tez-tour.com/hotel/2069/Mirette_Overview_2_9921_middle.jpg",
+          "caption": "SUNNY DAYS MIRETTE FAMILY AQUA PARK RESORT 3 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=1050",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 62304,
+            "checkedAt": "2026-11-14T05:02:10.551Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/2069/People_on_tennis_court_922_middle.jpg",
+          "caption": "SUNNY DAYS MIRETTE FAMILY AQUA PARK RESORT 3 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=1050",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 135525,
+            "checkedAt": "2026-11-14T05:02:10.547Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/2069/Mirette_Family_Apartment_4_9681_middle.jpg",
+          "caption": "SUNNY DAYS MIRETTE FAMILY AQUA PARK RESORT 3 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=1050",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 41931,
+            "checkedAt": "2026-11-14T05:02:10.126Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/2069/Mirette_Family_Apartment_1_8418_middle.jpg",
+          "caption": "SUNNY DAYS MIRETTE FAMILY AQUA PARK RESORT 3 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=1050",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 54870,
+            "checkedAt": "2026-11-14T05:02:12.067Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/2069/Mirette_Overview_1_5929_middle.jpg",
+          "caption": "SUNNY DAYS MIRETTE FAMILY AQUA PARK RESORT 3 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=1050",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 83668,
+            "checkedAt": "2026-11-14T05:02:10.365Z"
+          }
+        }
+      ],
+      "rights": "supplier-permission-required"
+    },
+    {
+      "id": 1061,
+      "name": "SAND BEACH 3 *",
+      "siteHotelId": 1491,
+      "source": "https://www.tez-tour.com/hotel.html?id=1061",
+      "gallerySource": "https://www.tez-tour.com/data/siteGalleries.html?siteHotelId=1491&lang=ru",
+      "thumbnail": {
+        "url": "https://s.tez-tour.com/hotel/1491/DSC_8767_-_Copy_1850_middle.JPG",
+        "caption": "SAND BEACH 3 *",
+        "source": "https://www.tez-tour.com/hotel.html?id=1061",
+        "verification": {
+          "status": 200,
+          "contentType": "image/jpeg",
+          "bytes": 88057,
+          "checkedAt": "2026-11-14T05:02:15.307Z"
+        }
+      },
+      "photos": [
+        {
+          "url": "https://s.tez-tour.com/hotel/1491/DSC_8767_-_Copy_1850_middle.JPG",
+          "caption": "SAND BEACH 3 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=1061",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 88057,
+            "checkedAt": "2026-11-14T05:02:15.307Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/1491/DSC_8879_4283_middle.JPG",
+          "caption": "SAND BEACH 3 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=1061",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 112550,
+            "checkedAt": "2026-11-14T05:02:15.874Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/1491/E07A9929_8440_middle.JPG",
+          "caption": "SAND BEACH 3 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=1061",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 86625,
+            "checkedAt": "2026-11-14T05:02:15.723Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/1491/untitled-01725_6982_middle.jpg",
+          "caption": "SAND BEACH 3 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=1061",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 84571,
+            "checkedAt": "2026-11-14T05:02:15.517Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/1491/DSC_4571_3175_middle.JPG",
+          "caption": "SAND BEACH 3 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=1061",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 93469,
+            "checkedAt": "2026-11-14T05:02:16.094Z"
+          }
+        }
+      ],
+      "rights": "supplier-permission-required"
+    },
+    {
+      "id": 9946,
+      "name": "SINDBAD CLUB 4 *",
+      "siteHotelId": 1730,
+      "source": "https://www.tez-tour.com/hotel.html?id=9946",
+      "gallerySource": "https://www.tez-tour.com/data/siteGalleries.html?siteHotelId=1730&lang=ru",
+      "thumbnail": {
+        "url": "https://s.tez-tour.com/hotel/1730/010-A-exterior_131988435_8233_middle.jpg",
+        "caption": "SINDBAD CLUB 4 *",
+        "source": "https://www.tez-tour.com/hotel.html?id=9946",
+        "verification": {
+          "status": 200,
+          "contentType": "image/jpeg",
+          "bytes": 98545,
+          "checkedAt": "2026-11-14T05:02:15.916Z"
+        }
+      },
+      "photos": [
+        {
+          "url": "https://s.tez-tour.com/hotel/1730/010-A-exterior_131988435_8233_middle.jpg",
+          "caption": "SINDBAD CLUB 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=9946",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 98545,
+            "checkedAt": "2026-11-14T05:02:15.916Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/1730/043-R-restaurant_131988478_1092_middle.jpg",
+          "caption": "SINDBAD CLUB 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=9946",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 52924,
+            "checkedAt": "2026-11-14T05:02:20.340Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/1730/047-GA-garden_131988482_3528_middle.jpg",
+          "caption": "SINDBAD CLUB 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=9946",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 66207,
+            "checkedAt": "2026-11-14T05:02:20.695Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/1730/031-R-restaurant_131988462_3465_middle.jpg",
+          "caption": "SINDBAD CLUB 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=9946",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 67642,
+            "checkedAt": "2026-11-14T05:02:21.047Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/1730/042-R-restaurant_131988477_4227_middle.jpg",
+          "caption": "SINDBAD CLUB 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=9946",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 56157,
+            "checkedAt": "2026-11-14T05:02:20.707Z"
+          }
+        }
+      ],
+      "rights": "supplier-permission-required"
+    },
+    {
+      "id": 16279,
+      "name": "MINAMARK RESORT & SPA 4 *",
+      "siteHotelId": 1462,
+      "source": "https://www.tez-tour.com/hotel.html?id=16279",
+      "gallerySource": "https://www.tez-tour.com/data/siteGalleries.html?siteHotelId=1462&lang=ru",
+      "thumbnail": {
+        "url": "https://s.tez-tour.com/hotel/1462/01__3__5715_middle.jpg",
+        "caption": "MINAMARK RESORT & SPA 4 *",
+        "source": "https://www.tez-tour.com/hotel.html?id=16279",
+        "verification": {
+          "status": 200,
+          "contentType": "image/jpeg",
+          "bytes": 66935,
+          "checkedAt": "2026-11-14T05:02:25.938Z"
+        }
+      },
+      "photos": [
+        {
+          "url": "https://s.tez-tour.com/hotel/1462/01__3__5715_middle.jpg",
+          "caption": "MINAMARK RESORT & SPA 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=16279",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 66935,
+            "checkedAt": "2026-11-14T05:02:25.938Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/1462/Kids_Area__7__9179_middle.jpg",
+          "caption": "MINAMARK RESORT & SPA 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=16279",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 79327,
+            "checkedAt": "2026-11-14T05:02:25.711Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/1462/Beach__10__511_middle.jpg",
+          "caption": "MINAMARK RESORT & SPA 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=16279",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 70752,
+            "checkedAt": "2026-11-14T05:02:25.349Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/1462/Aqua_Park__1__9087_middle.JPG",
+          "caption": "MINAMARK RESORT & SPA 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=16279",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 77312,
+            "checkedAt": "2026-11-14T05:02:32.293Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/1462/Bazzar_Area__6__3812_middle.jpg",
+          "caption": "MINAMARK RESORT & SPA 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=16279",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 82768,
+            "checkedAt": "2026-11-14T05:02:31.119Z"
+          }
+        }
+      ],
+      "rights": "supplier-permission-required"
+    },
+    {
+      "id": 23638,
+      "name": "SUNRISE GARDEN BEACH RESORT SELECT 5 *",
+      "siteHotelId": 946,
+      "source": "https://www.tez-tour.com/hotel.html?id=23638",
+      "gallerySource": "https://www.tez-tour.com/data/siteGalleries.html?siteHotelId=946&lang=ru",
+      "thumbnail": {
+        "url": "https://s.tez-tour.com/hotel/946/02__GB_Pool_Overview_2_8031_middle.jpg",
+        "caption": "SUNRISE GARDEN BEACH RESORT SELECT 5 *",
+        "source": "https://www.tez-tour.com/hotel.html?id=23638",
+        "verification": {
+          "status": 200,
+          "contentType": "image/jpeg",
+          "bytes": 82069,
+          "checkedAt": "2026-11-14T05:02:21.203Z"
+        }
+      },
+      "photos": [
+        {
+          "url": "https://s.tez-tour.com/hotel/946/02__GB_Pool_Overview_2_8031_middle.jpg",
+          "caption": "SUNRISE GARDEN BEACH RESORT SELECT 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=23638",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 82069,
+            "checkedAt": "2026-11-14T05:02:21.203Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/946/GB_-_Nasaya_Friends_2596_middle.jpg",
+          "caption": "SUNRISE GARDEN BEACH RESORT SELECT 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=23638",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 62819,
+            "checkedAt": "2026-11-14T05:02:21.137Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/946/GB_Beach_Front_Room_6945_middle.jpg",
+          "caption": "SUNRISE GARDEN BEACH RESORT SELECT 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=23638",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 65151,
+            "checkedAt": "2026-11-14T05:02:25.332Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/946/GB_Family_Bunk_Bed_2_1635_middle.jpg",
+          "caption": "SUNRISE GARDEN BEACH RESORT SELECT 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=23638",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 59998,
+            "checkedAt": "2026-11-14T05:02:25.556Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/946/GB_Junior_Suite_3_6041_middle.jpg",
+          "caption": "SUNRISE GARDEN BEACH RESORT SELECT 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=23638",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 56626,
+            "checkedAt": "2026-11-14T05:02:25.736Z"
+          }
+        }
+      ],
+      "rights": "supplier-permission-required"
+    },
+    {
+      "id": 23882,
+      "name": "BEL AIR AZUR BEACH RESORT 3 *",
+      "siteHotelId": 3566,
+      "source": "https://www.tez-tour.com/hotel.html?id=23882",
+      "gallerySource": "https://www.tez-tour.com/data/siteGalleries.html?siteHotelId=3566&lang=ru",
+      "thumbnail": {
+        "url": "https://s.tez-tour.com/hotel/3566/1_5954_middle.jpg",
+        "caption": "BEL AIR AZUR BEACH RESORT 3 *",
+        "source": "https://www.tez-tour.com/hotel.html?id=23882",
+        "verification": {
+          "status": 200,
+          "contentType": "image/jpeg",
+          "bytes": 87404,
+          "checkedAt": "2026-11-14T05:02:31.112Z"
+        }
+      },
+      "photos": [
+        {
+          "url": "https://s.tez-tour.com/hotel/3566/1_5954_middle.jpg",
+          "caption": "BEL AIR AZUR BEACH RESORT 3 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=23882",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 87404,
+            "checkedAt": "2026-11-14T05:02:31.112Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/3566/KINGSIZEBED-1920x1280_1708_middle.jpg",
+          "caption": "BEL AIR AZUR BEACH RESORT 3 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=23882",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 51324,
+            "checkedAt": "2026-11-14T05:02:32.297Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/3566/SNACKBAR-1024x683_9667_middle.jpg",
+          "caption": "BEL AIR AZUR BEACH RESORT 3 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=23882",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 71569,
+            "checkedAt": "2026-11-14T05:02:30.742Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/3566/BEACH-MAIN-16x9-1-1024x576_7170_middle.jpg",
+          "caption": "BEL AIR AZUR BEACH RESORT 3 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=23882",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 50321,
+            "checkedAt": "2026-11-14T05:02:31.096Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/3566/HERO-SHOT-OVERVIEW-1-1920x1280_2731_middle.jpg",
+          "caption": "BEL AIR AZUR BEACH RESORT 3 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=23882",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 89641,
+            "checkedAt": "2026-11-14T05:02:35.800Z"
+          }
+        }
+      ],
+      "rights": "supplier-permission-required"
+    },
+    {
+      "id": 24001,
+      "name": "ARABIA AZUR 3 *",
+      "siteHotelId": 406,
+      "source": "https://www.tez-tour.com/hotel.html?id=24001",
+      "gallerySource": "https://www.tez-tour.com/data/siteGalleries.html?siteHotelId=406&lang=ru",
+      "thumbnail": {
+        "url": "https://s.tez-tour.com/hotel/406/444_8324_middle.jpg",
+        "caption": "ARABIA AZUR 3 *",
+        "source": "https://www.tez-tour.com/hotel.html?id=24001",
+        "verification": {
+          "status": 200,
+          "contentType": "image/jpeg",
+          "bytes": 76132,
+          "checkedAt": "2026-11-14T05:02:35.999Z"
+        }
+      },
+      "photos": [
+        {
+          "url": "https://s.tez-tour.com/hotel/406/444_8324_middle.jpg",
+          "caption": "ARABIA AZUR 3 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=24001",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 76132,
+            "checkedAt": "2026-11-14T05:02:35.999Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/406/MAINBUILDING_295_middle.jpg",
+          "caption": "ARABIA AZUR 3 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=24001",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 76548,
+            "checkedAt": "2026-11-14T05:02:36.370Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/406/BILLARD_4521_middle.jpg",
+          "caption": "ARABIA AZUR 3 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=24001",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 63291,
+            "checkedAt": "2026-11-14T05:02:35.785Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/406/Lawrence_Disco_6883_middle.jpg",
+          "caption": "ARABIA AZUR 3 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=24001",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 63337,
+            "checkedAt": "2026-11-14T05:02:35.991Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/406/ROOM_Kingsize_bed_7474_middle.jpg",
+          "caption": "ARABIA AZUR 3 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=24001",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 48749,
+            "checkedAt": "2026-11-14T05:02:36.178Z"
+          }
+        }
+      ],
+      "rights": "supplier-permission-required"
+    },
+    {
+      "id": 40110,
+      "name": "TITANIC RESORT & AQUA PARK 4 *",
+      "siteHotelId": 3402,
+      "source": "https://www.tez-tour.com/hotel.html?id=40110",
+      "gallerySource": "https://www.tez-tour.com/data/siteGalleries.html?siteHotelId=3402&lang=ru",
+      "thumbnail": {
+        "url": "https://s.tez-tour.com/hotel/3402/03_4305_middle.jpg",
+        "caption": "TITANIC RESORT & AQUA PARK 4 *",
+        "source": "https://www.tez-tour.com/hotel.html?id=40110",
+        "verification": {
+          "status": 200,
+          "contentType": "image/jpeg",
+          "bytes": 125743,
+          "checkedAt": "2026-11-14T05:02:42.156Z"
+        }
+      },
+      "photos": [
+        {
+          "url": "https://s.tez-tour.com/hotel/3402/03_4305_middle.jpg",
+          "caption": "TITANIC RESORT & AQUA PARK 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=40110",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 125743,
+            "checkedAt": "2026-11-14T05:02:42.156Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/3402/1__18__539_middle.jpg",
+          "caption": "TITANIC RESORT & AQUA PARK 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=40110",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 75303,
+            "checkedAt": "2026-11-14T05:02:42.494Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/3402/1__57__9983_middle.jpg",
+          "caption": "TITANIC RESORT & AQUA PARK 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=40110",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 59827,
+            "checkedAt": "2026-11-14T05:02:44.261Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/3402/1__8__4245_middle.jpg",
+          "caption": "TITANIC RESORT & AQUA PARK 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=40110",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 79144,
+            "checkedAt": "2026-11-14T05:02:43.309Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/3402/1__62__7494_middle.jpg",
+          "caption": "TITANIC RESORT & AQUA PARK 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=40110",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 90194,
+            "checkedAt": "2026-11-14T05:02:41.765Z"
+          }
+        }
+      ],
+      "rights": "supplier-permission-required"
+    },
+    {
+      "id": 41235,
+      "name": "PICKALBATROS DANA BEACH RESORT 5 *",
+      "siteHotelId": 2945,
+      "source": "https://www.tez-tour.com/hotel.html?id=41235",
+      "gallerySource": "https://www.tez-tour.com/data/siteGalleries.html?siteHotelId=2945&lang=ru",
+      "thumbnail": {
+        "url": "https://s.tez-tour.com/hotel/2945/01_Over_View_1_4449_middle.jpg",
+        "caption": "PICKALBATROS DANA BEACH RESORT 5 *",
+        "source": "https://www.tez-tour.com/hotel.html?id=41235",
+        "verification": {
+          "status": 200,
+          "contentType": "image/jpeg",
+          "bytes": 70426,
+          "checkedAt": "2026-11-14T05:02:43.883Z"
+        }
+      },
+      "photos": [
+        {
+          "url": "https://s.tez-tour.com/hotel/2945/01_Over_View_1_4449_middle.jpg",
+          "caption": "PICKALBATROS DANA BEACH RESORT 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=41235",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 70426,
+            "checkedAt": "2026-11-14T05:02:43.883Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/2945/Standard_Room_Pool_View1_7014_middle.jpg",
+          "caption": "PICKALBATROS DANA BEACH RESORT 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=41235",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 46913,
+            "checkedAt": "2026-11-14T05:02:46.746Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/2945/Lobby_1_7393_middle.jpg",
+          "caption": "PICKALBATROS DANA BEACH RESORT 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=41235",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 70855,
+            "checkedAt": "2026-11-14T05:02:46.980Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/2945/Beach_Overview_13_6891_middle.jpg",
+          "caption": "PICKALBATROS DANA BEACH RESORT 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=41235",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 99582,
+            "checkedAt": "2026-11-14T05:02:47.328Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/2945/Superior_Room_Sea_View_3_6406_middle.jpg",
+          "caption": "PICKALBATROS DANA BEACH RESORT 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=41235",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 57288,
+            "checkedAt": "2026-11-14T05:02:46.765Z"
+          }
+        }
+      ],
+      "rights": "supplier-permission-required"
+    },
+    {
+      "id": 41290,
+      "name": "PICKALBATROS ALF LEILA WA LEILA BY NEVERLAND HURGHADA 4 *",
+      "siteHotelId": 1873,
+      "source": "https://www.tez-tour.com/hotel.html?id=41290",
+      "gallerySource": "https://www.tez-tour.com/data/siteGalleries.html?siteHotelId=1873&lang=ru",
+      "thumbnail": {
+        "url": "https://s.tez-tour.com/hotel/1873/Overview_14_1524_middle.jpg",
+        "caption": "PICKALBATROS ALF LEILA WA LEILA BY NEVERLAND HURGHADA 4 *",
+        "source": "https://www.tez-tour.com/hotel.html?id=41290",
+        "verification": {
+          "status": 200,
+          "contentType": "image/jpeg",
+          "bytes": 72487,
+          "checkedAt": "2026-11-14T05:02:47.175Z"
+        }
+      },
+      "photos": [
+        {
+          "url": "https://s.tez-tour.com/hotel/1873/Overview_14_1524_middle.jpg",
+          "caption": "PICKALBATROS ALF LEILA WA LEILA BY NEVERLAND HURGHADA 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=41290",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 72487,
+            "checkedAt": "2026-11-14T05:02:47.175Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/1873/Columbus_Bar_7_2826_middle.jpg",
+          "caption": "PICKALBATROS ALF LEILA WA LEILA BY NEVERLAND HURGHADA 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=41290",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 55325,
+            "checkedAt": "2026-11-14T05:02:47.368Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/1873/Jungle_Beach_Overview_1_6140_middle.jpg",
+          "caption": "PICKALBATROS ALF LEILA WA LEILA BY NEVERLAND HURGHADA 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=41290",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 74068,
+            "checkedAt": "2026-11-14T05:02:52.066Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/1873/Mediterranean_Restaurant_2_5195_middle.jpg",
+          "caption": "PICKALBATROS ALF LEILA WA LEILA BY NEVERLAND HURGHADA 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=41290",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 72830,
+            "checkedAt": "2026-11-14T05:02:52.651Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/1873/Overview_18_854_middle.jpg",
+          "caption": "PICKALBATROS ALF LEILA WA LEILA BY NEVERLAND HURGHADA 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=41290",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 63128,
+            "checkedAt": "2026-11-14T05:02:52.448Z"
+          }
+        }
+      ],
+      "rights": "supplier-permission-required"
+    },
+    {
+      "id": 41299,
+      "name": "PICKALBATROS AQUA PARK RESORT HURGHADA 4 *",
+      "siteHotelId": 319,
+      "source": "https://www.tez-tour.com/hotel.html?id=41299",
+      "gallerySource": "https://www.tez-tour.com/data/siteGalleries.html?siteHotelId=319&lang=ru",
+      "thumbnail": {
+        "url": "https://s.tez-tour.com/hotel/319/Over_View_8_2664_middle.jpg",
+        "caption": "PICKALBATROS AQUA PARK RESORT HURGHADA 4 *",
+        "source": "https://www.tez-tour.com/hotel.html?id=41299",
+        "verification": {
+          "status": 200,
+          "contentType": "image/jpeg",
+          "bytes": 97705,
+          "checkedAt": "2026-11-14T05:02:52.280Z"
+        }
+      },
+      "photos": [
+        {
+          "url": "https://s.tez-tour.com/hotel/319/Over_View_8_2664_middle.jpg",
+          "caption": "PICKALBATROS AQUA PARK RESORT HURGHADA 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=41299",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 97705,
+            "checkedAt": "2026-11-14T05:02:52.280Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/319/Football_Court_5_1517_middle.JPG",
+          "caption": "PICKALBATROS AQUA PARK RESORT HURGHADA 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=41299",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 49107,
+            "checkedAt": "2026-11-14T05:02:52.125Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/319/Spa_1_5841_middle.jpg",
+          "caption": "PICKALBATROS AQUA PARK RESORT HURGHADA 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=41299",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 66446,
+            "checkedAt": "2026-11-14T05:02:52.312Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/319/Sports_Bar_2_9982_middle.jpg",
+          "caption": "PICKALBATROS AQUA PARK RESORT HURGHADA 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=41299",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 63485,
+            "checkedAt": "2026-11-14T05:02:57.883Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/319/Beach_1_1__7829_middle.jpg",
+          "caption": "PICKALBATROS AQUA PARK RESORT HURGHADA 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=41299",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 80385,
+            "checkedAt": "2026-11-14T05:02:58.437Z"
+          }
+        }
+      ],
+      "rights": "supplier-permission-required"
+    },
+    {
+      "id": 41845,
+      "name": "SUNNY DAYS EL PALACIO RESORT & SPA 4 *",
+      "siteHotelId": 3350,
+      "source": "https://www.tez-tour.com/hotel.html?id=41845",
+      "gallerySource": "https://www.tez-tour.com/data/siteGalleries.html?siteHotelId=3350&lang=ru",
+      "thumbnail": {
+        "url": "https://s.tez-tour.com/hotel/3350/Overview_1_7431_61131CF29433C488CF8999951AE7E061_6909_middle.jpg",
+        "caption": "SUNNY DAYS EL PALACIO RESORT & SPA 4 *",
+        "source": "https://www.tez-tour.com/hotel.html?id=41845",
+        "verification": {
+          "status": 200,
+          "contentType": "image/jpeg",
+          "bytes": 61012,
+          "checkedAt": "2026-11-14T05:03:03.510Z"
+        }
+      },
+      "photos": [
+        {
+          "url": "https://s.tez-tour.com/hotel/3350/Overview_1_7431_61131CF29433C488CF8999951AE7E061_6909_middle.jpg",
+          "caption": "SUNNY DAYS EL PALACIO RESORT & SPA 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=41845",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 61012,
+            "checkedAt": "2026-11-14T05:03:03.510Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/3350/Layalina_Restaurant_3_4978_middle.jpg",
+          "caption": "SUNNY DAYS EL PALACIO RESORT & SPA 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=41845",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 82375,
+            "checkedAt": "2026-11-14T05:03:04.324Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/3350/Overview_2_4228_middle.jpg",
+          "caption": "SUNNY DAYS EL PALACIO RESORT & SPA 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=41845",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 72220,
+            "checkedAt": "2026-11-14T05:03:04.477Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/3350/Layalina_Restaurant_5_3900_middle.jpg",
+          "caption": "SUNNY DAYS EL PALACIO RESORT & SPA 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=41845",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 66333,
+            "checkedAt": "2026-11-14T05:03:04.494Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/3350/Health_Club-1_6362_middle.jpg",
+          "caption": "SUNNY DAYS EL PALACIO RESORT & SPA 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=41845",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 63759,
+            "checkedAt": "2026-11-14T05:03:03.878Z"
+          }
+        }
+      ],
+      "rights": "supplier-permission-required"
+    },
+    {
+      "id": 48502,
+      "name": "SUNRISE HOLIDAYS 5 *",
+      "siteHotelId": 2616,
+      "source": "https://www.tez-tour.com/hotel.html?id=48502",
+      "gallerySource": "https://www.tez-tour.com/data/siteGalleries.html?siteHotelId=2616&lang=ru",
+      "thumbnail": {
+        "url": "https://s.tez-tour.com/hotel/2616/03_HO_Beach_&_Pool_2_215_middle.jpg",
+        "caption": "SUNRISE HOLIDAYS 5 *",
+        "source": "https://www.tez-tour.com/hotel.html?id=48502",
+        "verification": {
+          "status": 200,
+          "contentType": "image/jpeg",
+          "bytes": 85065,
+          "checkedAt": "2026-11-14T05:02:58.027Z"
+        }
+      },
+      "photos": [
+        {
+          "url": "https://s.tez-tour.com/hotel/2616/03_HO_Beach_&_Pool_2_215_middle.jpg",
+          "caption": "SUNRISE HOLIDAYS 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=48502",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 85065,
+            "checkedAt": "2026-11-14T05:02:58.027Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/2616/5998a30f67b57bfca079549f675957e9_2915_middle.jpg",
+          "caption": "SUNRISE HOLIDAYS 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=48502",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 51452,
+            "checkedAt": "2026-11-14T05:02:58.237Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/2616/HO_Premium_room_empty1_5261_middle.jpg",
+          "caption": "SUNRISE HOLIDAYS 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=48502",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 50334,
+            "checkedAt": "2026-11-14T05:02:58.051Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/2616/64ed9dd983ff2f66293c7a02181c4195_6659_middle.jpg",
+          "caption": "SUNRISE HOLIDAYS 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=48502",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 55496,
+            "checkedAt": "2026-11-14T05:02:58.253Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/2616/HO_Nasaya_Entrance_1_2552_middle.jpg",
+          "caption": "SUNRISE HOLIDAYS 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=48502",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 70064,
+            "checkedAt": "2026-11-14T05:03:04.482Z"
+          }
+        }
+      ],
+      "rights": "supplier-permission-required"
+    },
+    {
+      "id": 58043,
+      "name": "SUNRISE ALMA BAY RESORT 4 *",
+      "siteHotelId": 4240,
+      "source": "https://www.tez-tour.com/hotel.html?id=58043",
+      "gallerySource": "https://www.tez-tour.com/data/siteGalleries.html?siteHotelId=4240&lang=ru",
+      "thumbnail": {
+        "url": "https://s.tez-tour.com/hotel/4240/Protels_Grand_Seas_Resort_011_5931_middle.jpg",
+        "caption": "SUNRISE ALMA BAY RESORT 4 *",
+        "source": "https://www.tez-tour.com/hotel.html?id=58043",
+        "verification": {
+          "status": 200,
+          "contentType": "image/jpeg",
+          "bytes": 82251,
+          "checkedAt": "2026-11-14T05:03:09.158Z"
+        }
+      },
+      "photos": [
+        {
+          "url": "https://s.tez-tour.com/hotel/4240/Protels_Grand_Seas_Resort_011_5931_middle.jpg",
+          "caption": "SUNRISE ALMA BAY RESORT 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=58043",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 82251,
+            "checkedAt": "2026-11-14T05:03:09.158Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/4240/Protels_Grand_Seas_Resort_053_1055_middle.jpg",
+          "caption": "SUNRISE ALMA BAY RESORT 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=58043",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 63803,
+            "checkedAt": "2026-11-14T05:03:08.916Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/4240/Protels_Grand_Seas_Resort_048_6618_middle.jpg",
+          "caption": "SUNRISE ALMA BAY RESORT 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=58043",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 60213,
+            "checkedAt": "2026-11-14T05:03:08.773Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/4240/Protels_Grand_Seas_Resort_022_9065_middle.jpg",
+          "caption": "SUNRISE ALMA BAY RESORT 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=58043",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 57898,
+            "checkedAt": "2026-11-14T05:03:08.703Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/4240/3_5_Overview_999_middle.jpg",
+          "caption": "SUNRISE ALMA BAY RESORT 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=58043",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 79955,
+            "checkedAt": "2026-11-14T05:03:08.565Z"
+          }
+        }
+      ],
+      "rights": "supplier-permission-required"
+    },
+    {
+      "id": 70398,
+      "name": "STEIGENBERGER AL DAU BEACH 5 *",
+      "siteHotelId": 3484,
+      "source": "https://www.tez-tour.com/hotel.html?id=70398",
+      "gallerySource": "https://www.tez-tour.com/data/siteGalleries.html?siteHotelId=3484&lang=ru",
+      "thumbnail": {
+        "url": "https://s.tez-tour.com/hotel/3484/01_SABH_Landscape_Night_5231_middle.jpg",
+        "caption": "STEIGENBERGER AL DAU BEACH 5 *",
+        "source": "https://www.tez-tour.com/hotel.html?id=70398",
+        "verification": {
+          "status": 200,
+          "contentType": "image/jpeg",
+          "bytes": 70696,
+          "checkedAt": "2026-11-14T05:03:09.897Z"
+        }
+      },
+      "photos": [
+        {
+          "url": "https://s.tez-tour.com/hotel/3484/01_SABH_Landscape_Night_5231_middle.jpg",
+          "caption": "STEIGENBERGER AL DAU BEACH 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=70398",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 70696,
+            "checkedAt": "2026-11-14T05:03:09.897Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/3484/Standard_Room_1856_middle.jpg",
+          "caption": "STEIGENBERGER AL DAU BEACH 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=70398",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 54098,
+            "checkedAt": "2026-11-14T05:03:13.758Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/3484/SABH_Spa_911_middle.jpg",
+          "caption": "STEIGENBERGER AL DAU BEACH 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=70398",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 39493,
+            "checkedAt": "2026-11-14T05:03:13.952Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/3484/SABH_Tamarind_6160_middle.jpg",
+          "caption": "STEIGENBERGER AL DAU BEACH 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=70398",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 61010,
+            "checkedAt": "2026-11-14T05:03:14.129Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/3484/Karibu_Lobby_Bar_7671_middle.jpg",
+          "caption": "STEIGENBERGER AL DAU BEACH 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=70398",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 69684,
+            "checkedAt": "2026-11-14T05:03:14.102Z"
+          }
+        }
+      ],
+      "rights": "supplier-permission-required"
+    },
+    {
+      "id": 71086,
+      "name": "SUNRISE GRAND SELECT CRYSTAL BAY 5 *",
+      "siteHotelId": 705,
+      "source": "https://www.tez-tour.com/hotel.html?id=71086",
+      "gallerySource": "https://www.tez-tour.com/data/siteGalleries.html?siteHotelId=705&lang=ru",
+      "thumbnail": {
+        "url": "https://s.tez-tour.com/hotel/705/01_Pool_Overview_933_middle.jpg",
+        "caption": "SUNRISE GRAND SELECT CRYSTAL BAY 5 *",
+        "source": "https://www.tez-tour.com/hotel.html?id=71086",
+        "verification": {
+          "status": 200,
+          "contentType": "image/jpeg",
+          "bytes": 71218,
+          "checkedAt": "2026-11-14T05:03:21.208Z"
+        }
+      },
+      "photos": [
+        {
+          "url": "https://s.tez-tour.com/hotel/705/01_Pool_Overview_933_middle.jpg",
+          "caption": "SUNRISE GRAND SELECT CRYSTAL BAY 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=71086",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 71218,
+            "checkedAt": "2026-11-14T05:03:21.208Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/705/2_2_Deluxe_Room_1239_middle.JPG",
+          "caption": "SUNRISE GRAND SELECT CRYSTAL BAY 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=71086",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 40741,
+            "checkedAt": "2026-11-14T05:03:19.272Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/705/Mangal_Restaurant3_9125_middle.jpg",
+          "caption": "SUNRISE GRAND SELECT CRYSTAL BAY 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=71086",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 92299,
+            "checkedAt": "2026-11-14T05:03:24.999Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/705/Manohar_Indian_Restaurant_9737_middle.JPG",
+          "caption": "SUNRISE GRAND SELECT CRYSTAL BAY 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=71086",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 66940,
+            "checkedAt": "2026-11-14T05:03:24.406Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/705/02_Beach_Lagoon_6198_middle.jpg",
+          "caption": "SUNRISE GRAND SELECT CRYSTAL BAY 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=71086",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 54272,
+            "checkedAt": "2026-11-14T05:03:24.524Z"
+          }
+        }
+      ],
+      "rights": "supplier-permission-required"
+    },
+    {
+      "id": 71438,
+      "name": "BELLAGIO BEACH RESORT & SPA 5 *",
+      "siteHotelId": 2445,
+      "source": "https://www.tez-tour.com/hotel.html?id=71438",
+      "gallerySource": "https://www.tez-tour.com/data/siteGalleries.html?siteHotelId=2445&lang=ru",
+      "thumbnail": {
+        "url": "https://s.tez-tour.com/hotel/2445/reer_3358_middle.png",
+        "caption": "BELLAGIO BEACH RESORT & SPA 5 *",
+        "source": "https://www.tez-tour.com/hotel.html?id=71438",
+        "verification": {
+          "status": 200,
+          "contentType": "image/png",
+          "bytes": 787708,
+          "checkedAt": "2026-11-14T05:03:20.668Z"
+        }
+      },
+      "photos": [
+        {
+          "url": "https://s.tez-tour.com/hotel/2445/reer_3358_middle.png",
+          "caption": "BELLAGIO BEACH RESORT & SPA 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=71438",
+          "verification": {
+            "status": 200,
+            "contentType": "image/png",
+            "bytes": 787708,
+            "checkedAt": "2026-11-14T05:03:20.668Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/2445/Rooms_009_2_7023_middle.jpg",
+          "caption": "BELLAGIO BEACH RESORT & SPA 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=71438",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 45934,
+            "checkedAt": "2026-11-14T05:03:13.568Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/2445/EGY_1059_4757_middle.jpg",
+          "caption": "BELLAGIO BEACH RESORT & SPA 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=71438",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 68126,
+            "checkedAt": "2026-11-14T05:03:19.092Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/2445/R-998_3428_middle.jpg",
+          "caption": "BELLAGIO BEACH RESORT & SPA 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=71438",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 56963,
+            "checkedAt": "2026-11-14T05:03:19.104Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/2445/Rest_and_Bars_5P1A0706_1850_middle.jpg",
+          "caption": "BELLAGIO BEACH RESORT & SPA 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=71438",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 59542,
+            "checkedAt": "2026-11-14T05:03:18.724Z"
+          }
+        }
+      ],
+      "rights": "supplier-permission-required"
+    },
+    {
+      "id": 71798,
+      "name": "ARABELLA  AZUR 3 *",
+      "siteHotelId": 665,
+      "source": "https://www.tez-tour.com/hotel.html?id=71798",
+      "gallerySource": "https://www.tez-tour.com/data/siteGalleries.html?siteHotelId=665&lang=ru",
+      "thumbnail": {
+        "url": "https://s.tez-tour.com/hotel/665/DSC04400_145_middle.jpg",
+        "caption": "ARABELLA  AZUR 3 *",
+        "source": "https://www.tez-tour.com/hotel.html?id=71798",
+        "verification": {
+          "status": 200,
+          "contentType": "image/jpeg",
+          "bytes": 115511,
+          "checkedAt": "2026-11-14T05:03:24.448Z"
+        }
+      },
+      "photos": [
+        {
+          "url": "https://s.tez-tour.com/hotel/665/DSC04400_145_middle.jpg",
+          "caption": "ARABELLA  AZUR 3 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=71798",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 115511,
+            "checkedAt": "2026-11-14T05:03:24.448Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/665/DSC03494_870_middle.jpg",
+          "caption": "ARABELLA  AZUR 3 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=71798",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 48361,
+            "checkedAt": "2026-11-14T05:03:23.909Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/665/LAGOON_OVER_VIEW_7321_middle.jpg",
+          "caption": "ARABELLA  AZUR 3 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=71798",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 64917,
+            "checkedAt": "2026-11-14T05:03:24.327Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/665/Lobby_-_Arabella_Azur_3230_middle.jpg",
+          "caption": "ARABELLA  AZUR 3 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=71798",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 53738,
+            "checkedAt": "2026-11-14T05:03:29.857Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/665/SEA_VIEW_ROOM_-_SIDE_VIEW__3__4903_middle.JPG",
+          "caption": "ARABELLA  AZUR 3 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=71798",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 48555,
+            "checkedAt": "2026-11-14T05:03:30.049Z"
+          }
+        }
+      ],
+      "rights": "supplier-permission-required"
+    },
+    {
+      "id": 73557,
+      "name": "NEW EAGLES DOWNTOWN ZAHABIA RESORT & AQUA PARK 3 *",
+      "siteHotelId": 2554,
+      "source": "https://www.tez-tour.com/hotel.html?id=73557",
+      "gallerySource": "https://www.tez-tour.com/data/siteGalleries.html?siteHotelId=2554&lang=ru",
+      "thumbnail": {
+        "url": "https://s.tez-tour.com/hotel/2554/DJI_0559_2__1216_middle.jpg",
+        "caption": "NEW EAGLES DOWNTOWN ZAHABIA RESORT & AQUA PARK 3 *",
+        "source": "https://www.tez-tour.com/hotel.html?id=73557",
+        "verification": {
+          "status": 200,
+          "contentType": "image/jpeg",
+          "bytes": 86138,
+          "checkedAt": "2026-11-14T05:03:29.658Z"
+        }
+      },
+      "photos": [
+        {
+          "url": "https://s.tez-tour.com/hotel/2554/DJI_0559_2__1216_middle.jpg",
+          "caption": "NEW EAGLES DOWNTOWN ZAHABIA RESORT & AQUA PARK 3 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=73557",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 86138,
+            "checkedAt": "2026-11-14T05:03:29.658Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/2554/DSC01074_6290_middle.jpg",
+          "caption": "NEW EAGLES DOWNTOWN ZAHABIA RESORT & AQUA PARK 3 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=73557",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 66886,
+            "checkedAt": "2026-11-14T05:03:29.827Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/2554/A7S05005_5198_middle.jpg",
+          "caption": "NEW EAGLES DOWNTOWN ZAHABIA RESORT & AQUA PARK 3 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=73557",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 67774,
+            "checkedAt": "2026-11-14T05:03:29.445Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/2554/Standard_Room_3__754_middle.jpg",
+          "caption": "NEW EAGLES DOWNTOWN ZAHABIA RESORT & AQUA PARK 3 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=73557",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 63422,
+            "checkedAt": "2026-11-14T05:03:29.442Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/2554/Standard4_1407_middle.jpg",
+          "caption": "NEW EAGLES DOWNTOWN ZAHABIA RESORT & AQUA PARK 3 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=73557",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 32561,
+            "checkedAt": "2026-11-14T05:03:35.855Z"
+          }
+        }
+      ],
+      "rights": "supplier-permission-required"
+    },
+    {
+      "id": 75139,
+      "name": "GIFTUN AZUR 3 *",
+      "siteHotelId": 2994,
+      "source": "https://www.tez-tour.com/hotel.html?id=75139",
+      "gallerySource": "https://www.tez-tour.com/data/siteGalleries.html?siteHotelId=2994&lang=ru",
+      "thumbnail": {
+        "url": "https://s.tez-tour.com/hotel/2994/kids_pool_4168_middle.jpg",
+        "caption": "GIFTUN AZUR 3 *",
+        "source": "https://www.tez-tour.com/hotel.html?id=75139",
+        "verification": {
+          "status": 200,
+          "contentType": "image/jpeg",
+          "bytes": 112107,
+          "checkedAt": "2026-11-14T05:03:35.647Z"
+        }
+      },
+      "photos": [
+        {
+          "url": "https://s.tez-tour.com/hotel/2994/kids_pool_4168_middle.jpg",
+          "caption": "GIFTUN AZUR 3 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=75139",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 112107,
+            "checkedAt": "2026-11-14T05:03:35.647Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/2994/Football_1461_middle.jpg",
+          "caption": "GIFTUN AZUR 3 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=75139",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 138568,
+            "checkedAt": "2026-11-14T05:03:37.467Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/2994/IMG_7144_tonemapped_9698_middle.jpg",
+          "caption": "GIFTUN AZUR 3 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=75139",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 62941,
+            "checkedAt": "2026-11-14T05:03:36.069Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/2994/GYM_5106_middle.jpg",
+          "caption": "GIFTUN AZUR 3 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=75139",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 69669,
+            "checkedAt": "2026-11-14T05:03:35.262Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/2994/Suite_T-Block_-_01_7932_middle.jpg",
+          "caption": "GIFTUN AZUR 3 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=75139",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 59435,
+            "checkedAt": "2026-11-14T05:03:35.632Z"
+          }
+        }
+      ],
+      "rights": "supplier-permission-required"
+    },
+    {
+      "id": 110008,
+      "name": "PICKALBATROS PALACE RESORT HURGHADA 5 *",
+      "siteHotelId": 3899,
+      "source": "https://www.tez-tour.com/hotel.html?id=110008",
+      "gallerySource": "https://www.tez-tour.com/data/siteGalleries.html?siteHotelId=3899&lang=ru",
+      "thumbnail": {
+        "url": "https://s.tez-tour.com/hotel/3899/Pools_Overview_6_7559_middle.jpg",
+        "caption": "PICKALBATROS PALACE RESORT HURGHADA 5 *",
+        "source": "https://www.tez-tour.com/hotel.html?id=110008",
+        "verification": {
+          "status": 200,
+          "contentType": "image/jpeg",
+          "bytes": 118264,
+          "checkedAt": "2026-11-14T05:03:41.317Z"
+        }
+      },
+      "photos": [
+        {
+          "url": "https://s.tez-tour.com/hotel/3899/Pools_Overview_6_7559_middle.jpg",
+          "caption": "PICKALBATROS PALACE RESORT HURGHADA 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=110008",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 118264,
+            "checkedAt": "2026-11-14T05:03:41.317Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/3899/Playground_3_6993_middle.jpg",
+          "caption": "PICKALBATROS PALACE RESORT HURGHADA 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=110008",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 103996,
+            "checkedAt": "2026-11-14T05:03:41.501Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/3899/Aqua_Park_8_3786_middle.jpg",
+          "caption": "PICKALBATROS PALACE RESORT HURGHADA 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=110008",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 107266,
+            "checkedAt": "2026-11-14T05:03:43.437Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/3899/Pools_Overview_9_4949_middle.jpg",
+          "caption": "PICKALBATROS PALACE RESORT HURGHADA 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=110008",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 117455,
+            "checkedAt": "2026-11-14T05:03:43.441Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/3899/Oriental_Palace_Bar_3_858_middle.jpg",
+          "caption": "PICKALBATROS PALACE RESORT HURGHADA 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=110008",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 104616,
+            "checkedAt": "2026-11-14T05:03:42.835Z"
+          }
+        }
+      ],
+      "rights": "supplier-permission-required"
+    },
+    {
+      "id": 110011,
+      "name": "PICKALBATROS AQUA VISTA RESORT HURGHADA 4 *",
+      "siteHotelId": 1751,
+      "source": "https://www.tez-tour.com/hotel.html?id=110011",
+      "gallerySource": "https://www.tez-tour.com/data/siteGalleries.html?siteHotelId=1751&lang=ru",
+      "thumbnail": {
+        "url": "https://s.tez-tour.com/hotel/1751/Overview_1_2961_middle.jpg",
+        "caption": "PICKALBATROS AQUA VISTA RESORT HURGHADA 4 *",
+        "source": "https://www.tez-tour.com/hotel.html?id=110011",
+        "verification": {
+          "status": 200,
+          "contentType": "image/jpeg",
+          "bytes": 71298,
+          "checkedAt": "2026-11-14T05:03:41.490Z"
+        }
+      },
+      "photos": [
+        {
+          "url": "https://s.tez-tour.com/hotel/1751/Overview_1_2961_middle.jpg",
+          "caption": "PICKALBATROS AQUA VISTA RESORT HURGHADA 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=110011",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 71298,
+            "checkedAt": "2026-11-14T05:03:41.490Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/1751/Standard_Room_Garden_View_1_7421_middle.JPG",
+          "caption": "PICKALBATROS AQUA VISTA RESORT HURGHADA 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=110011",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 54472,
+            "checkedAt": "2026-11-14T05:03:46.535Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/1751/IMG_1263_383_middle.jpg",
+          "caption": "PICKALBATROS AQUA VISTA RESORT HURGHADA 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=110011",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 63468,
+            "checkedAt": "2026-11-14T05:03:47.724Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/1751/Red_Sky_Bar_1_868_middle.jpg",
+          "caption": "PICKALBATROS AQUA VISTA RESORT HURGHADA 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=110011",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 83442,
+            "checkedAt": "2026-11-14T05:03:47.125Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/1751/Soprano_Restaurant_1_6622_middle.JPG",
+          "caption": "PICKALBATROS AQUA VISTA RESORT HURGHADA 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=110011",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 58494,
+            "checkedAt": "2026-11-14T05:03:47.303Z"
+          }
+        }
+      ],
+      "rights": "supplier-permission-required"
+    },
+    {
+      "id": 135904,
+      "name": "PICKALBATROS JUNGLE AQUA PARK BY NEVERLAND 4 *",
+      "siteHotelId": 1494,
+      "source": "https://www.tez-tour.com/hotel.html?id=135904",
+      "gallerySource": "https://www.tez-tour.com/data/siteGalleries.html?siteHotelId=1494&lang=ru",
+      "thumbnail": {
+        "url": "https://s.tez-tour.com/hotel/1494/Aqua_Park_35_7839_middle.jpg",
+        "caption": "PICKALBATROS JUNGLE AQUA PARK BY NEVERLAND 4 *",
+        "source": "https://www.tez-tour.com/hotel.html?id=135904",
+        "verification": {
+          "status": 200,
+          "contentType": "image/jpeg",
+          "bytes": 86862,
+          "checkedAt": "2026-11-14T05:03:52.941Z"
+        }
+      },
+      "photos": [
+        {
+          "url": "https://s.tez-tour.com/hotel/1494/Aqua_Park_35_7839_middle.jpg",
+          "caption": "PICKALBATROS JUNGLE AQUA PARK BY NEVERLAND 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=135904",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 86862,
+            "checkedAt": "2026-11-14T05:03:52.941Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/1494/Spa_2_6279_middle.jpg",
+          "caption": "PICKALBATROS JUNGLE AQUA PARK BY NEVERLAND 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=135904",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 71339,
+            "checkedAt": "2026-11-14T05:03:53.346Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/1494/Orange_Bar_482_middle.jpg",
+          "caption": "PICKALBATROS JUNGLE AQUA PARK BY NEVERLAND 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=135904",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 78695,
+            "checkedAt": "2026-11-14T05:03:53.529Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/1494/Columbus_Bar_175_middle.jpg",
+          "caption": "PICKALBATROS JUNGLE AQUA PARK BY NEVERLAND 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=135904",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 72481,
+            "checkedAt": "2026-11-14T05:03:58.531Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/1494/Splash_Room_Bunkbed_1_2976_middle.jpg",
+          "caption": "PICKALBATROS JUNGLE AQUA PARK BY NEVERLAND 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=135904",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 39841,
+            "checkedAt": "2026-11-14T05:03:57.758Z"
+          }
+        }
+      ],
+      "rights": "supplier-permission-required"
+    },
+    {
+      "id": 160185,
+      "name": "AMC ROYAL HOTEL & SPA 5 *",
+      "siteHotelId": 4339,
+      "source": "https://www.tez-tour.com/hotel.html?id=160185",
+      "gallerySource": "https://www.tez-tour.com/data/siteGalleries.html?siteHotelId=4339&lang=ru",
+      "thumbnail": {
+        "url": "https://s.tez-tour.com/hotel/4339/01__2__2175_middle.jpg",
+        "caption": "AMC ROYAL HOTEL & SPA 5 *",
+        "source": "https://www.tez-tour.com/hotel.html?id=160185",
+        "verification": {
+          "status": 200,
+          "contentType": "image/jpeg",
+          "bytes": 67089,
+          "checkedAt": "2026-11-14T05:03:47.160Z"
+        }
+      },
+      "photos": [
+        {
+          "url": "https://s.tez-tour.com/hotel/4339/01__2__2175_middle.jpg",
+          "caption": "AMC ROYAL HOTEL & SPA 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=160185",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 67089,
+            "checkedAt": "2026-11-14T05:03:47.160Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/4339/IMG_9017_3244_middle.jpg",
+          "caption": "AMC ROYAL HOTEL & SPA 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=160185",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 49240,
+            "checkedAt": "2026-11-14T05:03:46.746Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/4339/01__9__4788_middle.jpg",
+          "caption": "AMC ROYAL HOTEL & SPA 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=160185",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 92167,
+            "checkedAt": "2026-11-14T05:03:52.957Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/4339/AQUA_PARK__45__8743_middle.JPG",
+          "caption": "AMC ROYAL HOTEL & SPA 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=160185",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 83170,
+            "checkedAt": "2026-11-14T05:03:53.704Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/4339/Premium_Room_SV_6429_middle.jpg",
+          "caption": "AMC ROYAL HOTEL & SPA 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=160185",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 54053,
+            "checkedAt": "2026-11-14T05:03:53.528Z"
+          }
+        }
+      ],
+      "rights": "supplier-permission-required"
+    },
+    {
+      "id": 160627,
+      "name": "TITANIC PALACE RESORT & SPA 5 *",
+      "siteHotelId": 3520,
+      "source": "https://www.tez-tour.com/hotel.html?id=160627",
+      "gallerySource": "https://www.tez-tour.com/data/siteGalleries.html?siteHotelId=3520&lang=ru",
+      "thumbnail": {
+        "url": "https://s.tez-tour.com/hotel/3520/palace__26__6063_middle.jpg",
+        "caption": "TITANIC PALACE RESORT & SPA 5 *",
+        "source": "https://www.tez-tour.com/hotel.html?id=160627",
+        "verification": {
+          "status": 200,
+          "contentType": "image/jpeg",
+          "bytes": 146534,
+          "checkedAt": "2026-11-14T05:03:58.497Z"
+        }
+      },
+      "photos": [
+        {
+          "url": "https://s.tez-tour.com/hotel/3520/palace__26__6063_middle.jpg",
+          "caption": "TITANIC PALACE RESORT & SPA 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=160627",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 146534,
+            "checkedAt": "2026-11-14T05:03:58.497Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/3520/palace__31__5312_middle.jpg",
+          "caption": "TITANIC PALACE RESORT & SPA 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=160627",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 65924,
+            "checkedAt": "2026-11-14T05:03:58.709Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/3520/Japanies_restaurant_8744_middle.jpg",
+          "caption": "TITANIC PALACE RESORT & SPA 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=160627",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 64591,
+            "checkedAt": "2026-11-14T05:03:58.685Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/3520/Promo_5159_middle.jpg",
+          "caption": "TITANIC PALACE RESORT & SPA 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=160627",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 58210,
+            "checkedAt": "2026-11-14T05:03:58.860Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/3520/palace__27__2171_middle.jpg",
+          "caption": "TITANIC PALACE RESORT & SPA 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=160627",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 149813,
+            "checkedAt": "2026-11-14T05:04:03.753Z"
+          }
+        }
+      ],
+      "rights": "supplier-permission-required"
+    },
+    {
+      "id": 210779,
+      "name": "THE THREE CORNERS SUNNY BEACH 4 *",
+      "siteHotelId": 31974,
+      "source": "https://www.tez-tour.com/hotel.html?id=210779",
+      "gallerySource": "https://www.tez-tour.com/data/siteGalleries.html?siteHotelId=31974&lang=ru",
+      "thumbnail": {
+        "url": "https://s.tez-tour.com/hotel/31974/thethreecorners_redsea_hurghada_sunny_beach_resort_children_pool_2-scaled_1986_middle.jpg",
+        "caption": "THE THREE CORNERS SUNNY BEACH 4 *",
+        "source": "https://www.tez-tour.com/hotel.html?id=210779",
+        "verification": {
+          "status": 200,
+          "contentType": "image/jpeg",
+          "bytes": 88664,
+          "checkedAt": "2026-11-14T05:04:03.161Z"
+        }
+      },
+      "photos": [
+        {
+          "url": "https://s.tez-tour.com/hotel/31974/thethreecorners_redsea_hurghada_sunny_beach_resort_children_pool_2-scaled_1986_middle.jpg",
+          "caption": "THE THREE CORNERS SUNNY BEACH 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=210779",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 88664,
+            "checkedAt": "2026-11-14T05:04:03.161Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/31974/thethreecorners_redsea_hurghada_sunny_beach_resort_trixie_kids_club_3_63_middle.jpg",
+          "caption": "THE THREE CORNERS SUNNY BEACH 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=210779",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 47994,
+            "checkedAt": "2026-11-14T05:04:03.596Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/31974/thethreecorners_redsea_hurghada_sunny_beach_resort_soleil_restaurant_1_5850_middle.jpg",
+          "caption": "THE THREE CORNERS SUNNY BEACH 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=210779",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 67680,
+            "checkedAt": "2026-11-14T05:04:03.152Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/31974/thethreecorners_redsea_hurghada_sunny_beach_resort_jetty_1_7425_middle.jpg",
+          "caption": "THE THREE CORNERS SUNNY BEACH 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=210779",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 74369,
+            "checkedAt": "2026-11-14T05:04:03.351Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/31974/thethreecorners_redsea_hurghada_sunny_beach_resort_trixie_kids_club_2_240_middle.jpg",
+          "caption": "THE THREE CORNERS SUNNY BEACH 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=210779",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 110669,
+            "checkedAt": "2026-11-14T05:04:03.553Z"
+          }
+        }
+      ],
+      "rights": "supplier-permission-required"
+    },
+    {
+      "id": 314498,
+      "name": "PICKALBATROS AQUA BLU RESORT HRG 4 *",
+      "siteHotelId": 50002385,
+      "source": "https://www.tez-tour.com/hotel.html?id=314498",
+      "gallerySource": "https://www.tez-tour.com/data/siteGalleries.html?siteHotelId=50002385&lang=ru",
+      "thumbnail": {
+        "url": "https://s.tez-tour.com/hotel/50002385/12_4688_middle.jpg",
+        "caption": "PICKALBATROS AQUA BLU RESORT HRG 4 *",
+        "source": "https://www.tez-tour.com/hotel.html?id=314498",
+        "verification": {
+          "status": 200,
+          "contentType": "image/jpeg",
+          "bytes": 101544,
+          "checkedAt": "2026-11-14T05:04:11.057Z"
+        }
+      },
+      "photos": [
+        {
+          "url": "https://s.tez-tour.com/hotel/50002385/12_4688_middle.jpg",
+          "caption": "PICKALBATROS AQUA BLU RESORT HRG 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=314498",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 101544,
+            "checkedAt": "2026-11-14T05:04:11.057Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/50002385/Lobby_Bar_1_2102_middle.jpg",
+          "caption": "PICKALBATROS AQUA BLU RESORT HRG 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=314498",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 62795,
+            "checkedAt": "2026-11-14T05:04:11.472Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/50002385/Standard_Room_Garden_View_2_1594_middle.jpg",
+          "caption": "PICKALBATROS AQUA BLU RESORT HRG 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=314498",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 55405,
+            "checkedAt": "2026-11-14T05:04:11.615Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/50002385/Entrance_2_8679_middle.jpg",
+          "caption": "PICKALBATROS AQUA BLU RESORT HRG 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=314498",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 62563,
+            "checkedAt": "2026-11-14T05:04:11.653Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/50002385/Pools___1__3369_middle.jpg",
+          "caption": "PICKALBATROS AQUA BLU RESORT HRG 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=314498",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 60214,
+            "checkedAt": "2026-11-14T05:04:08.577Z"
+          }
+        }
+      ],
+      "rights": "supplier-permission-required"
+    },
+    {
+      "id": 385428,
+      "name": "JAZ AQUAMARINE RESORT HURGHADA 5 *",
+      "siteHotelId": 50004668,
+      "source": "https://www.tez-tour.com/hotel.html?id=385428",
+      "gallerySource": "https://www.tez-tour.com/data/siteGalleries.html?siteHotelId=50004668&lang=ru",
+      "thumbnail": {
+        "url": "https://s.tez-tour.com/hotel/50004668/020111Aquamarine_Overview_3_2117_middle.jpg",
+        "caption": "JAZ AQUAMARINE RESORT HURGHADA 5 *",
+        "source": "https://www.tez-tour.com/hotel.html?id=385428",
+        "verification": {
+          "status": 200,
+          "contentType": "image/jpeg",
+          "bytes": 78018,
+          "checkedAt": "2026-11-14T05:04:09.330Z"
+        }
+      },
+      "photos": [
+        {
+          "url": "https://s.tez-tour.com/hotel/50004668/020111Aquamarine_Overview_3_2117_middle.jpg",
+          "caption": "JAZ AQUAMARINE RESORT HURGHADA 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=385428",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 78018,
+            "checkedAt": "2026-11-14T05:04:09.330Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/50004668/Corallo-a-la-carte-restaurant-20199411_5694_middle.jpg",
+          "caption": "JAZ AQUAMARINE RESORT HURGHADA 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=385428",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 69831,
+            "checkedAt": "2026-11-14T05:04:16.252Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/50004668/Water-Slides-002_3964_middle.jpg",
+          "caption": "JAZ AQUAMARINE RESORT HURGHADA 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=385428",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 62640,
+            "checkedAt": "2026-11-14T05:04:15.872Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/50004668/020158Executive_Suite_Queen_Bed__205_middle.jpg",
+          "caption": "JAZ AQUAMARINE RESORT HURGHADA 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=385428",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 64527,
+            "checkedAt": "2026-11-14T05:04:15.874Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/50004668/Fayrouz-lobby_bar-001_5778_middle.jpg",
+          "caption": "JAZ AQUAMARINE RESORT HURGHADA 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=385428",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 90030,
+            "checkedAt": "2026-11-14T05:04:15.681Z"
+          }
+        }
+      ],
+      "rights": "supplier-permission-required"
+    },
+    {
+      "id": 402558,
+      "name": "ELYSEES DREAM BEACH HOTEL 4 *",
+      "siteHotelId": 4391,
+      "source": "https://www.tez-tour.com/hotel.html?id=402558",
+      "gallerySource": "https://www.tez-tour.com/data/siteGalleries.html?siteHotelId=4391&lang=ru",
+      "thumbnail": {
+        "url": "https://s.tez-tour.com/hotel/4391/Elysees__june2026___1__4039_middle.jpg",
+        "caption": "ELYSEES DREAM BEACH HOTEL 4 *",
+        "source": "https://www.tez-tour.com/hotel.html?id=402558",
+        "verification": {
+          "status": 200,
+          "contentType": "image/jpeg",
+          "bytes": 104483,
+          "checkedAt": "2026-11-14T05:04:15.487Z"
+        }
+      },
+      "photos": [
+        {
+          "url": "https://s.tez-tour.com/hotel/4391/Elysees__june2026___1__4039_middle.jpg",
+          "caption": "ELYSEES DREAM BEACH HOTEL 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=402558",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 104483,
+            "checkedAt": "2026-11-14T05:04:15.487Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/4391/Elysees_beach_2026___2__2006_middle.jpg",
+          "caption": "ELYSEES DREAM BEACH HOTEL 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=402558",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 69300,
+            "checkedAt": "2026-11-14T05:04:15.882Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/4391/IMG_8132_571_middle.jpg",
+          "caption": "ELYSEES DREAM BEACH HOTEL 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=402558",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 45195,
+            "checkedAt": "2026-11-14T05:04:20.488Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/4391/Elysees__june2026___9__6182_middle.jpg",
+          "caption": "ELYSEES DREAM BEACH HOTEL 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=402558",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 56686,
+            "checkedAt": "2026-11-14T05:04:20.692Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/4391/IMG_7971_6068_middle.jpg",
+          "caption": "ELYSEES DREAM BEACH HOTEL 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=402558",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 112818,
+            "checkedAt": "2026-11-14T05:04:20.687Z"
+          }
+        }
+      ],
+      "rights": "supplier-permission-required"
+    },
+    {
+      "id": 428163,
+      "name": "TITANIC ROYAL 5 *",
+      "siteHotelId": 5411,
+      "source": "https://www.tez-tour.com/hotel.html?id=428163",
+      "gallerySource": "https://www.tez-tour.com/data/siteGalleries.html?siteHotelId=5411&lang=ru",
+      "thumbnail": {
+        "url": "https://s.tez-tour.com/hotel/5411/01__1__6723_middle.jpg",
+        "caption": "TITANIC ROYAL 5 *",
+        "source": "https://www.tez-tour.com/hotel.html?id=428163",
+        "verification": {
+          "status": 200,
+          "contentType": "image/jpeg",
+          "bytes": 85008,
+          "checkedAt": "2026-11-14T05:04:21.468Z"
+        }
+      },
+      "photos": [
+        {
+          "url": "https://s.tez-tour.com/hotel/5411/01__1__6723_middle.jpg",
+          "caption": "TITANIC ROYAL 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=428163",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 85008,
+            "checkedAt": "2026-11-14T05:04:21.468Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/5411/6J7A2556_9841_middle.jpg",
+          "caption": "TITANIC ROYAL 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=428163",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 76170,
+            "checkedAt": "2026-11-14T05:04:21.078Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/5411/6J7A0317-HDR-892x595_93_middle.jpg",
+          "caption": "TITANIC ROYAL 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=428163",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 52675,
+            "checkedAt": "2026-11-14T05:04:21.470Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/5411/DSC_4873-1_8696_middle.jpg",
+          "caption": "TITANIC ROYAL 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=428163",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 59205,
+            "checkedAt": "2026-11-14T05:04:25.965Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/5411/164563007_899390140859895_5871965449995005482_n-scaled_8519_middle.jpg",
+          "caption": "TITANIC ROYAL 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=428163",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 72117,
+            "checkedAt": "2026-11-14T05:04:25.962Z"
+          }
+        }
+      ],
+      "rights": "supplier-permission-required"
+    },
+    {
+      "id": 443294,
+      "name": "STEIGENBERGER AQUA MAGIC HOTEL 5 *",
+      "siteHotelId": 20566,
+      "source": "https://www.tez-tour.com/hotel.html?id=443294",
+      "gallerySource": "https://www.tez-tour.com/data/siteGalleries.html?siteHotelId=20566&lang=ru",
+      "thumbnail": {
+        "url": "https://s.tez-tour.com/hotel/20566/01_SAM_Kids_Play_Boat_Overview_8122_middle.jpg",
+        "caption": "STEIGENBERGER AQUA MAGIC HOTEL 5 *",
+        "source": "https://www.tez-tour.com/hotel.html?id=443294",
+        "verification": {
+          "status": 200,
+          "contentType": "image/jpeg",
+          "bytes": 103494,
+          "checkedAt": "2026-11-14T05:04:26.521Z"
+        }
+      },
+      "photos": [
+        {
+          "url": "https://s.tez-tour.com/hotel/20566/01_SAM_Kids_Play_Boat_Overview_8122_middle.jpg",
+          "caption": "STEIGENBERGER AQUA MAGIC HOTEL 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=443294",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 103494,
+            "checkedAt": "2026-11-14T05:04:26.521Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/20566/Aqua_MagicSuperiorRoom_758_middle.jpg",
+          "caption": "STEIGENBERGER AQUA MAGIC HOTEL 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=443294",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 55680,
+            "checkedAt": "2026-11-14T05:04:26.551Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/20566/Aqua_Slides_55_middle.jpg",
+          "caption": "STEIGENBERGER AQUA MAGIC HOTEL 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=443294",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 77344,
+            "checkedAt": "2026-11-14T05:04:26.162Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/20566/Magic_Orient_Restaurant_5082_middle.jpg",
+          "caption": "STEIGENBERGER AQUA MAGIC HOTEL 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=443294",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 83779,
+            "checkedAt": "2026-11-14T05:04:26.549Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/20566/HRGMAG_room_bathroom_9565_middle.jpg",
+          "caption": "STEIGENBERGER AQUA MAGIC HOTEL 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=443294",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 49782,
+            "checkedAt": "2026-11-14T05:04:30.926Z"
+          }
+        }
+      ],
+      "rights": "supplier-permission-required"
+    },
+    {
+      "id": 553107,
+      "name": "MERAKI RESORT 4 *",
+      "siteHotelId": 20106,
+      "source": "https://www.tez-tour.com/hotel.html?id=553107",
+      "gallerySource": "https://www.tez-tour.com/data/siteGalleries.html?siteHotelId=20106&lang=ru",
+      "thumbnail": {
+        "url": "https://s.tez-tour.com/hotel/20106/01__Meraki_Beach_Setup_1518_middle.jpg",
+        "caption": "MERAKI RESORT 4 *",
+        "source": "https://www.tez-tour.com/hotel.html?id=553107",
+        "verification": {
+          "status": 200,
+          "contentType": "image/jpeg",
+          "bytes": 58361,
+          "checkedAt": "2026-11-14T05:04:51.735Z"
+        }
+      },
+      "photos": [
+        {
+          "url": "https://s.tez-tour.com/hotel/20106/01__Meraki_Beach_Setup_1518_middle.jpg",
+          "caption": "MERAKI RESORT 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=553107",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 58361,
+            "checkedAt": "2026-11-14T05:04:51.735Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/20106/Double_Trouble3_7759_middle.jpg",
+          "caption": "MERAKI RESORT 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=553107",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 57068,
+            "checkedAt": "2026-11-14T05:04:51.534Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/20106/03__Meraki_-_Euphoria_Pool_6199_middle.jpg",
+          "caption": "MERAKI RESORT 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=553107",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 98208,
+            "checkedAt": "2026-11-14T05:04:57.458Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/20106/Meraki_Beach_Lifeystle_2_9008_middle.JPG",
+          "caption": "MERAKI RESORT 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=553107",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 77049,
+            "checkedAt": "2026-11-14T05:04:57.512Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/20106/Party_Never_Ends_Suite_2_-_1_6139_middle.jpg",
+          "caption": "MERAKI RESORT 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=553107",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 53000,
+            "checkedAt": "2026-11-14T05:04:57.312Z"
+          }
+        }
+      ],
+      "rights": "supplier-permission-required"
+    },
+    {
+      "id": 612636,
+      "name": "PICKALBATROS WATER VALLEY RESORT BY NEVERLAND 5 *",
+      "siteHotelId": 21387,
+      "source": "https://www.tez-tour.com/hotel.html?id=612636",
+      "gallerySource": "https://www.tez-tour.com/data/siteGalleries.html?siteHotelId=21387&lang=ru",
+      "thumbnail": {
+        "url": "https://s.tez-tour.com/hotel/21387/Aqua_Park_42_4834_middle.jpg",
+        "caption": "PICKALBATROS WATER VALLEY RESORT BY NEVERLAND 5 *",
+        "source": "https://www.tez-tour.com/hotel.html?id=612636",
+        "verification": {
+          "status": 200,
+          "contentType": "image/jpeg",
+          "bytes": 89376,
+          "checkedAt": "2026-11-14T05:04:48.558Z"
+        }
+      },
+      "photos": [
+        {
+          "url": "https://s.tez-tour.com/hotel/21387/Aqua_Park_42_4834_middle.jpg",
+          "caption": "PICKALBATROS WATER VALLEY RESORT BY NEVERLAND 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=612636",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 89376,
+            "checkedAt": "2026-11-14T05:04:48.558Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/21387/Entrance_2_9121_middle.jpg",
+          "caption": "PICKALBATROS WATER VALLEY RESORT BY NEVERLAND 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=612636",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 42913,
+            "checkedAt": "2026-11-14T05:04:51.540Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/21387/pk26b_13_middle.jpg",
+          "caption": "PICKALBATROS WATER VALLEY RESORT BY NEVERLAND 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=612636",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 76406,
+            "checkedAt": "2026-11-14T05:04:51.368Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/21387/Jungle_Beach_Overview_1_566_middle.jpg",
+          "caption": "PICKALBATROS WATER VALLEY RESORT BY NEVERLAND 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=612636",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 74068,
+            "checkedAt": "2026-11-14T05:04:52.908Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/21387/Spa_2_6313_middle.jpg",
+          "caption": "PICKALBATROS WATER VALLEY RESORT BY NEVERLAND 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=612636",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 54248,
+            "checkedAt": "2026-11-14T05:04:51.604Z"
+          }
+        }
+      ],
+      "rights": "supplier-permission-required"
+    },
+    {
+      "id": 614816,
+      "name": "PICKALBATROS BLU SPA RESORT HURGHADA 5 *",
+      "siteHotelId": 21086,
+      "source": "https://www.tez-tour.com/hotel.html?id=614816",
+      "gallerySource": "https://www.tez-tour.com/data/siteGalleries.html?siteHotelId=21086&lang=ru",
+      "thumbnail": {
+        "url": "https://s.tez-tour.com/hotel/21086/featured-copy_5244_middle.jpg",
+        "caption": "PICKALBATROS BLU SPA RESORT HURGHADA 5 *",
+        "source": "https://www.tez-tour.com/hotel.html?id=614816",
+        "verification": {
+          "status": 200,
+          "contentType": "image/jpeg",
+          "bytes": 62173,
+          "checkedAt": "2026-11-14T05:04:47.768Z"
+        }
+      },
+      "photos": [
+        {
+          "url": "https://s.tez-tour.com/hotel/21086/featured-copy_5244_middle.jpg",
+          "caption": "PICKALBATROS BLU SPA RESORT HURGHADA 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=614816",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 62173,
+            "checkedAt": "2026-11-14T05:04:47.768Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/21086/pbsr-pickalbatros-blu-spa-resort-gallery-new-8_842_middle.jpg",
+          "caption": "PICKALBATROS BLU SPA RESORT HURGHADA 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=614816",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 82134,
+            "checkedAt": "2026-11-14T05:04:48.169Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/21086/Healthy_Bar_6090_middle.jpg",
+          "caption": "PICKALBATROS BLU SPA RESORT HURGHADA 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=614816",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 78419,
+            "checkedAt": "2026-11-14T05:04:45.864Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/21086/Hotel_Overview_9_754_middle.jpg",
+          "caption": "PICKALBATROS BLU SPA RESORT HURGHADA 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=614816",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 65114,
+            "checkedAt": "2026-11-14T05:04:46.225Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/21086/Elite_Room_Sea_View_5_3515_middle.jpg",
+          "caption": "PICKALBATROS BLU SPA RESORT HURGHADA 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=614816",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 82991,
+            "checkedAt": "2026-11-14T05:04:48.153Z"
+          }
+        }
+      ],
+      "rights": "supplier-permission-required"
+    },
+    {
+      "id": 638085,
+      "name": "STEIGENBERGER PURE LIFESTYLE 5 *",
+      "siteHotelId": 21146,
+      "source": "https://www.tez-tour.com/hotel.html?id=638085",
+      "gallerySource": "https://www.tez-tour.com/data/siteGalleries.html?siteHotelId=21146&lang=ru",
+      "thumbnail": {
+        "url": "https://s.tez-tour.com/hotel/21146/01_SPL_Pools_1_1518_middle.jpg",
+        "caption": "STEIGENBERGER PURE LIFESTYLE 5 *",
+        "source": "https://www.tez-tour.com/hotel.html?id=638085",
+        "verification": {
+          "status": 200,
+          "contentType": "image/jpeg",
+          "bytes": 113953,
+          "checkedAt": "2026-11-14T05:04:56.937Z"
+        }
+      },
+      "photos": [
+        {
+          "url": "https://s.tez-tour.com/hotel/21146/01_SPL_Pools_1_1518_middle.jpg",
+          "caption": "STEIGENBERGER PURE LIFESTYLE 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=638085",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 113953,
+            "checkedAt": "2026-11-14T05:04:56.937Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/21146/Alex_Beach_Club_-_Outdoor_Area_2_3733_middle.jpg",
+          "caption": "STEIGENBERGER PURE LIFESTYLE 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=638085",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 88840,
+            "checkedAt": "2026-11-14T05:04:57.092Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/21146/Alex_Beach_Club_-_Indoor_Area_4884_middle.jpg",
+          "caption": "STEIGENBERGER PURE LIFESTYLE 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=638085",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 96464,
+            "checkedAt": "2026-11-14T05:04:57.694Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/21146/SPL_Swim-up_Suite_8108_middle.jpg",
+          "caption": "STEIGENBERGER PURE LIFESTYLE 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=638085",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 42591,
+            "checkedAt": "2026-11-14T05:05:02.940Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/21146/SPL_Alex_Beach_Club_&_Restaurant_1_8050_middle.jpg",
+          "caption": "STEIGENBERGER PURE LIFESTYLE 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=638085",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 57555,
+            "checkedAt": "2026-11-14T05:05:02.553Z"
+          }
+        }
+      ],
+      "rights": "supplier-permission-required"
+    },
+    {
+      "id": 833986,
+      "name": "SERRY BEACH RESORT 5 *",
+      "siteHotelId": 23906,
+      "source": "https://www.tez-tour.com/hotel.html?id=833986",
+      "gallerySource": "https://www.tez-tour.com/data/siteGalleries.html?siteHotelId=23906&lang=ru",
+      "thumbnail": {
+        "url": "https://s.tez-tour.com/hotel/23906/Main_Pool__1__2116_middle.jpg",
+        "caption": "SERRY BEACH RESORT 5 *",
+        "source": "https://www.tez-tour.com/hotel.html?id=833986",
+        "verification": {
+          "status": 200,
+          "contentType": "image/jpeg",
+          "bytes": 90904,
+          "checkedAt": "2026-11-14T05:05:02.721Z"
+        }
+      },
+      "photos": [
+        {
+          "url": "https://s.tez-tour.com/hotel/23906/Main_Pool__1__2116_middle.jpg",
+          "caption": "SERRY BEACH RESORT 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=833986",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 90904,
+            "checkedAt": "2026-11-14T05:05:02.721Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/23906/008-R-restaurant_131988329_6160_middle.jpg",
+          "caption": "SERRY BEACH RESORT 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=833986",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 62666,
+            "checkedAt": "2026-11-14T05:05:02.517Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/23906/040-BA-bar_131988364_8956_middle.jpg",
+          "caption": "SERRY BEACH RESORT 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=833986",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 45415,
+            "checkedAt": "2026-11-14T05:05:02.361Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/23906/006-L-lounge-lobby_131988327_5059_middle.jpg",
+          "caption": "SERRY BEACH RESORT 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=833986",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 38497,
+            "checkedAt": "2026-11-14T05:05:02.134Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/23906/073-W-room-example-suite-executive-pool-view-penthouse-suite-pool-view_131988401_3628_middle.jpg",
+          "caption": "SERRY BEACH RESORT 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=833986",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 61138,
+            "checkedAt": "2026-11-14T05:05:07.974Z"
+          }
+        }
+      ],
+      "rights": "supplier-permission-required"
+    },
+    {
+      "id": 3009257,
+      "name": "JAZ CASA DEL MAR RESORT (EX. IBEROTEL CASA DEL MAR RESORT) 4 *",
+      "siteHotelId": 993,
+      "source": "https://www.tez-tour.com/hotel.html?id=3009257",
+      "gallerySource": "https://www.tez-tour.com/data/siteGalleries.html?siteHotelId=993&lang=ru",
+      "thumbnail": {
+        "url": "https://s.tez-tour.com/hotel/993/041107Overview_2_Ok_995_middle.jpg",
+        "caption": "JAZ CASA DEL MAR RESORT (EX. IBEROTEL CASA DEL MAR RESORT) 4 *",
+        "source": "https://www.tez-tour.com/hotel.html?id=3009257",
+        "verification": {
+          "status": 200,
+          "contentType": "image/jpeg",
+          "bytes": 46859,
+          "checkedAt": "2026-11-14T05:05:07.680Z"
+        }
+      },
+      "photos": [
+        {
+          "url": "https://s.tez-tour.com/hotel/993/041107Overview_2_Ok_995_middle.jpg",
+          "caption": "JAZ CASA DEL MAR RESORT (EX. IBEROTEL CASA DEL MAR RESORT) 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=3009257",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 46859,
+            "checkedAt": "2026-11-14T05:05:07.680Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/993/3649_Iberotel_Casa_Del_Mar_Resort_Family_Suite_ii_1674_middle.jpg",
+          "caption": "JAZ CASA DEL MAR RESORT (EX. IBEROTEL CASA DEL MAR RESORT) 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=3009257",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 42530,
+            "checkedAt": "2026-11-14T05:05:07.560Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/993/041133Spa,_Fitness,_and_Recreation_Center_6476_middle.jpg",
+          "caption": "JAZ CASA DEL MAR RESORT (EX. IBEROTEL CASA DEL MAR RESORT) 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=3009257",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 50302,
+            "checkedAt": "2026-11-14T05:05:07.780Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/993/9892_Iberotel_Casa_Del_Mar_Resort_Superior_Deluxe_Twin_Pool_View_346_middle.jpg",
+          "caption": "JAZ CASA DEL MAR RESORT (EX. IBEROTEL CASA DEL MAR RESORT) 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=3009257",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 45733,
+            "checkedAt": "2026-11-14T05:05:07.636Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/993/19132_Iberotel_Casa_Del_Mar_Resort_Lobby_ii_9294_middle.jpg",
+          "caption": "JAZ CASA DEL MAR RESORT (EX. IBEROTEL CASA DEL MAR RESORT) 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=3009257",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 63417,
+            "checkedAt": "2026-11-14T05:05:07.958Z"
+          }
+        }
+      ],
+      "rights": "supplier-permission-required"
+    },
+    {
+      "id": 3016724,
+      "name": "REGINA RESORT & AQUAPARK 4 *",
+      "siteHotelId": 3692,
+      "source": "https://www.tez-tour.com/hotel.html?id=3016724",
+      "gallerySource": "https://www.tez-tour.com/data/siteGalleries.html?siteHotelId=3692&lang=ru",
+      "thumbnail": {
+        "url": "https://s.tez-tour.com/hotel/3692/2__Regina_Pool__2_4731_middle.jpg",
+        "caption": "REGINA RESORT & AQUAPARK 4 *",
+        "source": "https://www.tez-tour.com/hotel.html?id=3016724",
+        "verification": {
+          "status": 200,
+          "contentType": "image/jpeg",
+          "bytes": 59580,
+          "checkedAt": "2026-11-14T05:05:13.034Z"
+        }
+      },
+      "photos": [
+        {
+          "url": "https://s.tez-tour.com/hotel/3692/2__Regina_Pool__2_4731_middle.jpg",
+          "caption": "REGINA RESORT & AQUAPARK 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=3016724",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 59580,
+            "checkedAt": "2026-11-14T05:05:13.034Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/3692/Regina_Regal_Room_2368_middle.jpg",
+          "caption": "REGINA RESORT & AQUAPARK 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=3016724",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 50983,
+            "checkedAt": "2026-11-14T05:05:13.460Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/3692/Standard_Rooms__7__7015_middle.jpg",
+          "caption": "REGINA RESORT & AQUAPARK 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=3016724",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 38461,
+            "checkedAt": "2026-11-14T05:05:13.257Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/3692/1__Wellness_SPA_Facade_6950_middle.jpg",
+          "caption": "REGINA RESORT & AQUAPARK 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=3016724",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 62053,
+            "checkedAt": "2026-11-14T05:05:13.432Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/3692/3__Wellness_SPA_Gym_3932_middle.jpg",
+          "caption": "REGINA RESORT & AQUAPARK 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=3016724",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 55878,
+            "checkedAt": "2026-11-14T05:05:13.047Z"
+          }
+        }
+      ],
+      "rights": "supplier-permission-required"
+    },
+    {
+      "id": 9001159,
+      "name": "SENTIDO MAMLOUK PALACE 5 *",
+      "siteHotelId": 3470,
+      "source": "https://www.tez-tour.com/hotel.html?id=9001159",
+      "gallerySource": "https://www.tez-tour.com/data/siteGalleries.html?siteHotelId=3470&lang=ru",
+      "thumbnail": {
+        "url": "https://s.tez-tour.com/hotel/3470/03_MP_Pool_Overview___2__7088_middle.JPG",
+        "caption": "SENTIDO MAMLOUK PALACE 5 *",
+        "source": "https://www.tez-tour.com/hotel.html?id=9001159",
+        "verification": {
+          "status": 200,
+          "contentType": "image/jpeg",
+          "bytes": 88156,
+          "checkedAt": "2026-11-14T05:05:19.261Z"
+        }
+      },
+      "photos": [
+        {
+          "url": "https://s.tez-tour.com/hotel/3470/03_MP_Pool_Overview___2__7088_middle.JPG",
+          "caption": "SENTIDO MAMLOUK PALACE 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=9001159",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 88156,
+            "checkedAt": "2026-11-14T05:05:19.261Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/3470/MP_Mexican_Restaurant_1__2__8378_middle.JPG",
+          "caption": "SENTIDO MAMLOUK PALACE 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=9001159",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 63370,
+            "checkedAt": "2026-11-14T05:05:19.445Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/3470/5_2__Executive_Suite_6241_middle.jpg",
+          "caption": "SENTIDO MAMLOUK PALACE 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=9001159",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 70255,
+            "checkedAt": "2026-11-14T05:05:24.618Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/3470/3_5_Family_Suite_5345_middle.jpg",
+          "caption": "SENTIDO MAMLOUK PALACE 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=9001159",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 97674,
+            "checkedAt": "2026-11-14T05:05:24.820Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/3470/MP_Zumba_4309_middle.JPG",
+          "caption": "SENTIDO MAMLOUK PALACE 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=9001159",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 105730,
+            "checkedAt": "2026-11-14T05:05:24.218Z"
+          }
+        }
+      ],
+      "rights": "supplier-permission-required"
+    },
+    {
+      "id": 9001173,
+      "name": "TITANIC BEACH RESORT SPA & AQUA PARK 5 *",
+      "siteHotelId": 386,
+      "source": "https://www.tez-tour.com/hotel.html?id=9001173",
+      "gallerySource": "https://www.tez-tour.com/data/siteGalleries.html?siteHotelId=386&lang=ru",
+      "thumbnail": {
+        "url": "https://s.tez-tour.com/hotel/386/DSC_9990_8847_middle.jpg",
+        "caption": "TITANIC BEACH RESORT SPA & AQUA PARK 5 *",
+        "source": "https://www.tez-tour.com/hotel.html?id=9001173",
+        "verification": {
+          "status": 200,
+          "contentType": "image/jpeg",
+          "bytes": 97413,
+          "checkedAt": "2026-11-14T05:05:24.189Z"
+        }
+      },
+      "photos": [
+        {
+          "url": "https://s.tez-tour.com/hotel/386/DSC_9990_8847_middle.jpg",
+          "caption": "TITANIC BEACH RESORT SPA & AQUA PARK 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=9001173",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 97413,
+            "checkedAt": "2026-11-14T05:05:24.189Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/386/gallery_images_1744563028123-IMG_9681__Large__495_middle.jpg",
+          "caption": "TITANIC BEACH RESORT SPA & AQUA PARK 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=9001173",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 51006,
+            "checkedAt": "2026-11-14T05:05:24.220Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/386/IMG_7033_4729_middle.jpg",
+          "caption": "TITANIC BEACH RESORT SPA & AQUA PARK 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=9001173",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 53438,
+            "checkedAt": "2026-11-14T05:05:24.240Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/386/gallery_images_1744563027004-DJI_0147__Large__6321_middle.jpg",
+          "caption": "TITANIC BEACH RESORT SPA & AQUA PARK 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=9001173",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 90603,
+            "checkedAt": "2026-11-14T05:05:29.727Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/386/gallery_images_1747630507201-IMG_0105__Large__2851_middle.jpg",
+          "caption": "TITANIC BEACH RESORT SPA & AQUA PARK 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=9001173",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 19227,
+            "checkedAt": "2026-11-14T05:05:30.120Z"
+          }
+        }
+      ],
+      "rights": "supplier-permission-required"
+    },
+    {
+      "id": 10590717,
+      "name": "SUNRISE ALORA AQUA PARK RESORT 4 *",
+      "siteHotelId": 29255,
+      "source": "https://www.tez-tour.com/hotel.html?id=10590717",
+      "gallerySource": "https://www.tez-tour.com/data/siteGalleries.html?siteHotelId=29255&lang=ru",
+      "thumbnail": {
+        "url": "https://s.tez-tour.com/hotel/29255/3_4_Resort_Overview_2993_middle.jpg",
+        "caption": "SUNRISE ALORA AQUA PARK RESORT 4 *",
+        "source": "https://www.tez-tour.com/hotel.html?id=10590717",
+        "verification": {
+          "status": 200,
+          "contentType": "image/jpeg",
+          "bytes": 83779,
+          "checkedAt": "2026-11-14T05:05:13.246Z"
+        }
+      },
+      "photos": [
+        {
+          "url": "https://s.tez-tour.com/hotel/29255/3_4_Resort_Overview_2993_middle.jpg",
+          "caption": "SUNRISE ALORA AQUA PARK RESORT 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=10590717",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 83779,
+            "checkedAt": "2026-11-14T05:05:13.246Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/29255/Sun_Ray_Lobby_Bar_1804_middle.jpg",
+          "caption": "SUNRISE ALORA AQUA PARK RESORT 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=10590717",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 59350,
+            "checkedAt": "2026-11-14T05:05:19.066Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/29255/2_3_Reception_5679_middle.jpg",
+          "caption": "SUNRISE ALORA AQUA PARK RESORT 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=10590717",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 75241,
+            "checkedAt": "2026-11-14T05:05:18.489Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/29255/6_1_Wave_Pool_1830_middle.jpg",
+          "caption": "SUNRISE ALORA AQUA PARK RESORT 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=10590717",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 62405,
+            "checkedAt": "2026-11-14T05:05:18.496Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/29255/9_2_Beach_7671_middle.jpg",
+          "caption": "SUNRISE ALORA AQUA PARK RESORT 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=10590717",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 69579,
+            "checkedAt": "2026-11-14T05:05:18.693Z"
+          }
+        }
+      ],
+      "rights": "supplier-permission-required"
+    },
+    {
+      "id": 10603964,
+      "name": "NEW EAGLES AQUA PARK 4 *",
+      "siteHotelId": 30738,
+      "source": "https://www.tez-tour.com/hotel.html?id=10603964",
+      "gallerySource": "https://www.tez-tour.com/data/siteGalleries.html?siteHotelId=30738&lang=ru",
+      "thumbnail": {
+        "url": "https://s.tez-tour.com/hotel/30738/2C1A2158_2896_middle.JPG",
+        "caption": "NEW EAGLES AQUA PARK 4 *",
+        "source": "https://www.tez-tour.com/hotel.html?id=10603964",
+        "verification": {
+          "status": 200,
+          "contentType": "image/jpeg",
+          "bytes": 70716,
+          "checkedAt": "2026-11-14T05:05:29.908Z"
+        }
+      },
+      "photos": [
+        {
+          "url": "https://s.tez-tour.com/hotel/30738/2C1A2158_2896_middle.JPG",
+          "caption": "NEW EAGLES AQUA PARK 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=10603964",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 70716,
+            "checkedAt": "2026-11-14T05:05:29.908Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/30738/MON_5726_4227_middle.jpg",
+          "caption": "NEW EAGLES AQUA PARK 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=10603964",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 41101,
+            "checkedAt": "2026-11-14T05:05:29.928Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/30738/MON_5783_6241_middle.jpg",
+          "caption": "NEW EAGLES AQUA PARK 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=10603964",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 77872,
+            "checkedAt": "2026-11-14T05:05:30.126Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/30738/MON_5747_6940_middle.jpg",
+          "caption": "NEW EAGLES AQUA PARK 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=10603964",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 54152,
+            "checkedAt": "2026-11-14T05:05:29.883Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/30738/SYD_8647_6141_middle.JPG",
+          "caption": "NEW EAGLES AQUA PARK 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=10603964",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 52566,
+            "checkedAt": "2026-11-14T05:05:35.174Z"
+          }
+        }
+      ],
+      "rights": "supplier-permission-required"
+    },
+    {
+      "id": 10622029,
+      "name": "TITANIC PEARL 5 *",
+      "siteHotelId": 32412,
+      "source": "https://www.tez-tour.com/hotel.html?id=10622029",
+      "gallerySource": "https://www.tez-tour.com/data/siteGalleries.html?siteHotelId=32412&lang=ru",
+      "thumbnail": {
+        "url": "https://s.tez-tour.com/hotel/32412/Copy_of_DJI_20260731111038_0122_D_70_middle.jpg",
+        "caption": "TITANIC PEARL 5 *",
+        "source": "https://www.tez-tour.com/hotel.html?id=10622029",
+        "verification": {
+          "status": 200,
+          "contentType": "image/jpeg",
+          "bytes": 75203,
+          "checkedAt": "2026-11-14T05:05:35.384Z"
+        }
+      },
+      "photos": [
+        {
+          "url": "https://s.tez-tour.com/hotel/32412/Copy_of_DJI_20260731111038_0122_D_70_middle.jpg",
+          "caption": "TITANIC PEARL 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=10622029",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 75203,
+            "checkedAt": "2026-11-14T05:05:35.384Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/32412/Copy_of_MOU04131-Pano_3265_middle.jpg",
+          "caption": "TITANIC PEARL 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=10622029",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 94289,
+            "checkedAt": "2026-11-14T05:05:37.902Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/32412/Copy_of_Copy_of_MOU04195-HDR_673_middle.JPG",
+          "caption": "TITANIC PEARL 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=10622029",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 51680,
+            "checkedAt": "2026-11-14T05:05:36.522Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/32412/Copy_of_MOU04128_3247_middle.jpg",
+          "caption": "TITANIC PEARL 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=10622029",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 81735,
+            "checkedAt": "2026-11-14T05:05:37.134Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/32412/Copy_of_Copy_of_MOU04210_7883_middle.jpg",
+          "caption": "TITANIC PEARL 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=10622029",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 53066,
+            "checkedAt": "2026-11-14T05:05:38.442Z"
+          }
+        }
+      ],
+      "rights": "supplier-permission-required"
+    },
+    {
+      "id": 10234721,
+      "name": "SUNRISE GRAND SELECT CRYSTAL BAY - POSH CLUB 5 *",
+      "siteHotelId": 26517,
+      "source": "https://www.tez-tour.com/hotel.html?id=10234721",
+      "gallerySource": "https://www.tez-tour.com/data/siteGalleries.html?siteHotelId=26517&lang=ru",
+      "thumbnail": {
+        "url": "https://s.tez-tour.com/hotel/26517/2_5_Pool_Overeview_8182_middle.jpg",
+        "caption": "SUNRISE GRAND SELECT CRYSTAL BAY - POSH CLUB 5 *",
+        "source": "https://www.tez-tour.com/hotel.html?id=10234721",
+        "verification": {
+          "status": 200,
+          "contentType": "image/jpeg",
+          "bytes": 84881,
+          "checkedAt": "2026-11-14T05:05:42.092Z"
+        }
+      },
+      "photos": [
+        {
+          "url": "https://s.tez-tour.com/hotel/26517/2_5_Pool_Overeview_8182_middle.jpg",
+          "caption": "SUNRISE GRAND SELECT CRYSTAL BAY - POSH CLUB 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=10234721",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 84881,
+            "checkedAt": "2026-11-14T05:05:42.092Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/26517/1_1_Beach_Lagoon__2543_middle.jpg",
+          "caption": "SUNRISE GRAND SELECT CRYSTAL BAY - POSH CLUB 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=10234721",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 62631,
+            "checkedAt": "2026-11-14T05:05:41.519Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/26517/6_1__Gym_9281_middle.jpg",
+          "caption": "SUNRISE GRAND SELECT CRYSTAL BAY - POSH CLUB 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=10234721",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 64300,
+            "checkedAt": "2026-11-14T05:05:40.923Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/26517/2_8_Resort_Overview-Garden_5627_middle.jpg",
+          "caption": "SUNRISE GRAND SELECT CRYSTAL BAY - POSH CLUB 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=10234721",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 111293,
+            "checkedAt": "2026-11-14T05:05:41.091Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/26517/10_8_Pool_Suite_9710_middle.JPG",
+          "caption": "SUNRISE GRAND SELECT CRYSTAL BAY - POSH CLUB 5 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=10234721",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 80151,
+            "checkedAt": "2026-11-14T05:05:42.629Z"
+          }
+        }
+      ],
+      "rights": "supplier-permission-required"
+    },
+    {
+      "id": 10590925,
+      "name": "SUNRISE SOLARA AQUA PARK RESORT 4 *",
+      "siteHotelId": 29254,
+      "source": "https://www.tez-tour.com/hotel.html?id=10590925",
+      "gallerySource": "https://www.tez-tour.com/data/siteGalleries.html?siteHotelId=29254&lang=ru",
+      "thumbnail": {
+        "url": "https://s.tez-tour.com/hotel/29254/2_3_Resort_Overview_5931_middle.jpg",
+        "caption": "SUNRISE SOLARA AQUA PARK RESORT 4 *",
+        "source": "https://www.tez-tour.com/hotel.html?id=10590925",
+        "verification": {
+          "status": 200,
+          "contentType": "image/jpeg",
+          "bytes": 108399,
+          "checkedAt": "2026-11-14T05:05:41.123Z"
+        }
+      },
+      "photos": [
+        {
+          "url": "https://s.tez-tour.com/hotel/29254/2_3_Resort_Overview_5931_middle.jpg",
+          "caption": "SUNRISE SOLARA AQUA PARK RESORT 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=10590925",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 108399,
+            "checkedAt": "2026-11-14T05:05:41.123Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/29254/Frida_Restaurant_03_9522_middle.jpg",
+          "caption": "SUNRISE SOLARA AQUA PARK RESORT 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=10590925",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 69154,
+            "checkedAt": "2026-11-14T05:05:46.934Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/29254/Solara_Lobby_05_239_middle.jpg",
+          "caption": "SUNRISE SOLARA AQUA PARK RESORT 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=10590925",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 60379,
+            "checkedAt": "2026-11-14T05:05:46.396Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/29254/3_3_Aqua_Park_Pool_9382_middle.jpg",
+          "caption": "SUNRISE SOLARA AQUA PARK RESORT 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=10590925",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 87544,
+            "checkedAt": "2026-11-14T05:05:47.768Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/29254/1_2_Swim-up_Room_6082_middle.jpg",
+          "caption": "SUNRISE SOLARA AQUA PARK RESORT 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=10590925",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 44773,
+            "checkedAt": "2026-11-14T05:05:46.356Z"
+          }
+        }
+      ],
+      "rights": "supplier-permission-required"
+    },
+    {
+      "id": 10591134,
+      "name": "EMPIRE HOTEL AQUA PARK 3 *",
+      "siteHotelId": 29286,
+      "source": "https://www.tez-tour.com/hotel.html?id=10591134",
+      "gallerySource": "https://www.tez-tour.com/data/siteGalleries.html?siteHotelId=29286&lang=ru",
+      "thumbnail": {
+        "url": "https://s.tez-tour.com/hotel/29286/7_4383_middle.jpg",
+        "caption": "EMPIRE HOTEL AQUA PARK 3 *",
+        "source": "https://www.tez-tour.com/hotel.html?id=10591134",
+        "verification": {
+          "status": 200,
+          "contentType": "image/jpeg",
+          "bytes": 81984,
+          "checkedAt": "2026-11-14T05:05:46.583Z"
+        }
+      },
+      "photos": [
+        {
+          "url": "https://s.tez-tour.com/hotel/29286/7_4383_middle.jpg",
+          "caption": "EMPIRE HOTEL AQUA PARK 3 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=10591134",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 81984,
+            "checkedAt": "2026-11-14T05:05:46.583Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/29286/1R3A0941_7403_middle.jpg",
+          "caption": "EMPIRE HOTEL AQUA PARK 3 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=10591134",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 44003,
+            "checkedAt": "2026-11-14T05:05:46.940Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/29286/2_1209_middle.jpg",
+          "caption": "EMPIRE HOTEL AQUA PARK 3 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=10591134",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 55713,
+            "checkedAt": "2026-11-14T05:05:52.565Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/29286/15_9333_middle.jpg",
+          "caption": "EMPIRE HOTEL AQUA PARK 3 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=10591134",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 23767,
+            "checkedAt": "2026-11-14T05:05:52.031Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/29286/7_1605_middle.jpg",
+          "caption": "EMPIRE HOTEL AQUA PARK 3 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=10591134",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 81984,
+            "checkedAt": "2026-11-14T05:05:52.420Z"
+          }
+        }
+      ],
+      "rights": "supplier-permission-required"
+    },
+    {
+      "id": 10591207,
+      "name": "ROYAL STAR BEACH RESORT 4 *",
+      "siteHotelId": 29314,
+      "source": "https://www.tez-tour.com/hotel.html?id=10591207",
+      "gallerySource": "https://www.tez-tour.com/data/siteGalleries.html?siteHotelId=29314&lang=ru",
+      "thumbnail": {
+        "url": "https://s.tez-tour.com/hotel/29314/11_16_middle.jpg",
+        "caption": "ROYAL STAR BEACH RESORT 4 *",
+        "source": "https://www.tez-tour.com/hotel.html?id=10591207",
+        "verification": {
+          "status": 200,
+          "contentType": "image/jpeg",
+          "bytes": 85384,
+          "checkedAt": "2026-11-14T05:05:52.370Z"
+        }
+      },
+      "photos": [
+        {
+          "url": "https://s.tez-tour.com/hotel/29314/11_16_middle.jpg",
+          "caption": "ROYAL STAR BEACH RESORT 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=10591207",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 85384,
+            "checkedAt": "2026-11-14T05:05:52.370Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/29314/7_4237_middle.jpg",
+          "caption": "ROYAL STAR BEACH RESORT 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=10591207",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 104244,
+            "checkedAt": "2026-11-14T05:05:52.258Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/29314/38_7361_middle.jpg",
+          "caption": "ROYAL STAR BEACH RESORT 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=10591207",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 57033,
+            "checkedAt": "2026-11-14T05:05:51.831Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/29314/30_8452_middle.jpg",
+          "caption": "ROYAL STAR BEACH RESORT 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=10591207",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 54865,
+            "checkedAt": "2026-11-14T05:05:57.575Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/29314/6_58227_lg_8459_middle.jpg",
+          "caption": "ROYAL STAR BEACH RESORT 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=10591207",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 49844,
+            "checkedAt": "2026-11-14T05:05:57.774Z"
+          }
+        }
+      ],
+      "rights": "supplier-permission-required"
+    },
+    {
+      "id": 10591210,
+      "name": "EMPIRE BEACH AQUA PARK 3 *",
+      "siteHotelId": 29315,
+      "source": "https://www.tez-tour.com/hotel.html?id=10591210",
+      "gallerySource": "https://www.tez-tour.com/data/siteGalleries.html?siteHotelId=29315&lang=ru",
+      "thumbnail": {
+        "url": "https://s.tez-tour.com/hotel/29315/get18_3442_middle.jpg",
+        "caption": "EMPIRE BEACH AQUA PARK 3 *",
+        "source": "https://www.tez-tour.com/hotel.html?id=10591210",
+        "verification": {
+          "status": 200,
+          "contentType": "image/jpeg",
+          "bytes": 66668,
+          "checkedAt": "2026-11-14T05:05:59.367Z"
+        }
+      },
+      "photos": [
+        {
+          "url": "https://s.tez-tour.com/hotel/29315/get18_3442_middle.jpg",
+          "caption": "EMPIRE BEACH AQUA PARK 3 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=10591210",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 66668,
+            "checkedAt": "2026-11-14T05:05:59.367Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/29315/get15_1156_middle.jpg",
+          "caption": "EMPIRE BEACH AQUA PARK 3 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=10591210",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 85189,
+            "checkedAt": "2026-11-14T05:05:58.150Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/29315/get9_3276_middle.jpg",
+          "caption": "EMPIRE BEACH AQUA PARK 3 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=10591210",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 67853,
+            "checkedAt": "2026-11-14T05:05:58.566Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/29315/get29_6952_middle.jpg",
+          "caption": "EMPIRE BEACH AQUA PARK 3 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=10591210",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 74050,
+            "checkedAt": "2026-11-14T05:05:58.348Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/29315/DSC_7811_fb5e4_lg_7252_middle.jpg",
+          "caption": "EMPIRE BEACH AQUA PARK 3 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=10591210",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 57826,
+            "checkedAt": "2026-11-14T05:06:03.381Z"
+          }
+        }
+      ],
+      "rights": "supplier-permission-required"
+    },
+    {
+      "id": 10594885,
+      "name": "SUNRISE AZALEA AQUA PARK RESORT (EX. SUNRISE ASTER AQUA PARK RESORT) 4 *",
+      "siteHotelId": 29735,
+      "source": "https://www.tez-tour.com/hotel.html?id=10594885",
+      "gallerySource": "https://www.tez-tour.com/data/siteGalleries.html?siteHotelId=29735&lang=ru",
+      "thumbnail": {
+        "url": "https://s.tez-tour.com/hotel/29735/2_2_Aqua_pool_3510_middle.jpg",
+        "caption": "SUNRISE AZALEA AQUA PARK RESORT (EX. SUNRISE ASTER AQUA PARK RESORT) 4 *",
+        "source": "https://www.tez-tour.com/hotel.html?id=10594885",
+        "verification": {
+          "status": 200,
+          "contentType": "image/jpeg",
+          "bytes": 102491,
+          "checkedAt": "2026-11-14T05:06:03.774Z"
+        }
+      },
+      "photos": [
+        {
+          "url": "https://s.tez-tour.com/hotel/29735/2_2_Aqua_pool_3510_middle.jpg",
+          "caption": "SUNRISE AZALEA AQUA PARK RESORT (EX. SUNRISE ASTER AQUA PARK RESORT) 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=10594885",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 102491,
+            "checkedAt": "2026-11-14T05:06:03.774Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/29735/1_6_Superior_Room_Bathroom_2918_middle.jpg",
+          "caption": "SUNRISE AZALEA AQUA PARK RESORT (EX. SUNRISE ASTER AQUA PARK RESORT) 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=10594885",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 51633,
+            "checkedAt": "2026-11-14T05:06:04.149Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/29735/Executive_Jacuzzi_Suite_4_-_Retouched_974_middle.jpg",
+          "caption": "SUNRISE AZALEA AQUA PARK RESORT (EX. SUNRISE ASTER AQUA PARK RESORT) 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=10594885",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 82863,
+            "checkedAt": "2026-11-14T05:06:04.622Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/29735/Beach_Bar_7761_middle.jpg",
+          "caption": "SUNRISE AZALEA AQUA PARK RESORT (EX. SUNRISE ASTER AQUA PARK RESORT) 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=10594885",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 58329,
+            "checkedAt": "2026-11-14T05:06:03.978Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/29735/11_3_Overviews_3531_middle.jpg",
+          "caption": "SUNRISE AZALEA AQUA PARK RESORT (EX. SUNRISE ASTER AQUA PARK RESORT) 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=10594885",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 78462,
+            "checkedAt": "2026-11-14T05:06:03.803Z"
+          }
+        }
+      ],
+      "rights": "supplier-permission-required"
+    },
+    {
+      "id": 10595301,
+      "name": "SUNRISE SERANO AQUA PARK RESORT (EX. RIVIERA AQUA PARK RESORT) 4 *",
+      "siteHotelId": 29818,
+      "source": "https://www.tez-tour.com/hotel.html?id=10595301",
+      "gallerySource": "https://www.tez-tour.com/data/siteGalleries.html?siteHotelId=29818&lang=ru",
+      "thumbnail": {
+        "url": "https://s.tez-tour.com/hotel/29818/11_1_Overview_2764_middle.jpg",
+        "caption": "SUNRISE SERANO AQUA PARK RESORT (EX. RIVIERA AQUA PARK RESORT) 4 *",
+        "source": "https://www.tez-tour.com/hotel.html?id=10595301",
+        "verification": {
+          "status": 200,
+          "contentType": "image/jpeg",
+          "bytes": 107740,
+          "checkedAt": "2026-11-14T05:06:09.700Z"
+        }
+      },
+      "photos": [
+        {
+          "url": "https://s.tez-tour.com/hotel/29818/11_1_Overview_2764_middle.jpg",
+          "caption": "SUNRISE SERANO AQUA PARK RESORT (EX. RIVIERA AQUA PARK RESORT) 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=10595301",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 107740,
+            "checkedAt": "2026-11-14T05:06:09.700Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/29818/4_1_Bikini_Pool__6222_middle.jpg",
+          "caption": "SUNRISE SERANO AQUA PARK RESORT (EX. RIVIERA AQUA PARK RESORT) 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=10595301",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 60403,
+            "checkedAt": "2026-11-14T05:06:08.928Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/29818/6_6_Bangalows_Family_Room_6918_middle.jpg",
+          "caption": "SUNRISE SERANO AQUA PARK RESORT (EX. RIVIERA AQUA PARK RESORT) 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=10595301",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 50023,
+            "checkedAt": "2026-11-14T05:06:09.352Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/29818/6_5_Bangalows_Family_Room_6586_middle.jpg",
+          "caption": "SUNRISE SERANO AQUA PARK RESORT (EX. RIVIERA AQUA PARK RESORT) 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=10595301",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 44077,
+            "checkedAt": "2026-11-14T05:06:08.924Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/29818/5_1_Bangalow_Room_425_middle.jpg",
+          "caption": "SUNRISE SERANO AQUA PARK RESORT (EX. RIVIERA AQUA PARK RESORT) 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=10595301",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 42945,
+            "checkedAt": "2026-11-14T05:06:09.312Z"
+          }
+        }
+      ],
+      "rights": "supplier-permission-required"
+    },
+    {
+      "id": 10595322,
+      "name": "SUNRISE SERANO CLUB RESORT 4 *",
+      "siteHotelId": 29819,
+      "source": "https://www.tez-tour.com/hotel.html?id=10595322",
+      "gallerySource": "https://www.tez-tour.com/data/siteGalleries.html?siteHotelId=29819&lang=ru",
+      "thumbnail": {
+        "url": "https://s.tez-tour.com/hotel/29819/2__Entrance_9830_middle.jpg",
+        "caption": "SUNRISE SERANO CLUB RESORT 4 *",
+        "source": "https://www.tez-tour.com/hotel.html?id=10595322",
+        "verification": {
+          "status": 200,
+          "contentType": "image/jpeg",
+          "bytes": 58092,
+          "checkedAt": "2026-11-14T05:06:09.323Z"
+        }
+      },
+      "photos": [
+        {
+          "url": "https://s.tez-tour.com/hotel/29819/2__Entrance_9830_middle.jpg",
+          "caption": "SUNRISE SERANO CLUB RESORT 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=10595322",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 58092,
+            "checkedAt": "2026-11-14T05:06:09.323Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/29819/2__Pool_277_middle.jpg",
+          "caption": "SUNRISE SERANO CLUB RESORT 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=10595322",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 64565,
+            "checkedAt": "2026-11-14T05:06:14.342Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/29819/Family_Room_5__219_middle.jpg",
+          "caption": "SUNRISE SERANO CLUB RESORT 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=10595322",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 41625,
+            "checkedAt": "2026-11-14T05:06:14.765Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/29819/DSC00568-HDR_9769_middle.jpg",
+          "caption": "SUNRISE SERANO CLUB RESORT 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=10595322",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 62736,
+            "checkedAt": "2026-11-14T05:06:14.510Z"
+          }
+        },
+        {
+          "url": "https://s.tez-tour.com/hotel/29819/Izoya_Shisha_Cafe_3_4717_middle.jpg",
+          "caption": "SUNRISE SERANO CLUB RESORT 4 *",
+          "source": "https://www.tez-tour.com/hotel.html?id=10595322",
+          "verification": {
+            "status": 200,
+            "contentType": "image/jpeg",
+            "bytes": 83381,
+            "checkedAt": "2026-11-14T05:06:14.580Z"
+          }
+        }
+      ],
+      "rights": "supplier-permission-required"
+    }
+  ],
+  "unresolved": []
+}

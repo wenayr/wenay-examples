@@ -1,4 +1,4 @@
-import type {SupplySource} from './supply-contract.ts'
+import type {SupplyPhoto, SupplySource} from './supply-contract.ts'
 
 export const packageDestinations = ['hurghada', 'sharm', 'rhodes'] as const
 export const packageWindowDays = 20
@@ -25,6 +25,8 @@ export interface PackageHotel {
     longitude: number | null
     url: string
     coordinateSource?: PackageCoordinateSource
+    photo?: SupplyPhoto | null
+    photos?: readonly SupplyPhoto[]
 }
 
 export interface PackageFare {
@@ -40,7 +42,7 @@ export interface PackageSummary extends Omit<PackageHotel, 'id'> {
     best: PackageFare
 }
 
-export interface PackageMarker extends Pick<PackageSummary, 'hotelId' | 'name' | 'stars' | 'minTotal' | 'maxTotal' | 'coordinateSource'> {
+export interface PackageMarker extends Pick<PackageSummary, 'hotelId' | 'name' | 'stars' | 'minTotal' | 'maxTotal' | 'coordinateSource' | 'photo'> {
     latitude: number
     longitude: number
 }

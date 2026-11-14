@@ -63,8 +63,9 @@ export function matchesPackageHotel(hotel: PackageHotel, filter: Pick<PackageQue
 
 function publicFare({id, departure, total}: PackageFare): PackageFare { return {id, departure, total} }
 function summary({hotel, best, maxTotal}: Match): PackageSummary {
-    const {id, name, stars, latitude, longitude, url, coordinateSource} = hotel
-    return {hotelId: id, name, stars, latitude, longitude, url, coordinateSource, best: publicFare(best), minTotal: best.total, maxTotal}
+    const {id, name, stars, latitude, longitude, url, coordinateSource, photo} = hotel
+    return {hotelId: id, name, stars, latitude, longitude, url, coordinateSource, photo,
+        best: publicFare(best), minTotal: best.total, maxTotal}
 }
 
 /** One immutable snapshot per supplier trip context and observed departure window. */
@@ -141,7 +142,7 @@ export function createOfferIndex(observations: Observations) {
                 break
             }
             markers.push({hotelId: hotel.id, name: hotel.name, latitude: hotel.latitude, longitude: hotel.longitude,
-                stars: hotel.stars, minTotal: best.total, maxTotal, coordinateSource: hotel.coordinateSource})
+                stars: hotel.stars, minTotal: best.total, maxTotal, coordinateSource: hotel.coordinateSource, photo: hotel.photo})
         }
         const end = query.offset + query.limit
         const items = sorted.slice(query.offset, end).map(summary)

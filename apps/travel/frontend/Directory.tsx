@@ -1,7 +1,7 @@
-import {useEffect, useRef, useState} from 'react'
+import {useEffect, useMemo, useRef, useState} from 'react'
 import type {SupplyCatalogPage, SupplyDestination, SupplyHotel, SupplyOptions} from '../src/supply-contract.ts'
 import {DirectoryCard} from './DirectoryCard.tsx'
-import {DirectoryMap, type tMapBounds} from './DirectoryMap.tsx'
+import {DirectoryMap, type tMapBounds, type tMapCamera} from './DirectoryMap.tsx'
 import {DirectoryDetail} from './DirectoryDetail.tsx'
 import {Rates, SourceCredits, SourceLine} from './DirectoryOffers.tsx'
 import {directoryUrl, useDirectoryEvents, useDirectoryQuery} from './directory-query.ts'
@@ -13,6 +13,9 @@ import {BrowseViews, useBrowseViews} from './BrowseViews.tsx'
 import {directoryTrip} from './trip/model.ts'
 import {SaveTripButton} from './trip/TripPlan.tsx'
 import {dateLabel, photo, hotelCount} from './presentation.ts'
+import {cameraForRoute} from './map-camera.ts'
+import {usePackageFavourites} from './package-favourites.ts'
+import './package-map.css'
 
 const pageSize = 12
 const prefsStore = createDirectoryPreferences()
@@ -65,17 +68,25 @@ function Browse({destinations, initial, initialHotel, route}: {
     const [draft, setDraft] = useState(prefs.search)
     const [offset, setOffset] = useState(initialBrowse.offset)
     const [bounds, setBounds] = useState<tMapBounds | null>(initialBrowse.bounds)
+    const [camera, setCamera] = useState<tMapCamera | null>(() => cameraForRoute(route))
+    const [fitRevision, setFitRevision] = useState(0)
+    const [fitWhenReady, setFitWhenReady] = useState(false)
     const [selection, setSelection] = useState(initialBrowse.selection)
     const [detailId, setDetailId] = useState(initialHotel)
-    const views = useBrowseViews(initialBrowse.view)
+    const initialView = route.query.has('view') ? initialBrowse.view : 'map'
+    const views = useBrowseViews(initialView)
+    const mapMode = views.view == 'map'
+    const favourites = usePackageFavourites()
     const [detailNotice, setDetailNotice] = useState('')
     const [open, setOpen] = useState<SupplyHotel | null>(null)
-    const [filtersOpen, setFiltersOpen] = useState(false)
+    const [filtersOpen, setFiltersOpen] = useState(() => mapMode && window.matchMedia('(min-width: 721px)').matches)
     const [showRates, setShowRates] = useState(false)
     const mapAnchor = useRef<HTMLDivElement>(null)
     const gridAnchor = useRef<HTMLDivElement>(null)
     const range = bounds ? {west: bounds[0], south: bounds[1], east: bounds[2], north: bounds[3]} : undefined
-    const url = directoryUrl('catalog', {destination: destination.id, q: prefs.search, source: prefs.source, limit: pageSize, offset, ...range})
+    const catalogPage = mapMode ? {limit: 100, offset: 0} : {limit: pageSize, offset}
+    const url = directoryUrl('catalog', {destination: destination.id, q: prefs.search, source: prefs.source,
+        ...catalogPage, ...range})
     const [refresh, setRefresh] = useState(0)
     const query = useDirectoryQuery<SupplyCatalogPage>(url, refresh)
     const detailUrl = detailId ? directoryUrl('hotel', {destination: destination.id, hotelId: detailId}) : null
@@ -84,6 +95,8 @@ function Browse({destinations, initial, initialHotel, route}: {
     const [lastPage, setLastPage] = useState<SupplyCatalogPage | undefined>()
     const stable = response ?? (lastPage?.destination.id == destination.id ? lastPage : undefined)
     const items = response?.items ?? []
+    const mapHotels = useMemo(() => (stable?.items ?? []).map(hotel => ({...hotel,
+        favouriteLevel: favourites.levels[hotel.id] ?? 0})), [stable?.items, favourites.levels])
     useDirectoryEvents(destination.id, stable?.revision, () => setRefresh(previous => previous + 1))
     useEffect(() => {
         if (detailId && detail.data?.hotel === null) {
@@ -107,6 +120,11 @@ function Browse({destinations, initial, initialHotel, route}: {
         if (response) setLastPage(response)
     }, [response])
     useEffect(() => {
+        if (!fitWhenReady || !response) return
+        setFitRevision(value => value + 1)
+        setFitWhenReady(false)
+    }, [fitWhenReady, response])
+    useEffect(() => {
         const search = draft.trim()
         if (search == prefs.search) return
         const timer = setTimeout(() => {
@@ -121,11 +139,12 @@ function Browse({destinations, initial, initialHotel, route}: {
     function searchLink(hotelId = detailId, selected = selection) {
         const {destination, ...filters} = prefs
         const browse = browseFields({bounds, offset, selection: selected, view: views.view})
-        return travelHash('catalog', destination, {...filters, ...browse, hotelId: hotelId || undefined})
+        return travelHash('catalog', destination, {...filters, ...browse, hotelId: hotelId || undefined,
+            mapLat: camera?.latitude, mapLon: camera?.longitude, mapZoom: camera?.zoom})
     }
     useEffect(() => {
         replaceTravelHash(searchLink())
-    }, [prefs, bounds, offset, selection, views.view, detailId])
+    }, [prefs, bounds, camera, offset, selection, views.view, detailId])
 
     function update(next: Partial<DirectoryPreferences>) {
         setPrefs(previous => ({...previous, ...next}))
@@ -135,6 +154,7 @@ function Browse({destinations, initial, initialHotel, route}: {
         setDetailNotice('')
         if (next.destination) {
             setBounds(null)
+            setCamera(null)
             setDraft('')
             setPrefs(previous => ({...previous, source: '', search: ''}))
         }
@@ -143,6 +163,13 @@ function Browse({destinations, initial, initialHotel, route}: {
     function searchArea(next: tMapBounds | null) {
         setBounds(next)
         setOffset(0)
+    }
+
+    function showDirection() {
+        setBounds(null)
+        setCamera(null)
+        setOffset(0)
+        setFitWhenReady(true)
     }
 
     function changePage(next: number) {
@@ -162,11 +189,14 @@ function Browse({destinations, initial, initialHotel, route}: {
     function showOnMap(hotel: SupplyHotel) {
         setSelection(hotel.id)
         views.setView('map')
+        setBounds([Math.max(-180, hotel.longitude - .01), Math.max(-85, hotel.latitude - .01),
+            Math.min(180, hotel.longitude + .01), Math.min(85, hotel.latitude + .01)])
+        setCamera({latitude: hotel.latitude, longitude: hotel.longitude, zoom: 15})
         requestAnimationFrame(() => mapAnchor.current?.scrollIntoView({block: 'nearest'}))
     }
 
     function selectMarker(id: string) {
-        const hotel = items.find(item => item.id == id)
+        const hotel = mapHotels.find(item => item.id == id)
         if (hotel) showHotel(hotel)
     }
     const cover = imageForDestination(destination.id)
@@ -176,6 +206,73 @@ function Browse({destinations, initial, initialHotel, route}: {
     const assistant = travelHash('assistant', destination.id, {
         kind: 'catalog', firstDeparture: prefs.checkIn, nights, adults: prefs.adults, phrase: prefs.search,
     })
+    const filterClassName = ['directory-filters filters', filtersOpen && 'filters--expanded', mapMode && 'package-map-filters']
+        .filter(Boolean).join(' ')
+    const filterPanel = <aside className={filterClassName} data-open={mapMode ? filtersOpen : undefined}
+        onKeyDown={event => {
+            if (!mapMode || event.key != 'Escape') return
+            setFiltersOpen(false)
+            event.currentTarget.querySelector<HTMLButtonElement>('.filter-toggle')?.focus()
+            event.stopPropagation()
+        }}>
+            <div className="filters-heading"><div><Icon name="filters"/><h2>{mapMode ? 'Фильтры' : 'Поиск отелей'}</h2></div>
+                <button type="button" className="filter-toggle" aria-label="Параметры поиска" aria-expanded={filtersOpen}
+                    onClick={() => setFiltersOpen(!filtersOpen)}><Icon name="down"/></button></div>
+            <div className="filter-fields" hidden={mapMode ? !filtersOpen : undefined}>
+                <label className="filter-field"><span>Направление</span><select aria-label="Направление" value={destination.id}
+                    onChange={event => update({destination: event.target.value})}>
+                    {destinations.map(d => <option value={d.id} key={d.id}>{d.name} · {d.country}</option>)}</select></label>
+                <label className="filter-field"><span>Название отеля</span><input type="search" placeholder="Найти отель" value={draft}
+                    maxLength={120} onChange={event => setDraft(event.target.value)}/></label>
+                <label className="filter-field"><span>Источник</span><select aria-label="Источник" value={prefs.source} onChange={event => update({source: event.target.value})}>
+                    <option value="">Все источники</option>{stable?.sources.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                    {prefs.source && !stable?.sources.some(s => s.id == prefs.source) && <option value={prefs.source}>{prefs.source}</option>}
+                </select></label>
+                <fieldset><legend>Даты для проверки цены</legend>
+                    <label className="filter-field"><span>Заезд</span><input type="date" min={start} value={prefs.checkIn} onChange={event => {
+                        const value = event.target.value
+                        if (value >= start) update({checkIn: value, checkOut: shiftDate(value, Math.min(nights, 30))})
+                    }}/></label>
+                    <label className="filter-field"><span>Выезд</span><input type="date" min={shiftDate(prefs.checkIn, 1)}
+                        max={shiftDate(prefs.checkIn, 30)} value={prefs.checkOut}
+                        onChange={event => { const date = event.target.value
+                            if (date > prefs.checkIn && date <= shiftDate(prefs.checkIn, 30)) update({checkOut: date}) }}/></label>
+                    <label className="filter-field"><span>Взрослых</span><select aria-label="Взрослых" value={prefs.adults} onChange={e => update({adults: Number(e.target.value)})}>
+                        {[1, 2, 3, 4, 5, 6, 7, 8].map(n => <option key={n}>{n}</option>)}
+                    </select></label>
+                </fieldset>
+                <button type="button" className="filter-reset" onClick={() => {
+                    setDraft('')
+                    searchArea(null)
+                    update({...directoryDefaults(), destination: destination.id})
+                }}>Сбросить фильтры</button>
+            </div>
+        </aside>
+    const hotelDetail = visibleHotel && <DirectoryDetail key={visibleHotel.id} hotel={visibleHotel} destination={destination} prefs={prefs}
+        mapMode={mapMode} onClose={() => dismissTravelDetail(closeHotel)}
+        save={<SaveTripButton item={directoryTrip(visibleHotel, destination, prefs,
+            stable?.sources.find(source => source.id == visibleHotel.sourceId)?.updatedAt)}/>}/>
+    if (mapMode) return <>
+        <main className="package-map-page directory-home--map" id="catalog">
+            <div className="package-map-stage" ref={mapAnchor}>
+                <DirectoryMap destination={destination} hotels={mapHotels} selectedId={selection || null}
+                    onSelect={setSelection} onOpen={selectMarker} onSearchArea={searchArea} bounds={bounds}
+                    camera={camera} onCamera={setCamera} immersive detailedByDefault loading={!response && !query.error}
+                    fitAllKey={fitRevision} onFavourite={favourites.setLevel}/>
+            </div>
+            {filterPanel}
+            <div className="package-map-toolbar">
+                <strong>{destination.name}</strong>
+                <span>{response ? hotelCount(response.total) : 'Загрузка…'}</span>
+                <button type="button" onClick={() => views.setView('list')}><Icon name="list" size={15}/> Список</button>
+                <button type="button" onClick={showDirection}>Всё направление</button>
+                {response?.nextOffset != null && <small className="package-map-status">Показано {mapHotels.length} · приблизьте район</small>}
+                {query.error && <span className="package-map-status" role="status">{query.error}</span>}
+                {detailNotice && <span className="package-map-status" role="status">{detailNotice}</span>}
+            </div>
+        </main>
+        {hotelDetail}
+    </>
     return <>
         <main className="travel-home directory-home" id="catalog">
             <header className={'directory-hero' + (cover ? ' has-cover' : '')}>
@@ -184,40 +281,7 @@ function Browse({destinations, initial, initialHotel, route}: {
                     <span><Icon name="pin" size={15}/> {destination.country}</span></div>
             </header>
             <div className="directory-layout">
-                <aside className={'directory-filters filters' + (filtersOpen ? ' filters--expanded' : '')}>
-                    <div className="filters-heading"><div><Icon name="filters"/><h2>Поиск отелей</h2></div>
-                        <button type="button" className="filter-toggle" aria-label="Параметры поиска" aria-expanded={filtersOpen}
-                            onClick={() => setFiltersOpen(!filtersOpen)}><Icon name="down"/></button></div>
-                    <div className="filter-fields">
-                        <label className="filter-field"><span>Направление</span><select aria-label="Направление" value={destination.id}
-                            onChange={event => update({destination: event.target.value})}>
-                            {destinations.map(d => <option value={d.id} key={d.id}>{d.name} · {d.country}</option>)}</select></label>
-                        <label className="filter-field"><span>Название отеля</span><input type="search" placeholder="Найти отель" value={draft}
-                            maxLength={120} onChange={event => setDraft(event.target.value)}/></label>
-                        <label className="filter-field"><span>Источник</span><select aria-label="Источник" value={prefs.source} onChange={event => update({source: event.target.value})}>
-                            <option value="">Все источники</option>{stable?.sources.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-                            {prefs.source && !stable?.sources.some(s => s.id == prefs.source) && <option value={prefs.source}>{prefs.source}</option>}
-                        </select></label>
-                        <fieldset><legend>Даты для проверки цены</legend>
-                            <label className="filter-field"><span>Заезд</span><input type="date" min={start} value={prefs.checkIn} onChange={event => {
-                                const value = event.target.value
-                                if (value >= start) update({checkIn: value, checkOut: shiftDate(value, Math.min(nights, 30))})
-                            }}/></label>
-                            <label className="filter-field"><span>Выезд</span><input type="date" min={shiftDate(prefs.checkIn, 1)}
-                                max={shiftDate(prefs.checkIn, 30)} value={prefs.checkOut}
-                                onChange={event => { const date = event.target.value
-                                    if (date > prefs.checkIn && date <= shiftDate(prefs.checkIn, 30)) update({checkOut: date}) }}/></label>
-                            <label className="filter-field"><span>Взрослых</span><select aria-label="Взрослых" value={prefs.adults} onChange={e => update({adults: Number(e.target.value)})}>
-                                {[1, 2, 3, 4, 5, 6, 7, 8].map(n => <option key={n}>{n}</option>)}
-                            </select></label>
-                        </fieldset>
-                        <button type="button" className="filter-reset" onClick={() => {
-                            setDraft('')
-                            searchArea(null)
-                            update({...directoryDefaults(), destination: destination.id})
-                        }}>Сбросить фильтры</button>
-                    </div>
-                </aside>
+                {filterPanel}
                 <div className="directory-results">
                     <div className="directory-summary"><div><p>{destination.country}</p><h2>Отели и размещение</h2></div>
                         <div className="directory-summary-actions">
@@ -271,10 +335,7 @@ function Browse({destinations, initial, initialHotel, route}: {
                 </div>
             </div>
         </main>
-        {visibleHotel && <DirectoryDetail key={visibleHotel.id} hotel={visibleHotel} destination={destination} prefs={prefs}
-            onClose={() => dismissTravelDetail(closeHotel)}
-            save={<SaveTripButton item={directoryTrip(visibleHotel, destination, prefs,
-                stable?.sources.find(source => source.id === visibleHotel.sourceId)?.updatedAt)}/>}/>}
+        {hotelDetail}
     </>
 }
 

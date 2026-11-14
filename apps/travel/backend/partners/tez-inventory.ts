@@ -1,5 +1,6 @@
 import {createHash} from 'node:crypto'
 import {readFileSync} from 'node:fs'
+import {createAsyncQueue} from 'wenay-common2'
 import type {PackageCoordinateSource} from '../../src/package-contract.ts'
 import type {SupplySource} from '../../src/supply-contract.ts'
 import {allowTezSearch} from './tez-access.ts'
@@ -152,7 +153,14 @@ function missing(message: string, handoff = false): TezObservation {
 
 export function createTezInventory(deps: {fetch: typeof fetch, now: () => Date}) {
     const cache = new Map<string, {result: TezObservation, until: number}>()
-    const inflight = new Map<string, Promise<TezObservation>>()
+    const queue = createAsyncQueue(6)
+    const inflight = new Map<string, {
+        work: Promise<TezObservation>
+        users: Set<symbol>
+        controller: AbortController
+        signal: AbortSignal
+    }>()
+    type Pending = NonNullable<ReturnType<typeof inflight.get>>
     function remember(key: string, result: TezObservation, ttl: number) {
         if (!cache.has(key) && cache.size >= 360) cache.delete(cache.keys().next().value!)
         cache.set(key, {result, until: deps.now().getTime() + ttl})
@@ -162,7 +170,27 @@ export function createTezInventory(deps: {fetch: typeof fetch, now: () => Date})
         if (!result.source.updatedAt) return result
         return {...result, source: {...result.source, status: 'cached', description: message}}
     }
-    async function read(input: TezWindow, hotelId?: string, date?: string, forceFresh = false): Promise<TezObservation> {
+    async function observe(pending: Pending, signal?: AbortSignal) {
+        signal?.throwIfAborted()
+        const token = Symbol('supplier-reader')
+        pending.users.add(token)
+        let rejectAbort: (reason: unknown) => void = () => {}
+        const cancelled = new Promise<never>((_, reject) => { rejectAbort = reject })
+        function aborted() {
+            pending.users.delete(token)
+            if (!pending.users.size) pending.controller.abort(signal?.reason)
+            rejectAbort(signal?.reason ?? new DOMException('Aborted', 'AbortError'))
+        }
+        signal?.addEventListener('abort', aborted, {once: true})
+        try {
+            return await (signal ? Promise.race([pending.work, cancelled]) : pending.work)
+        } finally {
+            pending.users.delete(token)
+            signal?.removeEventListener('abort', aborted)
+        }
+    }
+    async function read(input: TezWindow, hotelId?: string, date?: string, forceFresh = false, signal?: AbortSignal): Promise<TezObservation> {
+        signal?.throwIfAborted()
         const now = deps.now()
         const request = buildRequest(input, now.toISOString().slice(0, 10), hotelId, date)
         if (!request) return missing('Публичный поиск TEZ не настроен для этого маршрута, состава или периода.', true)
@@ -170,28 +198,37 @@ export function createTezInventory(deps: {fetch: typeof fetch, now: () => Date})
         const prior = cache.get(request.url)
         if (!forceFresh && prior && prior.until > now.getTime()) return cached(prior.result)
         const waiting = inflight.get(request.url)
-        if (waiting) return waiting
+        if (waiting && !waiting.signal.aborted) return observe(waiting, signal)
         function failed(message: string) {
             const lastTime = Date.parse(prior?.result.source.updatedAt ?? '')
             if (prior && now.getTime() - lastTime <= 15 * 60_000) return cached(prior.result, message + ' Показаны ранее проверенные цены.')
             return missing(message)
         }
-        if (inflight.size >= 6 || !allowTezSearch(deps.fetch, now.getTime())) return failed('Лимит одновременных запросов TEZ. Повторите позже.')
+        const controller = new AbortController()
+        const deadline = AbortSignal.any([controller.signal, AbortSignal.timeout(20_000)])
+        const pending: Pending = {controller, signal: deadline, users: new Set(), work: Promise.resolve(missing('Проверяем тарифы TEZ.'))}
         async function fetchQuotes() {
             try {
-                const response = await deps.fetch(search.url, {signal: AbortSignal.timeout(10_000), redirect: 'error'})
+                deadline.throwIfAborted()
+                if (!allowTezSearch(deps.fetch, deps.now().getTime())) {
+                    return remember(search.url, failed('Лимит частоты запросов TEZ. Повторите позже.'), 10_000)
+                }
+                const timeout = AbortSignal.any([deadline, AbortSignal.timeout(10_000)])
+                const response = await deps.fetch(search.url, {signal: timeout, redirect: 'error'})
                 if (!response.ok) throw new Error('Поставщик не вернул цены')
                 return remember(search.url, decode(await response.json(), search, deps.now().toISOString()), 120_000)
             } catch {
+                if (controller.signal.aborted) throw controller.signal.reason
                 return remember(search.url, failed('Нет свежего ответа TEZ.'), 10_000)
             } finally {
-                inflight.delete(search.url)
+                if (inflight.get(search.url) == pending) inflight.delete(search.url)
             }
         }
-        const work = fetchQuotes()
-        inflight.set(request.url, work)
-        return work
+        inflight.set(request.url, pending)
+        pending.work = queue.add(fetchQuotes)
+        return observe(pending, signal)
     }
-    return {window: (input: TezWindow) => read(input),
-        day: (input: TezWindow, hotelId: string, date: string, forceFresh = false) => read(input, hotelId, date, forceFresh)}
+    return {window: (input: TezWindow, signal?: AbortSignal) => read(input, undefined, undefined, false, signal),
+        day: (input: TezWindow, hotelId: string, date: string, forceFresh = false, signal?: AbortSignal) =>
+            read(input, hotelId, date, forceFresh, signal)}
 }

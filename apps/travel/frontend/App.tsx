@@ -217,7 +217,7 @@ export function App({store}: {store: ReturnType<typeof createTravelSearch>}) {
     }, [])
     const route = travelRoute(location.hash)
     useEffect(() => { document.title = travelPages[route.page] + ' · Wenay Travel' }, [route.page])
-    return <TripProvider>
+    return <TripProvider><div className={'travel-app' + (route.page == 'packages' ? ' travel-app--map' : '')}>
         <a className="travel-skip" href="#travel-content" onClick={event => {
             event.preventDefault()
             content.current?.focus()
@@ -239,6 +239,6 @@ export function App({store}: {store: ReturnType<typeof createTravelSearch>}) {
             initialContext={assistantContext(route)} onApply={applySearch}/>}
         {route.page === 'trip' && <TripPlan onResume={resume} flightSection={<><FlightResume/><SavedSupply/></>}/>}
         </div>
-        {route.page !== 'demo' && <Footer/>}
-    </TripProvider>
+        {route.page !== 'demo' && route.page !== 'packages' && <Footer/>}
+    </div></TripProvider>
 }

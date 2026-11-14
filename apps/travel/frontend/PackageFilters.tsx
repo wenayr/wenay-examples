@@ -9,13 +9,15 @@ type FilterProps = {
     prefs: PackagePreferences
     destinations: SupplyDestination[]
     onChange: (patch: Partial<PackagePreferences>) => void
+    immersive?: boolean
 }
 
-export function PackageFilters({prefs, destinations, onChange}: FilterProps) {
-    const [expanded, setExpanded] = useState(false)
+export function PackageFilters({prefs, destinations, onChange, immersive = false}: FilterProps) {
+    const [expanded, setExpanded] = useState(() => immersive && typeof window != 'undefined' && window.matchMedia('(min-width: 721px)').matches)
     const today = new Date().toISOString().slice(0, 10)
     const lastAllowed = shiftDate(prefs.firstDeparture, packageWindowDays - 1)
     const sliderEnd = Math.max(usualBudget, prefs.maxTotal)
+    const className = ['directory-filters filters', expanded && 'filters--expanded', immersive && 'package-map-filters'].filter(Boolean).join(' ')
     function changeFirst(value: string) {
         if (!validDate(value) || value < today) return
         const oldLength = (Date.parse(prefs.lastDeparture) - Date.parse(prefs.firstDeparture)) / 86_400_000
@@ -27,11 +29,17 @@ export function PackageFilters({prefs, destinations, onChange}: FilterProps) {
         if (key === 'minTotal') onChange({minTotal: Math.min(value, prefs.maxTotal)})
         else onChange({maxTotal: Math.max(value, prefs.minTotal)})
     }
-    return <aside className={'directory-filters filters' + (expanded ? ' filters--expanded' : '')}>
-        <div className="filters-heading"><div><Icon name="filters"/><h2>Поиск тура</h2></div>
-            <button className="filter-toggle" type="button" aria-label="Параметры тура" aria-expanded={expanded}
+    return <aside className={className}
+        data-open={immersive ? expanded : undefined} onKeyDown={event => {
+            if (!immersive || event.key != 'Escape') return
+            setExpanded(false)
+            event.currentTarget.querySelector<HTMLButtonElement>('.filter-toggle')?.focus()
+            event.stopPropagation()
+        }}>
+        <div className="filters-heading"><div><Icon name="filters"/><h2>{immersive ? 'Фильтры' : 'Поиск тура'}</h2></div>
+            <button className="filter-toggle" type="button" aria-label={expanded ? 'Свернуть фильтры' : 'Открыть фильтры'} aria-expanded={expanded}
                 aria-controls="package-filters" onClick={() => setExpanded(!expanded)}><Icon name="down"/></button></div>
-        <div className="filter-fields" id="package-filters">
+        <div className="filter-fields" id="package-filters" hidden={immersive ? !expanded : undefined}>
             <label className="filter-field"><span>Направление тура</span><select value={prefs.destination}
                 onChange={e => onChange({destination: e.target.value})}>
                 {destinations.map(place => <option key={place.id} value={place.id}>{place.name} · {place.country}</option>)}

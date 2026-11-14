@@ -8,12 +8,13 @@ import {Icon} from './Icons.tsx'
 import {providerQueryParams} from './provider-client.ts'
 import {travelHash} from './navigation.ts'
 
-export function DirectoryDetail({hotel, destination, prefs, onClose, save}: {
+export function DirectoryDetail({hotel, destination, prefs, onClose, save, mapMode = false}: {
     save: ReactNode
     hotel: SupplyHotel
     destination: SupplyDestination
     prefs: DirectoryPreferences
     onClose: () => void
+    mapMode?: boolean
 }) {
     const dialog = useRef<HTMLDialogElement>(null)
     const url = directoryUrl('options', {
@@ -26,10 +27,16 @@ export function DirectoryDetail({hotel, destination, prefs, onClose, save}: {
         return () => node?.close()
     }, [])
     const fmt = new Intl.DateTimeFormat('ru-RU', {day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC'})
-    return <dialog className="hotel-detail directory-detail" aria-labelledby="directory-detail-title" ref={dialog}
+    return <dialog className={'hotel-detail directory-detail' + (mapMode ? ' directory-detail--map' : '')}
+        aria-labelledby="directory-detail-title" ref={dialog}
         onCancel={onClose} onClick={event => { if (event.target == event.currentTarget) onClose() }}>
+        {mapMode && <header className="directory-map-detail-header">
+            <button type="button" onClick={onClose}><Icon name="arrow" size={16}/> Вернуться к карте</button>
+            <button type="button" aria-label="Закрыть карточку отеля" onClick={onClose}><Icon name="close" size={19}/></button>
+        </header>}
         <PropertyPhoto key={hotel.id} hotel={hotel}/>
-        <button className="detail-close" type="button" onClick={onClose} aria-label="Закрыть карточку отеля"><Icon name="close"/></button>
+        {!mapMode && <button className="detail-close" type="button" onClick={onClose} aria-label="Закрыть карточку отеля">
+            <Icon name="close"/></button>}
         <div className="detail-content">
             <p className="property-location"><Icon name="pin" size={16}/>{hotel.locality || destination.name} · {destination.country}</p>
             <h2 id="directory-detail-title">{hotel.name}</h2>

@@ -2,19 +2,27 @@ import {useEffect, useEffectEvent, useRef, useState} from 'react'
 import * as L from 'leaflet'
 import type {GeoJsonObject} from 'geojson'
 import {destinations} from '../demo/catalog.ts'
-import type {SupplyDestination, SupplyHotel} from '../src/supply-contract.ts'
+import type {SupplyDestination, SupplyHotel, SupplyPhoto} from '../src/supply-contract.ts'
 import type {PackageTrendPoint} from '../src/package-trends-contract.ts'
 import {drawAtlas, fitHotelPoints, overlap, type CardBox} from './HotelMap.tsx'
 import {Icon} from './Icons.tsx'
 import {mapClusters} from './map-clusters.ts'
+import {packageFavouriteLevels, type tPackageFavouriteLevel} from './package-favourites.ts'
 
 export type tMapBounds = readonly [west: number, south: number, east: number, north: number]
 
-type MapProperty = Pick<SupplyHotel, 'id' | 'name' | 'latitude' | 'longitude'> & {
+export type MapProperty = Pick<SupplyHotel, 'id' | 'name' | 'latitude' | 'longitude'> & {
     priceLabel?: string
     priceTotal?: number
     tooltip?: string
     trend?: readonly PackageTrendPoint[]
+    photo?: SupplyPhoto | null
+    favouriteLevel?: tPackageFavouriteLevel
+}
+export interface tMapCamera {
+    latitude: number
+    longitude: number
+    zoom: number
 }
 interface DirectoryMapProps {
     destination: SupplyDestination
@@ -28,6 +36,11 @@ interface DirectoryMapProps {
     fitAllKey?: number | string
     detailedByDefault?: boolean
     loading?: boolean
+    immersive?: boolean
+    onOpen?: (id: string) => void
+    onFavourite?: (id: string, level: tPackageFavouriteLevel) => void
+    camera?: tMapCamera | null
+    onCamera?: (camera: tMapCamera) => void
 }
 
 // Natural Earth 1:10m land (world-atlas 2.0.2), roads and urban areas. Each local GeoJSON
@@ -66,8 +79,9 @@ function accessibleMarker(marker: L.Marker, label: string, count: number, ids: r
     node?.setAttribute('data-hotel-count', String(count))
     node?.setAttribute('data-hotel-ids', JSON.stringify(ids))
     node?.addEventListener('keydown', function activateWithSpace(event) {
-        if (event.key != ' ') return
+        if (![' ', 'Enter'].includes(event.key) || event.target != node) return
         event.preventDefault()
+        event.stopPropagation()
         activate()
     })
 }
@@ -109,7 +123,7 @@ function priceTrend(days: readonly PackageTrendPoint[]) {
         const dot = document.createElementNS(svgNamespace, 'circle')
         dot.setAttribute('cx', String(x))
         dot.setAttribute('cy', String(y))
-        dot.setAttribute('r', '2')
+        dot.setAttribute('r', '2.4')
         dot.append(title)
         graph.append(dot)
     })
@@ -118,37 +132,166 @@ function priceTrend(days: readonly PackageTrendPoint[]) {
     return graph
 }
 
-function addProperty(group: L.LayerGroup, hotel: MapProperty, index: number, select: () => void) {
+function favouriteControls(hotel: MapProperty, change: (level: tPackageFavouriteLevel) => void) {
+    const controls = document.createElement('div')
+    controls.className = 'map-hotel-card__favorites'
+    controls.setAttribute('aria-label', 'Уровень избранного')
+    controls.addEventListener('keydown', function keepFavouriteControl(event) {
+        if (event.key == 'Enter' || event.key == ' ') event.stopPropagation()
+    })
+    const symbols = {1: '●', 2: '♥', 3: '⚑'} as const
+    const levels = [1, 2, 3] as const
+    levels.forEach(level => {
+        const button = document.createElement('button')
+        button.type = 'button'
+        button.className = 'map-hotel-card__favorite'
+        button.dataset.level = String(level)
+        button.textContent = symbols[level]
+        button.style.setProperty('--hotel-favourite-color', packageFavouriteLevels[level].color)
+        button.title = packageFavouriteLevels[level].label
+        button.setAttribute('aria-label', packageFavouriteLevels[level].label + ' · ' + hotel.name)
+        button.setAttribute('aria-pressed', String(hotel.favouriteLevel == level))
+        button.addEventListener('click', function changeFavourite(event) {
+            event.stopPropagation()
+            change(hotel.favouriteLevel == level ? 0 : level)
+        })
+        controls.append(button)
+    })
+    L.DomEvent.disableClickPropagation(controls)
+    return controls
+}
+
+function mapPhotoUrl(value: string | undefined) {
+    if (!value) return null
+    try {
+        const url = new URL(value, window.location.href)
+        const local = url.protocol == 'http:' && url.origin == window.location.origin
+        if (url.protocol == 'https:' || local) return url.href
+    } catch {
+        return null
+    }
+    return null
+}
+
+function mapPropertyLabel(hotel: MapProperty) {
+    const parts = [hotel.name]
+    if (hotel.priceLabel) parts.push(hotel.priceLabel + ' за группу')
+    const quoted = hotel.trend?.filter(day => day.status == 'quoted' && day.total != null) ?? []
+    const amounts = quoted.map(day => day.total as number)
+    if (amounts.length) {
+        const low = Math.min(...amounts)
+        const high = Math.max(...amounts)
+        let range = trendMoney.format(low / 100)
+        if (high != low) range += ' — ' + trendMoney.format(high / 100)
+        parts.push('Дневные минимумы в бюджете ' + range)
+    }
+    if (hotel.favouriteLevel) parts.push(packageFavouriteLevels[hotel.favouriteLevel].label)
+    return parts.join('. ')
+}
+
+function photoCard(hotel: MapProperty, open: () => void, favourite?: (level: tPackageFavouriteLevel) => void) {
+    const card = document.createElement('article')
+    card.className = 'map-hotel-card'
+    card.dataset.favouriteLevel = String(hotel.favouriteLevel ?? 0)
+    card.style.setProperty('--hotel-favourite-color', packageFavouriteLevels[hotel.favouriteLevel ?? 0].color)
+    const button = document.createElement('button')
+    button.type = 'button'
+    button.className = 'map-hotel-card__open'
+    button.setAttribute('aria-label', 'Открыть ' + mapPropertyLabel(hotel))
+    function missingPhoto() {
+        const empty = document.createElement('div')
+        empty.className = 'map-hotel-card__photo is-missing'
+        empty.textContent = 'Фото пока недоступно'
+        return empty
+    }
+    const photo = mapPhotoUrl(hotel.photo?.url)
+    if (photo) {
+        const image = document.createElement('img')
+        image.className = 'map-hotel-card__photo'
+        image.src = photo
+        image.alt = hotel.name
+        image.loading = 'lazy'
+        image.decoding = 'async'
+        image.addEventListener('error', function imageUnavailable() { image.replaceWith(missingPhoto()) }, {once: true})
+        button.append(image)
+    } else button.append(missingPhoto())
+    const body = document.createElement('div')
+    body.className = 'map-hotel-card__body'
+    const name = document.createElement('strong')
+    name.className = 'map-hotel-card__name'
+    name.textContent = hotel.name
+    body.append(name)
+    if (hotel.trend?.length) {
+        const graph = priceTrend(hotel.trend)
+        graph.classList.add('map-hotel-card__trend')
+        body.append(graph)
+    } else {
+        const pending = document.createElement('span')
+        pending.className = 'map-hotel-card__trend is-empty'
+        pending.textContent = 'Даты уточняются'
+        body.append(pending)
+    }
+    const amount = document.createElement('b')
+    amount.className = 'map-hotel-card__price'
+    amount.textContent = hotel.priceLabel ?? 'Открыть отель'
+    body.append(amount)
+    button.append(body)
+    button.addEventListener('click', function openHotel(event) {
+        event.stopPropagation()
+        open()
+    })
+    L.DomEvent.disableClickPropagation(button)
+    card.append(button)
+    if (favourite) card.append(favouriteControls(hotel, favourite))
+    return card
+}
+
+function addProperty(group: L.LayerGroup, hotel: MapProperty, index: number, select: () => void,
+    rich = false, favourite?: (level: tPackageFavouriteLevel) => void, compact = false) {
+    if (rich) {
+        const card = photoCard(hotel, select, favourite)
+        const icon = L.divIcon({className: 'directory-map-pin is-rich-card', html: card,
+            iconSize: [190, 220], iconAnchor: [95, 110]})
+        const marker = L.marker([hotel.latitude, hotel.longitude], {
+            icon, keyboard: true, autoPanOnFocus: false, bubblingMouseEvents: false,
+        }).on('click', select).addTo(group)
+        accessibleMarker(marker, mapPropertyLabel(hotel), 1, [hotel.id], select)
+        return marker
+    }
     const label = document.createElement('span')
     label.className = 'directory-map-number' + (hotel.priceLabel ? ' package-map-price' : '')
+    label.dataset.favouriteLevel = String(hotel.favouriteLevel ?? 0)
+    label.style.setProperty('--hotel-favourite-color', packageFavouriteLevels[hotel.favouriteLevel ?? 0].color)
     const trend = hotel.trend ?? []
     const multipleDays = Boolean(hotel.priceLabel && trend.length > 1)
-    const width = hotel.priceLabel ? 128 : 40
+    let width = hotel.priceLabel ? 128 : 40
     let height = hotel.priceLabel ? 52 : 40
+    if (compact && hotel.priceLabel) {
+        width = 112
+        height = 44
+    }
     if (hotel.priceLabel) {
         const name = document.createElement('span')
         name.className = 'directory-pin-name'
         name.textContent = hotel.name
         const amount = document.createElement('strong')
         amount.textContent = hotel.priceLabel
-        label.append(name, amount)
+        if (!compact) label.append(name)
         if (multipleDays) {
             const totals = trend.filter(day => day.status == 'quoted').map(day => day.total)
             const quoted = totals.filter((value): value is number => value != null)
             label.classList.add('has-trend')
             label.append(priceTrend(trend))
             if (quoted.length) {
-                const range = document.createElement('span')
-                range.className = 'directory-pin-range'
                 const low = Math.min(...quoted)
                 const high = Math.max(...quoted)
-                range.textContent = trendMoney.format(low / 100)
-                if (high != low) range.textContent += ' – ' + trendMoney.format(high / 100)
-                range.title = 'Дневные минимумы в бюджете'
-                label.append(range)
+                label.title = 'Дневные минимумы в бюджете · ' + trendMoney.format(low / 100)
+                if (high != low) label.title += ' – ' + trendMoney.format(high / 100)
             }
             height = 84
+            if (compact) height = 56
         }
+        label.append(amount)
     } else label.textContent = String(index + 1)
     const icon = L.divIcon({className: 'directory-map-pin', html: label, iconSize: [width, height], iconAnchor: [width / 2, height / 2]})
     const marker = L.marker([hotel.latitude, hotel.longitude], {
@@ -199,6 +342,17 @@ function addCluster(map: L.Map, group: L.LayerGroup, hotels: readonly MapPropert
     const amounts = hotels.map(hotel => hotel.priceTotal).filter((value): value is number => value != null)
     price.textContent = amounts.length ? 'от ' + clusterMoney.format(Math.min(...amounts) / 100) : 'Приблизить'
     label.append(count, price)
+    const favourites = hotels.filter(hotel => (hotel.favouriteLevel ?? 0) > 0)
+    if (favourites.length) {
+        const level = Math.max(...favourites.map(hotel => hotel.favouriteLevel ?? 0)) as tPackageFavouriteLevel
+        label.dataset.favouriteLevel = String(level)
+        label.style.setProperty('--hotel-favourite-color', packageFavouriteLevels[level].color)
+        const badge = document.createElement('span')
+        badge.className = 'directory-cluster-favourites'
+        badge.textContent = '♥ ' + favourites.length
+        badge.title = 'Отмеченных отелей в группе · ' + favourites.length
+        label.append(badge)
+    }
     const icon = L.divIcon({className: 'directory-map-pin is-cluster', html: label, iconSize: [120, 48], iconAnchor: [60, 24]})
     const marker = L.marker(center, {icon, keyboard: true, autoPanOnFocus: false, bubblingMouseEvents: false}).addTo(group)
     function expand() {
@@ -268,13 +422,38 @@ function protectSelectedLabel(map: L.Map, group: L.LayerGroup, markers: readonly
     })
 }
 
+function fitDirectoryHotels(map: L.Map, destination: SupplyDestination, hotels: readonly MapProperty[], immersive: boolean) {
+    if (!immersive || !hotels.length) {
+        fitHotelPoints(map, destination, hotels)
+        return
+    }
+    const narrow = map.getSize().x < 700
+    const positions = hotels.map(hotel => L.latLng(hotel.latitude, hotel.longitude))
+    map.fitBounds(L.latLngBounds(positions), {
+        maxZoom: 14, animate: false,
+        paddingTopLeft: narrow ? [20, 145] : [335, 100],
+        paddingBottomRight: narrow ? [20, 30] : [40, 30],
+    })
+}
+
+function mapSearchBounds(area: L.LatLngBounds): tMapBounds | null {
+    const south = Math.max(-85, area.getSouth())
+    const north = Math.min(85, area.getNorth())
+    if (south >= north) return null
+    const west = L.Util.wrapNum(area.getWest(), [-180, 180], true)
+    const east = L.Util.wrapNum(area.getEast(), [-180, 180], true)
+    const wholeWorld = area.getEast() - area.getWest() >= 360 || west >= east
+    return wholeWorld ? [-180, south, 180, north] : [west, south, east, north]
+}
+
 export function DirectoryMap({destination, hotels, selectedId, onSelect, onSearchArea, world = false, bounds,
-    onShowAll, fitAllKey, detailedByDefault = false, loading = false}: DirectoryMapProps) {
+    onShowAll, fitAllKey, detailedByDefault = false, loading = false, immersive = false,
+    onOpen, onFavourite, camera, onCamera}: DirectoryMapProps) {
     const host = useRef<HTMLDivElement>(null)
     const mapRef = useRef<L.Map | null>(null)
     const markers = useRef(new Map<string, L.Marker>())
     const propertyLayer = useRef<L.LayerGroup | null>(null)
-    const select = useRef(onSelect)
+    const actions = useRef({select: onSelect, open: onOpen, favourite: onFavourite, camera: onCamera})
     const cancelViewport = useRef<() => void>(() => {})
     const [detailed, setDetailed] = useState(world || detailedByDefault)
     const [tileError, setTileError] = useState(false)
@@ -283,20 +462,34 @@ export function DirectoryMap({destination, hotels, selectedId, onSelect, onSearc
     const fitted = useRef(false)
     const fittedRequest = useRef(fitAllKey)
     const previousSelection = useRef<string | null>(null)
+    const rememberCamera = useEffectEvent((map: L.Map) => {
+        const center = map.wrapLatLng(map.getCenter())
+        actions.current.camera?.({latitude: center.lat, longitude: center.lng, zoom: map.getZoom()})
+    })
     const fitVisibleHotels = useEffectEvent((map: L.Map) => {
         const positioned = bounds || fitted.current
         const empty = loading || !hotels.length || !map.getSize().x
         if (positioned || empty) return
-        fitHotelPoints(map, destination, hotels)
+        fitDirectoryHotels(map, destination, hotels, immersive)
         fitted.current = true
+        rememberCamera(map)
     })
     const searchVisibleArea = useEffectEvent((map: L.Map) => {
-        const area = map.getBounds()
-        onSearchArea([area.getWest(), area.getSouth(), area.getEast(), area.getNorth()])
+        const area = mapSearchBounds(map.getBounds())
+        if (area) onSearchArea(area)
     })
+    function activateHotel(id: string) {
+        actions.current.select(id)
+        if (immersive) actions.current.open?.(id)
+    }
     const renderProperties = useEffectEvent((map: L.Map) => {
         const group = propertyLayer.current
         if (!group || !Number.isFinite(map.getZoom())) return
+        const active = document.activeElement instanceof HTMLElement ? document.activeElement : null
+        const focusedPin = active?.closest('.directory-map-pin')
+        const focusedHotel = [...markers.current].find(([, marker]) => marker.getElement() == focusedPin)?.[0]
+        const focusedLevel = active?.dataset.level
+        const focusedOpen = active?.classList.contains('map-hotel-card__open')
         group.clearLayers()
         markers.current.clear()
         const projection = hotels.map((hotel, order) => {
@@ -304,15 +497,20 @@ export function DirectoryMap({destination, hotels, selectedId, onSelect, onSearc
             return {...hotel, order, x: point.x, y: point.y}
         })
         const hasTrends = hotels.some(hotel => (hotel.trend?.length ?? 0) > 1)
-        const cell = hasTrends ? {width: 150, height: 100} : {width: 138, height: 62}
+        const photoZoom = immersive && map.getZoom() >= 13.25
+        let cell = hasTrends ? {width: 150, height: 100} : {width: 138, height: 62}
+        if (immersive) cell = photoZoom ? {width: 210, height: 235} : {width: 144, height: 76}
         const clusters = mapClusters(projection, selectedId, cell.width, cell.height)
         const displayed: L.Marker[] = []
         clusters.forEach(cluster => {
             const members = cluster.members
             if (members.length == 1) {
                 const hotel = members[0]
-                const marker = addProperty(group, hotel, hotel.order, () => select.current(hotel.id))
                 const active = hotel.id == selectedId
+                const rich = immersive && (photoZoom || active)
+                const favourite = actions.current.favourite
+                const change = favourite ? (level: tPackageFavouriteLevel) => favourite(hotel.id, level) : undefined
+                const marker = addProperty(group, hotel, hotel.order, () => activateHotel(hotel.id), rich, change, immersive)
                 marker.getElement()?.classList.toggle('is-selected', active)
                 marker.getElement()?.setAttribute('aria-pressed', String(active))
                 marker.setZIndexOffset(active ? 2000 : 0)
@@ -320,7 +518,7 @@ export function DirectoryMap({destination, hotels, selectedId, onSelect, onSearc
                 displayed.push(marker)
             } else {
                 const center = map.unproject(L.point(cluster.x, cluster.y), map.getZoom())
-                const marker = addCluster(map, group, members, center, id => select.current(id), function searchCluster() {
+                const marker = addCluster(map, group, members, center, activateHotel, function searchCluster() {
                     cancelViewport.current()
                     searchVisibleArea(map)
                 })
@@ -328,24 +526,39 @@ export function DirectoryMap({destination, hotels, selectedId, onSelect, onSearc
             }
         })
         protectSelectedLabel(map, group, displayed)
+        if (focusedHotel && !document.querySelector('dialog[open]')) {
+            const element = markers.current.get(focusedHotel)?.getElement()
+            let control: HTMLElement | null | undefined = element
+            if (focusedLevel && /^[123]$/.test(focusedLevel)) {
+                control = element?.querySelector<HTMLButtonElement>('[data-level="' + focusedLevel + '"]')
+            } else if (focusedOpen) control = element?.querySelector<HTMLButtonElement>('.map-hotel-card__open')
+            control?.focus({preventScroll: true})
+        }
         const area = map.getBounds()
         const count = hotels.reduce((total, hotel) => total + Number(area.contains([hotel.latitude, hotel.longitude])), 0)
         setVisible(previous => previous == count ? previous : count)
         host.current?.setAttribute('data-map-groups', String(clusters.length))
     })
-    useEffect(() => { select.current = onSelect }, [onSelect])
+    useEffect(() => {
+        actions.current = {select: onSelect, open: onOpen, favourite: onFavourite, camera: onCamera}
+    }, [onSelect, onOpen, onFavourite, onCamera])
 
     useEffect(() => {
         if (!host.current) return
-        const map = L.map(host.current, {minZoom: world ? 2 : 8, maxZoom: 18, zoomSnap: .25, zoomControl: false, scrollWheelZoom: false})
+        const map = L.map(host.current, {
+            minZoom: world || immersive ? 2 : 8, maxZoom: 18, zoomSnap: .25, zoomControl: false,
+            scrollWheelZoom: immersive, touchZoom: true, doubleClickZoom: true, keyboard: true,
+        })
         mapRef.current = map
         propertyLayer.current = L.layerGroup().addTo(map)
         map.createPane('atlas').style.zIndex = '170'
         map.createPane('atlasPlaces').style.zIndex = '180'
         map.attributionControl.setPrefix(false)
-        if (!world) map.attributionControl.addAttribution('<a href="https://www.naturalearthdata.com/">Natural Earth</a>')
-        L.control.zoom({position: 'bottomleft', zoomInTitle: 'Увеличить', zoomOutTitle: 'Уменьшить'}).addTo(map)
-        L.control.scale({imperial: false, position: 'bottomright'}).addTo(map)
+        if (!world && !immersive) map.attributionControl.addAttribution('<a href="https://www.naturalearthdata.com/">Natural Earth</a>')
+        if (!immersive) {
+            L.control.zoom({position: 'bottomleft', zoomInTitle: 'Увеличить', zoomOutTitle: 'Уменьшить'}).addTo(map)
+            L.control.scale({imperial: false, position: 'bottomright'}).addTo(map)
+        }
         let userMove = false
         let pending: ReturnType<typeof setTimeout> | undefined
         cancelViewport.current = function cancelSearch() {
@@ -356,12 +569,14 @@ export function DirectoryMap({destination, hotels, selectedId, onSelect, onSearc
             if (event instanceof KeyboardEvent && !['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', '+', '-', '='].includes(event.key)) return
             if (event instanceof WheelEvent && !map.scrollWheelZoom.enabled()) return
             const target = event.target instanceof Element ? event.target : null
-            if (target?.closest('.leaflet-marker-icon, .leaflet-popup, .leaflet-disabled')) return
+            if (target?.closest('.leaflet-popup, .leaflet-disabled')) return
+            if (!(event instanceof WheelEvent) && target?.closest('.leaflet-marker-icon')) return
             clearTimeout(pending)
             userMove = true
         }
         function moved() {
             renderProperties(map)
+            if (userMove || fitted.current) rememberCamera(map)
             if (!userMove) return
             userMove = false
             clearTimeout(pending)
@@ -401,10 +616,14 @@ export function DirectoryMap({destination, hotels, selectedId, onSelect, onSearc
         fitted.current = false
         previousSelection.current = null
         setLimited(false)
+        if (camera) {
+            map.setView([camera.latitude, camera.longitude], camera.zoom, {animate: false})
+            fitted.current = true
+        }
         const zoom = world ? 9 : 12
         const initialized = Number.isFinite(map.getZoom())
         const matchesCenter = initialized && map.getCenter().distanceTo([latitude, longitude]) < 10
-        if (!world || !matchesCenter) {
+        if (!camera && (!world || !matchesCenter)) {
             map.setView([latitude, longitude], world && latitude == 0 && longitude == 0 ? 2 : zoom, {animate: false})
         }
         const base = world ? L.layerGroup().addTo(map) : addBase(map, id, () => setLimited(true))
@@ -413,7 +632,22 @@ export function DirectoryMap({destination, hotels, selectedId, onSelect, onSearc
 
     useEffect(() => {
         const map = mapRef.current
+        if (!map || !camera) return
+        const closeCenter = map.getCenter().distanceTo([camera.latitude, camera.longitude]) < 0.2
+        if (!closeCenter || Math.abs(map.getZoom() - camera.zoom) > 0.001) {
+            cancelViewport.current()
+            map.setView([camera.latitude, camera.longitude], camera.zoom, {animate: false})
+        }
+        fitted.current = true
+    }, [camera?.latitude, camera?.longitude, camera?.zoom, id])
+
+    useEffect(() => {
+        const map = mapRef.current
         if (!map) return
+        if (camera) {
+            fitted.current = true
+            return
+        }
         if (!bounds) {
             fitted.current = false
             return
@@ -422,7 +656,7 @@ export function DirectoryMap({destination, hotels, selectedId, onSelect, onSearc
         const area = L.latLngBounds([south, west], [north, east])
         if (!map.getBounds().equals(area, 0.0001)) map.fitBounds(area, {animate: false})
         fitted.current = true
-    }, [bounds, id])
+    }, [bounds, id, camera?.latitude, camera?.longitude, camera?.zoom])
 
     useEffect(() => {
         const map = mapRef.current
@@ -448,13 +682,13 @@ export function DirectoryMap({destination, hotels, selectedId, onSelect, onSearc
         map.closePopup()
         fitVisibleHotels(map)
         if (!loading && !bounds && fittedRequest.current != fitAllKey) {
-            fitHotelPoints(map, destination, hotels)
+            fitDirectoryHotels(map, destination, hotels, immersive)
             fitted.current = true
             fittedRequest.current = fitAllKey
         }
         renderProperties(map)
         const selected = selectedId && markers.current.get(selectedId)
-        if (selected && selectedId != previousSelection.current) {
+        if (!immersive && selected && selectedId != previousSelection.current) {
             if (!map.getBounds().pad(-0.08).contains(selected.getLatLng())) map.panTo(selected.getLatLng(), {animate: false})
         }
         previousSelection.current = selectedId
@@ -463,7 +697,8 @@ export function DirectoryMap({destination, hotels, selectedId, onSelect, onSearc
     function searchArea() {
         cancelViewport.current()
         const bounds = mapRef.current?.getBounds()
-        if (bounds) onSearchArea([bounds.getWest(), bounds.getSouth(), bounds.getEast(), bounds.getNorth()])
+        const area = bounds && mapSearchBounds(bounds)
+        if (area) onSearchArea(area)
     }
 
     function showAll() {
@@ -473,20 +708,21 @@ export function DirectoryMap({destination, hotels, selectedId, onSelect, onSearc
             return
         }
         const map = mapRef.current
-        if (map) fitHotelPoints(map, destination, hotels)
+        if (map) fitDirectoryHotels(map, destination, hotels, immersive)
     }
 
-    return <section className="hotel-map directory-map" aria-label={'Карта объектов · ' + name} aria-busy={loading}>
+    return <section className={'hotel-map directory-map' + (immersive ? ' directory-map--immersive' : '')}
+        aria-label={'Карта объектов · ' + name} aria-busy={loading}>
         <div className="hotel-map__canvas" ref={host} aria-label="Карта, стрелки для перемещения"
             data-map-total={hotels.length} data-map-visible={visible}/>
-        <output className="directory-map__count" aria-live="polite">В области <strong>{visible}</strong> из {hotels.length}</output>
-        <div className="hotel-map__tools">
+        {!immersive && <output className="directory-map__count" aria-live="polite">В области <strong>{visible}</strong> из {hotels.length}</output>}
+        {!immersive && <div className="hotel-map__tools">
             <button type="button" onClick={searchArea} aria-label="Обновить цены в этой области">Обновить</button>
             <button type="button" title="Уличная карта OpenStreetMap" aria-label="Уличная карта OpenStreetMap" aria-pressed={detailed}
                 onClick={() => setDetailed(value => !value)}><Icon name="map"/></button>
             <button type="button" title="Показать объекты выдачи" aria-label="Показать объекты выдачи"
                 onClick={showAll}><Icon name="pin"/></button>
-        </div>
+        </div>}
         {loading && <small className="hotel-map__notice directory-map__loading" role="status">Обновляем цены…</small>}
         {detailed && tileError && <small className="hotel-map__notice" role="status">Уличная карта частично недоступна</small>}
         {limited && !detailed && <small className="hotel-map__notice">Показаны координаты. Для улиц включите подробную карту.</small>}
