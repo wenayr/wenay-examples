@@ -1,4 +1,4 @@
-import {BSearchIndex} from 'wenay-common2'
+import {BSearchIndex} from 'wenay-common2/client'
 
 /** Binary insertion point, including duplicate values on either boundary. */
 export function boundary<T>(values: readonly T[], before: (value: T) => boolean) {
@@ -36,7 +36,12 @@ export function createRangeIndex<T, P extends number | string>(
         if (existing) existing.push(point)
         else groups.set(key, [point])
     }
-    const keys = [...groups.keys()].sort((a, b) => a < b ? -1 : a > b ? 1 : 0)
+    function keyOrder(a: P, b: P) {
+        if (a < b) return -1
+        if (a > b) return 1
+        return 0
+    }
+    const keys = [...groups.keys()].sort(keyOrder)
     const compare = (a: T, b: T) => secondary(a) - secondary(b) || tie(a, b)
     function build(start: number, end: number): Node<T> {
         if (end - start == 1) return {start, end, entries: groups.get(keys[start])!.sort(compare)}

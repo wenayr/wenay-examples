@@ -3,22 +3,24 @@ import {
     type PackageDay, type PackageHotel, type PackagePage
 } from '../src/package-contract.ts'
 import type {SupplySource} from '../src/supply-contract.ts'
+import type {PackageHotelSearch} from '../src/package-search-contract.ts'
+import {searchPhrase} from './catalog-text.ts'
 import {recheckFare} from './recheck.ts'
 import {createOfferIndex, matchesPackageHotel} from './package-index.ts'
 import {createTezInventory} from './partners/tez-inventory.ts'
 import {createPackageTrends} from './package-trends.ts'
 import {createPackageMatrix} from './package-matrix.ts'
 import {tezHotelMedia} from './partners/tez-media.ts'
+import {tezKnownHotels} from './partners/tez-catalog.ts'
 
 type Provider = ReturnType<typeof createTezInventory>
 type Trip = Parameters<Provider['window']>[0]
 type Observation = Awaited<ReturnType<Provider['window']>>
 type Filter = Parameters<ReturnType<typeof createOfferIndex>['search']>[0]
 
-function prepare(observation: Observation) {
-    const hotels = new Map<string, PackageHotel>()
+function prepare(observation: Observation, destination: string) {
+    const hotels = new Map<string, PackageHotel>(tezKnownHotels(destination).map(hotel => [hotel.id, hotel]))
     for (const quote of observation.quotes) {
-        if (hotels.has(quote.hotelId)) continue
         const {hotelId: id, name, latitude, longitude, stars, url, coordinateSource} = quote
         hotels.set(id, {id, name, latitude, longitude, stars, url, coordinateSource, ...tezHotelMedia(id)})
     }
@@ -65,22 +67,39 @@ export function createPackages(provider: Provider = createTezInventory({fetch, n
         const generation = key + '/' + data.generation
         const cached = prepared.get(generation)
         if (cached) return cached
-        const entry = prepare(data)
+        const entry = prepare(data, destination)
         remember(destination, entry.hotels)
         if (prepared.size >= 96) prepared.delete(prepared.keys().next().value!)
         prepared.set(generation, entry)
         return entry
     }
-    async function window(trip: Trip, signal?: AbortSignal) {
-        const data = await provider.window(trip, signal)
+    async function window(trip: Trip, signal?: AbortSignal, refresh = false) {
+        const data = await provider.window(trip, signal, refresh)
         const key = JSON.stringify([trip.destinationId, trip.first, trip.last, trip.nights, trip.adults, trip.minTotal, trip.maxTotal])
         return {data, ...observed(trip.destinationId, key, data)}
     }
-    async function search(trip: Trip, filter: Filter): Promise<PackagePage> {
-        const batch = await window(trip)
-        const result = batch.index.search(filter)
+    async function search(trip: Trip, filter: Filter, options: {signal?: AbortSignal, refresh?: boolean} = {}): Promise<PackagePage> {
+        const batch = await window(trip, options.signal, options.refresh)
+        const result = batch.index.search(filter, true)
         const direction = filter.box ? batch.index.search({...filter, box: null, offset: 0, limit: 0}) : result
-        return {...result, source: batch.data.source, coverage: 'supplier-minima', direction: {total: direction.total, ...direction.geo}}
+        const knownHotels = result.knownHotels ?? []
+        return {...result, knownHotels, source: batch.data.source, coverage: 'supplier-minima', direction: {total: direction.total, ...direction.geo}}
+    }
+    async function hotels(trip: Trip, filter: Filter, term: string, options: {signal?: AbortSignal, refresh?: boolean} = {}) {
+        if (term.length > 120) throw new RangeError('Название отеля должно быть не длиннее 120 символов.')
+        const normalized = searchPhrase(term)
+        const batch = await window(trip, options.signal, options.refresh)
+        const context = {...filter, term: normalized, box: null}
+        const quoted = batch.index.search({...context, offset: 0, limit: Infinity}).items
+        const pricedIds = new Set(quoted.map(hotel => hotel.hotelId))
+        const known = batch.index.findHotels(context).filter(hotel => !pricedIds.has(hotel.id))
+        const entries = [...quoted.map(quote => ({quote, hotel: null})), ...known.map(hotel => ({quote: null, hotel}))]
+        const end = filter.offset + filter.limit
+        const page = entries.slice(filter.offset, end)
+        return {term: normalized, items: page.flatMap(entry => entry.quote ? [entry.quote] : []),
+            knownHotels: page.flatMap(entry => entry.hotel ? [entry.hotel] : []), total: entries.length,
+            nextOffset: end < entries.length ? end : null,
+            coverage: 'supplier-minima', source: batch.data.source} satisfies PackageHotelSearch
     }
     async function trends(trip: Trip, filter: Filter, hotelIds?: readonly string[], signal?: AbortSignal) {
         signal?.throwIfAborted()
@@ -148,5 +167,5 @@ export function createPackages(provider: Provider = createTezInventory({fetch, n
     function recheck(trip: Trip, filter: Filter, hotelId: string, departure: string, fareId: string) {
         return recheckFare(provider, trip, filter, hotelId, departure, fareId)
     }
-    return {search, calendar, compare, recheck, trends, matrix: priceMatrix.read}
+    return {search, hotels, calendar, compare, recheck, trends, matrix: priceMatrix.read}
 }

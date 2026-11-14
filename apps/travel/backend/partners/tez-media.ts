@@ -1,4 +1,4 @@
-import {existsSync, readFileSync} from 'node:fs'
+import mediaManifest from './tez-media.json' with {type: 'json'}
 import type {SupplyPhoto} from '../../src/supply-contract.ts'
 import type {PackageHotelGallery} from '../../src/package-media-contract.ts'
 
@@ -14,8 +14,7 @@ interface MediaHotel {
     rights: string
 }
 
-const path = new URL('./tez-media.json', import.meta.url)
-const manifest = existsSync(path) ? JSON.parse(readFileSync(path, 'utf8')) as {checkedOn?: string, hotels: MediaHotel[]} : {hotels: []}
+const manifest = mediaManifest as {checkedOn?: string, hotels: MediaHotel[]}
 
 function publicPhoto(hotel: MediaHotel, image: MediaImage): SupplyPhoto | null {
     try {

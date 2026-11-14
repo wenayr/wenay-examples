@@ -24,8 +24,9 @@ export function travelRoute(hash: string) {
     const [page, id] = path.split('/')
     let destination: string | undefined
     try { destination = id ? decodeURIComponent(id) : undefined } catch { destination = undefined }
+    const fallback: TravelPage = page == '' ? 'packages' : 'discover'
     return {
-        page: Object.hasOwn(travelPages, page) ? page as TravelPage : 'discover' as const,
+        page: Object.hasOwn(travelPages, page) ? page as TravelPage : fallback,
         destination, query: new URLSearchParams(query),
     }
 }

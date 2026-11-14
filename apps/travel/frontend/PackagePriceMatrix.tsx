@@ -5,6 +5,7 @@ import {dateLabel} from './presentation.ts'
 import {type PackagePreferences} from './package-preferences.ts'
 import {matrixCellKey, matrixDates, matrixPageDates, matrixRangeNights, matrixVisibleRows, type MatrixViewContext} from './package-matrix.ts'
 import {usePackageMatrix} from './package-matrix-query.ts'
+import {usePageVisible, useVisibleRefresh} from './visible-refresh.ts'
 import './package-matrix.css'
 
 const money = new Intl.NumberFormat('ru-RU', {style: 'currency', currency: 'EUR', maximumFractionDigits: 2})
@@ -31,6 +32,7 @@ function cellAmount(cell: PackageMatrixCell | undefined, status: string) {
 }
 
 function cellLabel(cell: PackageMatrixCell | undefined, status: string, selected: boolean) {
+    if (status == 'stale') return 'последняя цена'
     if (status == 'waiting') return 'обновляем'
     if (selected) return 'Выбрано'
     if (status == 'unknown' && cell?.lowest) return 'неполный ответ'
@@ -51,10 +53,12 @@ function keyboardCell(event: KeyboardEvent<HTMLButtonElement>, row: number, colu
     target?.focus({preventScroll: false})
 }
 
-export function PackagePriceMatrix({prefs, selectedFareId, onSelect, onSnapshot, view, onView}: {
+export function PackagePriceMatrix({prefs, selectedFareId, onSelect, onSnapshot, view, onView, refreshRevision = 0, onStateChange}: {
     prefs: PackagePreferences, selectedFareId: string | undefined, onSelect: (cell: PackageMatrixCell) => void,
     onSnapshot: (cells: PackageMatrixCell[], failedCellKeys: string[]) => void,
     view: MatrixViewContext, onView: (patch: Partial<MatrixViewContext>) => void,
+    refreshRevision?: number,
+    onStateChange?: (state: {busy: boolean, stale: boolean, failed: boolean}) => void,
 }) {
     const allDates = useMemo(() => matrixDates(prefs.firstDeparture, prefs.lastDeparture), [prefs.firstDeparture, prefs.lastDeparture])
     const durations = matrixRangeNights(view.firstNights, view.lastNights)
@@ -62,7 +66,17 @@ export function PackagePriceMatrix({prefs, selectedFareId, onSelect, onSnapshot,
     const nights = durations.slice(rowOffset, rowOffset + matrixVisibleRows)
     const visibleOffset = Math.min(view.dateOffset, Math.max(0, allDates.length - matrixPageDates))
     const departures = allDates.slice(visibleOffset, visibleOffset + matrixPageDates)
-    const query = usePackageMatrix(prefs, departures, nights, true)
+    const visible = usePageVisible()
+    const query = usePackageMatrix(prefs, departures, nights, visible)
+    const forceRefresh = useEffectEvent(query.refresh)
+    useEffect(() => {
+        if (refreshRevision) forceRefresh()
+    }, [refreshRevision])
+    useVisibleRefresh({enabled: visible, busy: query.loading, onRefresh: query.retry})
+    const stalePrices = query.staleCellKeys.length > 0
+    const failedPrices = query.failedCellKeys.length > 0
+    const publishState = useEffectEvent(() => onStateChange?.({busy: query.loading, stale: stalePrices, failed: failedPrices}))
+    useEffect(() => { publishState() }, [query.loading, stalePrices, failedPrices])
     const snapshot = useEffectEvent(onSnapshot)
     useEffect(() => { snapshot(query.cells, query.failedCellKeys) }, [query.cells, query.failedCellKeys])
     const cells = new Map(query.cells.map(cell => [matrixCellKey(cell.departure, cell.nights), cell]))
@@ -73,7 +87,7 @@ export function PackagePriceMatrix({prefs, selectedFareId, onSelect, onSnapshot,
     const high = Math.max(...observed)
     const checked = query.cells.length
     const total = departures.length * nights.length
-    const hasRetryable = query.failed.length > 0 || query.cells.some(cell => cell.status == 'failed' || cell.status == 'unknown')
+    const hasRetryable = stalePrices || query.failed.length > 0 || query.cells.some(cell => cell.status == 'failed' || cell.status == 'unknown')
     function changeNights(first: number, last: number) {
         onView({firstNights: first, lastNights: last, durationOffset: 0})
         setInspected(null)
@@ -134,7 +148,7 @@ export function PackagePriceMatrix({prefs, selectedFareId, onSelect, onSnapshot,
                         const failed = query.failedCellKeys.includes(key)
                         const selected = Boolean(cell?.inBudget && cell.inBudget.id == selectedFareId)
                         let status: string = cell?.status ?? (query.loading ? 'loading' : 'failed')
-                        if (stale) status = 'waiting'
+                        if (stale) status = query.loading ? 'waiting' : 'stale'
                         if (failed) status = 'failed'
                         const heat = cell?.inBudget ? (cell.inBudget.total - low) / Math.max(1, high - low) : undefined
                         const label = stale ? 'Последняя полученная цена. Ожидаем обновления' : description(cell, query.loading, failed)
@@ -168,6 +182,10 @@ export function PackagePriceMatrix({prefs, selectedFareId, onSelect, onSnapshot,
         {query.waitingUntil && <p className="package-matrix__waiting" role="status">
             Ожидаем обновления до {new Date(query.waitingUntil).toLocaleTimeString('ru-RU')}. Проверка продолжится автоматически.
             {observed.length > 0 && ' Показаны последние полученные цены.'}
+        </p>}
+        {!query.loading && stalePrices && <p className="package-matrix__waiting" role="status">
+            Новую цену подтвердить не удалось. Сохранены последние полученные цены с прежним временем проверки.
+            Для выбора предложения повторите проверку.
         </p>}
         {inspectedCell && <div className="package-matrix__inspected" aria-live="polite">
             <strong>{dateLabel(inspectedCell.departure)} · {inspectedCell.days} дней / {inspectedCell.nights} ночей</strong>

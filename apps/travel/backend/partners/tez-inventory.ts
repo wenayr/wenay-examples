@@ -1,6 +1,6 @@
-import {createHash} from 'node:crypto'
-import {readFileSync} from 'node:fs'
-import {createAsyncQueue} from 'wenay-common2'
+import {createAsyncQueue} from 'wenay-common2/client'
+import locationManifest from './tez-locations.json' with {type: 'json'}
+import locationOverrides from './tez-location-overrides.json' with {type: 'json'}
 import type {PackageCoordinateSource} from '../../src/package-contract.ts'
 import type {SupplySource} from '../../src/supply-contract.ts'
 import {allowTezSearch, tezSearchRetryAt} from './tez-access.ts'
@@ -47,8 +47,8 @@ interface Location {
     identitySources?: string[]
     coordinateEvidenceUrl?: string
 }
-const manifest = JSON.parse(readFileSync(new URL('./tez-locations.json', import.meta.url), 'utf8')) as {checkedOn: string, locations: Location[]}
-const overrides = JSON.parse(readFileSync(new URL('./tez-location-overrides.json', import.meta.url), 'utf8')) as {locations: Location[]}
+const manifest = locationManifest as {checkedOn: string, locations: Location[]}
+const overrides = locationOverrides as {locations: Location[]}
 // Curated identity checks survive a later supplier page refresh, including a known inaccurate supplier marker.
 const locations = new Map([...manifest.locations, ...overrides.locations].map(p => [p.destination + ':' + p.id, p]))
 const dayMs = 86_400_000
@@ -61,7 +61,11 @@ function validDate(value: string) {
     const time = Date.parse(value)
     return Number.isFinite(time) && new Date(time).toISOString().slice(0, 10) == value
 }
-function hash(value: unknown) { return createHash('sha256').update(JSON.stringify(value)).digest('hex').slice(0, 24) }
+async function hash(value: unknown) {
+    const bytes = new TextEncoder().encode(JSON.stringify(value))
+    const digest = await crypto.subtle.digest('SHA-256', bytes)
+    return Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, '0')).join('').slice(0, 24)
+}
 
 function conditionName(value: unknown, position: number) {
     const name = Array.isArray(value) ? value[position] : null
@@ -108,7 +112,7 @@ function buildRequest(input: TezWindow, today: string, hotelId?: string, date?: 
 }
 type Request = NonNullable<ReturnType<typeof buildRequest>>
 
-function readQuote(row: unknown, request: Request): TezQuote | null {
+async function readQuote(row: unknown, request: Request): Promise<TezQuote | null> {
     if (!Array.isArray(row)) return null
     const [start, , , nights, , area, property, board, room, guests, fare, workstation] = row
     if (typeof start != 'string' || !/^\d{2}\.\d{2}\.\d{4}$/.test(start)) return null
@@ -133,7 +137,7 @@ function readQuote(row: unknown, request: Request): TezQuote | null {
     const rating = /\s([1-5])\s*\*\s*$/.exec(title)
     const geo = locations.get(request.input.destinationId + ':' + supplierHotel)
     // The agency-only URL distinguishes supplier reservations. Hash it server-side and expose only the public hotel page.
-    const id = 'tez-offer:' + hash([hotelId, departure, actualNights, board, room, row[17], row[22], workstation?.[0]?.[0], total])
+    const id = 'tez-offer:' + await hash([hotelId, departure, actualNights, board, room, row[17], row[22], workstation?.[0]?.[0], total])
     const evidence = [...(geo?.identitySources ?? [])]
     if (geo?.coordinateEvidenceUrl) evidence.push(geo.coordinateEvidenceUrl)
     const coordinateSource = geo ? {url: geo.source, checkedOn: geo.checkedOn ?? manifest.checkedOn,
@@ -144,15 +148,15 @@ function readQuote(row: unknown, request: Request): TezQuote | null {
             room: conditionName(room, 1), board: conditionName(board, 0)}}
 }
 
-function decode(payload: unknown, request: Request, checkedAt: string): TezObservation {
+async function decode(payload: unknown, request: Request, checkedAt: string): Promise<TezObservation> {
     if (!payload || typeof payload != 'object') throw new Error('Некорректный ответ TEZ')
     if (!('success' in payload) || payload.success !== true) throw new Error('Поставщик не подтвердил результат запроса')
     if (!('data' in payload) || !Array.isArray(payload.data)) throw new Error('Поставщик не передал список вариантов')
     if (payload.data.length && (!('departureCityId' in payload) || Number(payload.departureCityId) != 3746)) throw new Error('Не совпадает город вылета')
     if ('arrivalCountryId' in payload && Number(payload.arrivalCountryId) != request.country) throw new Error('Не совпадает страна прибытия')
     const offers = new Map<string, TezQuote>()
-    for (const row of payload.data) {
-        const quote = readQuote(row, request)
+    const decoded = await Promise.all(payload.data.map(row => readQuote(row, request)))
+    for (const quote of decoded) {
         if (quote) offers.set(quote.id, quote)
     }
     const quotes = [...offers.values()].sort((a, b) => a.total - b.total || a.id.localeCompare(b.id))
@@ -161,7 +165,7 @@ function decode(payload: unknown, request: Request, checkedAt: string): TezObser
     const more = observed.some(item => Array.isArray(item) && item[0] == 'More results' && String(item[1]) == 'true')
     const emptyDay = !payload.data.length && !more
     const complete = Boolean(request.hotelId) && (emptyDay || lastPage && offers.size == payload.data.length)
-    return {quotes, byFareId: offers, generation: hash([request.url, quotes, complete]), complete,
+    return {quotes, byFareId: offers, generation: await hash([request.url, quotes, complete]), complete,
         source: {...source, status: 'live', updatedAt: checkedAt, description}}
 }
 
@@ -221,7 +225,10 @@ export function createTezInventory(deps: {fetch: typeof fetch, now: () => Date})
         if (waiting && !waiting.signal.aborted) return observe(waiting, signal)
         function failed(message: string) {
             const lastTime = Date.parse(prior?.result.source.updatedAt ?? '')
-            if (prior && now.getTime() - lastTime <= 15 * 60_000) return cached(prior.result, message + ' Показаны ранее проверенные цены.')
+            if (prior && now.getTime() - lastTime <= 15 * 60_000) {
+                const result = cached(prior.result, message + ' Показаны ранее проверенные цены.')
+                return {...result, source: {...result.source, stale: true}}
+            }
             return missing(message)
         }
         const controller = new AbortController()
@@ -240,7 +247,7 @@ export function createTezInventory(deps: {fetch: typeof fetch, now: () => Date})
                 const timeout = AbortSignal.any([deadline, AbortSignal.timeout(10_000)])
                 const response = await deps.fetch(search.url, {signal: timeout, redirect: 'error'})
                 if (!response.ok) throw new Error('Поставщик не вернул цены')
-                return remember(search.url, decode(await response.json(), search, deps.now().toISOString()), 120_000)
+                return remember(search.url, await decode(await response.json(), search, deps.now().toISOString()), 120_000)
             } catch {
                 if (controller.signal.aborted) throw controller.signal.reason
                 return remember(search.url, failed('Нет свежего ответа TEZ.'), 10_000)
@@ -252,12 +259,12 @@ export function createTezInventory(deps: {fetch: typeof fetch, now: () => Date})
         pending.work = queue.add(fetchQuotes)
         return observe(pending, signal)
     }
-    function range(input: TezWindow, hotelId: string, date: string, nights: readonly number[], signal?: AbortSignal) {
-        return read(input, hotelId, date, false, signal, nights)
+    function range(input: TezWindow, hotelId: string, date: string, nights: readonly number[], signal?: AbortSignal, forceFresh = false) {
+        return read(input, hotelId, date, forceFresh, signal, nights)
     }
     // The ranged operation is an optional capability for injected providers that implement day/window only.
     const ranged: {range?: typeof range} = {range}
-    return {window: (input: TezWindow, signal?: AbortSignal) => read(input, undefined, undefined, false, signal),
+    return {window: (input: TezWindow, signal?: AbortSignal, forceFresh = false) => read(input, undefined, undefined, forceFresh, signal),
         day: (input: TezWindow, hotelId: string, date: string, forceFresh = false, signal?: AbortSignal) =>
             read(input, hotelId, date, forceFresh, signal), ...ranged}
 }

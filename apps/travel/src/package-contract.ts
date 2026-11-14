@@ -61,6 +61,7 @@ export interface PackageSearchResults {
 }
 
 export interface PackagePage extends PackageSearchResults {
+    knownHotels?: PackageHotel[]
     source: SupplySource
     coverage: 'supplier-minima'
     direction: PackageSearchResults['geo'] & {total: number}

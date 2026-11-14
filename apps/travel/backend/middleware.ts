@@ -1,7 +1,7 @@
 import type {IncomingMessage, ServerResponse} from 'node:http'
 import type {createCatalogEvents} from './catalog-events.ts'
 import type {SupplyHotel, SupplyOptions} from '../src/supply-contract.ts'
-import {dateValue, mapBox, numberParam, packageQuery, validateTravelDates} from './travel-query.ts'
+import {mapBox, numberParam, validateTravelDates} from './travel-query.ts'
 import {serveAssistant} from './assistant-http.ts'
 import {findAirports} from './flights/airports.ts'
 import {readFlightQuery, type createFlights} from './flights/index.ts'
@@ -10,7 +10,7 @@ import type {createPackages} from './packages.ts'
 import {createPlaceCatalog, searchPhrase, type PlaceRegion} from './catalog.ts'
 import {serveProviders} from './providers/http.ts'
 import type {createProviderRegistry} from './providers/index.ts'
-import {tezHotelGallery} from './partners/tez-media.ts'
+import {createPackageHttp, packageHttpPaths} from './package-http.ts'
 
 interface SupplyDeps {
     catalog: ReturnType<typeof createPlaceCatalog>
@@ -32,16 +32,27 @@ function json(response: ServerResponse, status: number, body: unknown) {
     response.end(JSON.stringify(body))
 }
 
-function readHotelId(value: string | null) {
-    if (!value || !/^tez:[1-9]\d{0,14}$/.test(value)) throw new RangeError('Укажите отель туроператора.')
-    return value
-}
-
 export function createSupplyMiddleware(deps: SupplyDeps) {
+    const packageHttp = createPackageHttp({packages: deps.packages, destinations: deps.catalog.destinations, today: deps.today})
     return async function supply(request: IncomingMessage, response: ServerResponse, next: () => void) {
         const raw = request.url ?? '/'
         if (!raw.startsWith('/api/travel/')) return next()
         const url = new URL(raw, 'http://localhost/')
+        if (packageHttpPaths.includes(url.pathname)) {
+            const controller = new AbortController()
+            const cancel = () => controller.abort()
+            response.once('close', cancel)
+            try {
+                const result = await packageHttp.handle(new Request(url, {method: request.method, signal: controller.signal}))
+                if (result && !response.destroyed && !response.writableEnded) {
+                    response.writeHead(result.status, Object.fromEntries(result.headers))
+                    response.end(await result.text())
+                }
+            } finally {
+                response.off('close', cancel)
+            }
+            return
+        }
         if (url.pathname == '/api/travel/chat' || url.pathname == '/api/travel/mcp') {
             return serveAssistant({request, response, assistant: deps.assistant, mcp: url.pathname.endsWith('/mcp')})
         }
@@ -54,17 +65,6 @@ export function createSupplyMiddleware(deps: SupplyDeps) {
             return json(response, 405, {error: 'Используйте GET.'})
         }
         const params = url.searchParams
-        if (url.pathname == '/api/travel/package-gallery') {
-            try {
-                const gallery = tezHotelGallery(readHotelId(params.get('hotelId')))
-                if (!gallery) return json(response, 404, {error: 'Фотографии этого отеля пока не найдены у поставщика.'})
-                return json(response, 200, gallery)
-            } catch (error) {
-                if (error instanceof RangeError) return json(response, 400, {error: error.message})
-                return json(response, 503, {error: 'Не удалось прочитать фотографии отеля.'})
-            }
-        }
-        if (url.pathname == '/api/travel/destinations') return json(response, 200, {destinations: deps.catalog.destinations})
         if (url.pathname == '/api/travel/airports') {
             const phrase = params.get('q') ?? ''
             try {
@@ -85,53 +85,13 @@ export function createSupplyMiddleware(deps: SupplyDeps) {
                 return json(response, 503, {error: 'Не удалось получить рейсы.'})
             }
         }
-        const routes = ['/api/travel/catalog', '/api/travel/hotel', '/api/travel/events', '/api/travel/options',
-            '/api/travel/packages', '/api/travel/package-calendar', '/api/travel/package-compare', '/api/travel/package-recheck',
-            '/api/travel/package-trends', '/api/travel/package-matrix']
+        const routes = ['/api/travel/catalog', '/api/travel/hotel', '/api/travel/events', '/api/travel/options']
         if (!routes.includes(url.pathname)) return json(response, 404, {error: 'Маршрут не найден.'})
         const id = params.get('destination') ?? deps.catalog.destinations[0]?.id
         const destination = deps.catalog.destinations.find(region => region.id == id)
         if (!destination) return json(response, 404, {error: 'Направление не найдено.'})
         try {
             const today = deps.today?.() ?? new Date().toISOString().slice(0, 10)
-            if (url.pathname.startsWith('/api/travel/package')) {
-                if (!deps.packages) return json(response, 503, {error: 'Пакетный поиск недоступен.'})
-                const {trip, filter} = packageQuery(params, destination.id, today)
-                if (url.pathname == '/api/travel/packages') return json(response, 200, await deps.packages.search(trip, filter))
-                const controller = new AbortController()
-                const cancel = () => controller.abort()
-                response.once('close', cancel)
-                try {
-                    if (url.pathname == '/api/travel/package-matrix') {
-                        const values = params.get('nightsValues') ?? String(trip.nights)
-                        if (!/^\d{1,2}(,\d{1,2}){0,5}$/.test(values)) throw new RangeError('Укажите длительность в ночах через запятую.')
-                        return json(response, 200, await deps.packages.matrix(trip, readHotelId(params.get('hotelId')),
-                            values.split(',').map(Number), controller.signal))
-                    }
-                    if (url.pathname == '/api/travel/package-trends') {
-                        const requested = params.get('hotelIds')
-                        const ids = requested ? requested.split(',').map(readHotelId) : undefined
-                        return json(response, 200, await deps.packages.trends(trip, filter, ids, controller.signal))
-                    }
-                    if (url.pathname == '/api/travel/package-calendar') {
-                        const chart = await deps.packages.calendar(trip, filter, readHotelId(params.get('hotelId')), controller.signal)
-                        if (!chart) return json(response, 404, {error: 'Предложение для этого отеля больше не найдено в выбранном окне.'})
-                        return json(response, 200, chart)
-                    }
-                    const departure = dateValue(params.get('departure'))
-                    if (departure < trip.first || departure > trip.last) throw new RangeError('Дата вылета должна входить в окно поиска.')
-                    if (url.pathname == '/api/travel/package-compare') {
-                        const ids = (params.get('hotelIds') ?? '').split(',')
-                        if (ids.length > 3 || new Set(ids).size != ids.length) throw new RangeError('Выберите до трёх разных отелей.')
-                        return json(response, 200, await deps.packages.compare(trip, filter, ids.map(readHotelId), departure, controller.signal))
-                    }
-                    const fareId = params.get('fareId') ?? ''
-                    if (!/^tez-offer:[a-f0-9]{24}$/.test(fareId)) throw new RangeError('Укажите тариф туроператора.')
-                    return json(response, 200, await deps.packages.recheck(trip, filter, readHotelId(params.get('hotelId')), departure, fareId))
-                } finally {
-                    response.off('close', cancel)
-                }
-            }
             if (url.pathname == '/api/travel/events') {
                 if (!deps.events) return json(response, 503, {error: 'Подписка недоступна.'})
                 return deps.events.subscribe(request, response, destination.id, params.get('since'))

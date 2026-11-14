@@ -1,19 +1,22 @@
-import {useEffect, useEffectEvent, useState} from 'react'
+import {useEffect, useEffectEvent, useRef, useState} from 'react'
 
 interface ResponseState<T> {key: string, data?: T, error?: string, loading?: boolean}
 const responses = new Map<string, unknown>()
 
-export function useDirectoryQuery<T>(url: string | null, refresh = 0) {
+export function useDirectoryQuery<T>(url: string | null, refreshRevision = 0) {
     const [result, setResult] = useState<ResponseState<T> | null>(() => url ? {key: url, data: responses.get(url) as T | undefined, loading: true} : null)
     const [attempt, setAttempt] = useState(0)
+    const fresh = useRef(false)
     useEffect(() => {
         if (!url) return
         const current = url
+        const requestUrl = fresh.current ? directoryRefreshUrl(current) : current
+        fresh.current = false
         const controller = new AbortController()
         setResult(previous => ({key: current, data: previous?.key == current ? previous.data : responses.get(current) as T | undefined, loading: true}))
         async function load() {
             try {
-                const response = await fetch(current, {signal: controller.signal})
+                const response = await fetch(requestUrl, {signal: controller.signal})
                 if (!response.ok) {
                     const body: unknown = await response.json().catch(() => null)
                     const message = body && typeof body === 'object' && 'error' in body ? body.error : ''
@@ -38,15 +41,19 @@ export function useDirectoryQuery<T>(url: string | null, refresh = 0) {
         }
         void load()
         return () => controller.abort()
-    }, [url, attempt, refresh])
+    }, [url, attempt, refreshRevision])
     function retry() {
+        setAttempt(n => n + 1)
+    }
+    function refresh() {
+        fresh.current = true
         setAttempt(n => n + 1)
     }
     const visible = result?.key == url ? result : null
     return {
         data: visible?.data, error: visible?.error,
         loading: Boolean(url) && (visible?.loading ?? !visible),
-        retry,
+        retry, refresh,
     }
 }
 
@@ -87,7 +94,7 @@ export function useDirectoryEvents(destination: string, revision: string | undef
 }
 
 type DirectoryEndpoint = 'destinations' | 'catalog' | 'hotel' | 'options' | 'events' | 'packages'
-    | 'package-calendar' | 'package-trends' | 'package-matrix' | 'package-gallery' | 'package-compare' | 'package-recheck'
+    | 'package-calendar' | 'package-trends' | 'package-matrix' | 'package-gallery' | 'package-hotel-search' | 'package-compare' | 'package-recheck'
     | 'flights' | 'airports' | 'providers' | 'provider-search' | 'deals' | 'markets'
 
 export function directoryUrl(path: DirectoryEndpoint, query: Record<string, string | number | undefined> = {}) {
@@ -97,4 +104,8 @@ export function directoryUrl(path: DirectoryEndpoint, query: Record<string, stri
     }
     const suffix = params.toString()
     return import.meta.env.BASE_URL + 'api/travel/' + path + (suffix ? '?' + suffix : '')
+}
+
+export function directoryRefreshUrl(url: string) {
+    return url + (url.includes('?') ? '&' : '?') + 'refresh=1'
 }

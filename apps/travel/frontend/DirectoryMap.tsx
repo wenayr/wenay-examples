@@ -523,13 +523,14 @@ export function DirectoryMap({destination, hotels, selectedId, onSelect, onSearc
         const focusedLevel = active?.dataset.level
         const focusedOpen = active?.classList.contains('map-hotel-card__open')
         const focusedMatrix = active?.classList.contains('map-hotel-card__matrix')
+        const uniqueHotels = [...new Map(hotels.map(hotel => [hotel.id, hotel] as const)).values()]
         group.clearLayers()
         markers.current.clear()
-        const projection = hotels.map((hotel, order) => {
+        const projection = uniqueHotels.map((hotel, order) => {
             const point = map.project([hotel.latitude, hotel.longitude], map.getZoom())
             return {...hotel, order, x: point.x, y: point.y}
         })
-        const hasTrends = hotels.some(hotel => (hotel.trend?.length ?? 0) > 1)
+        const hasTrends = uniqueHotels.some(hotel => (hotel.trend?.length ?? 0) > 1)
         const photoZoom = immersive && map.getZoom() >= 13.25
         let cell = hasTrends ? {width: 150, height: 100} : {width: 138, height: 62}
         if (immersive) cell = photoZoom ? {width: 210, height: 259} : {width: 144, height: 76}
@@ -581,7 +582,7 @@ export function DirectoryMap({destination, hotels, selectedId, onSelect, onSearc
             control?.focus({preventScroll: true})
         }
         const area = map.getBounds()
-        const count = hotels.reduce((total, hotel) => total + Number(area.contains([hotel.latitude, hotel.longitude])), 0)
+        const count = uniqueHotels.reduce((total, hotel) => total + Number(area.contains([hotel.latitude, hotel.longitude])), 0)
         setVisible(previous => previous == count ? previous : count)
         host.current?.setAttribute('data-map-groups', String(clusters.length))
     })

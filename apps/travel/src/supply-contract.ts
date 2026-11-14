@@ -34,6 +34,7 @@ export interface SupplyHotel {
 }
 
 export interface SupplySource {
+    stale?: boolean
     id: string
     name: string
     url?: string

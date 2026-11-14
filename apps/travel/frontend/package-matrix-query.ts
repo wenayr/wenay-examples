@@ -1,6 +1,6 @@
 import {useEffect, useRef, useState} from 'react'
 import type {PackageMatrix, PackageMatrixCell} from '../src/package-matrix-contract.ts'
-import {directoryUrl} from './directory-query.ts'
+import {directoryRefreshUrl, directoryUrl} from './directory-query.ts'
 import {packageQuery, type PackagePreferences} from './package-preferences.ts'
 import {matrixCellKey, matrixChunks, matrixDates, matrixRetryAt} from './package-matrix.ts'
 
@@ -39,9 +39,12 @@ export function usePackageMatrix(prefs: PackagePreferences, departures: readonly
     const [state, setState] = useState<MatrixState | null>(null)
     const last = useRef<MatrixState | null>(null)
     const [attempt, setAttempt] = useState(0)
+    const force = useRef(false)
     useEffect(() => {
         if (!key) return
         const controller = new AbortController()
+        const revalidate = force.current
+        force.current = false
         const requests = key.split('|')
         const collected = new Map<string, PackageMatrixCell>()
         const failed = new Set<string>()
@@ -59,7 +62,8 @@ export function usePackageMatrix(prefs: PackagePreferences, departures: readonly
             for (const cell of data.cells) {
                 const cellKey = matrixCellKey(cell.departure, cell.nights)
                 const retryAt = cell.retryAt ?? cell.source.retryAt
-                if (retryAt && Number.isFinite(Date.parse(retryAt))) {
+                const paused = retryAt && Number.isFinite(Date.parse(retryAt))
+                if (paused || cell.source.stale) {
                     if (!collected.has(cellKey)) collected.set(cellKey, cell)
                     staleCellKeys.add(cellKey)
                 } else {
@@ -91,7 +95,7 @@ export function usePackageMatrix(prefs: PackagePreferences, departures: readonly
                 try {
                     let pending = true
                     while (pending) {
-                        const response = await fetch(url, {signal: controller.signal})
+                        const response = await fetch(revalidate ? directoryRefreshUrl(url) : url, {signal: controller.signal})
                         if (!response.ok) throw new Error('HTTP ' + response.status)
                         const data: PackageMatrix = await response.json()
                         if (controller.signal.aborted) return
@@ -104,7 +108,7 @@ export function usePackageMatrix(prefs: PackagePreferences, departures: readonly
                             continue
                         }
                         pending = false
-                        const retryable = data.cells.some(cell => cell.status == 'failed' || cell.status == 'unknown')
+                        const retryable = data.source.stale || data.cells.some(cell => cell.status == 'failed' || cell.status == 'unknown' || cell.source.stale)
                         if (!retryable) {
                             if (pages.size >= 48) pages.delete(pages.keys().next().value!)
                             const checked = data.cells.flatMap(cell => cell.checkedAt ? [Date.parse(cell.checkedAt)] : [])
@@ -148,6 +152,7 @@ export function usePackageMatrix(prefs: PackagePreferences, departures: readonly
     }
     function refresh() {
         for (const url of urls) pages.delete(url)
+        force.current = true
         setAttempt(value => value + 1)
     }
     return {

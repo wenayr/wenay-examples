@@ -2,6 +2,13 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import {browseFields, browseForRoute, travelHash, travelRoute} from '../frontend/navigation.ts'
 
+test('a fresh entry opens the tour map while explicit pages keep their route', () => {
+    assert.equal(travelRoute('').page, 'packages')
+    assert.equal(travelRoute('#').page, 'packages')
+    assert.equal(travelRoute('#discover').page, 'discover')
+    assert.equal(travelRoute('#unknown').page, 'discover')
+})
+
 test('a shared catalogue search restores its page, map area, view and selected property', () => {
     const saved = {offset: 24, view: 'map' as const, selection: 'osm:123', bounds: [-9.1, 53.1, -8.9, 53.4] as const}
     const link = travelHash('catalog', 'galway', {

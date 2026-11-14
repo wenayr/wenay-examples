@@ -2,6 +2,7 @@ import type {
     PackageDayPrices, PackageFare, PackageHotel, PackageMarker, PackageSearchResults, PackageSummary
 } from '../src/package-contract.ts'
 import {boundary, createRangeIndex, type IndexSlice} from './range-index.ts'
+import {searchPhrase} from './catalog-text.ts'
 
 type DateBudget = {
     firstDeparture: string
@@ -10,6 +11,7 @@ type DateBudget = {
     maxTotal: number
 }
 export interface PackageQuery extends DateBudget {
+    term?: string
     box: readonly [number, number, number, number] | null
     minStars: number
     offset: number
@@ -51,8 +53,9 @@ function* points<T>(slices: readonly IndexSlice<T>[]) {
 function located(hotel: PackageHotel): hotel is PackageHotel & {latitude: number, longitude: number} {
     return Number.isFinite(hotel.latitude) && Number.isFinite(hotel.longitude)
 }
-export function matchesPackageHotel(hotel: PackageHotel, filter: Pick<PackageQuery, 'minStars' | 'box'>) {
+export function matchesPackageHotel(hotel: PackageHotel, filter: Pick<PackageQuery, 'minStars' | 'box' | 'term'>) {
     if ((hotel.stars ?? 0) < filter.minStars) return false
+    if (filter.term && !searchPhrase(hotel.name).includes(searchPhrase(filter.term))) return false
     if (!filter.box) return true
     const [west, south, east, north] = filter.box
     if (!located(hotel)) return false
@@ -71,6 +74,29 @@ function summary({hotel, best, maxTotal}: Match): PackageSummary {
 /** One immutable snapshot per supplier trip context and observed departure window. */
 export function createOfferIndex(observations: Observations) {
     const hotels = new Map(observations.hotels.map(hotel => [hotel.id, {...hotel}]))
+    const names = new Map([...hotels].map(([id, hotel]) => [id, searchPhrase(hotel.name)]))
+    const nameParts = new Map<string, Set<PackageHotel>>()
+    function parts(value: string, size: number) {
+        const letters = Array.from(value)
+        return new Set(Array.from({length: Math.max(0, letters.length - size + 1)}, (_, index) => letters.slice(index, index + size).join('')))
+    }
+    for (const [id, name] of names) {
+        for (const size of [1, 2, 3]) {
+            for (const part of parts(name, size)) {
+                const posting = nameParts.get(part)
+                if (posting) posting.add(hotels.get(id)!)
+                else nameParts.set(part, new Set([hotels.get(id)!]))
+            }
+        }
+    }
+    function namedHotels(term: string) {
+        const grams = [...parts(term, Math.min(3, Array.from(term).length))]
+        const postings = grams.map(gram => nameParts.get(gram))
+        if (postings.some(posting => !posting)) return []
+        const known = postings as Set<PackageHotel>[]
+        known.sort((a, b) => a.size - b.size)
+        return [...known[0]].filter(hotel => known.every(posting => posting.has(hotel)) && names.get(hotel.id)!.includes(term))
+    }
     const byHotel = new Map<string, IndexedFare[]>()
     const offers: IndexedFare[] = []
     for (const {id, hotelId, departure, total} of observations.offers) {
@@ -87,13 +113,16 @@ export function createOfferIndex(observations: Observations) {
     const allPrices = fareIndex(offers)
     const byStars = [...hotels.values()].sort((a, b) => (a.stars ?? 0) - (b.stars ?? 0))
 
-    function search(query: PackageQuery): PackageSearchResults {
+    function search(query: PackageQuery, includeKnown = false): PackageSearchResults & {knownHotels?: PackageHotel[]} {
+        const term = searchPhrase(query.term ?? '')
+        const selected = term ? namedHotels(term) : null
         const box = query.box
         const area = box && geography(box[1], box[3], box[0], box[2])
         const tariffs = prices(allPrices, query)
         const start = boundary(byStars, hotel => (hotel.stars ?? 0) < query.minStars)
         const stars = [{entries: byStars, start, end: byStars.length}]
-        const candidates = area && count(area) < byStars.length - start ? area : stars
+        let candidates: readonly IndexSlice<PackageHotel>[] = area && count(area) < byStars.length - start ? area : stars
+        if (selected && selected.length < count(candidates)) candidates = [{entries: selected, start: 0, end: selected.length}]
         const matches = new Map<string, Match>()
         let mapped = 0
         let bounds: [number, number, number, number] | null = null
@@ -146,8 +175,10 @@ export function createOfferIndex(observations: Observations) {
         }
         const end = query.offset + query.limit
         const items = sorted.slice(query.offset, end).map(summary)
-        return {items, total: sorted.length, markers, markersTruncated, nextOffset: end < sorted.length ? end : null,
+        const result = {items, total: sorted.length, markers, markersTruncated, nextOffset: end < sorted.length ? end : null,
             geo: {mapped, unresolved: sorted.length - mapped, bounds}}
+        if (includeKnown) return {...result, knownHotels: findHotels(query).filter(hotel => !matches.has(hotel.id))}
+        return result
     }
 
     function calendar(query: DateBudget, hotelId: string): PackageDayPrices[] {
@@ -167,5 +198,10 @@ export function createOfferIndex(observations: Observations) {
         }
         return days
     }
-    return {search, calendar}
+    function findHotels(query: Pick<PackageQuery, 'minStars' | 'box' | 'term'>) {
+        const term = searchPhrase(query.term ?? '')
+        const candidates = term ? namedHotels(term) : [...hotels.values()]
+        return candidates.filter(hotel => matchesPackageHotel(hotel, query)).sort((a, b) => a.name.localeCompare(b.name))
+    }
+    return {search, calendar, findHotels}
 }

@@ -250,7 +250,8 @@
 .package-matrix__cell[data-status=loading] {
     background: #f3f5ef;
 }
-.package-matrix__cell[data-status=waiting] {
+.package-matrix__cell[data-status=waiting],
+.package-matrix__cell[data-status=stale] {
     border: 1px dashed #c8c7aa;
     background: #f4f1e4;
     color: #817953;

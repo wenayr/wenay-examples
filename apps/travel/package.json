@@ -3,7 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "engines": {"node": ">=24.2"},
+  "engines": {
+    "node": ">=24.2"
+  },
   "scripts": {
     "dev": "vite",
     "start": "node server.mjs",
@@ -13,7 +15,10 @@
     "build": "tsc --noEmit && vite build --base=./",
     "test": "node --test test/*.test.ts backend/places/*.test.mjs backend/partners/*.test.ts",
     "photos:import": "node scripts/import-property-photos.ts",
-    "demo": "node demo/january.ts"
+    "demo": "node demo/january.ts",
+    "build:hosted": "node scripts/build-hosted.mjs",
+    "dev:hosted": "node scripts/preview-hosted.mjs",
+    "site:prepare": "node scripts/prepare-site.mjs"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "1.30.0",

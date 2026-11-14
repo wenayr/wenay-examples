@@ -1,4 +1,4 @@
-import {createAsyncQueue} from 'wenay-common2'
+import {createAsyncQueue} from 'wenay-common2/client'
 import {packageWindowDays} from '../src/package-contract.ts'
 import {packageTrendHotelLimit, type PackageHotelTrend, type PackageTrends} from '../src/package-trends-contract.ts'
 import type {SupplySource} from '../src/supply-contract.ts'

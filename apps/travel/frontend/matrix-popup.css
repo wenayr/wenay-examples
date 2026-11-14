@@ -1,0 +1,262 @@
+.package-matrix-popup {
+    position: fixed;
+    width: min(980px, calc(100vw - 32px));
+    max-height: calc(100dvh - 40px);
+    margin: auto;
+    padding: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    border: 1px solid #c4d7c5;
+    border-radius: 18px;
+    background: #fff;
+    color: var(--ink);
+    box-shadow: 0 20px 90px #102e3366;
+}
+.package-matrix-popup::backdrop {
+    background: #183b3559;
+    backdrop-filter: blur(2px);
+}
+.package-matrix-popup__header {
+    position: sticky;
+    z-index: 3;
+    top: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 14px 20px;
+    border-bottom: 1px solid #dce7d8;
+    background: #fffffff7;
+    backdrop-filter: blur(10px);
+}
+.package-matrix-popup__header>div:first-child {
+    min-width: 0;
+}
+.package-matrix-popup__header p {
+    margin: 0 0 4px;
+    color: #71826f;
+    font-size: 11px;
+}
+.package-matrix-popup__header h2 {
+    margin: 0;
+    color: #284b3b;
+    font: 600 20px/1.2 Inter, system-ui, sans-serif;
+    overflow-wrap: anywhere;
+}
+.package-matrix-popup__header-actions,
+.package-matrix-popup__hotel-links,
+.package-matrix-popup__selection-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+.package-matrix-popup button,
+.package-matrix-popup a {
+    font-family: inherit;
+}
+.package-matrix-popup__header-actions button,
+.package-matrix-popup__hotel-links button,
+.package-matrix-popup__selection-actions>a,
+.package-matrix-popup__selection-actions>button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    min-height: 34px;
+    padding: 7px 10px;
+    border: 1px solid #d5e3d1;
+    border-radius: 8px;
+    background: #f1f7eb;
+    color: #2c6545;
+    font-size: 11px;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    touch-action: manipulation;
+}
+.package-matrix-popup .package-matrix-popup__close {
+    width: 35px;
+    padding: 0;
+    border-color: transparent;
+    background: #edf2e9;
+}
+.package-matrix-popup button:disabled {
+    opacity: .45;
+    cursor: default;
+}
+.package-matrix-popup__content {
+    padding: 17px 20px 20px;
+}
+.package-matrix-popup__hotel {
+    display: grid;
+    grid-template-columns: 180px minmax(0, 1fr);
+    gap: 18px;
+    margin-bottom: 16px;
+}
+.package-matrix-popup__photo {
+    overflow: hidden;
+    border: 1px solid #d4e1cf;
+    border-radius: 10px;
+}
+.package-matrix-popup__photo .map-hotel-card__photo {
+    display: block;
+    width: 100%;
+    height: 84px;
+    object-fit: cover;
+}
+.package-matrix-popup__photo .map-hotel-card__sources {
+    gap: 2px;
+    padding-inline: 5px;
+    font-size: 9px;
+}
+.package-matrix-popup__hotel-tools>p {
+    margin: 0 0 6px;
+    color: #627960;
+    font-size: 11px;
+}
+.package-matrix-popup .package-favourites {
+    display: block;
+    margin: 9px 0;
+    padding: 0;
+    border: 0;
+}
+.package-matrix-popup .package-favourites legend {
+    margin-bottom: 5px;
+    color: #768672;
+    font-size: 10px;
+}
+.package-matrix-popup .package-favourites__choices {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 5px;
+}
+.package-matrix-popup .package-favourite-choice {
+    gap: 4px;
+    min-height: 29px;
+    padding: 5px;
+    font-size: 10px;
+}
+.package-matrix-popup__trip {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
+    margin-bottom: 17px;
+    padding: 12px;
+    border: 1px solid #e0e8da;
+    border-radius: 10px;
+    background: #f7faf2;
+}
+.package-matrix-popup__trip label {
+    display: grid;
+    gap: 5px;
+    min-width: 0;
+}
+.package-matrix-popup__trip label>span {
+    color: #70806b;
+    font-size: 10px;
+}
+.package-matrix-popup__trip input {
+    width: 100%;
+    min-width: 0;
+    min-height: 34px;
+    padding: 6px;
+    border: 1px solid #cddcc6;
+    border-radius: 6px;
+    background: #fff;
+    color: #34573e;
+    font-family: inherit;
+    font-size: 11px;
+}
+.package-matrix-popup__selection {
+    position: sticky;
+    z-index: 2;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 13px 20px;
+    border-top: 1px solid #d7e5d0;
+    background: #f5f9eff7;
+    backdrop-filter: blur(10px);
+}
+.package-matrix-popup__selection strong {
+    color: #2b6543;
+    font-size: 14px;
+}
+.package-matrix-popup__selection p {
+    margin: 5px 0 0;
+    color: #72816b;
+    font-size: 10px;
+    line-height: 1.5;
+}
+.package-matrix-popup__fare {
+    display: grid;
+    gap: 4px;
+    min-width: 0;
+    color: #60785e;
+    font-size: 11px;
+}
+.package-matrix-popup__fare strong {
+    font-size: 23px;
+}
+.package-matrix-popup__fare time {
+    color: #7c8c74;
+    font-size: 10px;
+}
+@media (max-width: 720px) {
+    .package-matrix-popup {
+        width: calc(100vw - 12px);
+        max-height: calc(100dvh - 16px);
+        border-radius: 13px;
+    }
+    .package-matrix-popup__header {
+        align-items: start;
+        padding: 11px 12px;
+    }
+    .package-matrix-popup__header h2 {
+        font-size: 16px;
+    }
+    .package-matrix-popup__header-actions {
+        gap: 5px;
+    }
+    .package-matrix-popup__header-actions>button:first-child {
+        max-width: 83px;
+        padding: 5px;
+        font-size: 10px;
+    }
+    .package-matrix-popup__content {
+        padding: 12px;
+    }
+    .package-matrix-popup__hotel {
+        grid-template-columns: 145px minmax(0, 1fr);
+        gap: 10px;
+    }
+    .package-matrix-popup .package-favourites__choices {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .package-matrix-popup__hotel-links {
+        flex-wrap: wrap;
+        gap: 4px;
+    }
+    .package-matrix-popup__hotel-links button {
+        min-height: 27px;
+        padding: 4px 6px;
+        font-size: 9px;
+    }
+    .package-matrix-popup__trip {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 9px;
+        padding: 9px;
+    }
+    .package-matrix-popup__selection {
+        align-items: start;
+        flex-wrap: wrap;
+        gap: 9px;
+        padding: 11px 12px;
+    }
+    .package-matrix-popup__selection-actions {
+        gap: 6px;
+    }
+}

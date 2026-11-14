@@ -1,4 +1,4 @@
-import {createAsyncQueue} from 'wenay-common2'
+import {createAsyncQueue} from 'wenay-common2/client'
 import {packageMaxTotal} from '../src/package-contract.ts'
 import {
     packageMatrixCellLimit, type PackageMatrix, type PackageMatrixCell, type PackageMatrixFare
@@ -55,7 +55,8 @@ function prepareCell(trip: TezWindow, hotelId: string, departure: string, observ
         const requestedCell = quote.hotelId == hotelId && quote.departure == departure
         return requestedCell && validConditions && validPrice
     }).sort((a, b) => a.total - b.total || a.id.localeCompare(b.id))
-    const complete = !observation.source.retryAt && observation.complete && fares.length == cellQuotes.length
+    const fresh = !observation.source.retryAt && !observation.source.stale
+    const complete = fresh && observation.complete && fares.length == cellQuotes.length
     const position = boundary(fares, fare => fare.total < trip.minTotal)
     const candidate = fares[position]
     const withinBudget = candidate && candidate.total <= trip.maxTotal ? candidate : null
@@ -64,7 +65,7 @@ function prepareCell(trip: TezWindow, hotelId: string, departure: string, observ
     if (withinBudget) status = 'in-budget'
     else if (fares.length && complete) status = 'outside-budget'
     else if (complete && knownHotel) status = 'empty'
-    if (observation.source.retryAt) status = 'unknown'
+    if (!fresh) status = 'unknown'
     return {departure, nights: trip.nights, days: trip.nights + 1, status, complete, checkedAt,
         retryAt: observation.source.retryAt, source: observation.source,
         lowest: fares[0] ? publicFare(fares[0], trip, checkedAt) : null,
@@ -73,18 +74,19 @@ function prepareCell(trip: TezWindow, hotelId: string, departure: string, observ
 }
 
 function describeCells(cells: PackageMatrixCell[]): SupplySource {
+    const stale = cells.some(cell => cell.source.stale)
     const retryTimes = cells.flatMap(cell => cell.retryAt ? [cell.retryAt] : []).sort()
     const retryAt = retryTimes.at(-1)
     const checked = cells.filter(cell => cell.checkedAt)
-    if (!checked.length) return {...source, status: 'unavailable', updatedAt: null, retryAt, description: 'Цены матрицы пока не подтверждены.'}
+    if (!checked.length) return {...source, status: 'unavailable', updatedAt: null, retryAt, stale, description: 'Цены матрицы пока не подтверждены.'}
     const times = checked.map(cell => cell.checkedAt!).sort()
     const description = 'Проверено сочетаний дат и длительности: ' + checked.length + ' из ' + cells.length
         + '. Цена всего пакета для выбранных гостей; номер и питание указаны у тарифа.'
-    return {...source, status: checked.some(cell => cell.source.status == 'live') ? 'live' : 'cached', updatedAt: times[0], retryAt, description}
+    return {...source, status: checked.some(cell => cell.source.status == 'live') ? 'live' : 'cached', updatedAt: times[0], retryAt, stale, description}
 }
 
 export function createPackageMatrix(deps: {provider: tProvider, knownHotel?: (destinationId: string, hotelId: string) => boolean}) {
-    async function read(trip: TezWindow, hotelId: string, requestedNights: readonly number[], signal?: AbortSignal): Promise<PackageMatrix> {
+    async function read(trip: TezWindow, hotelId: string, requestedNights: readonly number[], signal?: AbortSignal, refresh = false): Promise<PackageMatrix> {
         signal?.throwIfAborted()
         const axes = matrixAxes(trip, hotelId, requestedNights)
         const knownHotel = deps.knownHotel?.(trip.destinationId, hotelId) ?? false
@@ -96,8 +98,8 @@ export function createPackageMatrix(deps: {provider: tProvider, knownHotel?: (de
             signal?.throwIfAborted()
             const context = {...trip, first: departure, last: departure, nights: nights[0], minTotal: 0, maxTotal: packageMaxTotal}
             try {
-                const observation = range ? await range(context, hotelId, departure, nights, signal)
-                    : await deps.provider.day(context, hotelId, departure, false, signal)
+                const observation = range ? await range(context, hotelId, departure, nights, signal, refresh)
+                    : await deps.provider.day(context, hotelId, departure, refresh, signal)
                 signal?.throwIfAborted()
                 return nights.map(nights => prepareCell({...trip, nights}, hotelId, departure, observation, knownHotel))
             } catch {
