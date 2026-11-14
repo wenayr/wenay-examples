@@ -73,9 +73,9 @@ export function createAssistantTools(deps: AssistantDeps) {
     const search_flights = describeMethod(async (input: FlightQuery) => {
         if (!deps.flights) throw new Error('Поиск авиабилетов сейчас недоступен.')
         const query = readFlightQuery(travelParams(input), today())
-        const {offers, sources, calendar, links} = await deps.flights.search(query)
-        return {query, offers: offers.slice(0, 5), calendar, sources, links}
-    }, readOnly('Search a route by airport IATA codes. Quotes include source and currency. Recheck before purchase.',
+        return deps.flights.search(query)
+    }, readOnly('Search any route by airport IATA codes. Published routeQuotes are estimates for the whole party, with source and unknown baggage explicit. ' +
+        'Only comparison groups contain identical flights with matching known conditions. Calendars are one adult one way. Recheck before purchase.',
         schema(flightProperties, ['origin', 'destination', 'departure'])))
     const facade = createMcpFacadeServer({name: 'wenay-travel', version: '1.0.0', strict: true, readOnly: true,
         object: {list_destinations, search_hotels, search_packages, hotel_calendar, find_airports, search_flights},

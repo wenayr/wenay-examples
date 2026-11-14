@@ -10,7 +10,8 @@ test('matching returns include all adults, baggage and comparable prices before 
     const passenger = {cabin_class: 'economy', fare_basis_code: 'BASIC', baggages: [{type: 'checked', quantity: 1}]}
     function slice(origin: string, destination: string, date: string) {
         return {segments: [{origin: {iata_code: origin}, destination: {iata_code: destination}, departing_at: date + 'T10:00:00',
-            arriving_at: date + 'T11:00:00', marketing_carrier: {iata_code: 'BT'}, marketing_carrier_flight_number: '310',
+            arriving_at: date + 'T11:00:00', marketing_carrier: {iata_code: 'BT', name: 'airBaltic'},
+            operating_carrier: {name: 'airBaltic'}, marketing_carrier_flight_number: '310',
             passengers: [passenger, passenger]}]}
     }
     const offer = {live_mode: true, total_currency: 'EUR', expires_at: '2030-02-01T12:00:00Z', owner: {name: 'airBaltic'},
@@ -22,6 +23,9 @@ test('matching returns include all adults, baggage and comparable prices before 
     const result = readDuffelOffers(payload, query, new Date('2030-02-01T10:00:00Z'))
     assert.deepEqual(result.map(v => v.id), ['0', '1', '2'])
     assert.deepEqual(result[0].benchmark, {median: 22000, count: 2, saving: 12000})
+    const missingConditions = offers.map(value => ({...value, conditions: {refund_before_departure: {}, change_before_departure: {}}}))
+    assert.ok(readDuffelOffers({data: {live_mode: true, offers: missingConditions}}, query, new Date('2030-02-01'))
+        .every(value => value.benchmark === null && value.comparisonKey === null))
     passenger.baggages = []
     assert.deepEqual(readDuffelOffers(payload, query, new Date('2030-02-01')), [])
     params.set('returnDate', '2030-05-08')

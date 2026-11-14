@@ -70,7 +70,16 @@ function validateContext(raw: unknown, destinations: readonly {id: string}[]): P
 
 const euros = new Intl.NumberFormat('ru-RU', {style: 'currency', currency: 'EUR', maximumFractionDigits: 2})
 function summary(result: TravelChatResult, context: Partial<TravelChatQuery>, place: string) {
-    if (result.kind === 'flights') return `Подготовил маршрут ${result.query.origin} → ${result.query.destination} на ${result.query.departure}. Откройте поиск, чтобы проверить рейсы и условия багажа.`
+    if (result.kind === 'flights') {
+        const title = `Маршрут ${result.query.origin} → ${result.query.destination} на ${result.query.departure}. `
+        const quotes = result.search?.routeQuotes ?? []
+        if (quotes.length) {
+            const minimum = Math.min(...quotes.map(quote => quote.total))
+            return title + `Опубликовано вариантов: ${quotes.length}, от ${euros.format(minimum / 100)} за всех пассажиров. ` +
+                'В поиске можно сравнить перевозчиков и длительность. Условия багажа нужно подтвердить у продавца.'
+        }
+        return title + 'Откройте поиск, чтобы проверить рейсы, источники и условия багажа.'
+    }
     if (result.kind === 'catalog') return `${place}. В справочнике найдено объектов: ${result.total}. У справочных карточек нет подтверждённой цены проживания. ` +
         (result.total ? 'Откройте отель на карте или посмотрите варианты у партнёров.' : 'Попробуйте изменить направление или название.')
     const window = context.firstDeparture === context.lastDeparture ? context.firstDeparture : `${context.firstDeparture} — ${context.lastDeparture}`
@@ -138,7 +147,9 @@ export function createTravelAssistant(deps: AssistantDeps) {
             }
             if (!flight.departure) return ask('Когда нужен вылет? Можно написать «завтра» или назвать дату.')
             try {
-                const result = {kind: 'flights', query: readFlightQuery(travelParams(flight), today)} as const
+                const query = readFlightQuery(travelParams(flight), today)
+                const search = await deps.flights?.search(query)
+                const result = {kind: 'flights', query, ...(search ? {search} : {})} as const
                 return {mode, context, result, message: summary(result, context, '')}
             } catch (error) {
                 if (error instanceof RangeError) return ask(error.message)

@@ -7,6 +7,11 @@ function record(value: unknown): RecordValue {
 }
 function list(value: unknown): RecordValue[] { return Array.isArray(value) ? value.map(record) : [] }
 function text(value: unknown) { return typeof value == 'string' ? value : '' }
+function knownCondition(value: unknown) {
+    const rule = record(value)
+    if (rule.allowed === false) return true
+    return rule.allowed === true && /^\d+(\.\d{1,2})?$/.test(text(rule.penalty_amount)) && /^[A-Z]{3}$/.test(text(rule.penalty_currency))
+}
 
 export function duffelRequest(query: FlightQuery) {
     const slices = [{origin: query.origin, destination: query.destination, departure_date: query.departure}]
@@ -19,7 +24,8 @@ function readOffer(raw: RecordValue, query: FlightQuery, now: Date) {
     const expiresAt = text(raw.expires_at)
     const id = text(raw.id)
     const total = Math.round(Number(amount) * 100)
-    if (!id || raw.total_currency != 'EUR' || !/^\d+(\.\d{1,2})?$/.test(amount) || !Number.isSafeInteger(total) || total <= 0) return null
+    const validPrice = raw.total_currency == 'EUR' && /^\d+(\.\d{1,2})?$/.test(amount) && Number.isSafeInteger(total) && total > 0
+    if (!id || !validPrice) return null
     if (!(Date.parse(expiresAt) > now.getTime()) || raw.live_mode === false) return null
     const expectations = duffelRequest(query).data.slices
     const rawSlices = list(raw.slices)
@@ -27,6 +33,8 @@ function readOffer(raw: RecordValue, query: FlightQuery, now: Date) {
     const checked: (number | null)[] = []
     const slices: FlightSlice[] = []
     const signatures: string[] = []
+    const marketingCarriers = new Set<string>()
+    const operatingCarriers = new Set<string>()
     let comparable = true
     for (const [i, slice] of rawSlices.entries()) {
         const segments = list(slice.segments)
@@ -45,28 +53,46 @@ function readOffer(raw: RecordValue, query: FlightQuery, now: Date) {
                 if (traveler.cabin_class !== 'economy') return null
                 const baggage = Array.isArray(traveler.baggages) ? list(traveler.baggages) : null
                 const allowed = baggage?.find(b => b.type == 'checked')
-                const count = allowed ? allowed.quantity : baggage ? 0 : null
+                const missingAllowance = baggage ? 0 : null
+                const count = allowed ? allowed.quantity : missingAllowance
                 checked.push(typeof count == 'number' && Number.isInteger(count) && count >= 0 ? count : null)
                 const fareBasis = text(traveler.fare_basis_code)
                 if (!fareBasis || !baggage) comparable = false
-                signatures.push(JSON.stringify([fareBasis, baggage?.map(b => [b.type, b.quantity]).sort()]))
+                signatures.push(JSON.stringify([fareBasis, baggage?.sort((a, b) => text(a.type).localeCompare(text(b.type)))]))
             }
             const number = text(segment.marketing_carrier_flight_number)
             const airline = text(record(segment.marketing_carrier).iata_code)
-            if (!number || !airline) comparable = false
-            signatures.push(JSON.stringify([airline, number, segment.departing_at, segment.arriving_at, record(segment.destination).iata_code]))
+            const marketing = text(record(segment.marketing_carrier).name)
+            const operating = text(record(segment.operating_carrier).name)
+            if (marketing) marketingCarriers.add(marketing)
+            if (operating) operatingCarriers.add(operating)
+            if (!number || !airline || !operating) comparable = false
+            signatures.push(JSON.stringify([airline, number, operating, segment.departing_at, segment.arriving_at, record(segment.destination).iata_code]))
         }
         slices.push({origin, destination, departingAt, arrivingAt, stops})
     }
     const checkedBags = checked.some(c => c === null) ? null : Math.min(...checked as number[])
     if (query.checkedBag && (checkedBags ?? 0) < 1) return null
     const conditions = record(raw.conditions)
-    if (!conditions.refund_before_departure || !conditions.change_before_departure) comparable = false
-    signatures.push(JSON.stringify([conditions.refund_before_departure, conditions.change_before_departure]))
+    if (!knownCondition(conditions.refund_before_departure) || !knownCondition(conditions.change_before_departure)) comparable = false
+    signatures.push(JSON.stringify(conditions))
     const carrier = text(record(raw.owner).name)
     if (!carrier) return null
-    const offer: FlightOffer = {id, carrier, slices, total, checkedBags, expiresAt, currency: 'EUR', benchmark: null}
-    return {offer, group: comparable ? JSON.stringify(signatures) : null}
+    const comparisonKey = comparable ? JSON.stringify(signatures) : null
+    const readableConditions = [conditions.refund_before_departure, conditions.change_before_departure].map((value, index) => {
+        const rule = record(value)
+        if (typeof rule.allowed != 'boolean') return null
+        const title = index == 0 ? 'Возврат до вылета' : 'Изменение до вылета'
+        const penalty = text(rule.penalty_amount)
+        const currency = text(rule.penalty_currency)
+        const fee = penalty && currency ? ', сбор ' + penalty + ' ' + currency : ''
+        return title + (rule.allowed ? ' разрешён' + fee : ' запрещён')
+    })
+    const offer: FlightOffer = {id, carrier, slices, total, checkedBags, expiresAt, currency: 'EUR', benchmark: null,
+        providerId: 'duffel', providerName: 'Duffel', sourceUrl: 'https://duffel.com/flights/search', checkedAt: now.toISOString(),
+        marketingCarriers: [...marketingCarriers], operatingCarriers: [...operatingCarriers], taxesIncluded: true, cabin: 'economy',
+        conditions: readableConditions.every(Boolean) ? readableConditions.join('. ') : null, comparisonKey}
+    return {offer, group: comparisonKey}
 }
 
 export function readDuffelOffers(payload: unknown, query: FlightQuery, now: Date) {

@@ -1,9 +1,10 @@
 import type {TravelChatQuery, TravelChatResult} from '../../src/assistant-contract.ts'
-import type {FlightQuery} from '../../src/flight-contract.ts'
+import type {FlightQuery, FlightSearch} from '../../src/flight-contract.ts'
 import {Icon} from '../Icons.tsx'
 import {SourceLine, sourceStatus} from '../DirectoryOffers.tsx'
 import {hotelCount} from '../presentation.ts'
 import {validDate} from '../directory-preferences.ts'
+import {safeHref} from '../DirectoryCard.tsx'
 
 export type AssistantSearch =
     | {kind: 'packages' | 'catalog', query: Partial<TravelChatQuery>, hotelId?: string, hotelName?: string, fareId?: string}
@@ -14,6 +15,22 @@ const departure = new Intl.DateTimeFormat('ru-RU', {day: 'numeric', month: 'shor
 export const dateText = (day: string) => validDate(day) ? departure.format(new Date(day + 'T00:00:00Z')) : '—'
 export const costText = (cents: number) => euros.format(cents / 100)
 
+function FlightSummary({search}: {search?: FlightSearch}) {
+    if (!search) return null
+    const quotes = (search.routeQuotes ?? (search.routeQuote ? [search.routeQuote] : [])).slice(0, 3)
+    return <>
+        {!!quotes.length && <ul className="assistant-option-list">{quotes.map((quote, index) => <li key={quote.id ?? index}>
+            <a href={safeHref(quote.sourceUrl)} target="_blank" rel="noopener noreferrer">
+                <span><strong>{quote.carrier ?? 'Перевозчик не указан'}</strong>
+                    <small>{quote.providerName ?? 'Google Flights'} · опубликованный ориентир</small></span>
+                <span className="assistant-amount">От {costText(quote.total)}<small>за всю поездку</small></span>
+            </a></li>)}</ul>}
+        {search.offers.length > 0 && <p>Тарифов поставщика · {search.offers.length}. Срок действия и условия видны в сравнении.</p>}
+        {!!quotes.length && <p>Состав багажа и окончательные условия уточняются у продавца.</p>}
+        <SourceLine sources={search.sources}/>
+    </>
+}
+
 export function Options({result, query, onApply}: {
     result: TravelChatResult, query: Partial<TravelChatQuery>, onApply: (action: AssistantSearch) => void
 }) {
@@ -22,8 +39,9 @@ export function Options({result, query, onApply}: {
         <div className="assistant-flight"><span>{result.query.origin}</span><Icon name="plane"/><span>{result.query.destination}</span></div>
         <p>{dateText(result.query.departure)}{result.query.returnDate && <> — {dateText(result.query.returnDate)}</>} · взрослых: {result.query.adults}
             {result.query.checkedBag && ' · с багажом'}</p>
+        <FlightSummary search={result.search}/>
         <button className="assistant-primary" type="button" onClick={() => onApply({kind: 'flights', query: result.query})}>
-            Проверить рейсы и цены <Icon name="arrow" size={16}/></button>
+            Сравнить авиакомпании и цены <Icon name="arrow" size={16}/></button>
     </section>
     return <section className="assistant-options">
         <h3>{result.kind === 'packages' ? 'Пакетные туры' : 'Отели на карте'}</h3>

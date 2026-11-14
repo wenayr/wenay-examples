@@ -1,7 +1,7 @@
 import {useEffect, useState, type FormEvent} from 'react'
 import type {FlightBenchmark, FlightDay, FlightOffer, FlightQuery, FlightSearch, FlightSlice} from '../../src/flight-contract.ts'
 import type {SupplySource} from '../../src/supply-contract.ts'
-import {SourceLine, sourceStatus} from '../DirectoryOffers.tsx'
+import {SourceLine} from '../DirectoryOffers.tsx'
 import {safeHref} from '../DirectoryCard.tsx'
 import {directoryUrl, useDirectoryQuery} from '../directory-query.ts'
 import {Icon} from '../Icons.tsx'
@@ -9,6 +9,9 @@ import {shiftDate} from '../directory-preferences.ts'
 import {dateLabel} from '../presentation.ts'
 import {travelHash, type TravelRoute} from '../navigation.ts'
 import {AirportPicker} from './AirportPicker.tsx'
+import {ExactFlightDetails, PublishedPrices, SavedFlightPrices} from './FlightPrices.tsx'
+import {flightQueryKey} from './comparison.ts'
+import {AirlineSites} from './FlightSources.tsx'
 import {defaultFlight, flightError, flightForRoute, flightLink, flightParams, loadFlight, saveFlight} from './preferences.ts'
 import './flights.css'
 
@@ -42,6 +45,7 @@ function Offer({offer, people}: {offer: FlightOffer, people: number}) {
         {offer.slices.map(slice => <Leg key={slice.departingAt + slice.origin} slice={slice}/>)}
         <p className="flight-note">{baggage} · Тариф до <time dateTime={offer.expiresAt}>{sourceTime(offer.expiresAt)}</time></p>
         {offer.benchmark && <Benchmark value={offer.benchmark}/>}
+        <ExactFlightDetails offer={offer}/>
     </article>
 }
 
@@ -50,20 +54,18 @@ function flightType(direct: boolean | null) {
     return direct ? 'Прямой рейс' : 'С пересадкой'
 }
 
-function FlexibleDates({days, source, selected, onDate}: {
-    days: FlightDay[], source?: SupplySource, selected: string, onDate: (date: string) => void
+function FlexibleDates({days, source, selected, onDate, name}: {
+    days: FlightDay[], source?: SupplySource, selected: string, onDate: (date: string) => void, name: string,
 }) {
-    if (!days.length) {
-        return source && <p className="flight-note">{source.name} · {sourceStatus[source.status]}. {source.description}</p>
-    }
+    if (!days.length) return null
     return <section className="flight-calendar" aria-label="Цены на соседние даты">
-        <div className="flight-section-heading"><h3>Соседние даты</h3><span>airBaltic · за одного, в одну сторону</span></div>
+        <div className="flight-section-heading"><h3>Соседние даты</h3><span>{name} · за одного, в одну сторону</span></div>
         <div className="flight-day-grid">{days.map(day => <div className="flight-day" key={day.departure}>
             <button aria-pressed={day.departure == selected} onClick={() => onDate(day.departure)}
                 aria-label={'Искать на ' + dateLabel(day.departure) + ', от ' + euro(day.perPerson)}>
                 <span>{dateLabel(day.departure)}</span><strong>{euro(day.perPerson)}</strong><small>{flightType(day.direct)}</small>
             </button>
-            <a href={safeHref(day.sourceUrl)} target="_blank" rel="noopener noreferrer">У airBaltic ↗</a>
+            <a href={safeHref(day.sourceUrl)} target="_blank" rel="noopener noreferrer">У {name} ↗</a>
             {day.benchmark && <Benchmark value={day.benchmark} dates/>}
         </div>)}</div>
         <p className="flight-note">{source?.updatedAt && <>Проверено {sourceTime(source.updatedAt)}. </>}
@@ -74,6 +76,7 @@ function FlexibleDates({days, source, selected, onDate}: {
 function emptyFares(received: number, source?: SupplySource) {
     if (received) return 'Срок полученных тарифов истёк.'
     if (source?.status == 'live' || source?.status == 'cached') return 'Поставщик не вернул тарифов по этим условиям.'
+    if (source?.status == 'requires-access') return 'Тарифы с подтверждением мест сейчас недоступны. Проверьте опубликованные цены или поиск у продавца.'
     return source?.description || 'Подтверждённых цен на весь маршрут пока нет.'
 }
 
@@ -94,31 +97,28 @@ function FlightResults({query, onDate, refresh}: {query: FlightQuery, onDate: (d
     const offers = data.offers.filter(offer => Date.parse(offer.expiresAt) > Math.max(now, Date.now()))
     const exact = data.sources.find(source => source.id.includes('duffel'))
     const reference = data.sources.find(source => source.id.includes('baltic'))
+    const quotes = data.routeQuotes ?? (data.routeQuote ? [data.routeQuote] : [])
+    const calendars = data.calendars ?? [{providerId: 'airbaltic', providerName: 'airBaltic', rows: data.calendar, source: reference}]
     return <section className="flight-results" aria-label="Результаты поиска">
         <h2>{query.origin} → {query.destination}</h2>
         <p className="flight-query-summary">{dateLabel(query.departure)}{query.returnDate ? ' — ' + dateLabel(query.returnDate) : ' · в одну сторону'}
             {' · взрослых ' + query.adults}{query.checkedBag && ' · с багажом'}</p>
-        {!query.checkedBag && <FlexibleDates days={data.calendar} source={reference} selected={query.departure} onDate={onDate}/>}
+        {quotes.length > 0 && <PublishedPrices key={flightQueryKey(query)} rows={quotes} query={query}/>}
         <section>
-            <div className="flight-section-heading"><h3>Стоимость всей поездки</h3>
+            <div className="flight-section-heading"><h3>Тарифы поставщика</h3>
                 {exact && <span>{exact.name}{exact.updatedAt && ' · ' + sourceTime(exact.updatedAt)}</span>}
             </div>
             {offers.length ? <div className="flight-offers">{offers.map(offer => <Offer key={offer.id} offer={offer} people={query.adults}/>)}</div>
                 : <p className="flight-empty">{emptyFares(data.offers.length, exact)}{' '}
                     <button onClick={search.retry} className="travel-link">Запросить снова</button></p>}
         </section>
-        {data.routeQuote && !query.checkedBag && <aside className="flight-route-quote">
-            <h3>Ориентир на выбранный маршрут</h3>
-            <p><strong>От {euro(data.routeQuote.total)}</strong> за всю поездку и всех пассажиров
-                {data.routeQuote.carrier && ' · ' + data.routeQuote.carrier}.</p>
-            <p className="flight-note">{data.routeQuote.description}</p>
-            <div><a href={safeHref(data.routeQuote.sourceUrl)} target="_blank" rel="noopener noreferrer">Посмотреть в Google Flights ↗</a>
-                <time dateTime={data.routeQuote.checkedAt}>Проверено {sourceTime(data.routeQuote.checkedAt)}</time></div>
-        </aside>}
+        {!query.checkedBag && calendars.map(calendar => <FlexibleDates key={calendar.providerId} name={calendar.providerName}
+            days={calendar.rows} source={calendar.source} selected={query.departure} onDate={onDate}/>)}
         {!!data.links.length && <section className="flight-handoff"><h3>Проверить у продавца</h3>
             <p>Откроется поиск на выбранный маршрут. Цена и места подтверждаются у продавца перед оплатой.</p>
             <div>{data.links.map(link => <a href={safeHref(link.url)} key={link.url} target="_blank" rel="noopener noreferrer">{link.label} ↗</a>)}</div>
         </section>}
+        <AirlineSites items={data.carrierLinks ?? []}/>
         <SourceLine sources={data.sources}/>
     </section>
 }
@@ -198,17 +198,16 @@ function useSavedFlight(fallback?: () => FlightQuery) {
 
 export function FlightResume() {
     const saved = useSavedFlight()
-    if (!saved) return null
-    return <section className="flight-resume"><Icon name="plane"/><div><strong>Последний поиск авиабилетов</strong>
+    return <>{saved && <section className="flight-resume"><Icon name="plane"/><div><strong>Последний поиск авиабилетов</strong>
         <p>{saved.origin} → {saved.destination} · {dateLabel(saved.departure)}{saved.returnDate && ' — ' + dateLabel(saved.returnDate)}
             {' · взрослых '}{saved.adults}</p></div>
-        <a href={flightLink(saved)}>Проверить цены →</a></section>
+        <a href={flightLink(saved)}>Проверить цены →</a></section>}<SavedFlightPrices/></>
 }
 
 export function Flights({route}: {route: TravelRoute}) {
     const base = useSavedFlight(defaultFlight)
     return <main className="travel-home flight-home"><header><p><Icon name="plane" size={16}/> Самостоятельная поездка</p>
-        <h1>Авиабилеты</h1><span>Выберите аэропорты и сравните даты вылета.</span></header>
+        <h1>Авиабилеты</h1><span>Сравните авиакомпании, цены и условия на свой маршрут.</span></header>
         {base && <FlightForm initial={flightForRoute(base, route.query)} auto={route.query.has('departure')}/>}
     </main>
 }

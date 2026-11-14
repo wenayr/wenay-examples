@@ -41,3 +41,62 @@
 .flight-route-quote strong {font-size:21px;color:var(--green)}
 .flight-route-quote div {display:flex;align-items:baseline;flex-wrap:wrap;gap:6px 12px;font-size:13px}
 .flight-route-quote a {color:var(--green)}.flight-route-quote time {font-size:11px;color:var(--muted)}
+
+.flight-published > .flight-note {margin:0 0 15px;max-width:75ch}
+.flight-price-filters {display:flex;flex-wrap:wrap;align-items:end;gap:10px;padding:14px;background:#edf2e9;border-radius:12px}
+.flight-price-filters label {display:grid;flex:1 1 155px;min-width:0;gap:5px;font-size:12px;font-weight:650}
+.flight-price-filters select {width:100%;height:38px;padding:6px 8px;border:1px solid #afc0ad;border-radius:7px;background:white;color:var(--ink);font:inherit}
+.flight-price-filters button,.flight-price-actions button,.flight-compare-table button {padding:7px 9px;border:1px solid var(--rule);border-radius:6px;color:var(--green);background:white;font:inherit;cursor:pointer}
+.flight-price-count {display:flex;justify-content:space-between;flex-wrap:wrap;gap:5px 15px;margin:12px 0;color:var(--muted);font-size:12px}
+.flight-published-grid {display:grid;grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr));gap:12px}
+.flight-price-card {padding:18px;border:1px solid var(--rule);border-radius:12px;background:white;min-width:0}
+.flight-price-card h4 {font-size:17px;font-weight:650;margin:3px 0 0;color:var(--ink)}
+.flight-price-card .flight-offer-heading {gap:12px;flex-wrap:nowrap}
+.flight-price-card .flight-offer-heading small {display:block;color:var(--muted);font-size:11px}
+.flight-price-card .flight-offer-heading strong {white-space:nowrap}
+.flight-price-details {display:grid;grid-template-columns:1fr 1fr;gap:12px 8px;margin:18px 0 12px;font-size:12px}
+.flight-price-details dt {font-size:11px;color:var(--muted);margin:0 0 4px}
+.flight-price-details dd {margin:0;line-height:1.4}
+.flight-price-conditions {font-size:12px;color:var(--muted)}
+.flight-price-conditions summary {cursor:pointer;color:var(--green)}
+.flight-price-conditions p {line-height:1.5}
+.flight-price-checked {font-size:11px;color:var(--muted);margin:12px 0}
+.flight-price-actions {display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;padding-top:12px;border-top:1px solid var(--rule);font-size:12px}
+.flight-price-actions label {display:flex;align-items:center;gap:5px;cursor:pointer}
+.flight-price-actions input {accent-color:var(--green)}
+.flight-price-actions a,.flight-compare-table a,.flight-offer-link {color:var(--green);font-weight:650}
+.flight-selected {padding:20px 0 0}
+.flight-selected > .flight-note {margin:8px 0 12px}
+.flight-compare-scroll {overflow-x:auto;border:1px solid var(--rule);border-radius:12px;background:white}
+.flight-compare-table {width:100%;border-collapse:collapse;font-size:13px;text-align:left}
+.flight-compare-table th,.flight-compare-table td {padding:12px 15px;border-bottom:1px solid var(--rule);vertical-align:top;min-width:150px}
+.flight-compare-table th[scope=row] {font-weight:500;background:#f2f5ed;width:155px}
+.flight-compare-table thead th {font-weight:650;background:#e8eee2}
+.flight-compare-table tr:last-child > * {border-bottom:0}
+.flight-compare-table td a {display:block;margin-bottom:8px}
+.flight-saved-prices {margin-top:25px}
+.flight-saved-prices > h2 {font:500 30px/1.15 Georgia,serif;letter-spacing:-.03em;margin:0}
+.flight-saved-prices > .flight-note {margin:8px 0 15px}
+.flight-saved-prices h3 {font:650 18px/1.3 system-ui,sans-serif;margin:0}
+.flight-saved-prices .flight-price-card > p {font-size:13px;line-height:1.5}
+.flight-airlines > .flight-note {margin:8px 0 15px}
+.flight-airlines {margin-top:20px;border:1px solid var(--rule);border-radius:12px;padding:16px;background:#f5f7f1}
+.flight-airlines > summary {font:500 22px/1.2 Georgia,serif;cursor:pointer;color:var(--ink)}
+.flight-airline-filters {display:flex;flex-wrap:wrap;gap:12px;margin-top:16px}
+.flight-airline-filters label {display:grid;flex:1 1 200px;gap:5px;font-size:12px;font-weight:650}
+.flight-airline-filters input,.flight-airline-filters select {height:38px;min-width:0;width:100%;padding:7px 9px;border:1px solid #afc0ad;border-radius:7px;background:white;color:var(--ink);font:inherit}
+.flight-airline-grid {display:grid;grid-template-columns:repeat(auto-fit,minmax(min(230px,100%),1fr));gap:10px}
+.flight-airline-grid article {background:white;border:1px solid var(--rule);border-radius:10px;padding:15px;display:flex;flex-direction:column}
+.flight-airline-grid h4 {margin:0 0 4px;font-size:15px}
+.flight-airline-grid span,.flight-airline-grid p {font-size:12px;color:var(--muted);line-height:1.5}
+.flight-airline-grid p {margin:8px 0 12px}
+.flight-airline-grid a {font-size:12px;color:var(--green);font-weight:650;margin-top:auto}
+.flight-offer-link {font-size:13px;display:inline-block;margin-top:12px}
+@media(max-width:600px) {
+    .flight-price-filters {display:grid;grid-template-columns:1fr 1fr;padding:12px;gap:12px}
+    .flight-price-filters label {font-size:11px}
+    .flight-price-filters button {grid-column:1/-1}
+    .flight-price-card {padding:15px}
+    .flight-price-card .flight-offer-heading strong {font-size:18px}
+    .flight-compare-table th,.flight-compare-table td {padding:10px;min-width:140px}
+}

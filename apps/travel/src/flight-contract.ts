@@ -21,6 +21,16 @@ export interface FlightOffer {
     checkedBags: number | null
     expiresAt: string
     benchmark: FlightBenchmark | null
+    providerId?: string
+    providerName?: string
+    sourceUrl?: string
+    checkedAt?: string
+    marketingCarriers?: string[]
+    operatingCarriers?: string[]
+    taxesIncluded?: boolean | null
+    cabin?: 'economy'
+    conditions?: string | null
+    comparisonKey?: string | null
 }
 export interface FlightDay {
     departure: string
@@ -36,12 +46,47 @@ export interface RouteQuote {
     sourceUrl: string
     carrier: string | null
     description: string
+    id?: string
+    providerId?: string
+    providerName?: string
+    details?: {
+        stops: number | null
+        duration: string | null
+        durationMinutes: number | null
+        outbound: string | null
+        checkedBags: number | null
+        cabinBag: 'excluded' | 'unknown'
+    }
+}
+export interface AirlineLink {
+    id: string
+    name: string
+    iata: string
+    country: string
+    url: string
+    queryApplied: 'full' | 'route' | 'none'
+    description: string
+}
+export interface FlightCalendar {
+    providerId: string
+    providerName: string
+    rows: FlightDay[]
+    source: SupplySource
+    basis: 'one-adult-one-way'
+}
+export interface FlightComparison {
+    groups: {key: string, offerIds: string[], lowest: number, highest: number, saving: number}[]
+    description: string
 }
 export interface FlightSearch {
     routeQuote: RouteQuote | null
     query: FlightQuery
     offers: FlightOffer[]
     sources: SupplySource[]
-    links: {label: string, url: string}[]
+    links: {label: string, url: string, providerId?: string, kind?: 'search' | 'carrier'}[]
     calendar: FlightDay[]
+    routeQuotes?: RouteQuote[]
+    carrierLinks?: AirlineLink[]
+    calendars?: FlightCalendar[]
+    comparison?: FlightComparison
 }

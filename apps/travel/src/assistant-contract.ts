@@ -1,4 +1,4 @@
-import type {FlightQuery} from './flight-contract.ts'
+import type {FlightQuery, FlightSearch} from './flight-contract.ts'
 import type {PackageSummary} from './package-contract.ts'
 import type {SupplyHotel, SupplySource} from './supply-contract.ts'
 
@@ -20,7 +20,7 @@ export interface TravelChatQuery {
 export type TravelChatResult =
     | {kind: 'packages', items: PackageSummary[], total: number, source: SupplySource}
     | {kind: 'catalog', items: Pick<SupplyHotel, 'id' | 'name' | 'locality'>[], total: number}
-    | {kind: 'flights', query: FlightQuery}
+    | {kind: 'flights', query: FlightQuery, search?: FlightSearch}
 
 export interface TravelChatRequest {message: string, context?: Partial<TravelChatQuery>}
 export interface TravelChatReply {

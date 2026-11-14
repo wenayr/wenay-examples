@@ -70,3 +70,5 @@
 .assistant-airports {min-width:0;margin-inline:0}
 .assistant-airports legend {padding-inline:4px;font:500 22px/1.2 Georgia,serif}
 .assistant-airports>.assistant-primary {margin-top:12px}
+.assistant-option-list li > a {display:flex;justify-content:space-between;gap:12px;width:100%;padding:12px;color:var(--ink);text-align:left;text-decoration:none}
+.assistant-option-list li > a > span:first-child {display:grid;gap:4px}
