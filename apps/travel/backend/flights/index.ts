@@ -8,6 +8,7 @@ import {publicAggregatorLinks} from './aggregators.ts'
 import {ryanairCalendar, ryanairUrl} from './ryanair.ts'
 import {compareFlightOffers} from './comparison.ts'
 import {directAirlineLinks, resolveAirlineLinks} from './carriers.ts'
+import {travelRestriction} from '../markets/policy.ts'
 
 export function readFlightQuery(params: URLSearchParams, today: string): FlightQuery {
     const origin = (params.get('origin') ?? '').trim().toUpperCase()
@@ -94,6 +95,12 @@ export function createFlights(deps: {fetch: typeof fetch, now: () => Date, duffe
         }
     }
     async function search(query: FlightQuery): Promise<FlightSearch> {
+        const restriction = travelRestriction({kind: 'flights', ...query})
+        if (restriction) {
+            return {query, routeQuote: null, routeQuotes: [], offers: [], calendar: [], calendars: [], links: [], carrierLinks: [],
+                sources: [{id: 'route-review', name: restriction.title, url: restriction.evidence[0].url, status: 'unavailable',
+                    updatedAt: restriction.evidence[0].checkedAt, description: restriction.description}]}
+        }
         const now = deps.now().getTime()
         const key = JSON.stringify([query.origin, query.destination, query.departure, query.returnDate, query.adults, query.checkedBag])
         const cached = cache.get(key)

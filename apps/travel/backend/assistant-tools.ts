@@ -17,7 +17,8 @@ export interface AssistantDeps {
     catalog: Pick<ReturnType<typeof createPlaceCatalog>, 'list' | 'destinations'>
     packages?: Pick<ReturnType<typeof createPackages>, 'calendar' | 'search'>
     flights?: {search: (query: FlightQuery) => Promise<FlightSearch>}
-    providers?: Pick<ReturnType<typeof createProviderRegistry>, 'list' | 'search'>
+    providers?: Pick<ReturnType<typeof createProviderRegistry>, 'list' | 'search'> &
+        Partial<Pick<ReturnType<typeof createProviderRegistry>, 'markets'>>
     today?: () => string
     model?: {key: string, name: string, fetch: typeof fetch} | null
 }
@@ -85,6 +86,23 @@ export function createAssistantTools(deps: AssistantDeps) {
         if (!deps.providers) throw new Error('Реестр источников недоступен.')
         return deps.providers.list()
     }, readOnly('List independent executable flight, hotel and package providers, their capabilities, activation and current status. No secret values are returned.', schema({}, [])))
+    const list_markets = describeMethod(({country}: {country?: string}) => {
+        if (!deps.providers?.markets) throw new Error('Каталог рынков недоступен.')
+        const catalog = deps.providers.markets(country)
+        const items = catalog.items.map(item => {
+            const summary = {code: item.code, name: item.name, currency: item.currency, region: item.region, summary: item.summary,
+                aviationStatus: item.aviationStatus, commercialStatus: item.commercialStatus,
+                airlineCount: item.airlines.length, tourismPartnerCount: item.tourism.length, notices: item.notices}
+            if (!country) return summary
+            return {...summary, hubs: item.hubs, cities: item.cities, airlines: item.airlines, tourism: item.tourism,
+                providers: item.providers.map(source => ({providerId: source.providerId, status: source.status,
+                    configured: source.configured, coverage: source.coverage, coverageDescription: source.coverageDescription,
+                    evidence: source.evidence}))}
+        })
+        return {...catalog, items}
+    }, readOnly('Read the selected 20 Eurasian country markets, airlines, tourism partners and actual provider access and query checks. ' +
+        'Informational companies are distinct from price adapters. Destination, point of sale and nationality are independent.',
+        schema({country: {type: 'string', pattern: '^[A-Z]{2}$'}}, [])))
     const providerProperties = {
         kind: {type: 'string', enum: ['flights', 'hotels', 'packages', 'deals']},
         origin: {type: 'string', maxLength: 120}, destination: {type: 'string', maxLength: 120},
@@ -106,7 +124,8 @@ export function createAssistantTools(deps: AssistantDeps) {
         'Hotel provider IDs are unrelated to open-directory IDs. Missing access or query fields are explicit. Sandbox prices are excluded.',
         schema(providerProperties, ['kind'])))
     const facade = createMcpFacadeServer({name: 'wenay-travel', version: '1.0.0', strict: true, readOnly: true,
-        object: {list_destinations, search_hotels, search_packages, hotel_calendar, find_airports, search_flights, list_providers, search_travel_offers},
+        object: {list_destinations, search_hotels, search_packages, hotel_calendar, find_airports, search_flights,
+            list_providers, list_markets, search_travel_offers},
         resources: false, policy: {concurrency: () => 'parallel'}})
     async function mcp(req: IncomingMessage, res: ServerResponse, body: unknown) {
         const server = facade.control.server()

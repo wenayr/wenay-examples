@@ -38,7 +38,7 @@ export function Discover() {
     return <main className="travel-home discover-home">
         <section className="discover-hero">
             <div className="discover-intro">
-                <p className="discover-departure"><Icon name="plane" size={17}/> Из Таллина</p>
+                <p className="discover-departure"><Icon name="plane" size={17}/> Перелёты и поездки по миру</p>
                 <h1>Куда отправимся?</h1>
                 <p className="discover-subtitle">Подберите перелёт, отель или тур на свои даты.</p>
                 <form className="discover-request" onSubmit={event => {
@@ -68,7 +68,7 @@ export function Discover() {
                     <small>Искать в выбранной области</small></span><Icon name="arrow" size={16}/></a>}
         </div>
         <section className="discover-places" aria-labelledby="discover-heading">
-            <div className="discover-head"><h2 id="discover-heading">Направления</h2>
+            <div className="discover-head"><h2 id="discover-heading">Направления</h2><a className="travel-link" href="#markets">20 стран и их поставщики →</a>
                 <label className="place-search"><Icon name="search" size={16}/><input aria-label="Найти город или страну" type="search"
                     placeholder="Город или страна" value={filter} onChange={event => setFilter(event.target.value)}/></label></div>
             <div className="discover-segments" role="group" aria-label="Направления по типу поездки">

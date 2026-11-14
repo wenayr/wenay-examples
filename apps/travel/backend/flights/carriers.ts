@@ -2,9 +2,10 @@ import type {AirlineLink, FlightQuery} from '../../src/flight-contract.ts'
 import {balticUrl} from './airbaltic.ts'
 import {ryanairUrl} from './ryanair.ts'
 import {findAirports} from './airports.ts'
+import {marketAirlineDirectory} from '../markets/index.ts'
 
 // A carrier's home country is descriptive. Ranking requires an actual price for the requested trip.
-export const airlineDirectory = {
+const originalAirlineDirectory = {
     ryanair: {name: 'Ryanair', iata: 'FR', country: 'IE', website: 'https://www.ryanair.com/ie/en'},
     aerlingus: {name: 'Aer Lingus', iata: 'EI', country: 'IE', website: 'https://www.aerlingus.com/'},
     egyptair: {name: 'EGYPTAIR', iata: 'MS', country: 'EG', website: 'https://www.egyptair.com/en/Pages/Default.aspx'},
@@ -42,6 +43,8 @@ export const airlineDirectory = {
     ethiopian: {name: 'Ethiopian Airlines', iata: 'ET', country: 'ET', website: 'https://www.ethiopianairlines.com/'},
     qantas: {name: 'Qantas', iata: 'QF', country: 'AU', website: 'https://www.qantas.com/'},
 } as const satisfies Record<string, {name: string, iata: string, country: string, website: string}>
+
+export const airlineDirectory = {...originalAirlineDirectory, ...marketAirlineDirectory}
 
 const bookingQueries: Partial<Record<keyof typeof airlineDirectory, (query: FlightQuery) => string>> = {
     ryanair: ryanairUrl,

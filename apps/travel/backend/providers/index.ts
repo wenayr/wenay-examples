@@ -5,11 +5,14 @@ import {existingProviders} from './existing/definitions.ts'
 import {aviationProviders} from './aviation/definitions.ts'
 import {stayProviders} from './stays/definitions.ts'
 import {operatorProviders} from './operators/definitions.ts'
+import {regionalProviders} from './regional/definitions.ts'
 import {readProviderQuery} from './query.ts'
 import {createHash} from 'node:crypto'
+import {contextualProviderIds, describeMarkets, marketChecks, type MarketQueryCheck} from '../markets/index.ts'
+import {travelRestriction} from '../markets/policy.ts'
 
 export const providerRegistrations = {
-    ...existingProviders, ...aviationProviders, ...stayProviders, ...operatorProviders
+    ...existingProviders, ...aviationProviders, ...stayProviders, ...operatorProviders, ...regionalProviders
 } satisfies Record<string, ProviderRegistration>
 
 function safeUrl(value: string | null | undefined) {
@@ -60,6 +63,7 @@ export function createProviderRegistry(deps: ProviderDeps & {registrations?: Rec
     const last = new Map<string, NonNullable<ProviderAvailability['lastResult']>>()
     const cache = new Map<string, {until: number, result: ProviderSearch}>()
     const pending = new Map<string, Promise<ProviderSearch>>()
+    const marketProofs = new Map<string, MarketQueryCheck>()
 
     function availability(id: string): ProviderAvailability {
         const definition = registrations[id].definition
@@ -153,14 +157,24 @@ export function createProviderRegistry(deps: ProviderDeps & {registrations?: Rec
         const offers = results.flatMap(result => result.offers).sort((a, b) =>
             a.price.currency.localeCompare(b.price.currency) || a.price.basis.localeCompare(b.price.basis) ||
             (a.price.type ?? 'unknown').localeCompare(b.price.type ?? 'unknown') || a.price.amount - b.price.amount)
-        return {query, offers, results, groups: matchingOffers(offers), checkedAt: deps.now().toISOString()}
+        const result = {query, offers, results, groups: matchingOffers(offers), checkedAt: deps.now().toISOString()}
+        for (const check of marketChecks(query, result)) {
+            marketProofs.set([check.country, check.providerId, check.kind, check.scope].join(':'), check)
+        }
+        return result
     }
 
     async function search(input: ProviderQuery): Promise<ProviderSearch> {
         const query = readProviderQuery(input, deps.now().toISOString().slice(0, 10))
         if (query.providers?.some(id => !registrations[id])) throw new RangeError('Неизвестный источник.')
-        const selected = query.providers ?? Object.keys(registrations)
+        const selected = query.providers ?? contextualProviderIds(query, Object.keys(registrations))
         const ids = selected.filter(id => registrations[id].definition.kinds.includes(query.kind))
+        const restriction = travelRestriction(query)
+        if (restriction) {
+            return {query, offers: [], groups: [], checkedAt: deps.now().toISOString(), notices: [restriction],
+                results: ids.map(providerId => ({providerId, status: 'unsupported-query', offers: [], checkedAt: null,
+                    sourceUrl: restriction.evidence[0].url, description: restriction.description}))}
+        }
         const config = ids.map(id => {
             const source = availability(id)
             const fields = [...source.requiredEnv, ...(source.optionalEnv ?? [])]
@@ -187,5 +201,8 @@ export function createProviderRegistry(deps: ProviderDeps & {registrations?: Rec
             return result
         } finally {pending.delete(key)}
     }
-    return {list, search}
+    function markets(country?: string) {
+        return describeMarkets(list(), [...marketProofs.values()], country)
+    }
+    return {list, search, markets}
 }

@@ -92,7 +92,7 @@ function FlightResults({query, onDate, refresh}: {query: FlightQuery, onDate: (d
         const timer = setTimeout(() => setNow(Date.now()), Math.max(1, next - Date.now() + 20))
         return () => clearTimeout(timer)
     }, [data, now])
-    if (search.error) return <p role="status" className="directory-error">Не удалось получить ответ о рейсах.
+    if (search.error) return <p role="status" className="directory-error">{search.error}
         {' '}<button onClick={search.retry}>Повторить поиск</button></p>
     if (!data) return <p role="status" className="flight-loading">Запрашиваем цены на маршрут…</p>
     const offers = data.offers.filter(offer => Date.parse(offer.expiresAt) > Math.max(now, Date.now()))

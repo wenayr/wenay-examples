@@ -4,6 +4,7 @@ import {safeHref} from './DirectoryCard.tsx'
 import {providerQueryLink, providerStatusNames} from './provider-client.ts'
 import {providerSelectionId, readProviderSelections, toggleProviderSelection, type SavedProviderSelection} from './provider-saved.ts'
 import {dateLabel} from './presentation.ts'
+import {MarketNotices} from './MarketNotices.tsx'
 import './providers.css'
 
 export const priceBasisNames = {
@@ -16,7 +17,7 @@ export const priceTypeNames = {net: 'Закупочная цена для аге
 const updated = new Intl.DateTimeFormat('ru', {dateStyle: 'short', timeStyle: 'short'})
 export const providerTime = (value: string) => updated.format(new Date(value))
 export const providerMoney = (amount: number, currency: string) => new Intl.NumberFormat('ru', {
-    style: 'currency', currency, maximumFractionDigits: 2,
+    style: 'currency', currency,
 }).format(amount)
 
 function offerEnd(offer: ProviderOffer) {
@@ -156,6 +157,7 @@ export function ProviderResults({data, query, onRetry, names = {}}: {
     return <section className="provider-results" aria-label="Цены у поставщиков"><div className="provider-section-heading">
         <h2>{query.kind == 'deals' ? 'Предложения с подтверждённым основанием' : 'Предложения поставщиков'}</h2>
         <button type="button" onClick={onRetry}>Обновить цены</button></div>
+        <MarketNotices items={data.notices}/>
         <div className="provider-result-filters">
             <label>Источник<select value={provider} onChange={event => setProvider(event.target.value)}><option value="all">Все источники</option>
                 {[...providers].map(([id, name]) => <option key={id} value={id}>{name}</option>)}</select></label>

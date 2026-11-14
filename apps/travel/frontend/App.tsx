@@ -1,4 +1,4 @@
-import {useEffect, useRef, useState} from 'react'
+import {useEffect, useRef, useState, type MouseEvent} from 'react'
 import type {FlightQuery} from '../src/flight-contract.ts'
 import type {TravelChatQuery} from '../src/assistant-contract.ts'
 import type {createTravelSearch} from './state.ts'
@@ -18,18 +18,32 @@ import {ProviderMarketplace} from './ProviderMarketplace.tsx'
 import {ProviderDashboard} from './ProviderDashboard.tsx'
 import {AgencyGuides} from './AgencyGuides.tsx'
 import {SavedSupply} from './SavedSupply.tsx'
+import {Markets} from './Markets.tsx'
+import {marketContext} from './market-links.ts'
 import './directory.css'
 import './journey.css'
 
 const mainPages = ['catalog', 'packages', 'flights', 'deals'] as const satisfies (keyof typeof travelPages)[]
-const morePages = ['discover', 'prices', 'assistant'] as const satisfies (keyof typeof travelPages)[]
+const morePages = ['discover', 'markets', 'prices', 'assistant'] as const satisfies (keyof typeof travelPages)[]
 const agencyPages = ['providers', 'guides'] as const satisfies (keyof typeof travelPages)[]
+
+function refreshMarketsLink(event: MouseEvent<HTMLAnchorElement>) {
+    const current = travelRoute(window.location.hash)
+    const params = new URLSearchParams(current.query)
+    if (current.page == 'flights') params.set('kind', 'flights')
+    if (current.page == 'catalog') params.set('kind', 'hotels')
+    event.currentTarget.setAttribute('href', travelHash('markets', undefined, marketContext(params)))
+}
 
 function TopBar({page}: {page: TravelRoute['page']}) {
     const count = useTripCount()
     const more = useRef<HTMLDetailsElement>(null)
     function closeMore() {
         if (more.current) more.current.open = false
+    }
+    function openMore(event: MouseEvent<HTMLAnchorElement>) {
+        if (event.currentTarget.dataset.page == 'markets') refreshMarketsLink(event)
+        closeMore()
     }
     useEffect(closeMore, [page])
     return <header className="site-mast"><div className="mast-inner">
@@ -48,7 +62,8 @@ function TopBar({page}: {page: TravelRoute['page']}) {
             }}>
                 <summary data-current={[...morePages, ...agencyPages].some(key => key == page) || undefined}>Ещё</summary>
                 <div className="travel-more-links">{morePages.map(key =>
-                    <a key={key} href={travelHash(key)} onClick={closeMore} aria-current={page == key ? 'page' : undefined}>{travelPages[key]}</a>)}
+                    <a key={key} href={travelHash(key)} data-page={key} onClick={openMore} onAuxClick={openMore}
+                        aria-current={page == key ? 'page' : undefined}>{travelPages[key]}</a>)}
                     <span>Для агентства</span>{agencyPages.map(key =>
                         <a key={key} href={travelHash(key)} onClick={closeMore} aria-current={page == key ? 'page' : undefined}>{travelPages[key]}</a>)}
                 </div>
@@ -62,6 +77,7 @@ function TopBar({page}: {page: TravelRoute['page']}) {
 function Footer() {
     return <footer className="travel-footer"><strong>Wenay Travel</strong><span>Таллин, Эстония · EUR</span>
         <div className="footer-links"><a href="#demo">Демо туров</a>
+            <a href="#markets" onClick={refreshMarketsLink} onAuxClick={refreshMarketsLink}>Страны и поставщики</a>
             <a href="#providers">Источники и подключение</a><a href="#guides">Гиды агентства</a>
             <a href={import.meta.env.BASE_URL + 'hotel-photos/credits.html'}>Фотографии отелей</a>
             <a href={import.meta.env.BASE_URL + 'images/credits.html'}>Фотографии направлений</a></div></footer>
@@ -216,7 +232,8 @@ export function App({store}: {store: ReturnType<typeof createTravelSearch>}) {
         {route.page === 'flights' && <Flights key={location.visit} route={route}/>}
         {route.page === 'prices' && <ProviderMarketplace key={location.visit} route={route}/>}
         {route.page === 'deals' && <ProviderMarketplace key={location.visit} route={route} deals/>}
-        {route.page === 'providers' && <ProviderDashboard/>}
+        {route.page === 'markets' && <Markets key={location.visit} route={route}/>}
+        {route.page === 'providers' && <ProviderDashboard route={route}/>}
         {route.page === 'guides' && <AgencyGuides route={route}/>}
         {route.page === 'assistant' && <TravelAssistant key={location.visit} initialMessage={route.query.get('message') ?? ''}
             initialContext={assistantContext(route)} onApply={applySearch}/>}

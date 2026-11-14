@@ -13,6 +13,13 @@ export async function serveProviders({request, response, providers, url, today}:
     request: IncomingMessage, response: ServerResponse, providers?: ReturnType<typeof createProviderRegistry>, url: URL, today: string
 }) {
     if (!providers) return json(response, 503, {error: 'Поиск по источникам недоступен.'})
+    if (url.pathname == '/api/travel/markets' || url.pathname.startsWith('/api/travel/markets/')) {
+        if (request.method != 'GET') return json(response, 405, {error: 'Используйте GET.'})
+        const country = url.pathname.slice('/api/travel/markets/'.length)
+        try {return json(response, 200, providers.markets(country || undefined))} catch (error) {
+            return json(response, error instanceof RangeError ? 404 : 503, {error: 'Страна отсутствует в выбранных рынках.'})
+        }
+    }
     if (url.pathname == '/api/travel/providers') {
         if (request.method != 'GET') return json(response, 405, {error: 'Используйте GET.'})
         return json(response, 200, providers.list())

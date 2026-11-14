@@ -44,7 +44,8 @@ export function createSupplyMiddleware(deps: SupplyDeps) {
         if (url.pathname == '/api/travel/chat' || url.pathname == '/api/travel/mcp') {
             return serveAssistant({request, response, assistant: deps.assistant, mcp: url.pathname.endsWith('/mcp')})
         }
-        if (['/api/travel/providers', '/api/travel/provider-search', '/api/travel/deals'].includes(url.pathname)) {
+        const providerPath = ['/api/travel/providers', '/api/travel/provider-search', '/api/travel/deals', '/api/travel/markets'].includes(url.pathname)
+        if (providerPath || url.pathname.startsWith('/api/travel/markets/')) {
             return serveProviders({request, response, url, providers: deps.providers, today: deps.today?.() ?? new Date().toISOString().slice(0, 10)})
         }
         if (request.method != 'GET') {

@@ -52,7 +52,7 @@ function loadIndex() {
     }
     for (const [iata, name, city, region, country, regionCode, countryCode, service, keywords] of airports) {
         const row = rows.length
-        rows.push({iata, name, city, region, country})
+        rows.push({iata, name, city, region, country, countryCode})
         priority.push(service * 10 + (service >= 8 ? hubs.has(iata) ? 5 : texasCities.has(iata) ? 2 : 0 : 0))
         codes.set(iata, row)
         add(iata, row, 8)
@@ -68,6 +68,12 @@ function loadIndex() {
 }
 
 let index: ReturnType<typeof loadIndex> | undefined
+export function airportByCode(code: string) {
+    const {rows, codes} = index ??= loadIndex()
+    const row = codes.get(code.trim().toUpperCase())
+    return row === undefined ? undefined : rows[row]
+}
+
 export function findAirports(query: string, limit = 8): FlightAirport[] {
     const phrase = query.trim()
     if (!phrase || phrase.length > 120 || !Number.isFinite(limit) || limit < 1) return []

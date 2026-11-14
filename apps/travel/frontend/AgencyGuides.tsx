@@ -7,6 +7,7 @@ const guides = {
     agency: {title: 'Открыть агентство в Эстонии', load: () => import('../docs/AGENCY-ESTONIA.md?raw')},
     b2b: {title: 'Подключить отели и операторов', load: () => import('../docs/B2B-ONBOARDING.md?raw')},
     providers: {title: 'Настроить источники', load: () => import('../docs/PROVIDERS.md?raw')},
+    markets: {title: 'Работать с 20 странами Евразии', load: () => import('../docs/MARKETS-EURASIA.md?raw')},
     travel: {title: 'Планировать поездку', load: () => import('../GUIDE.md?raw')},
 } as const
 type tGuide = keyof typeof guides
@@ -14,7 +15,8 @@ type tGuide = keyof typeof guides
 function documentLink(value: string) {
     value = value.replace(/^docs\//, '')
     const local = {
-        'AGENCY-ESTONIA.md': 'agency', 'B2B-ONBOARDING.md': 'b2b', 'PROVIDERS.md': 'providers', '../GUIDE.md': 'travel',
+        'AGENCY-ESTONIA.md': 'agency', 'B2B-ONBOARDING.md': 'b2b', 'PROVIDERS.md': 'providers',
+        'MARKETS-EURASIA.md': 'markets', '../GUIDE.md': 'travel',
     } as const
     if (Object.hasOwn(local, value)) return travelHash('guides', undefined, {guide: local[value as keyof typeof local]})
     if (value == '../README.md' || value == '../PARTNERS.md') {

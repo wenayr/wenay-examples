@@ -1,3 +1,5 @@
+import type {MarketNotice} from './market-contract.ts'
+
 export const providerKinds = ['flights', 'hotels', 'packages', 'deals'] as const
 export type tProviderKind = typeof providerKinds[number]
 export type tProviderStatus = 'ready' | 'live' | 'cached' | 'sandbox' | 'requires-access' | 'unavailable' | 'unsupported-query' | 'handoff'
@@ -123,4 +125,5 @@ export interface ProviderSearch {
     results: ProviderResult[]
     groups: {key: string, offers: ProviderOffer[]}[]
     checkedAt: string
+    notices?: MarketNotice[]
 }

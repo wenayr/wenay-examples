@@ -4,4 +4,5 @@ export interface FlightAirport {
     city: string
     region: string
     country: string
+    countryCode?: string
 }

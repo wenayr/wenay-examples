@@ -5,7 +5,7 @@ import {safeHref} from './DirectoryCard.tsx'
 import {directoryUrl, useDirectoryQuery} from './directory-query.ts'
 import {providerKindNames, providerStatusNames} from './provider-client.ts'
 import {providerTime} from './ProviderResults.tsx'
-import {travelHash} from './navigation.ts'
+import {travelHash, type TravelRoute} from './navigation.ts'
 import './providers.css'
 import './agency.css'
 
@@ -55,11 +55,11 @@ function ProviderCard({item}: {item: ProviderAvailability}) {
     </article>
 }
 
-export function ProviderDashboard() {
+export function ProviderDashboard({route}: {route?: TravelRoute} = {}) {
     const providers = useDirectoryQuery<{
         items: ProviderAvailability[], summary: {total: number, public: number, configured: number, requiresAccess: number},
     }>(directoryUrl('providers'))
-    const [phrase, setPhrase] = useState('')
+    const [phrase, setPhrase] = useState(route?.query.get('search') ?? '')
     const [kind, setKind] = useState<tProviderKind | 'all'>('all')
     const [configured, setConfigured] = useState(false)
     const term = phrase.trim().toLocaleLowerCase('ru')
