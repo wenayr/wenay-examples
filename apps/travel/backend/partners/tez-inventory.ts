@@ -1,5 +1,6 @@
 import {createHash} from 'node:crypto'
 import {readFileSync} from 'node:fs'
+import type {PackageCoordinateSource} from '../../src/package-contract.ts'
 import type {SupplySource} from '../../src/supply-contract.ts'
 import {allowTezSearch} from './tez-access.ts'
 import {buildTezSearch} from './tez.ts'
@@ -23,6 +24,7 @@ export interface TezQuote {
     departure: string
     total: number
     url: string
+    coordinateSource?: PackageCoordinateSource
 }
 export interface TezObservation {
     quotes: readonly TezQuote[]
@@ -32,9 +34,21 @@ export interface TezObservation {
     complete: boolean
 }
 
-interface Location {destination: string, id: number, latitude: number, longitude: number}
-const manifest = JSON.parse(readFileSync(new URL('./tez-locations.json', import.meta.url), 'utf8')) as {locations: Location[]}
-const locations = new Map(manifest.locations.map(p => [p.destination + ':' + p.id, p]))
+interface Location {
+    destination: string
+    id: number
+    latitude: number
+    longitude: number
+    source: string
+    checkedOn?: string
+    precision?: PackageCoordinateSource['precision']
+    identitySources?: string[]
+    coordinateEvidenceUrl?: string
+}
+const manifest = JSON.parse(readFileSync(new URL('./tez-locations.json', import.meta.url), 'utf8')) as {checkedOn: string, locations: Location[]}
+const overrides = JSON.parse(readFileSync(new URL('./tez-location-overrides.json', import.meta.url), 'utf8')) as {locations: Location[]}
+// Curated identity checks survive a later supplier page refresh, including a known inaccurate supplier marker.
+const locations = new Map([...manifest.locations, ...overrides.locations].map(p => [p.destination + ':' + p.id, p]))
 const dayMs = 86_400_000
 const priceLimit = 150_000_000 // Same EUR ceiling as the existing TEZ package search, in cents.
 const source = {id: 'tez', name: 'TEZ TOUR Eesti', url: 'https://www.teztour.ee/page/xml-gate.et.html'}
@@ -102,8 +116,12 @@ function readQuote(row: unknown, request: Request): TezQuote | null {
     const geo = locations.get(request.input.destinationId + ':' + supplierHotel)
     // The agency-only URL distinguishes supplier reservations. Hash it server-side and expose only the public hotel page.
     const id = 'tez-offer:' + hash([hotelId, departure, nights, board, room, row[17], row[22], workstation?.[0]?.[0], total])
+    const evidence = [...(geo?.identitySources ?? [])]
+    if (geo?.coordinateEvidenceUrl) evidence.push(geo.coordinateEvidenceUrl)
+    const coordinateSource = geo ? {url: geo.source, checkedOn: geo.checkedOn ?? manifest.checkedOn,
+        precision: geo.precision ?? 'hotel-marker', evidence} satisfies PackageCoordinateSource : undefined
     return {id, hotelId, name: title.trim(), stars: rating ? Number(rating[1]) : null, latitude: geo?.latitude ?? null,
-        longitude: geo?.longitude ?? null, departure, total, url: 'https://www.tez-tour.com/hotel.html?id=' + supplierHotel}
+        longitude: geo?.longitude ?? null, coordinateSource, departure, total, url: 'https://www.tez-tour.com/hotel.html?id=' + supplierHotel}
 }
 
 function decode(payload: unknown, request: Request, checkedAt: string): TezObservation {
@@ -123,7 +141,8 @@ function decode(payload: unknown, request: Request, checkedAt: string): TezObser
     const more = observed.some(item => Array.isArray(item) && item[0] == 'More results' && String(item[1]) == 'true')
     const emptyDay = !payload.data.length && !more
     const complete = Boolean(request.hotelId) && (emptyDay || lastPage && offers.size == payload.data.length)
-    return {quotes, byFareId: offers, generation: hash([request.url, quotes, complete]), complete, source: {...source, status: 'live', updatedAt: checkedAt, description}}
+    return {quotes, byFareId: offers, generation: hash([request.url, quotes, complete]), complete,
+        source: {...source, status: 'live', updatedAt: checkedAt, description}}
 }
 
 function missing(message: string, handoff = false): TezObservation {
@@ -173,5 +192,6 @@ export function createTezInventory(deps: {fetch: typeof fetch, now: () => Date})
         inflight.set(request.url, work)
         return work
     }
-    return {window: (input: TezWindow) => read(input), day: (input: TezWindow, hotelId: string, date: string, forceFresh = false) => read(input, hotelId, date, forceFresh)}
+    return {window: (input: TezWindow) => read(input),
+        day: (input: TezWindow, hotelId: string, date: string, forceFresh = false) => read(input, hotelId, date, forceFresh)}
 }

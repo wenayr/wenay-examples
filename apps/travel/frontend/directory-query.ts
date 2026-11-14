@@ -87,7 +87,7 @@ export function useDirectoryEvents(destination: string, revision: string | undef
 }
 
 type DirectoryEndpoint = 'destinations' | 'catalog' | 'hotel' | 'options' | 'events' | 'packages'
-    | 'package-calendar' | 'package-compare' | 'package-recheck' | 'flights' | 'airports' | 'providers' | 'provider-search' | 'deals' | 'markets'
+    | 'package-calendar' | 'package-trends' | 'package-compare' | 'package-recheck' | 'flights' | 'airports' | 'providers' | 'provider-search' | 'deals' | 'markets'
 
 export function directoryUrl(path: DirectoryEndpoint, query: Record<string, string | number | undefined> = {}) {
     const params = new URLSearchParams()

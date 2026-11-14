@@ -75,7 +75,8 @@ export function createSupplyMiddleware(deps: SupplyDeps) {
             }
         }
         const routes = ['/api/travel/catalog', '/api/travel/hotel', '/api/travel/events', '/api/travel/options',
-            '/api/travel/packages', '/api/travel/package-calendar', '/api/travel/package-compare', '/api/travel/package-recheck']
+            '/api/travel/packages', '/api/travel/package-calendar', '/api/travel/package-compare', '/api/travel/package-recheck',
+            '/api/travel/package-trends']
         if (!routes.includes(url.pathname)) return json(response, 404, {error: 'Маршрут не найден.'})
         const id = params.get('destination') ?? deps.catalog.destinations[0]?.id
         const destination = deps.catalog.destinations.find(region => region.id == id)
@@ -90,6 +91,11 @@ export function createSupplyMiddleware(deps: SupplyDeps) {
                 const cancel = () => controller.abort()
                 response.once('close', cancel)
                 try {
+                    if (url.pathname == '/api/travel/package-trends') {
+                        const requested = params.get('hotelIds')
+                        const ids = requested ? requested.split(',').map(readHotelId) : undefined
+                        return json(response, 200, await deps.packages.trends(trip, filter, ids, controller.signal))
+                    }
                     if (url.pathname == '/api/travel/package-calendar') {
                         const chart = await deps.packages.calendar(trip, filter, readHotelId(params.get('hotelId')), controller.signal)
                         if (!chart) return json(response, 404, {error: 'Предложение для этого отеля больше не найдено в выбранном окне.'})

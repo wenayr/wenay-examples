@@ -339,14 +339,14 @@ function addHotel(map: L.Map, group: L.LayerGroup, hotel: MapHotel, dates: reado
     return {hotel, outline, marker, leader, dot, card}
 }
 
-interface CardBox {
+export interface CardBox {
     x: number
     y: number
     width: number
     height: number
 }
 
-function overlap(a: CardBox, b: CardBox) {
+export function overlap(a: CardBox, b: CardBox) {
     return Math.max(0, Math.min(a.x + a.width, b.x + b.width) - Math.max(a.x, b.x))
         * Math.max(0, Math.min(a.y + a.height, b.y + b.height) - Math.max(a.y, b.y))
 }

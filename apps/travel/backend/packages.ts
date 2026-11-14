@@ -6,6 +6,7 @@ import type {SupplySource} from '../src/supply-contract.ts'
 import {recheckFare} from './recheck.ts'
 import {createOfferIndex, matchesPackageHotel} from './package-index.ts'
 import {createTezInventory} from './partners/tez-inventory.ts'
+import {createPackageTrends} from './package-trends.ts'
 
 type Provider = ReturnType<typeof createTezInventory>
 type Trip = Parameters<Provider['window']>[0]
@@ -16,8 +17,8 @@ function prepare(observation: Observation) {
     const hotels = new Map<string, PackageHotel>()
     for (const quote of observation.quotes) {
         if (hotels.has(quote.hotelId)) continue
-        const {hotelId: id, name, latitude, longitude, stars, url} = quote
-        hotels.set(id, {id, name, latitude, longitude, stars, url})
+        const {hotelId: id, name, latitude, longitude, stars, url, coordinateSource} = quote
+        hotels.set(id, {id, name, latitude, longitude, stars, url, coordinateSource})
     }
     const index = createOfferIndex({hotels: [...hotels.values()], offers: observation.quotes})
     return {hotels, index}
@@ -42,6 +43,7 @@ function calendarSource(days: PackageDay[], original: SupplySource, anyLive: boo
 }
 
 export function createPackages(provider: Provider = createTezInventory({fetch, now: () => new Date()})) {
+    const dailyTrends = createPackageTrends({provider})
     // Price data is short-lived. Reuse the prepared geography and price buckets while a
     // supplier observation is current. Page and viewport changes reuse the same result.
     const prepared = new Map<string, ReturnType<typeof prepare>>()
@@ -72,7 +74,16 @@ export function createPackages(provider: Provider = createTezInventory({fetch, n
     }
     async function search(trip: Trip, filter: Filter): Promise<PackagePage> {
         const batch = await window(trip)
-        return {...batch.index.search(filter), source: batch.data.source, coverage: 'supplier-minima'}
+        const result = batch.index.search(filter)
+        const direction = filter.box ? batch.index.search({...filter, box: null, offset: 0, limit: 0}) : result
+        return {...result, source: batch.data.source, coverage: 'supplier-minima', direction: {total: direction.total, ...direction.geo}}
+    }
+    async function trends(trip: Trip, filter: Filter, hotelIds?: readonly string[], signal?: AbortSignal) {
+        signal?.throwIfAborted()
+        const batch = await window(trip)
+        signal?.throwIfAborted()
+        const ids = hotelIds ?? batch.index.search(filter).markers.map(marker => marker.hotelId)
+        return dailyTrends.read(trip, ids, signal)
     }
     async function dayQuote(trip: Trip, filter: Filter, hotelId: string, departure: string, signal?: AbortSignal) {
         signal?.throwIfAborted()
@@ -86,8 +97,10 @@ export function createPackages(provider: Provider = createTezInventory({fetch, n
         const blank = {departure, lowest: null, inBudget: null, highest: null}
         const price = accepted ? batch.index.calendar({...filter, firstDeparture: departure, lastDeparture: departure}, hotelId)[0] : blank
         const complete = Boolean(accepted && successful && data.complete)
-        const day: PackageDay = {...price, complete, checkedAt: successful ? data.source.updatedAt : null,
-            status: price.lowest ? 'quoted' : complete ? 'empty' : 'unknown'}
+        let dayStatus: PackageDay['status'] = 'unknown'
+        if (price.lowest) dayStatus = 'quoted'
+        else if (complete) dayStatus = 'empty'
+        const day: PackageDay = {...price, complete, checkedAt: successful ? data.source.updatedAt : null, status: dayStatus}
         let status: PackageComparisonItem['status'] = 'unknown'
         if (hotel && !accepted) status = 'filtered'
         else if (day.inBudget) status = 'in-budget'
@@ -131,5 +144,5 @@ export function createPackages(provider: Provider = createTezInventory({fetch, n
     function recheck(trip: Trip, filter: Filter, hotelId: string, departure: string, fareId: string) {
         return recheckFare(provider, trip, filter, hotelId, departure, fareId)
     }
-    return {search, calendar, compare, recheck}
+    return {search, calendar, compare, recheck, trends}
 }

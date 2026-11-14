@@ -13,7 +13,8 @@ const catalog = {destinations,
     list: () => ({destination: destinations[0], sources: [], items: [], total: 0, nextOffset: null})} satisfies AssistantDeps['catalog']
 const source = {id: 'fixture', name: 'Fixture', status: 'cached' as const, updatedAt: today(), description: 'Test'}
 const packages = {calendar: async () => null, search: async () => ({items: [], total: 0, markers: [], nextOffset: null,
-    markersTruncated: false, source, coverage: 'supplier-minima' as const})} satisfies AssistantDeps['packages']
+    markersTruncated: false, source, coverage: 'supplier-minima' as const,
+    geo: {mapped: 0, unresolved: 0, bounds: null}, direction: {total: 0, mapped: 0, unresolved: 0, bounds: null}})} satisfies AssistantDeps['packages']
 
 test('Параметры поездки переходят из уточнения в пакетный поиск; отдельный билет остаётся самостоятельным маршрутом', async t => {
     const app = createTravelAssistant({today, catalog, packages, model: null})

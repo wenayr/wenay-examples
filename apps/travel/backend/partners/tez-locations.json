@@ -1,96 +1,679 @@
 {
-  "checkedOn": "2026-11-13",
+  "checkedOn": "2026-11-14",
   "locations": [
     {
       "destination": "hurghada",
-      "id": 1061,
-      "latitude": 27.26083928002099,
-      "longitude": 33.821086618060235,
-      "source": "https://www.tez-tour.com/hotel.html?id=1061"
+      "id": 511,
+      "name": "DESERT ROSE 5 *",
+      "pageName": "DESERT ROSE  5 *",
+      "latitude": 27.09795864134609,
+      "longitude": 33.836343022936944,
+      "source": "https://www.tez-tour.com/hotel.html?id=511",
+      "checkedOn": "2026-11-14",
+      "precision": "hotel-marker"
+    },
+    {
+      "destination": "hurghada",
+      "id": 554,
+      "name": "PHARAOH AZUR RESORT 4 *",
+      "pageName": "PHARAOH AZUR RESORT  4 *",
+      "latitude": 27.088025034585552,
+      "longitude": 33.850590917224054,
+      "source": "https://www.tez-tour.com/hotel.html?id=554",
+      "checkedOn": "2026-11-14",
+      "precision": "hotel-marker"
+    },
+    {
+      "destination": "hurghada",
+      "id": 595,
+      "name": "BEACH ALBATROS RESORT HURGHADA 4 *",
+      "pageName": "BEACH ALBATROS RESORT HURGHADA  4 *",
+      "latitude": 27.122206312043595,
+      "longitude": 33.82647249376214,
+      "source": "https://www.tez-tour.com/hotel.html?id=595",
+      "checkedOn": "2026-11-14",
+      "precision": "hotel-marker"
+    },
+    {
+      "destination": "hurghada",
+      "id": 597,
+      "name": "JAZ ELITE CASA DEL MAR BEACH 5 *",
+      "pageName": "JAZ ELITE CASA DEL MAR BEACH  5 *",
+      "latitude": 27.1584486395076,
+      "longitude": 33.827566835040216,
+      "source": "https://www.tez-tour.com/hotel.html?id=597",
+      "checkedOn": "2026-11-14",
+      "precision": "hotel-marker"
+    },
+    {
+      "destination": "hurghada",
+      "id": 599,
+      "name": "SWISS INN RESORT HURGHADA 5 *",
+      "pageName": "SWISS INN RESORT HURGHADA  5 *",
+      "latitude": 27.158295904099784,
+      "longitude": 33.824090692156915,
+      "source": "https://www.tez-tour.com/hotel.html?id=599",
+      "checkedOn": "2026-11-14",
+      "precision": "hotel-marker"
+    },
+    {
+      "destination": "hurghada",
+      "id": 601,
+      "name": "LE PACHA 4 *",
+      "pageName": "LE PACHA  4 *",
+      "latitude": 27.21869122533001,
+      "longitude": 33.83993181859887,
+      "source": "https://www.tez-tour.com/hotel.html?id=601",
+      "checkedOn": "2026-11-14",
+      "precision": "hotel-marker"
+    },
+    {
+      "destination": "hurghada",
+      "id": 607,
+      "name": "SUNNY DAYS PALMA DE MIRETTE 4 *",
+      "pageName": "SUNNY DAYS PALMA DE MIRETTE  4 *",
+      "latitude": 27.245364113249476,
+      "longitude": 33.843043181056146,
+      "source": "https://www.tez-tour.com/hotel.html?id=607",
+      "checkedOn": "2026-11-14",
+      "precision": "hotel-marker"
     },
     {
       "destination": "hurghada",
       "id": 609,
+      "name": "DEXON ROMA HOTEL 3 *",
+      "pageName": "DEXON ROMA HOTEL  3 *",
       "latitude": 27.211764797350774,
       "longitude": 33.841491365081765,
-      "source": "https://www.tez-tour.com/hotel.html?id=609"
+      "source": "https://www.tez-tour.com/hotel.html?id=609",
+      "checkedOn": "2026-11-14",
+      "precision": "hotel-marker"
+    },
+    {
+      "destination": "hurghada",
+      "id": 611,
+      "name": "PICKALBATROS WHITE BEACH RESORT HURGHADA 5 *",
+      "pageName": "PICKALBATROS WHITE BEACH RESORT HURGHADA  5 *",
+      "latitude": 27.182635473091377,
+      "longitude": 33.82690164720452,
+      "source": "https://www.tez-tour.com/hotel.html?id=611",
+      "checkedOn": "2026-11-14",
+      "precision": "hotel-marker"
+    },
+    {
+      "destination": "hurghada",
+      "id": 986,
+      "name": "SEA GULL RESORT 4+ *",
+      "pageName": "SEA GULL RESORT  4+ *",
+      "latitude": 27.215628585754487,
+      "longitude": 33.840580913180474,
+      "source": "https://www.tez-tour.com/hotel.html?id=986",
+      "checkedOn": "2026-11-14",
+      "precision": "hotel-marker"
+    },
+    {
+      "destination": "hurghada",
+      "id": 992,
+      "name": "MOVENPICK HURGHADA (EX. MERCURE HURGHADA) 4 *",
+      "pageName": "MOVENPICK HURGHADA (EX. MERCURE HURGHADA)  4 *",
+      "latitude": 27.132442427644662,
+      "longitude": 33.829304906481866,
+      "source": "https://www.tez-tour.com/hotel.html?id=992",
+      "checkedOn": "2026-11-14",
+      "precision": "hotel-marker"
+    },
+    {
+      "destination": "hurghada",
+      "id": 1050,
+      "name": "SUNNY DAYS MIRETTE FAMILY AQUA PARK RESORT 3 *",
+      "pageName": "SUNNY DAYS MIRETTE FAMILY AQUA PARK RESORT  3 *",
+      "latitude": 27.244667799358368,
+      "longitude": 33.84095105802453,
+      "source": "https://www.tez-tour.com/hotel.html?id=1050",
+      "checkedOn": "2026-11-14",
+      "precision": "hotel-marker"
+    },
+    {
+      "destination": "hurghada",
+      "id": 1061,
+      "name": "SAND BEACH 3 *",
+      "pageName": "SAND BEACH  3 *",
+      "latitude": 27.26083928002099,
+      "longitude": 33.821086618060235,
+      "source": "https://www.tez-tour.com/hotel.html?id=1061",
+      "checkedOn": "2026-11-14",
+      "precision": "hotel-marker"
+    },
+    {
+      "destination": "hurghada",
+      "id": 9946,
+      "name": "SINDBAD CLUB 4 *",
+      "pageName": "SINDBAD CLUB  4 *",
+      "latitude": 27.1901214,
+      "longitude": 33.8307472,
+      "source": "https://www.tez-tour.com/hotel.html?id=9946",
+      "checkedOn": "2026-11-14",
+      "precision": "hotel-marker"
+    },
+    {
+      "destination": "hurghada",
+      "id": 16279,
+      "name": "MINAMARK RESORT & SPA 4 *",
+      "pageName": "MINAMARK RESORT & SPA  4 *",
+      "latitude": 27.218023367180415,
+      "longitude": 33.83911642705834,
+      "source": "https://www.tez-tour.com/hotel.html?id=16279",
+      "checkedOn": "2026-11-14",
+      "precision": "hotel-marker"
+    },
+    {
+      "destination": "hurghada",
+      "id": 23638,
+      "name": "SUNRISE GARDEN BEACH RESORT SELECT 5 *",
+      "pageName": "SUNRISE GARDEN BEACH RESORT SELECT  5 *",
+      "latitude": 27.100212683300793,
+      "longitude": 33.830549451464776,
+      "source": "https://www.tez-tour.com/hotel.html?id=23638",
+      "checkedOn": "2026-11-14",
+      "precision": "hotel-marker"
+    },
+    {
+      "destination": "hurghada",
+      "id": 23882,
+      "name": "BEL AIR AZUR BEACH RESORT 3 *",
+      "pageName": "BEL AIR AZUR BEACH RESORT  3 *",
+      "latitude": 27.24180618967421,
+      "longitude": 33.84389075910485,
+      "source": "https://www.tez-tour.com/hotel.html?id=23882",
+      "checkedOn": "2026-11-14",
+      "precision": "hotel-marker"
+    },
+    {
+      "destination": "hurghada",
+      "id": 24001,
+      "name": "ARABIA AZUR 3 *",
+      "pageName": "ARABIA AZUR  3 *",
+      "latitude": 27.24176803438129,
+      "longitude": 33.8457361189071,
+      "source": "https://www.tez-tour.com/hotel.html?id=24001",
+      "checkedOn": "2026-11-14",
+      "precision": "hotel-marker"
+    },
+    {
+      "destination": "hurghada",
+      "id": 40110,
+      "name": "TITANIC RESORT & AQUA PARK 4 *",
+      "pageName": "TITANIC RESORT & AQUA PARK  4 *",
+      "latitude": 27.104443664943357,
+      "longitude": 33.82303926622308,
+      "source": "https://www.tez-tour.com/hotel.html?id=40110",
+      "checkedOn": "2026-11-14",
+      "precision": "hotel-marker"
+    },
+    {
+      "destination": "hurghada",
+      "id": 41235,
+      "name": "PICKALBATROS DANA BEACH RESORT 5 *",
+      "pageName": "PICKALBATROS DANA BEACH RESORT  5 *",
+      "latitude": 27.099028361829333,
+      "longitude": 33.83346769487298,
+      "source": "https://www.tez-tour.com/hotel.html?id=41235",
+      "checkedOn": "2026-11-14",
+      "precision": "hotel-marker"
+    },
+    {
+      "destination": "hurghada",
+      "id": 41290,
+      "name": "PICKALBATROS ALF LEILA WA LEILA BY NEVERLAND HURGHADA 4 *",
+      "pageName": "PICKALBATROS ALF LEILA WA LEILA BY NEVERLAND HURGHADA  4 *",
+      "latitude": 27.092036789526393,
+      "longitude": 33.82321092760003,
+      "source": "https://www.tez-tour.com/hotel.html?id=41290",
+      "checkedOn": "2026-11-14",
+      "precision": "hotel-marker"
+    },
+    {
+      "destination": "hurghada",
+      "id": 41299,
+      "name": "PICKALBATROS AQUA PARK RESORT HURGHADA 4 *",
+      "pageName": "PICKALBATROS AQUA PARK RESORT HURGHADA  4 *",
+      "latitude": 27.12205352710294,
+      "longitude": 33.82218095933831,
+      "source": "https://www.tez-tour.com/hotel.html?id=41299",
+      "checkedOn": "2026-11-14",
+      "precision": "hotel-marker"
+    },
+    {
+      "destination": "hurghada",
+      "id": 41845,
+      "name": "SUNNY DAYS EL PALACIO RESORT & SPA 4 *",
+      "pageName": "SUNNY DAYS EL PALACIO RESORT & SPA  4 *",
+      "latitude": 27.246069961239588,
+      "longitude": 33.845060202235345,
+      "source": "https://www.tez-tour.com/hotel.html?id=41845",
+      "checkedOn": "2026-11-14",
+      "precision": "hotel-marker"
+    },
+    {
+      "destination": "hurghada",
+      "id": 48502,
+      "name": "SUNRISE HOLIDAYS 5 *",
+      "pageName": "SUNRISE HOLIDAYS  5 *",
+      "latitude": 27.208973494586836,
+      "longitude": 33.84619209443963,
+      "source": "https://www.tez-tour.com/hotel.html?id=48502",
+      "checkedOn": "2026-11-14",
+      "precision": "hotel-marker"
+    },
+    {
+      "destination": "hurghada",
+      "id": 58043,
+      "name": "SUNRISE ALMA BAY RESORT 4 *",
+      "pageName": "SUNRISE ALMA BAY RESORT  4 *",
+      "latitude": 27.1165149321161,
+      "longitude": 33.826343747729425,
+      "source": "https://www.tez-tour.com/hotel.html?id=58043",
+      "checkedOn": "2026-11-14",
+      "precision": "hotel-marker"
+    },
+    {
+      "destination": "hurghada",
+      "id": 70398,
+      "name": "STEIGENBERGER AL DAU BEACH 5 *",
+      "pageName": "STEIGENBERGER AL DAU BEACH  5 *",
+      "latitude": 27.164557884535075,
+      "longitude": 33.82567855989373,
+      "source": "https://www.tez-tour.com/hotel.html?id=70398",
+      "checkedOn": "2026-11-14",
+      "precision": "hotel-marker"
+    },
+    {
+      "destination": "hurghada",
+      "id": 71086,
+      "name": "SUNRISE GRAND SELECT CRYSTAL BAY 5 *",
+      "pageName": "SUNRISE GRAND SELECT CRYSTAL BAY  5 *",
+      "latitude": 27.102495332085468,
+      "longitude": 33.828575345629815,
+      "source": "https://www.tez-tour.com/hotel.html?id=71086",
+      "checkedOn": "2026-11-14",
+      "precision": "hotel-marker"
+    },
+    {
+      "destination": "hurghada",
+      "id": 71438,
+      "name": "BELLAGIO BEACH RESORT & SPA 5 *",
+      "pageName": "BELLAGIO BEACH RESORT & SPA  5 *",
+      "latitude": 27.30925381175005,
+      "longitude": 33.72157666360772,
+      "source": "https://www.tez-tour.com/hotel.html?id=71438",
+      "checkedOn": "2026-11-14",
+      "precision": "hotel-marker"
+    },
+    {
+      "destination": "hurghada",
+      "id": 71798,
+      "name": "ARABELLA  AZUR 3 *",
+      "pageName": "ARABELLA  AZUR  3 *",
+      "latitude": 27.240308584607558,
+      "longitude": 33.84795698797143,
+      "source": "https://www.tez-tour.com/hotel.html?id=71798",
+      "checkedOn": "2026-11-14",
+      "precision": "hotel-marker"
     },
     {
       "destination": "hurghada",
       "id": 73557,
+      "name": "NEW EAGLES DOWNTOWN ZAHABIA RESORT & AQUA PARK 3 *",
+      "pageName": "NEW EAGLES DOWNTOWN ZAHABIA RESORT & AQUA PARK  3 *",
       "latitude": 27.243637628349457,
       "longitude": 33.841337296122674,
-      "source": "https://www.tez-tour.com/hotel.html?id=73557"
+      "source": "https://www.tez-tour.com/hotel.html?id=73557",
+      "checkedOn": "2026-11-14",
+      "precision": "hotel-marker"
     },
     {
-      "destination": "sharm",
-      "id": 125158,
-      "latitude": 27.92128520688138,
-      "longitude": 34.32220398178106,
-      "source": "https://www.tez-tour.com/hotel.html?id=125158"
+      "destination": "hurghada",
+      "id": 75139,
+      "name": "GIFTUN AZUR 3 *",
+      "pageName": "GIFTUN AZUR  3 *",
+      "latitude": 27.184391534719072,
+      "longitude": 33.827888700122,
+      "source": "https://www.tez-tour.com/hotel.html?id=75139",
+      "checkedOn": "2026-11-14",
+      "precision": "hotel-marker"
     },
     {
-      "destination": "sharm",
-      "id": 156182,
-      "latitude": 28.028468731177572,
-      "longitude": 34.43427740325933,
-      "source": "https://www.tez-tour.com/hotel.html?id=156182"
+      "destination": "hurghada",
+      "id": 110008,
+      "name": "PICKALBATROS PALACE RESORT HURGHADA 5 *",
+      "pageName": "PICKALBATROS PALACE RESORT HURGHADA  5 *",
+      "latitude": 27.120487469429346,
+      "longitude": 33.826343747729425,
+      "source": "https://www.tez-tour.com/hotel.html?id=110008",
+      "checkedOn": "2026-11-14",
+      "precision": "hotel-marker"
     },
     {
-      "destination": "sharm",
-      "id": 155459,
-      "latitude": 27.90948207370435,
-      "longitude": 34.31889950027471,
-      "source": "https://www.tez-tour.com/hotel.html?id=155459"
+      "destination": "hurghada",
+      "id": 110011,
+      "name": "PICKALBATROS AQUA VISTA RESORT HURGHADA 4 *",
+      "pageName": "PICKALBATROS AQUA VISTA RESORT HURGHADA  4 *",
+      "latitude": 27.12549113779099,
+      "longitude": 33.82179472124017,
+      "source": "https://www.tez-tour.com/hotel.html?id=110011",
+      "checkedOn": "2026-11-14",
+      "precision": "hotel-marker"
     },
     {
-      "destination": "sharm",
-      "id": 108275,
-      "latitude": 27.86984446365143,
-      "longitude": 34.3136209129334,
-      "source": "https://www.tez-tour.com/hotel.html?id=108275"
+      "destination": "hurghada",
+      "id": 135904,
+      "name": "PICKALBATROS JUNGLE AQUA PARK BY NEVERLAND 4 *",
+      "pageName": "PICKALBATROS JUNGLE AQUA PARK BY NEVERLAND  4 *",
+      "latitude": 27.08909484995174,
+      "longitude": 33.82398340379632,
+      "source": "https://www.tez-tour.com/hotel.html?id=135904",
+      "checkedOn": "2026-11-14",
+      "precision": "hotel-marker"
     },
     {
-      "destination": "sharm",
-      "id": 105791,
-      "latitude": 27.86153579538193,
-      "longitude": 34.288601267242484,
-      "source": "https://www.tez-tour.com/hotel.html?id=105791"
+      "destination": "hurghada",
+      "id": 160185,
+      "name": "AMC ROYAL HOTEL & SPA 5 *",
+      "pageName": "AMC ROYAL HOTEL & SPA  5 *",
+      "latitude": 27.30520696514202,
+      "longitude": 33.72879717027581,
+      "source": "https://www.tez-tour.com/hotel.html?id=160185",
+      "checkedOn": "2026-11-14",
+      "precision": "hotel-marker"
     },
     {
-      "destination": "rhodes",
-      "id": 3015538,
-      "latitude": 36.4130186,
-      "longitude": 28.123917699999993,
-      "source": "https://www.tez-tour.com/hotel.html?id=3015538"
+      "destination": "hurghada",
+      "id": 160627,
+      "name": "TITANIC PALACE RESORT & SPA 5 *",
+      "pageName": "TITANIC PALACE RESORT & SPA  5 *",
+      "latitude": 27.091492345496775,
+      "longitude": 33.84934637224114,
+      "source": "https://www.tez-tour.com/hotel.html?id=160627",
+      "checkedOn": "2026-11-14",
+      "precision": "hotel-marker"
     },
     {
-      "destination": "rhodes",
-      "id": 310359,
-      "latitude": 36.44912010516764,
-      "longitude": 28.216686269905836,
-      "source": "https://www.tez-tour.com/hotel.html?id=310359"
+      "destination": "hurghada",
+      "id": 210779,
+      "name": "THE THREE CORNERS SUNNY BEACH 4 *",
+      "pageName": "THE THREE CORNERS SUNNY BEACH  4 *",
+      "latitude": 27.3162179,
+      "longitude": 33.7071656,
+      "source": "https://www.tez-tour.com/hotel.html?id=210779",
+      "checkedOn": "2026-11-14",
+      "precision": "hotel-marker"
     },
     {
-      "destination": "rhodes",
-      "id": 10599996,
-      "latitude": 36.4529229,
-      "longitude": 28.2216782,
-      "source": "https://www.tez-tour.com/hotel.html?id=10599996"
+      "destination": "hurghada",
+      "id": 314498,
+      "name": "PICKALBATROS AQUA BLU RESORT HRG 4 *",
+      "pageName": "PICKALBATROS AQUA BLU RESORT HRG  4 *",
+      "latitude": 27.123930539945604,
+      "longitude": 33.8224641857056,
+      "source": "https://www.tez-tour.com/hotel.html?id=314498",
+      "checkedOn": "2026-11-14",
+      "precision": "hotel-marker"
+    },
+    {
+      "destination": "hurghada",
+      "id": 385428,
+      "name": "JAZ AQUAMARINE RESORT HURGHADA 5 *",
+      "pageName": "JAZ AQUAMARINE RESORT HURGHADA  5 *",
+      "latitude": 27.09222950799054,
+      "longitude": 33.8469528328186,
+      "source": "https://www.tez-tour.com/hotel.html?id=385428",
+      "checkedOn": "2026-11-14",
+      "precision": "hotel-marker"
+    },
+    {
+      "destination": "hurghada",
+      "id": 402558,
+      "name": "ELYSEES DREAM BEACH HOTEL 4 *",
+      "pageName": "ELYSEES DREAM BEACH HOTEL  4 *",
+      "latitude": 27.196953839498683,
+      "longitude": 33.84238773065499,
+      "source": "https://www.tez-tour.com/hotel.html?id=402558",
+      "checkedOn": "2026-11-14",
+      "precision": "hotel-marker"
+    },
+    {
+      "destination": "hurghada",
+      "id": 428163,
+      "name": "TITANIC ROYAL 5 *",
+      "pageName": "TITANIC ROYAL  5 *",
+      "latitude": 27.109365693574127,
+      "longitude": 33.82653836238704,
+      "source": "https://www.tez-tour.com/hotel.html?id=428163",
+      "checkedOn": "2026-11-14",
+      "precision": "hotel-marker"
+    },
+    {
+      "destination": "hurghada",
+      "id": 443294,
+      "name": "STEIGENBERGER AQUA MAGIC HOTEL 5 *",
+      "pageName": "STEIGENBERGER AQUA MAGIC HOTEL  5 *",
+      "latitude": 27.162313,
+      "longitude": 33.822763,
+      "source": "https://www.tez-tour.com/hotel.html?id=443294",
+      "checkedOn": "2026-11-14",
+      "precision": "hotel-marker"
+    },
+    {
+      "destination": "hurghada",
+      "id": 553107,
+      "name": "MERAKI RESORT 4 *",
+      "pageName": "MERAKI RESORT  4 *",
+      "latitude": 27.2603047,
+      "longitude": 33.8158616,
+      "source": "https://www.tez-tour.com/hotel.html?id=553107",
+      "checkedOn": "2026-11-14",
+      "precision": "hotel-marker"
+    },
+    {
+      "destination": "hurghada",
+      "id": 612636,
+      "name": "PICKALBATROS WATER VALLEY RESORT BY NEVERLAND 5 *",
+      "pageName": "PICKALBATROS WATER VALLEY RESORT BY NEVERLAND  5 *",
+      "latitude": 27.08711905859602,
+      "longitude": 33.820925787805194,
+      "source": "https://www.tez-tour.com/hotel.html?id=612636",
+      "checkedOn": "2026-11-14",
+      "precision": "hotel-marker"
+    },
+    {
+      "destination": "hurghada",
+      "id": 614816,
+      "name": "PICKALBATROS BLU SPA RESORT HURGHADA 5 *",
+      "pageName": "PICKALBATROS BLU SPA RESORT HURGHADA  5 *",
+      "latitude": 27.18418373347503,
+      "longitude": 33.82624995899963,
+      "source": "https://www.tez-tour.com/hotel.html?id=614816",
+      "checkedOn": "2026-11-14",
+      "precision": "hotel-marker"
+    },
+    {
+      "destination": "hurghada",
+      "id": 638085,
+      "name": "STEIGENBERGER PURE LIFESTYLE 5 *",
+      "pageName": "STEIGENBERGER PURE LIFESTYLE  5 *",
+      "latitude": 27.1624758,
+      "longitude": 33.8248641,
+      "source": "https://www.tez-tour.com/hotel.html?id=638085",
+      "checkedOn": "2026-11-14",
+      "precision": "hotel-marker"
+    },
+    {
+      "destination": "hurghada",
+      "id": 833986,
+      "name": "SERRY BEACH RESORT 5 *",
+      "pageName": "SERRY BEACH RESORT  5 *",
+      "latitude": 27.187289858359556,
+      "longitude": 33.83237448311158,
+      "source": "https://www.tez-tour.com/hotel.html?id=833986",
+      "checkedOn": "2026-11-14",
+      "precision": "hotel-marker"
+    },
+    {
+      "destination": "hurghada",
+      "id": 3009257,
+      "name": "JAZ CASA DEL MAR RESORT (EX. IBEROTEL CASA DEL MAR RESORT) 4 *",
+      "pageName": "JAZ CASA DEL MAR RESORT (EX. IBEROTEL CASA DEL MAR RESORT)  4 *",
+      "latitude": 27.157303118857644,
+      "longitude": 33.82439109956658,
+      "source": "https://www.tez-tour.com/hotel.html?id=3009257",
+      "checkedOn": "2026-11-14",
+      "precision": "hotel-marker"
+    },
+    {
+      "destination": "hurghada",
+      "id": 3016724,
+      "name": "REGINA RESORT & AQUAPARK 4 *",
+      "pageName": "REGINA RESORT & AQUAPARK  4 *",
+      "latitude": 27.219883819209546,
+      "longitude": 33.83995327627099,
+      "source": "https://www.tez-tour.com/hotel.html?id=3016724",
+      "checkedOn": "2026-11-14",
+      "precision": "hotel-marker"
+    },
+    {
+      "destination": "hurghada",
+      "id": 9001159,
+      "name": "SENTIDO MAMLOUK PALACE 5 *",
+      "pageName": "SENTIDO MAMLOUK PALACE  5 *",
+      "latitude": 27.100909898953986,
+      "longitude": 33.829347821826104,
+      "source": "https://www.tez-tour.com/hotel.html?id=9001159",
+      "checkedOn": "2026-11-14",
+      "precision": "hotel-marker"
+    },
+    {
+      "destination": "hurghada",
+      "id": 9001173,
+      "name": "TITANIC BEACH RESORT SPA & AQUA PARK 5 *",
+      "pageName": "TITANIC BEACH RESORT SPA & AQUA PARK  5 *",
+      "latitude": 27.09130131187674,
+      "longitude": 33.84973261033929,
+      "source": "https://www.tez-tour.com/hotel.html?id=9001173",
+      "checkedOn": "2026-11-14",
+      "precision": "hotel-marker"
+    },
+    {
+      "destination": "hurghada",
+      "id": 10590717,
+      "name": "SUNRISE ALORA AQUA PARK RESORT 4 *",
+      "pageName": "SUNRISE ALORA AQUA PARK RESORT  4 *",
+      "latitude": 27.3061089,
+      "longitude": 33.7238841,
+      "source": "https://www.tez-tour.com/hotel.html?id=10590717",
+      "checkedOn": "2026-11-14",
+      "precision": "hotel-marker"
+    },
+    {
+      "destination": "hurghada",
+      "id": 10603964,
+      "name": "NEW EAGLES AQUA PARK 4 *",
+      "pageName": "NEW EAGLES AQUA PARK  4 *",
+      "latitude": 27.1277398,
+      "longitude": 33.8271404,
+      "source": "https://www.tez-tour.com/hotel.html?id=10603964",
+      "checkedOn": "2026-11-14",
+      "precision": "hotel-marker"
+    },
+    {
+      "destination": "hurghada",
+      "id": 10622029,
+      "name": "TITANIC PEARL 5 *",
+      "pageName": "TITANIC PEARL  5 *",
+      "latitude": 27.151166,
+      "longitude": 33.8291693,
+      "source": "https://www.tez-tour.com/hotel.html?id=10622029",
+      "checkedOn": "2026-11-14",
+      "precision": "hotel-marker"
     },
     {
       "destination": "rhodes",
       "id": 131753,
       "latitude": 36.4500532,
       "longitude": 28.2200595,
-      "source": "https://www.tez-tour.com/hotel.html?id=131753"
+      "source": "https://www.tez-tour.com/hotel.html?id=131753",
+      "checkedOn": "2026-11-13"
+    },
+    {
+      "destination": "rhodes",
+      "id": 310359,
+      "latitude": 36.44912010516764,
+      "longitude": 28.216686269905836,
+      "source": "https://www.tez-tour.com/hotel.html?id=310359",
+      "checkedOn": "2026-11-13"
+    },
+    {
+      "destination": "rhodes",
+      "id": 3015538,
+      "latitude": 36.4130186,
+      "longitude": 28.123917699999993,
+      "source": "https://www.tez-tour.com/hotel.html?id=3015538",
+      "checkedOn": "2026-11-13"
     },
     {
       "destination": "rhodes",
       "id": 7003347,
       "latitude": 36.42004283333066,
       "longitude": 28.132031237434376,
-      "source": "https://www.tez-tour.com/hotel.html?id=7003347"
+      "source": "https://www.tez-tour.com/hotel.html?id=7003347",
+      "checkedOn": "2026-11-13"
+    },
+    {
+      "destination": "rhodes",
+      "id": 10599996,
+      "latitude": 36.4529229,
+      "longitude": 28.2216782,
+      "source": "https://www.tez-tour.com/hotel.html?id=10599996",
+      "checkedOn": "2026-11-13"
+    },
+    {
+      "destination": "sharm",
+      "id": 105791,
+      "latitude": 27.86153579538193,
+      "longitude": 34.288601267242484,
+      "source": "https://www.tez-tour.com/hotel.html?id=105791",
+      "checkedOn": "2026-11-13"
+    },
+    {
+      "destination": "sharm",
+      "id": 108275,
+      "latitude": 27.86984446365143,
+      "longitude": 34.3136209129334,
+      "source": "https://www.tez-tour.com/hotel.html?id=108275",
+      "checkedOn": "2026-11-13"
+    },
+    {
+      "destination": "sharm",
+      "id": 125158,
+      "latitude": 27.92128520688138,
+      "longitude": 34.32220398178106,
+      "source": "https://www.tez-tour.com/hotel.html?id=125158",
+      "checkedOn": "2026-11-13"
+    },
+    {
+      "destination": "sharm",
+      "id": 155459,
+      "latitude": 27.90948207370435,
+      "longitude": 34.31889950027471,
+      "source": "https://www.tez-tour.com/hotel.html?id=155459",
+      "checkedOn": "2026-11-13"
+    },
+    {
+      "destination": "sharm",
+      "id": 156182,
+      "latitude": 28.028468731177572,
+      "longitude": 34.43427740325933,
+      "source": "https://www.tez-tour.com/hotel.html?id=156182",
+      "checkedOn": "2026-11-13"
     }
   ]
 }

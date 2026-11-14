@@ -4,6 +4,19 @@ export const packageDestinations = ['hurghada', 'sharm', 'rhodes'] as const
 export const packageWindowDays = 20
 export const packageMaxTotal = 150_000_000
 
+export const packageCoordinatePrecisions = {
+    'hotel-marker': 'Метка отеля в источнике',
+    'hotel-complex': 'Территория гостиничного комплекса',
+    'supplier-map-marker': 'Метка на карте продавца'
+} as const
+
+export interface PackageCoordinateSource {
+    url: string
+    checkedOn: string
+    precision: keyof typeof packageCoordinatePrecisions
+    evidence?: readonly string[]
+}
+
 export interface PackageHotel {
     id: string
     name: string
@@ -11,6 +24,7 @@ export interface PackageHotel {
     latitude: number | null
     longitude: number | null
     url: string
+    coordinateSource?: PackageCoordinateSource
 }
 
 export interface PackageFare {
@@ -26,7 +40,7 @@ export interface PackageSummary extends Omit<PackageHotel, 'id'> {
     best: PackageFare
 }
 
-export interface PackageMarker extends Pick<PackageSummary, 'hotelId' | 'name' | 'stars' | 'minTotal' | 'maxTotal'> {
+export interface PackageMarker extends Pick<PackageSummary, 'hotelId' | 'name' | 'stars' | 'minTotal' | 'maxTotal' | 'coordinateSource'> {
     latitude: number
     longitude: number
 }
@@ -37,11 +51,17 @@ export interface PackageSearchResults {
     markersTruncated: boolean
     total: number
     nextOffset: number | null
+    geo: {
+        mapped: number
+        unresolved: number
+        bounds: readonly [number, number, number, number] | null
+    }
 }
 
 export interface PackagePage extends PackageSearchResults {
     source: SupplySource
     coverage: 'supplier-minima'
+    direction: PackageSearchResults['geo'] & {total: number}
 }
 
 export interface PackageDayPrices {

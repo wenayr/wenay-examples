@@ -1,0 +1,159 @@
+{
+  "checkedOn": "2026-11-14",
+  "description": "Проверенные привязки и исправления применяются после данных официального сборщика. Причины и исходные координаты сохранены у записей.",
+  "locations": [
+    {
+      "destination": "hurghada",
+      "id": 10234721,
+      "name": "SUNRISE GRAND SELECT CRYSTAL BAY - POSH CLUB 5 *",
+      "latitude": 27.10197,
+      "longitude": 33.82672,
+      "source": "https://www.tripadvisor.com/Hotel_Review-g27118717-d33857605-Reviews-SUNRISE_Crystal_Bay_Resort_Posh_Club-Hurghada_1_Hurghada_Red_Sea_and_Sinai.html",
+      "coordinateSource": "Xotelo property geo",
+      "sourcePropertyId": "g297549-d33857605",
+      "coordinateEvidenceUrl": "https://data.xotelo.com/api/list?location_key=g297549&limit=100&offset=300&sort=best_value",
+      "identitySources": [
+        "https://www.tez-tour.com/hotel.html?id=10234721",
+        "https://www.sunrise-resorts.com/crystal-bay-resort/posh-club",
+        "https://www.sunrise-resorts.com/crystal-bay-resort"
+      ],
+      "matchingExplanation": "Exact current property name in regional Xotelo/Tripadvisor listing, corroborated by the supplier/owner identity.",
+      "checkedOn": "2026-11-14",
+      "precision": "hotel-complex"
+    },
+    {
+      "destination": "hurghada",
+      "id": 10590925,
+      "name": "SUNRISE SOLARA AQUA PARK RESORT 4 *",
+      "latitude": 27.3059721,
+      "longitude": 33.7247934,
+      "source": "https://www.openstreetmap.org/way/1137601652",
+      "coordinateSource": "OpenStreetMap property geometry center",
+      "sourcePropertyId": "way:1137601652",
+      "identitySources": [
+        "https://www.tez-tour.com/hotel.html?id=10590925",
+        "https://www.sunrise-resorts.com/solara-aqua-park-resort",
+        "https://www.zajezdy.cz/dovolena-sunrise-solara-aquapark-resort-hurghada-egypt-z3176720/",
+        "https://d1wo7kaelp5eck.cloudfront.net/sunrise-resorts.com-1611976553/cms/pressroom/111_so_factsheet_aug_2026_1.pdf"
+      ],
+      "matchingExplanation": "Exact distinctive current property name in TEZ, owner website and regional OSM property; no fuzzy match. OSM website tag still points at neighbouring Alora. Owner Solara factsheet Aug2026 explicitly names neighbouring SUNRISE Alora and shared facilities/beach; independent operator GPS27.3059057854,33.7246526358 is16m from the OSM marker. This is a property marker, not a verified entrance/boundary.",
+      "checkedOn": "2026-11-14",
+      "precision": "hotel-marker"
+    },
+    {
+      "destination": "hurghada",
+      "id": 10591134,
+      "name": "EMPIRE HOTEL AQUA PARK 3 *",
+      "latitude": 27.258974,
+      "longitude": 33.81854,
+      "source": "https://www.tripadvisor.com/Hotel_Review-g297549-d631182-Reviews-Empire_Hotel_Aqua_Park-Hurghada_Red_Sea_and_Sinai.html",
+      "coordinateSource": "Xotelo property geo",
+      "sourcePropertyId": "g297549-d631182",
+      "coordinateEvidenceUrl": "https://data.xotelo.com/api/list?location_key=g297549&limit=100&offset=0&sort=best_value",
+      "identitySources": [
+        "https://www.tez-tour.com/hotel.html?id=10591134",
+        "https://royalstarhotels.net/",
+        "https://www.openstreetmap.org/way/100147976"
+      ],
+      "matchingExplanation": "Exact current property name in regional Xotelo/Tripadvisor listing, corroborated by the supplier/owner identity.",
+      "checkedOn": "2026-11-14",
+      "precision": "hotel-marker"
+    },
+    {
+      "destination": "hurghada",
+      "id": 10591207,
+      "name": "ROYAL STAR BEACH RESORT 4 *",
+      "latitude": 27.2615,
+      "longitude": 33.8196,
+      "source": "https://www.tripadvisor.com/Hotel_Review-g297549-d6164318-Reviews-Royal_Star_Beach_Resort-Hurghada_Red_Sea_and_Sinai.html",
+      "coordinateSource": "Xotelo property geo",
+      "sourcePropertyId": "g297549-d6164318",
+      "coordinateEvidenceUrl": "https://data.xotelo.com/api/list?location_key=g297549&limit=100&offset=200&sort=best_value",
+      "identitySources": [
+        "https://www.tez-tour.com/hotel.html?id=10591207",
+        "https://royalstarbeachresort.net/"
+      ],
+      "matchingExplanation": "Exact current property name in regional Xotelo/Tripadvisor listing, corroborated by the supplier/owner identity.",
+      "checkedOn": "2026-11-14",
+      "precision": "hotel-marker"
+    },
+    {
+      "destination": "hurghada",
+      "id": 10591210,
+      "name": "EMPIRE BEACH AQUA PARK 3 *",
+      "latitude": 27.260864,
+      "longitude": 33.8202,
+      "source": "https://www.tripadvisor.com/Hotel_Review-g297549-d604966-Reviews-Royal_Star_Empire_Beach_Resort-Hurghada_Red_Sea_and_Sinai.html",
+      "coordinateSource": "Xotelo property geo",
+      "sourcePropertyId": "g297549-d604966",
+      "coordinateEvidenceUrl": "https://data.xotelo.com/api/list?location_key=g297549&limit=100&offset=100&sort=best_value",
+      "identitySources": [
+        "https://www.tez-tour.com/hotel.html?id=10591210",
+        "https://royalstarhotels.net/downloads/Empire%20beach%20resort%20Fact%20Sheet.pdf"
+      ],
+      "matchingExplanation": "Exact current property name in regional Xotelo/Tripadvisor listing, corroborated by the supplier/owner identity.",
+      "checkedOn": "2026-11-14",
+      "precision": "hotel-marker"
+    },
+    {
+      "destination": "hurghada",
+      "id": 10594885,
+      "name": "SUNRISE AZALEA AQUA PARK RESORT (EX. SUNRISE ASTER AQUA PARK RESORT) 4 *",
+      "latitude": 27.3048772,
+      "longitude": 33.7273514,
+      "source": "https://www.openstreetmap.org/node/13947730532",
+      "coordinateSource": "OpenStreetMap former Hawaii Le Jardin property, corroborated by current owner/operator identity",
+      "sourcePropertyId": "node:13947730532",
+      "identitySources": [
+        "https://www.sunrise-resorts.com/azalea-aqua-park-resort",
+        "https://yourtable.sunrise-resorts.com/",
+        "https://www.zajezdy.cz/dovolena-sunrise-azalea-aqua-park-resort-hurghada-egypt-z2482235/",
+        "https://www.tez-tour.com/hotel.html?id=10594885"
+      ],
+      "matchingExplanation": "The owner identifies Azalea as Formerly Le Jardin. Regional OSM Hawaii Le Jardin node and current operator Azalea GPS27.3049310840,33.7271998340 agree within16m. Current TEZ description (569 rooms,25km from airport,16km from centre,seafront) fits Ahiaa, unlike its old downtown map pin.",
+      "overrides": {
+        "source": "https://www.tez-tour.com/hotel.html?id=10594885",
+        "latitude": 27.2578957,
+        "longitude": 33.8116067,
+        "reason": "Supplier map pin conflicts with current owner identity, operator GPS and former hotel location by approximately10km."
+      },
+      "checkedOn": "2026-11-14",
+      "precision": "hotel-marker"
+    },
+    {
+      "destination": "hurghada",
+      "id": 10595301,
+      "name": "SUNRISE SERANO AQUA PARK RESORT (EX. RIVIERA AQUA PARK RESORT) 4 *",
+      "latitude": 27.3067003,
+      "longitude": 33.7268784,
+      "source": "https://www.openstreetmap.org/way/171504388",
+      "coordinateSource": "OpenStreetMap property geometry center",
+      "sourcePropertyId": "way:171504388",
+      "identitySources": [
+        "https://www.tez-tour.com/hotel.html?id=10595301",
+        "https://www.sunrise-resorts.com/serano-aqua-park-resort"
+      ],
+      "matchingExplanation": "Exact distinctive current property name in TEZ, owner website and regional OSM property; no fuzzy match.",
+      "checkedOn": "2026-11-14",
+      "precision": "hotel-marker"
+    },
+    {
+      "destination": "hurghada",
+      "id": 10595322,
+      "name": "SUNRISE SERANO CLUB RESORT 4 *",
+      "latitude": 27.304899934495758,
+      "longitude": 33.72554799815501,
+      "source": "https://www.invia.sk/hotel/egypt/hurghada/sunrise-serano-club-resort/",
+      "coordinateSource": "Published GPS coordinates on Invia accommodation profile",
+      "sourcePropertyId": "sunrise-serano-club-resort",
+      "identitySources": [
+        "https://www.tez-tour.com/hotel.html?id=10595322",
+        "https://www.coraltravel.pl/hotel/egipt/sunrise-serano-club-resort-hurghada/",
+        "https://yourtable.sunrise-resorts.com/"
+      ],
+      "matchingExplanation": "Exact current hotel name and Hurghada country on Invia profile with explicit GPS. Independent operator Coral confirms KM11 Ahiaa Road, second-line access across the road and adjacent Serano/Azalea facilities. Owner restaurant directory separately identifies Serano Club Resort, not Serano Aqua Park.",
+      "checkedOn": "2026-11-14",
+      "precision": "supplier-map-marker"
+    }
+  ]
+}

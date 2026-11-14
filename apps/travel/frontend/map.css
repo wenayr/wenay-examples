@@ -190,12 +190,86 @@
     background: #245a4a;
     color: #fff;
     box-shadow: 0 2px 5px #163e343e;
-    font: 700 12px/1 system-ui, sans-serif;
+    font: 700 14px/1 system-ui, sans-serif;
 }
+.directory-map .package-map-price {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+    padding: 5px 7px;
+    border-radius: 13px 13px 13px 4px;
+    font-size: 15px;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+}
+.directory-pin-name {font-size: 10px; font-weight: 550; text-overflow: ellipsis; overflow: hidden; max-width: 100%;}
+.package-map-price>strong {font-size: 15px; line-height: 1;}
+.directory-pin-range {font-size: 10px; font-weight: 550;}
+.directory-pin-trend {display: block; width: 112px; height: 18px; color: #c2e0c9; overflow: visible;}
+.directory-pin-trend path {stroke: currentColor; stroke-width: 1.6; fill: none;}
+.directory-pin-trend circle {fill: currentColor;}
+.directory-pin-trend text {fill: #d8e2d8; font: 8px system-ui, sans-serif; text-anchor: middle;}
+.directory-map-pin.is-selected .directory-pin-trend {color: #fff1cb;}
 .directory-map-pin.is-selected .directory-map-number { background: #9b512a; border-color: #fff; }
 .directory-map-pin:focus-visible .directory-map-number { outline: 3px solid #aa5128; outline-offset: 2px; }
 .directory-map-tooltip { color: #244a39; font: 600 13px/1.3 system-ui,sans-serif; white-space: normal; width: max-content; max-width: 190px; }
+.directory-map-cluster {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+    gap: 3px;
+    border: 2px solid #1a5a4d;
+    border-radius: 14px;
+    background: #fffdf8;
+    color: #174e41;
+    box-shadow: 0 2px 7px #123d3b42;
+    font: 600 11px/1 system-ui, sans-serif;
+}
+.directory-map-cluster strong {font-size: 15px; font-variant-numeric: tabular-nums;}
+.directory-map-pin:focus-visible .directory-map-cluster {outline: 3px solid #aa5128; outline-offset: 3px;}
+.directory-map__count {
+    position: absolute;
+    z-index: 450;
+    top: 10px;
+    left: 10px;
+    border: 1px solid #bacac0;
+    border-radius: 7px;
+    padding: 8px 9px;
+    background: #fffdf7f5;
+    color: #254f41;
+    font: 500 12px/1.2 system-ui, sans-serif;
+    pointer-events: none;
+}
+.directory-map .hotel-map__tools {max-width: calc(100% - 142px); flex-wrap: wrap; justify-content: flex-end;}
+.directory-map .hotel-map__tools button {min-height: 40px; min-width: 40px; font-size: 12px;}
+.directory-map .hotel-map__notice {top: 60px; max-width: calc(100% - 20px);}
+.directory-map .directory-map__loading {left: 10px; right: auto;}
+.directory-cluster-popup .leaflet-popup-content {margin: 15px 12px 13px;}
+.directory-cluster-list {display: grid; gap: 6px; color: #244a39; font: 13px/1.4 system-ui, sans-serif;}
+.directory-cluster-list>strong {margin-bottom: 4px; padding-right: 14px;}
+.directory-cluster-list button {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+    padding: 8px;
+    border: 1px solid #cad8ce;
+    border-radius: 6px;
+    background: white;
+    color: #234c3e;
+    cursor: pointer;
+    text-align: left;
+    font: inherit;
+}
+.directory-cluster-list button b {white-space: nowrap; font-variant-numeric: tabular-nums;}
+.directory-cluster-list button:focus-visible {outline: 3px solid #aa5128; outline-offset: 1px;}
 @media (max-width: 700px) {
     .directory-map .hotel-map__canvas { height: 285px; }
     .directory-map .hotel-map__tools { right: 7px; gap: 3px; }
+    .directory-map__count {left: 7px; padding: 9px 6px; font-size: 11px;}
 }

@@ -34,6 +34,7 @@
 }
 .travel-calendar__key-budget::before { background: var(--calendar-budget); }
 .travel-calendar__key-lowest::before { border: 2px solid var(--calendar-lowest); }
+.travel-calendar__key-highest::before { background: #ae8453; }
 
 .travel-calendar__unit { margin: 0 0 1px; font-size: .68rem; color: var(--calendar-muted); }
 .travel-calendar__chart { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 5px; }
@@ -65,6 +66,7 @@
 .travel-calendar__lines svg { display: block; width: 100%; height: 100%; overflow: visible; }
 .travel-calendar__lines path { fill: none; vector-effect: non-scaling-stroke; stroke-linejoin: round; }
 .travel-calendar__trend-lowest { stroke: var(--calendar-lowest); stroke-width: 1.5; stroke-dasharray: 3 4; }
+.travel-calendar__trend-highest { stroke: #ae8453; stroke-width: 1.5; stroke-dasharray: 2 4; }
 .travel-calendar__trend-budget { stroke: var(--calendar-budget); stroke-width: 2; }
 .travel-calendar .travel-calendar__day {
   position: relative;
@@ -83,7 +85,7 @@
 .travel-calendar__day:focus-visible { outline: 2px solid var(--calendar-budget); outline-offset: -2px; }
 .travel-calendar__points { display: block; position: relative; }
 .travel-calendar__points i { position: absolute; left: 50%; transform: translate(-50%, -50%); }
-.travel-calendar__low-dot, .travel-calendar__budget-dot {
+.travel-calendar__low-dot, .travel-calendar__budget-dot, .travel-calendar__high-dot {
   width: 9px;
   height: 9px;
   border-radius: 50%;
@@ -91,6 +93,7 @@
 }
 .travel-calendar__low-dot { background: white; border: 2px solid var(--calendar-lowest); }
 .travel-calendar__budget-dot { background: var(--calendar-budget); border: 1px solid white; }
+.travel-calendar__high-dot { background: #ae8453; border: 1px solid white; }
 .travel-calendar__day.is-selected .travel-calendar__budget-dot { width: 12px; height: 12px; box-shadow: 0 0 0 2px var(--calendar-budget); }
 .travel-calendar__missing { top: 100%; line-height: 1; font-style: normal; color: var(--calendar-muted); }
 .travel-calendar__date {

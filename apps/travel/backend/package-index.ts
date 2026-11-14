@@ -30,7 +30,9 @@ const markerLimit = 200
 
 function fareOrder(a: PackageFare, b: PackageFare) {
     if (a.total != b.total) return a.total - b.total
-    return a.id < b.id ? -1 : a.id > b.id ? 1 : 0
+    if (a.id < b.id) return -1
+    if (a.id > b.id) return 1
+    return 0
 }
 function fareIndex(fares: readonly IndexedFare[]) {
     return createRangeIndex(fares, fare => fare.departure, fare => fare.total, fareOrder)
@@ -53,13 +55,16 @@ export function matchesPackageHotel(hotel: PackageHotel, filter: Pick<PackageQue
     if ((hotel.stars ?? 0) < filter.minStars) return false
     if (!filter.box) return true
     const [west, south, east, north] = filter.box
-    return located(hotel) && hotel.longitude >= west && hotel.longitude <= east && hotel.latitude >= south && hotel.latitude <= north
+    if (!located(hotel)) return false
+    const insideLongitude = hotel.longitude >= west && hotel.longitude <= east
+    const insideLatitude = hotel.latitude >= south && hotel.latitude <= north
+    return insideLongitude && insideLatitude
 }
 
 function publicFare({id, departure, total}: PackageFare): PackageFare { return {id, departure, total} }
 function summary({hotel, best, maxTotal}: Match): PackageSummary {
-    const {id, name, stars, latitude, longitude, url} = hotel
-    return {hotelId: id, name, stars, latitude, longitude, url, best: publicFare(best), minTotal: best.total, maxTotal}
+    const {id, name, stars, latitude, longitude, url, coordinateSource} = hotel
+    return {hotelId: id, name, stars, latitude, longitude, url, coordinateSource, best: publicFare(best), minTotal: best.total, maxTotal}
 }
 
 /** One immutable snapshot per supplier trip context and observed departure window. */
@@ -89,9 +94,23 @@ export function createOfferIndex(observations: Observations) {
         const stars = [{entries: byStars, start, end: byStars.length}]
         const candidates = area && count(area) < byStars.length - start ? area : stars
         const matches = new Map<string, Match>()
+        let mapped = 0
+        let bounds: [number, number, number, number] | null = null
         function record(hotel: PackageHotel, cheapest: PackageFare, highest: number) {
             const current = matches.get(hotel.id)
-            if (!current) matches.set(hotel.id, {hotel, best: cheapest, maxTotal: highest})
+            if (!current) {
+                matches.set(hotel.id, {hotel, best: cheapest, maxTotal: highest})
+                if (located(hotel)) {
+                    mapped++
+                    if (!bounds) bounds = [hotel.longitude, hotel.latitude, hotel.longitude, hotel.latitude]
+                    else {
+                        bounds[0] = Math.min(bounds[0], hotel.longitude)
+                        bounds[1] = Math.min(bounds[1], hotel.latitude)
+                        bounds[2] = Math.max(bounds[2], hotel.longitude)
+                        bounds[3] = Math.max(bounds[3], hotel.latitude)
+                    }
+                }
+            }
             else {
                 if (fareOrder(cheapest, current.best) < 0) current.best = cheapest
                 current.maxTotal = Math.max(current.maxTotal, highest)
@@ -122,11 +141,12 @@ export function createOfferIndex(observations: Observations) {
                 break
             }
             markers.push({hotelId: hotel.id, name: hotel.name, latitude: hotel.latitude, longitude: hotel.longitude,
-                stars: hotel.stars, minTotal: best.total, maxTotal})
+                stars: hotel.stars, minTotal: best.total, maxTotal, coordinateSource: hotel.coordinateSource})
         }
         const end = query.offset + query.limit
         const items = sorted.slice(query.offset, end).map(summary)
-        return {items, total: sorted.length, markers, markersTruncated, nextOffset: end < sorted.length ? end : null}
+        return {items, total: sorted.length, markers, markersTruncated, nextOffset: end < sorted.length ? end : null,
+            geo: {mapped, unresolved: sorted.length - mapped, bounds}}
     }
 
     function calendar(query: DateBudget, hotelId: string): PackageDayPrices[] {

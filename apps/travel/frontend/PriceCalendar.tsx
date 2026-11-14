@@ -45,7 +45,7 @@ function quoteDescription(day: CalendarDay) {
 
 // Use a dot plot with a local scale. Mark only observed prices, including isolated dates.
 function chartScale(days: CalendarDay[]) {
-  const prices = days.flatMap(day => [day.lowest, day.inBudget].flatMap(offer => offer ? [offer.total] : []))
+  const prices = days.flatMap(day => [day.lowest, day.inBudget, day.highest].flatMap(offer => offer ? [offer.total] : []))
   const low = Math.min(...prices)
   const high = Math.max(...prices)
   const range = Math.max(high - low, high / 20, 100)
@@ -56,7 +56,7 @@ function chartScale(days: CalendarDay[]) {
   return {bottom, top, step}
 }
 
-function trendPath(days: CalendarDay[], field: 'lowest' | 'inBudget', y: (total: number) => number) {
+function trendPath(days: CalendarDay[], field: 'lowest' | 'inBudget' | 'highest', y: (total: number) => number) {
   let connected = false
   return days.map((day, index) => {
     const offer = day[field]
@@ -100,11 +100,13 @@ export function PriceCalendar<T extends CalendarFare>({days, selectedOfferId, on
   for (let amount = bottom; amount <= top; amount += step) ticks.push(amount)
   const axisThousands = top >= 1_000_000 && step >= 10_000
   const axisValue = (amount: number) => axisFormat.format(amount / (axisThousands ? 100_000 : 100))
+  const showHighest = days.some(day => day.highest && day.highest.total != day.lowest?.total)
   return <section className="travel-calendar" aria-label="Стоимость по датам вылета">
     <h3>Стоимость по датам вылета</h3>
     <div className="travel-calendar__key">
       <span className="travel-calendar__key-budget">В бюджете</span>
       <span className="travel-calendar__key-lowest">Минимум дня</span>
+      {showHighest && <span className="travel-calendar__key-highest">Верх полученных тарифов</span>}
     </div>
     <div className="travel-calendar__unit">{axisThousands ? 'тыс. €' : '€'}</div>
     <div className="travel-calendar__chart">
@@ -117,6 +119,7 @@ export function PriceCalendar<T extends CalendarFare>({days, selectedOfferId, on
             {ticks.map(amount => <i key={amount} style={{top: y(amount) + '%'}} />)}
             <svg viewBox={'0 0 ' + days.length + ' 100'} preserveAspectRatio="none">
               <path className="travel-calendar__trend-lowest" d={trendPath(days, 'lowest', y)} />
+              {showHighest && <path className="travel-calendar__trend-highest" d={trendPath(days, 'highest', y)} />}
               <path className="travel-calendar__trend-budget" d={trendPath(days, 'inBudget', y)} />
             </svg>
           </div>
@@ -134,6 +137,7 @@ export function PriceCalendar<T extends CalendarFare>({days, selectedOfferId, on
               }}>
               <span className="travel-calendar__points" aria-hidden="true">
                 {day.lowest && <i className="travel-calendar__low-dot" style={{top: y(day.lowest.total) + '%'}} />}
+                {showHighest && day.highest && <i className="travel-calendar__high-dot" style={{top: y(day.highest.total) + '%'}} />}
                 {day.inBudget && <i className="travel-calendar__budget-dot" style={{top: y(day.inBudget.total) + '%'}} />}
                 {!day.lowest && <i className="travel-calendar__missing">{day.status === 'unknown' ? '?' : '–'}</i>}
               </span>
