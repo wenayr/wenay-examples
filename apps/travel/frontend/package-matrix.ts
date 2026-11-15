@@ -1,10 +1,13 @@
 import {shiftDate} from './directory-preferences.ts'
 import type {PackageMatrix, PackageMatrixCell} from '../src/package-matrix-contract.ts'
+import {packageWindowDays} from '../src/package-contract.ts'
+import type {PackagePreferences} from './package-preferences.ts'
 
 export const matrixPageDates = 8
 export const matrixRows = 3
 export const matrixChunkCells = 6
 export const matrixVisibleRows = 4
+export const matrixSnapshotCells = packageWindowDays * 30
 
 export function matrixDates(first: string, last: string) {
     const length = Math.floor((Date.parse(last) - Date.parse(first)) / 86_400_000) + 1
@@ -41,12 +44,39 @@ export function matrixViewForRoute(nights: number, query = new URLSearchParams()
 
 export type MatrixViewContext = ReturnType<typeof matrixViewForRoute>
 
+export function matrixOverview(first: string, last: string, view: Pick<MatrixViewContext, 'firstNights' | 'lastNights'>) {
+    return {departures: matrixDates(first, last), nights: matrixRangeNights(view.firstNights, view.lastNights)}
+}
+
 export function matrixCellKey(departure: string, nights: number) {
     return departure + '/' + nights
 }
 
-export function matrixChunks(departures: readonly string[], nights: readonly number[]) {
+export function matrixMinimum(cells: readonly PackageMatrixCell[], prefs: PackagePreferences,
+    {now = Date.now(), staleCellKeys = []}: {now?: number, staleCellKeys?: readonly string[]} = {}) {
+    if (prefs.fareId) return null
+    const fares = cells.flatMap(cell => {
+        const fare = cell.inBudget
+        const usableSource = cell.status == 'in-budget' && !cell.source.stale
+        if (!fare || !usableSource) return []
+        if (staleCellKeys.includes(matrixCellKey(cell.departure, cell.nights))) return []
+        const sameStay = cell.nights == prefs.nights && fare.nights == prefs.nights
+        const sameParty = fare.adults == prefs.adults && fare.children == 0
+        const sameDate = cell.departure == fare.departure && fare.departure >= prefs.firstDeparture && fare.departure <= prefs.lastDeparture
+        const samePriceBasis = fare.currency == 'EUR' && fare.priceBasis == 'party-total'
+        const inBudget = fare.total >= prefs.minTotal && fare.total <= prefs.maxTotal
+        const checked = Date.parse(fare.checkedAt)
+        const recent = Number.isFinite(checked) && now - checked <= 120_000 && checked <= now
+        if (!sameStay || !sameParty || !sameDate) return []
+        if (!samePriceBasis || !inBudget || !recent) return []
+        return [fare]
+    })
+    return fares.reduce<PackageMatrixCell['inBudget']>((lowest, fare) => !lowest || fare.total < lowest.total ? fare : lowest, null)
+}
+
+export function matrixChunks(departures: readonly string[], nights: readonly number[], preferredNights?: number) {
     const groups = Array.from({length: Math.ceil(nights.length / matrixRows)}, (_, index) => nights.slice(index * matrixRows, (index + 1) * matrixRows))
+    if (preferredNights != null) groups.sort((a, b) => Number(b.includes(preferredNights)) - Number(a.includes(preferredNights)))
     return groups.flatMap(group => {
         const count = Math.max(1, Math.floor(matrixChunkCells / group.length))
         return Array.from({length: Math.ceil(departures.length / count)}, (_, index) => {

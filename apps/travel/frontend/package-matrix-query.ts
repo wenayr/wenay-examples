@@ -31,7 +31,7 @@ function waitUntil(retryAt: string, signal: AbortSignal) {
 }
 
 export function usePackageMatrix(prefs: PackagePreferences, departures: readonly string[], nights: readonly number[], enabled: boolean) {
-    const chunks = matrixChunks(departures, nights)
+    const chunks = matrixChunks(departures, nights, prefs.nights)
     const urls = chunks.map(chunk => directoryUrl('package-matrix', {
         ...packageQuery(prefs), nights: nights[0], ...chunk, hotelId: prefs.hotelId,
     }))

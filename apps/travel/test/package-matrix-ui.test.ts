@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict'
 import {test} from 'node:test'
 import type {PackageMatrix, PackageMatrixCell} from '../src/package-matrix-contract.ts'
-import {matrixChunks, matrixDates, matrixFirstNights, matrixNights, matrixRangeNights, matrixRetryAt, matrixViewForRoute, refreshedMatrixSelection} from '../frontend/package-matrix.ts'
+import {matrixChunks, matrixDates, matrixFirstNights, matrixMinimum, matrixNights, matrixOverview, matrixRangeNights, matrixRetryAt, matrixSnapshotCells, matrixViewForRoute, refreshedMatrixSelection} from '../frontend/package-matrix.ts'
+import {packageDefaults} from '../frontend/package-preferences.ts'
 
 test('matrix chunks keep the visible date × duration range within six source cells', () => {
     const dates = matrixDates('2027-01-24', '2027-01-31')
@@ -23,6 +24,28 @@ test('matrix chunks keep the visible date × duration range within six source ce
     assert.equal(expandedCells.length, 40)
 })
 
+test('micro matrix keeps the whole date and duration range while the selected duration loads first without extra cells', () => {
+    const view = {firstNights: 4, lastNights: 11, durationOffset: 4, dateOffset: 16}
+    const axes = matrixOverview('2026-12-01', '2026-12-20', view)
+    assert.equal(axes.departures.length, 20)
+    assert.equal(axes.departures[0], '2026-12-01')
+    assert.equal(axes.departures.at(-1), '2026-12-20')
+    assert.deepEqual(axes.nights, [4, 5, 6, 7, 8, 9, 10, 11])
+    const ordinary = matrixChunks(axes.departures, axes.nights)
+    const prioritised = matrixChunks(axes.departures, axes.nights, 7)
+    assert.equal(prioritised[0].nightsValues, '7,8,9')
+    assert.deepEqual(new Set(prioritised.map(chunk => JSON.stringify(chunk))), new Set(ordinary.map(chunk => JSON.stringify(chunk))))
+    const cells = prioritised.flatMap(chunk => {
+        const departures = matrixDates(chunk.firstDeparture, chunk.lastDeparture)
+        const nights = chunk.nightsValues.split(',')
+        assert.ok(departures.length * nights.length <= 6)
+        return departures.flatMap(day => nights.map(night => day + '/' + night))
+    })
+    assert.equal(cells.length, 160)
+    assert.equal(new Set(cells).size, 160)
+    assert.equal(matrixSnapshotCells, 600)
+})
+
 const source = {id: 'test', name: 'Fixture', status: 'cached', updatedAt: '2027-01-01T00:00:00Z', description: 'Regression fixture'} as const
 const fare = {
     id: 'fare7', departure: '2027-01-24', nights: 7, days: 8, adults: 2, children: 0, total: 138400, currency: 'EUR',
@@ -32,6 +55,24 @@ const selected = {
     departure: fare.departure, nights: 7, days: 8, status: 'in-budget', lowest: fare, inBudget: fare, highest: fare,
     complete: true, checkedAt: source.updatedAt, source,
 } satisfies PackageMatrixCell
+
+test('a map price can reuse only a recent matching matrix fare and never a different stay, party, budget or stale observation', () => {
+    const prefs = {...packageDefaults('2027-01-23'), firstDeparture: '2027-01-24', lastDeparture: '2027-01-31', hotelId: 'tez:1061'}
+    const now = Date.parse(source.updatedAt)
+    const lower = {...selected, inBudget: {...fare, total: 120000}}
+    assert.equal(matrixMinimum([selected, lower], prefs, {now})?.total, 120000)
+    assert.equal(matrixMinimum([selected], {...prefs, fareId: 'pending-selected-fare'}, {now}), null)
+    assert.equal(matrixMinimum([selected], {...prefs, nights: 8}, {now}), null)
+    assert.equal(matrixMinimum([selected], {...prefs, adults: 3}, {now}), null)
+    assert.equal(matrixMinimum([selected], {...prefs, firstDeparture: '2027-01-25'}, {now}), null)
+    assert.equal(matrixMinimum([selected], {...prefs, minTotal: 140000}, {now}), null)
+    assert.equal(matrixMinimum([selected], {...prefs, maxTotal: 130000}, {now}), null)
+    assert.equal(matrixMinimum([selected], prefs, {now: now + 120001}), null)
+    assert.equal(matrixMinimum([{...selected, source: {...source, stale: true}}], prefs, {now}), null)
+    assert.equal(matrixMinimum([selected], prefs, {now, staleCellKeys: [fare.departure + '/7']}), null)
+    assert.equal(matrixMinimum([{...selected, status: 'unknown'}], prefs, {now}), null)
+    assert.equal(matrixMinimum([{...selected, departure: '2027-01-25'}], prefs, {now}), null)
+})
 
 test('matrix refresh keeps the exact confirmed fare and invalidates changed or unconfirmed selection', () => {
     const fresh = {...selected, checkedAt: '2027-01-01T00:01:00Z'}

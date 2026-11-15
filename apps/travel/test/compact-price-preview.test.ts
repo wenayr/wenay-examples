@@ -106,3 +106,38 @@ test('a newer authoritative empty matrix cell wins over an older trend while a f
     assert.equal(preview.cells[1].total, fare.total)
     assert.equal(preview.cells[1].checkedAt, checkedAt)
 })
+
+test('the complete twenty-date by eight-duration miniature preserves both axes and exact factual price positions', () => {
+    const departures = Array.from({length: 20}, (_, index) => '2026-12-' + String(index + 1).padStart(2, '0'))
+    const nights = Array.from({length: 8}, (_, index) => index + 4)
+    const decemberFare = {...fare, departure: departures[10], total: 202700}
+    const decemberQuote = {...quoted, departure: decemberFare.departure, lowest: decemberFare, inBudget: decemberFare, highest: decemberFare}
+    const empty = {...quoted, departure: departures[1], nights: 4, days: 5, status: 'empty' as const,
+        lowest: null, inBudget: null, highest: null}
+    const preview = compactPricePreview({mode: 'matrix', nights: 7, now: Date.parse(checkedAt) + 1_000,
+        trend: [{departure: departures[2], total: 224600, status: 'quoted', checkedAt}],
+        matrix: {departures, nights, cells: [decemberQuote, empty]},
+    })
+    assert.equal(preview.cells.length, 160)
+    assert.deepEqual(preview.departures, departures)
+    assert.deepEqual(preview.durations.map(night => night + 1), [5, 6, 7, 8, 9, 10, 11, 12])
+    assert.deepEqual(preview.cells.map(cell => cell.departure + '/' + cell.nights),
+        nights.flatMap(night => departures.map(day => day + '/' + night)))
+    assert.equal(preview.cells[70].total, 202700)
+    assert.equal(preview.cells[62].total, 224600)
+    assert.equal(preview.cells[62].cached, true)
+    assert.equal(preview.cells[1].status, 'empty')
+    assert.equal(preview.cells.filter(cell => cell.status == 'unknown').length, 157)
+    assert.match(preview.label, /5–12 дней/)
+    assert.match(preview.label, /4–11 ночей/)
+})
+
+test('a full miniature with no source results keeps all 160 cells unknown without inventing prices', () => {
+    const departures = Array.from({length: 20}, (_, index) => '2026-12-' + String(index + 1).padStart(2, '0'))
+    const nights = Array.from({length: 8}, (_, index) => index + 4)
+    const preview = compactPricePreview({mode: 'matrix', nights: 7, matrix: {departures, nights, cells: []}})
+    assert.equal(preview.cells.length, 160)
+    assert.equal(preview.min, null)
+    assert.equal(preview.max, null)
+    assert.equal(preview.cells.every(cell => cell.status == 'unknown' && cell.total == null && cell.heat == null), true)
+})

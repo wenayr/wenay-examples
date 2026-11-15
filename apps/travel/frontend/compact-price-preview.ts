@@ -91,6 +91,10 @@ export function compactPricePreview(input: CompactPriceInput) {
     if (nights) label += ' · ' + durationLabel
     if (min != null) label += ' · ' + price.format(min / 100) + (max != min ? ' — ' + price.format(max! / 100) : '')
     if (!amounts.length) label += ' · подтверждённых цен пока нет'
+    if (mode == 'matrix' && cells.length) {
+        const unconfirmed = heat.filter(cell => cell.status == 'unknown' || cell.status == 'failed').length
+        label += ' · получено цен: ' + amounts.length + ' · не подтверждено: ' + unconfirmed
+    }
     if (heat.some(cell => cell.cached)) label += ' · используются цены сохранённого графика'
     if (heat.some(cell => cell.status == 'stale')) label += ' · часть цен требует обновления'
     if (matrix?.pending) label += ' · обновляется'
@@ -120,44 +124,34 @@ export function createCompactPricePreview(input: CompactPriceInput) {
     const graph = svgNode('svg', {viewBox: '0 0 168 20', class: 'compact-price-preview', 'aria-hidden': 'true'})
     graph.setAttribute('data-price-preview', model.mode)
     graph.setAttribute('data-price-rows', String(model.durations.length))
+    graph.setAttribute('data-price-columns', String(model.departures.length))
     const title = svgNode('title', {})
     title.textContent = model.label
     graph.append(title)
     if (!model.departures.length) {
         graph.append(svgNode('path', {d: 'M2 10H148', class: 'compact-price-preview__pending'}))
-        const caption = svgNode('text', {x: 164, y: 14, 'text-anchor': 'end', class: 'compact-price-preview__caption'})
-        caption.textContent = '···'
-        graph.append(caption)
         return {graph, label: model.label}
     }
     if (model.mode == 'matrix') {
-        const labelWidth = model.durations[0] ? 19 : 0
-        const width = (168 - labelWidth) / model.departures.length
-        const height = 15 / model.durations.length
-        model.durations.forEach((night, index) => {
-            if (!night) return
-            const label = svgNode('text', {x: 0, y: index * height + height * .72, class: 'compact-price-preview__row'})
-            label.textContent = (night + 1) + 'д'
-            graph.append(label)
-        })
+        const width = 168 / model.departures.length
+        const height = 20 / Math.max(1, model.durations.length)
+        const gap = Math.min(.45, width / 5, height / 5)
         model.cells.forEach((cell, index) => {
-            const x = labelWidth + index % model.departures.length * width
-            const y = Math.floor(index / model.departures.length) * height
-            const rect = svgNode('rect', {x: x + .5, y: y + .5, width: Math.max(1, width - 1), height: Math.max(1, height - 1), rx: 1.5})
+            const x = index % model.departures.length * width + gap / 2
+            const y = Math.floor(index / model.departures.length) * height + gap / 2
+            const rect = svgNode('rect', {x, y, width: width - gap, height: height - gap, rx: Math.min(.45, height / 5)})
             rect.setAttribute('data-status', cell.status)
             if (cell.heat != null) rect.setAttribute('fill', 'hsl(' + (154 - cell.heat * 111) + ' 48% ' + (45 + cell.heat * 18) + '%)')
             const tooltip = svgNode('title', {})
             tooltip.textContent = cellTitle(cell)
             rect.append(tooltip)
             graph.append(rect)
-        })
-        model.departures.forEach((departure, index) => {
-            const endpoint = index == 0 || index == model.departures.length - 1
-            if (model.departures.length > 3 && !endpoint) return
-            const caption = svgNode('text', {x: labelWidth + (index + .5) * width, y: 20,
-                'text-anchor': 'middle', class: 'compact-price-preview__date'})
-            caption.textContent = departure.slice(8, 10) + '.' + departure.slice(5, 7)
-            graph.append(caption)
+            if (cell.status == 'unknown') {
+                const length = Math.min(width - gap, height - gap)
+                const bottom = y + height - gap
+                graph.append(svgNode('path', {d: 'M' + x + ' ' + bottom + 'l' + length + ' -' + length,
+                    class: 'compact-price-preview__unknown'}))
+            }
         })
     } else {
         graph.append(svgNode('path', {d: 'M2 18H166', class: 'compact-price-preview__baseline'}))

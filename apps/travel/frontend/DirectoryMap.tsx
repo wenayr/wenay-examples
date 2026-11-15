@@ -55,6 +55,7 @@ interface DirectoryMapProps {
     onCamera?: (camera: tMapCamera) => void
     onRefresh?: (id: string) => void
     onClearSelection?: () => void
+    onPhotoCards?: (ids: readonly string[]) => void
     showLabels?: boolean
     focusKey?: number
 }
@@ -423,13 +424,13 @@ function mapSearchBounds(area: L.LatLngBounds): tMapBounds | null {
 
 export function DirectoryMap({destination, hotels, selectedId, onSelect, onSearchArea, world = false, bounds,
     onShowAll, fitAllKey, detailedByDefault = false, loading = false, immersive = false,
-    onOpen, onMatrix, onFavourite, camera, onCamera, onRefresh, onClearSelection, showLabels = false, focusKey}: DirectoryMapProps) {
+    onOpen, onMatrix, onFavourite, camera, onCamera, onRefresh, onClearSelection, onPhotoCards, showLabels = false, focusKey}: DirectoryMapProps) {
     const host = useRef<HTMLDivElement>(null)
     const mapRef = useRef<L.Map | null>(null)
     const markers = useRef(new Map<string, L.Marker>())
     const propertyLayer = useRef<L.LayerGroup | null>(null)
     const actions = useRef({select: onSelect, open: onOpen, matrix: onMatrix, favourite: onFavourite,
-        camera: onCamera, refresh: onRefresh, clear: onClearSelection})
+        camera: onCamera, refresh: onRefresh, clear: onClearSelection, photoCards: onPhotoCards})
     const photoHosts = useRef(new Map<string, Pick<MapPhotoMount, 'host' | 'sourcesHost'>>())
     const selectedPhotos = useRef(new Map<string, string>())
     const [photoCards, setPhotoCards] = useState<MapPhotoMount[]>([])
@@ -566,6 +567,7 @@ export function DirectoryMap({destination, hotels, selectedId, onSelect, onSearc
         })
         photoHosts.current = new Map(nextPhotoCards.map(({hotel, host, sourcesHost}) => [hotel.id, {host, sourcesHost}]))
         setPhotoCards(nextPhotoCards)
+        actions.current.photoCards?.(nextPhotoCards.map(card => card.hotel.id))
         if (focusedHotel && !document.querySelector('dialog[open]')) {
             const element = markers.current.get(focusedHotel)?.getElement()
             let control: HTMLElement | null | undefined = element
@@ -583,8 +585,8 @@ export function DirectoryMap({destination, hotels, selectedId, onSelect, onSearc
     })
     useEffect(() => {
         actions.current = {select: onSelect, open: onOpen, matrix: onMatrix, favourite: onFavourite,
-            camera: onCamera, refresh: onRefresh, clear: onClearSelection}
-    }, [onSelect, onOpen, onMatrix, onFavourite, onCamera, onRefresh, onClearSelection])
+            camera: onCamera, refresh: onRefresh, clear: onClearSelection, photoCards: onPhotoCards}
+    }, [onSelect, onOpen, onMatrix, onFavourite, onCamera, onRefresh, onClearSelection, onPhotoCards])
 
     useEffect(() => {
         if (!host.current) return

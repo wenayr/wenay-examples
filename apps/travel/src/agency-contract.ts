@@ -63,6 +63,6 @@ export interface AgencySession {
 export function initialAgencySettings(): AgencySettings {
     return {
         name: '', slug: '', tagline: '', contact: {email: '', phone: '', website: ''}, brandColor: '#166b61',
-        destinations: Object.keys(agencyDestinationNames), sources: ['tez'], showReviews: true, compactPriceMode: 'graph', reviewProperties: [],
+        destinations: Object.keys(agencyDestinationNames), sources: ['tez'], showReviews: true, compactPriceMode: 'matrix', reviewProperties: [],
     }
 }
