@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
+import {AsyncLocalStorage} from 'node:async_hooks'
 import {createProviderBuffer, ProviderRateLimitError} from '../backend/provider-buffer.ts'
 import {resolveProviderBufferConfig} from '../backend/provider-buffer-config.ts'
 import {createProviderStorage, type ProviderBucket} from '../backend/provider-buffer-storage.ts'
@@ -314,7 +315,7 @@ test('slow R2 reads and completion HEADs do not consume the admission gap before
     assert.equal(denied.retryAt, admittedAt + 2_000)
 })
 
-test('concurrent identical misses share the lookup before admission and supplier work', async () => {
+test('concurrent identical reads in one request share the lookup before admission and supplier work', async () => {
     const env = setup()
     const source = env.replica()
     let calls = 0
@@ -326,7 +327,8 @@ test('concurrent identical misses share the lookup before admission and supplier
         begin()
         return new Promise<Value>(resolve => {release = resolve})
     }
-    const readers = Array.from({length: 20}, () => source.source.read({key: 'same', load}))
+    const {signal} = new AbortController()
+    const readers = Array.from({length: 20}, () => source.source.read({key: 'same', load, signal}))
     await started
     assert.equal(env.readCounts().snapshotReads, 1)
     assert.equal(calls, 1)
@@ -411,7 +413,7 @@ test('cold static and destination requests do not start source initialization be
     }
 })
 
-test('the whole hosted lookup is registered before its I/O and survives the first reader disconnect', async () => {
+test('a disconnected owner finishes its hosted lookup while another request never awaits its pending I/O', async () => {
     const env = setup()
     const source = env.replica()
     const release = env.holdReads()
@@ -423,12 +425,80 @@ test('the whole hosted lookup is registered before its I/O and survives the firs
     await env.readStarted
     abort.abort()
     await assert.rejects(first, {name: 'AbortError'})
-    const second = source.source.read({key: 'same', load})
-    assert.equal(env.jobs.length, 2)
+    const pending = await source.source.read({key: 'same', load, signal: new AbortController().signal})
+    assert.equal(pending.missing, true)
+    assert.equal(env.jobs.length, 1)
     release()
-    assert.equal((await second).price, 789)
     await Promise.all(env.jobs)
+    assert.equal((await source.source.read({key: 'same', load})).price, 789)
+    assert.equal(source.health.snapshot().counters.loads, 1)
     assert.equal(source.health.snapshot().pendingKeys, 0)
+})
+
+test('a second live request can read the last verified price while the first one refreshes it', async () => {
+    const env = setup()
+    const buffer = env.replica()
+    await buffer.source.read({key: 'same', load: async () => ({price: 120, checkedAt: env.now()})})
+    const original = env.now()
+    env.advance(130_000)
+    let release = () => {}
+    const held = new Promise<void>(resolve => {release = resolve})
+    let begin = () => {}
+    const started = new Promise<void>(resolve => {begin = resolve})
+    async function load() {
+        begin()
+        await held
+        return {price: 135, checkedAt: env.now()}
+    }
+    const first = buffer.source.read({key: 'same', load, signal: new AbortController().signal})
+    await started
+    const second = await buffer.source.read({key: 'same', load, signal: new AbortController().signal})
+    assert.equal(second.price, 120)
+    assert.equal(second.checkedAt, original)
+    assert.equal(second.stale, true)
+    release()
+    assert.equal((await first).price, 135)
+    assert.equal((await buffer.source.read({key: 'same', load})).price, 135)
+    assert.equal(buffer.health.snapshot().counters.loads, 2)
+})
+
+test('queued R2 reads use their own request context when another request releases a slot', async () => {
+    const owners = new AsyncLocalStorage<string>()
+    let release = () => {}
+    const held = new Promise<void>(resolve => {release = resolve})
+    const calls: string[] = []
+    const store = createProviderStorage({prefix: 'test', maxBytes: 100, maxSharedReads: 1, bucket: {
+        async get(key) {
+            calls.push(key + '@' + owners.getStore())
+            if (key == 'test/A') await held
+            return null
+        },
+        put: async () => ({etag: 'unused'}),
+    }})
+    const first = owners.run('A', () => store.read('A'))
+    const second = owners.run('B', () => store.read('B'))
+    release()
+    await Promise.all([first, second])
+    assert.deepEqual(calls, ['test/A@A', 'test/B@B'])
+})
+
+test('hosted TEZ diagnostics distinguish an empty upstream page and an HTTP failure without logging buffer reads', async t => {
+    const log = t.mock.method(console, 'info', () => {})
+    const cases = [
+        {response: Response.json({success: true, data: []}), outcome: 'upstream-empty'},
+        {response: Response.redirect('https://elsewhere.example/private'), outcome: 'http-error'},
+    ]
+    for (const {response, outcome} of cases) {
+        const env = setup()
+        const inventory = createDefaultInventory({bucket: env.bucket, now: () => new Date(env.now()), fetch: async () => response})
+        const trip = {destinationId: 'sharm', first: '2030-01-24', last: '2030-01-24', nights: 7, adults: 2,
+            minTotal: 0, maxTotal: 500_000}
+        const before = log.mock.callCount()
+        await inventory.window(trip)
+        await inventory.window(trip)
+        assert.equal(log.mock.callCount(), before + 1)
+        assert.deepEqual(log.mock.calls[before].arguments, ['travel.tez.search', {outcome, httpStatus: response.status}])
+    }
 })
 
 test('an aborted queued storage I/O releases capacity for the next operation', async () => {

@@ -1,5 +1,5 @@
 import {createAsyncQueue} from 'wenay-common2/client'
-import type {PackageArea, tPackageBounds} from '../src/package-area-contract.ts'
+import type {PackageArea, PackageMapHotels, tPackageBounds} from '../src/package-area-contract.ts'
 import type {PackageHotel, PackagePage} from '../src/package-contract.ts'
 import type {PackageHotelSearch} from '../src/package-search-contract.ts'
 import type {PackageTrends} from '../src/package-trends-contract.ts'
@@ -36,6 +36,20 @@ function regionEnvelope(place: typeof placeDestinations[number]): tRegion {
 const connectedRegions = placeDestinations.filter(place => packageDestinations.some(id => id == place.id))
 export const connectedPackageRegions: readonly tRegion[] = connectedRegions.map(regionEnvelope)
 
+type MapFilter = Pick<PackageQuery, 'box' | 'minStars'>
+function createMapCatalog(hotels: readonly PackageHotel[]) {
+    const points = hotels.filter((hotel): hotel is PackageHotel & {latitude: number, longitude: number} =>
+        Number.isFinite(hotel.latitude) && Number.isFinite(hotel.longitude))
+    const ranges = createRangeIndex(points, hotel => hotel.latitude, hotel => hotel.longitude)
+    return function find(filter: MapFilter) {
+        const [west, south, east, north] = filter.box ?? [-180, -90, 180, 90]
+        const slices = ranges(south, north, west, east)
+        return slices.flatMap(slice => slice.entries.slice(slice.start, slice.end)).filter(hotel => (hotel.stars ?? 0) >= filter.minStars)
+    }
+}
+
+const bundledCatalogs = new Map(connectedRegions.map(region => [region.id, createMapCatalog(tezKnownHotels(region.id))]))
+
 function intersects(box: tPackageBounds, target: tPackageBounds) {
     const longitude = box[0] <= target[2] && box[2] >= target[0]
     const latitude = box[1] <= target[3] && box[3] >= target[1]
@@ -56,13 +70,13 @@ function sourceFor(observations: {source: SupplySource}[], area: PackageArea): S
 export function createPackageAreas(deps: {
     window: (trip: TezWindow, signal?: AbortSignal, refresh?: boolean) => Promise<WindowResult>
     trends: (trip: TezWindow, ids: readonly string[], signal?: AbortSignal) => Promise<PackageTrends>
+    remembered?: (destination: string, filter: MapFilter) => PackageHotel[] | undefined
     regions?: readonly tRegion[]
 }) {
     const regions = deps.regions ?? connectedPackageRegions
     const regionIndex = createRangeIndex(regions, region => region.latitude, region => region.longitude)
     const maxLatitude = Math.max(0, ...regions.map(region => Math.max(region.latitude - region.bbox[1], region.bbox[3] - region.latitude)))
     const maxLongitude = Math.max(0, ...regions.map(region => Math.max(region.longitude - region.bbox[0], region.bbox[2] - region.longitude)))
-    const queue = createAsyncQueue(2)
     const snapshots = createBoundedCache<ReturnType<typeof createOfferIndex>>({maxEntries: 32, maxBytes: 8 * 1024 * 1024})
 
     function select(mode: tAreaMode, box: tPackageBounds | null, fallback: string, allowedDestinations?: readonly string[]): Selection {
@@ -89,9 +103,19 @@ export function createPackageAreas(deps: {
         return {regions: selected, area: {mode, bounds: box, destinations: selected, coverage, description}}
     }
 
+    function catalog(filter: MapFilter, destination: string, allowedDestinations?: readonly string[]): PackageMapHotels {
+        const selection = select('map', filter.box, destination, allowedDestinations)
+        const hotels = selection.regions.flatMap(region =>
+            deps.remembered?.(region.id, filter) ?? bundledCatalogs.get(region.id)?.(filter) ?? [])
+        const known = [...new Map(hotels.map(hotel => [hotel.id, hotel])).values()]
+        return {area: selection.area, knownHotels: known.slice(0, knownMarkerLimit), markersTruncated: known.length > knownMarkerLimit}
+    }
+
     async function observe(trip: TezWindow, filter: PackageQuery, mode: tAreaMode, signal?: AbortSignal, refresh = false,
         allowedDestinations?: readonly string[]) {
         const selection = select(mode, filter.box, trip.destinationId, allowedDestinations)
+        // Drain regional work within its request context. The provider buffer owns shared admission.
+        const queue = createAsyncQueue(2)
         const batches = await Promise.all(selection.regions.map(region => queue.add(async function observeRegion() {
             signal?.throwIfAborted()
             return deps.window({...trip, destinationId: region.id}, signal, refresh)
@@ -169,6 +193,7 @@ export function createPackageAreas(deps: {
             group.push(hotel.hotelId)
             groups.set(hotel.destinationId, group)
         }
+        const queue = createAsyncQueue(2)
         const entries = await Promise.all([...groups].map(([destinationId, hotelIds]) => queue.add(
             () => deps.trends({...trip, destinationId}, hotelIds, signal))))
         signal?.throwIfAborted()
@@ -177,5 +202,5 @@ export function createPackageAreas(deps: {
             source: entries.length ? sourceFor(entries, observed.area) : observed.source,
             items: entries.flatMap(entry => entry.items)} satisfies PackageTrends
     }
-    return {search, hotels, trends, select, health: snapshots.health}
+    return {catalog, search, hotels, trends, select, health: snapshots.health}
 }

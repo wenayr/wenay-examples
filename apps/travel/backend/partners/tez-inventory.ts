@@ -5,7 +5,7 @@ import type {SupplySource} from '../../src/supply-contract.ts'
 import {createProviderBuffer, ProviderRateLimitError, providerRetryAt} from '../provider-buffer.ts'
 import type {ProviderBucket} from '../provider-buffer-storage.ts'
 import type {ProviderBufferConfig} from '../provider-buffer-config.ts'
-import {allowTezSearch, tezSearchRetryAt} from './tez-access.ts'
+import {allowTezSearch, requestTez, tezSearchRetryAt} from './tez-access.ts'
 import {readBoundedProviderText} from '../provider-buffer-body.ts'
 import {buildTezSearch} from './tez.ts'
 import type {TezRegion} from '../../src/package-regions.ts'
@@ -154,7 +154,7 @@ async function readQuote(row: unknown, request: Request): Promise<TezQuote | nul
             room: conditionName(room, 1), board: conditionName(board, 0)}}
 }
 
-async function decode(payload: unknown, request: Request, checkedAt: string): Promise<TezObservation> {
+async function decode(payload: unknown, request: Request, checkedAt: string) {
     if (!payload || typeof payload != 'object') throw new Error('Некорректный ответ TEZ')
     if (!('success' in payload) || payload.success !== true) throw new Error('Поставщик не подтвердил результат запроса')
     if (!('data' in payload) || !Array.isArray(payload.data)) throw new Error('Поставщик не передал список вариантов')
@@ -171,8 +171,11 @@ async function decode(payload: unknown, request: Request, checkedAt: string): Pr
     const more = observed.some(item => Array.isArray(item) && item[0] == 'More results' && String(item[1]) == 'true')
     const emptyDay = !payload.data.length && !more
     const complete = Boolean(request.hotelId) && (emptyDay || lastPage && offers.size == payload.data.length)
-    return {quotes, byFareId: offers, generation: await hash([request.url, quotes, complete]), complete,
-        source: {...source, status: 'live', updatedAt: checkedAt, description}}
+    const observation = {quotes, byFareId: offers, generation: await hash([request.url, quotes, complete]), complete,
+        source: {...source, status: 'live', updatedAt: checkedAt, description}} satisfies TezObservation
+    const emptyOutcome = emptyDay ? 'upstream-empty' : 'no-validated-fares'
+    const outcome = quotes.length ? 'quotes' : emptyOutcome
+    return {observation, outcome}
 }
 
 function missing(message: string, handoff = false): TezObservation {
@@ -239,13 +242,25 @@ export function createTezInventory(deps: {
                 throw new ProviderRateLimitError(tezSearchRetryAt(deps.fetch, deps.now().getTime())!)
             }
             const timeout = AbortSignal.any([sharedSignal, AbortSignal.timeout(10_000)])
-            const response = await deps.fetch(search.url, {signal: timeout, redirect: 'error'})
-            if (response.status == 429) throw new ProviderRateLimitError(providerRetryAt(response.headers.get('retry-after'), deps.now().getTime()))
-            if (!response.ok) throw new Error('Поставщик не вернул цены')
-            const size = Number(response.headers.get('content-length')) || undefined
-            const text = await readBoundedProviderText({size, body: response.body, text: () => response.text()},
-                deps.config?.maxSnapshotBytes ?? 2_000_000, timeout)
-            return decode(JSON.parse(text), search, deps.now().toISOString())
+            let httpStatus: number | null = null
+            let outcome = 'transport-error'
+            try {
+                const response = await requestTez(deps.fetch, search.url, timeout)
+                httpStatus = response.status
+                outcome = 'http-error'
+                if (httpStatus == 429) throw new ProviderRateLimitError(providerRetryAt(response.headers.get('retry-after'), deps.now().getTime()))
+                if (!response.ok) throw new Error('Поставщик не вернул цены')
+                outcome = 'invalid-response'
+                const size = Number(response.headers.get('content-length')) || undefined
+                const text = await readBoundedProviderText({size, body: response.body, text: () => response.text()},
+                    deps.config?.maxSnapshotBytes ?? 2_000_000, timeout)
+                const result = await decode(JSON.parse(text), search, deps.now().toISOString())
+                outcome = result.outcome
+                return result.observation
+            } finally {
+                if (timeout.aborted) outcome = sharedSignal.aborted ? 'cancelled' : 'timeout'
+                if (deps.bucket) console.info('travel.tez.search', {outcome, httpStatus})
+            }
         }
         // This is a normalized request observation, not a claim that regional minima cover every fare or budget.
         return buffer.source.read({key: request.url, load: fetchQuotes, signal, refresh: forceFresh})

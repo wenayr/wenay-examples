@@ -15,10 +15,10 @@ import './hotel-search.css'
 const pageSize = 8
 const money = new Intl.NumberFormat('ru-RU', {style: 'currency', currency: 'EUR', minimumFractionDigits: 0, maximumFractionDigits: 2})
 
-function emptyText(busy: boolean, unconfirmed: boolean) {
-    if (busy) return 'Ищем отели и получаем цены…'
-    if (unconfirmed) return 'Поиск возобновится после ответа поставщика.'
-    return 'Совпадений среди полученных туров нет. Измените название или даты.'
+function emptyText(busy: boolean, loaded: boolean) {
+    if (busy) return 'Ищем отели…'
+    if (!loaded) return 'Результаты поиска ещё не получены.'
+    return 'В каталоге нет совпадений. Попробуйте другое название или область карты.'
 }
 
 export function HotelQuickSearch({prefs, destination, value, onValue, suspended, onLocate, onOpen,
@@ -114,7 +114,6 @@ export function HotelQuickSearch({prefs, destination, value, onValue, suspended,
             </header>
             <div className="hotel-quick-search__state" role="status">
                 {busy && <span>Обновляем предложения…</span>}
-                {retryAt && <span>Продолжим проверку в {new Date(retryAt).toLocaleTimeString('ru-RU')}</span>}
                 {query.error && <span>{query.error} <button type="button" onClick={query.retry}>Повторить</button></span>}
                 {!busy && sourceUnconfirmed && <span>Поставщик пока не подтвердил цены.</span>}
                 {data?.source.updatedAt && <span>{stale ? 'Последние полученные цены · ' : 'Проверено · '}
@@ -141,7 +140,7 @@ export function HotelQuickSearch({prefs, destination, value, onValue, suspended,
                         <button type="button" onClick={event => onOpen(hotel, 'graph', event.currentTarget)}>Об отеле</button>
                     </div>
                 </div>
-            </li>)}</ul> : <p className="hotel-quick-search__empty">{emptyText(busy, sourceUnconfirmed)}</p>}
+            </li>)}</ul> : <p className="hotel-quick-search__empty">{emptyText(busy, Boolean(data))}</p>}
             <footer>
                 <span>{data && hotelCount(data.total)}{data && ' · ' + data.source.name}</span>
                 <div>

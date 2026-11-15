@@ -1,5 +1,6 @@
 import {packageRegionDefinitions, type TezRegion} from '../../src/package-regions.ts'
 import {searchPhrase} from '../catalog-text.ts'
+import {requestTez} from './tez-access.ts'
 import type {PackageHotel} from '../../src/package-contract.ts'
 
 interface RegionReference {
@@ -25,7 +26,7 @@ export function createTezRegions(deps: {fetch: typeof fetch, now: () => Date}) {
         async function readCountry() {
             const params = new URLSearchParams({cityId: '3746', countryId, locale: 'en'})
             try {
-                const response = await deps.fetch(referenceEndpoint + '?' + params, {signal: AbortSignal.timeout(10_000), redirect: 'error'})
+                const response = await requestTez(deps.fetch, referenceEndpoint + '?' + params, AbortSignal.timeout(10_000))
                 if (!response.ok) throw new Error('Reference unavailable')
                 const payload = await response.json() as {success?: boolean, tours?: RegionReference[]}
                 if (payload.success != true || !Array.isArray(payload.tours)) throw new Error('Reference not confirmed')
@@ -68,8 +69,8 @@ export function createTezRegions(deps: {fetch: typeof fetch, now: () => Date}) {
         async function readHotels() {
             const params = new URLSearchParams({cityId: '3746', countryId, locale: 'en'})
             try {
-                const response = await deps.fetch('https://search.tezapi.eu/tariffsearch/hotels?' + params,
-                    {signal: AbortSignal.timeout(10_000), redirect: 'error'})
+                const url = 'https://search.tezapi.eu/tariffsearch/hotels?' + params
+                const response = await requestTez(deps.fetch, url, AbortSignal.timeout(10_000))
                 if (!response.ok) throw new Error('Hotel reference unavailable')
                 const payload = await response.json() as {success?: boolean, hotels?: HotelReference[]}
                 if (payload.success != true || !Array.isArray(payload.hotels)) throw new Error('Hotel reference not confirmed')

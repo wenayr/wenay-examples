@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict'
+import {AsyncLocalStorage} from 'node:async_hooks'
 import test from 'node:test'
 import {createTezInventory} from '../backend/partners/tez-inventory.ts'
 import {createPackages} from '../backend/packages.ts'
@@ -19,6 +20,56 @@ test('hosted Worker fails closed before creating a memory provider when its R2 b
     const health = await (await worker.fetch(request('health'))).json()
     assert.equal(health.persistence, 'unavailable')
     assert.equal(health.expected, 'r2-shared')
+})
+
+test('anonymous map geography remains readable during a missing R2 binding and scoped geography stays closed', async () => {
+    const worker = createTravelWorker({requireSharedStorage: true})
+    assert.equal((await worker.fetch(request('destinations'))).status, 200)
+    const url = 'package-map-hotels?destination=sharm'
+    const response = await worker.fetch(request(url))
+    assert.equal(response.status, 200)
+    assert.ok((await response.json()).knownHotels.length > 0)
+    assert.equal((await worker.fetch(request(url + '&agency=local'))).status, 503)
+    const owner = new Request(request(url), {headers: {'oai-authenticated-user-id': 'verified-owner'}})
+    assert.equal((await worker.fetch(owner)).status, 503)
+})
+
+test('ongoing quote work belongs to its originating request while static assets and health stay independent', async () => {
+    const ownership = new AsyncLocalStorage<{waitUntil: (work: Promise<unknown>) => void}>()
+    let started!: () => void
+    let release!: () => void
+    const reading = new Promise<void>(resolve => {started = resolve})
+    const gate = new Promise<void>(resolve => {release = resolve})
+    const bucket = {
+        async get() {
+            started()
+            await gate
+            throw new Error('Offline fixture')
+        },
+        async put() {throw new Error('Unexpected put')},
+    }
+    const worker = createTravelWorker({requireSharedStorage: true,
+        waitUntil(work) {ownership.getStore()!.waitUntil(work)},
+        assets: {'/index.html': {body: 'bWFw', type: 'text/html'}}})
+    function visit(url: string, jobs: Promise<unknown>[]) {
+        const context = {waitUntil(work: Promise<unknown>) {jobs.push(work)}}
+        return ownership.run(context, () => worker.fetch(new Request(url), {BUCKET: bucket}, context))
+    }
+    const quoteJobs: Promise<unknown>[] = []
+    const unrelated: Promise<unknown>[] = []
+    const quote = visit(request('packages?' + query).url, quoteJobs)
+    try {
+        await reading
+        const home = await visit('https://travel.example/', unrelated)
+        assert.equal(await home.text(), 'map')
+        const health = await (await visit(request('health').url, unrelated)).json()
+        assert.ok(health.boundedJobs > 0)
+        assert.ok(quoteJobs.length > 0)
+        assert.equal(unrelated.length, 0)
+    } finally { release() }
+    assert.equal((await quote).status, 200)
+    await Promise.all(quoteJobs)
+    assert.equal((await (await visit(request('health').url, unrelated)).json()).boundedJobs, 0)
 })
 
 test('Worker search uses the shared name index, ignores viewport, refreshes real observations and preserves unknown catalog hotels', async () => {

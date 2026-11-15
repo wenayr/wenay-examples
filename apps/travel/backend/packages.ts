@@ -75,6 +75,7 @@ export function createPackages(provider: Provider = createDefaultInventory()) {
     // Price data is short-lived. Reuse the prepared geography and price buckets while a
     // supplier observation is current. Page and viewport changes reuse the same result.
     const prepared = createBoundedCache<ReturnType<typeof prepare>>({maxEntries: 96, maxBytes: 8 * 1024 * 1024})
+    const latestDynamicCatalog = new Map<string, string>()
     // A successful supplier observation establishes a property identity for later empty-day responses.
     // Prices and availability always come from the distinct observation for the selected trip and day.
     const knownHotels = new Map<string, PackageHotel>()
@@ -110,7 +111,11 @@ export function createPackages(provider: Provider = createDefaultInventory()) {
             }
             metadata = await provider.catalog.enrich(trip.destinationId, [...hotels.values()], signal)
         }
-        return {data, ...observed(trip.destinationId, key, data, metadata)}
+        const entry = observed(trip.destinationId, key, data, metadata)
+        if (metadata?.some(hotel => Number.isFinite(hotel.latitude) && Number.isFinite(hotel.longitude))) {
+            latestDynamicCatalog.set(trip.destinationId, entry.revision)
+        }
+        return {data, ...entry}
     }
     async function search(trip: Trip, filter: Filter, options: {signal?: AbortSignal, refresh?: boolean} = {}): Promise<PackagePage> {
         const batch = await window(trip, options.signal, options.refresh)
@@ -218,7 +223,12 @@ export function createPackages(provider: Provider = createDefaultInventory()) {
         return {hotelId, name: hotel.name, hotelUrl: information.sourceUrl,
             checkedOn: information.checkedOn, photos: [], information}
     }
-    const area = createPackageAreas({window, trends: dailyTrends.read})
+    const area = createPackageAreas({window, trends: dailyTrends.read, remembered(destination, filter) {
+        const key = latestDynamicCatalog.get(destination)
+        if (!key) return undefined
+        const entry = prepared.view.get(key)
+        return entry?.index.findHotels(filter).filter(hotel => Number.isFinite(hotel.latitude) && Number.isFinite(hotel.longitude))
+    }})
     return {search, hotels, calendar, compare, recheck, trends, matrix: priceMatrix.read, area, gallery,
         source: {events: provider.events, health: provider.health,
             indexes: () => ({prepared: prepared.health.snapshot(), area: area.health.snapshot()})}}

@@ -1,4 +1,5 @@
 import {createAsyncQueue} from 'wenay-common2/client'
+import {requestTez} from './tez-access.ts'
 import type {PackageHotel} from '../../src/package-contract.ts'
 import type {PackageHotelGallery, PackageHotelInformation, PackageHotelPhoto} from '../../src/package-media-contract.ts'
 
@@ -180,7 +181,7 @@ export function createTezProperties(deps: {fetch: typeof fetch, now: () => Date}
         const existing = requests.get(url)
         if (existing) return observe(existing, signal)
         async function readResponse() {
-            const response = await deps.fetch(url, {signal, redirect: 'error'})
+            const response = await requestTez(deps.fetch, url, signal)
             if (!response.ok) throw new Error('Property metadata unavailable')
             const text = await response.text()
             if (text.length > 2_097_152) throw new Error('Property metadata too large')

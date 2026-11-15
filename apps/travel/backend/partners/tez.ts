@@ -1,5 +1,5 @@
 import type {SupplyOffer, SupplySource} from '../../src/supply-contract.ts'
-import {allowTezSearch} from './tez-access.ts'
+import {allowTezSearch, requestTez} from './tez-access.ts'
 import {packageRegionDefinitions, type TezRegion} from '../../src/package-regions.ts'
 
 const oneDay = 86_400_000
@@ -89,7 +89,7 @@ export function createTezProvider(deps: {fetch: typeof fetch, now: () => Date}) 
     }
     async function fetchSearch(search: NonNullable<ReturnType<typeof buildTezSearch>>): Promise<SearchResult> {
         try {
-            const response = await deps.fetch(search.url, {signal: AbortSignal.timeout(12000), redirect: 'error'})
+            const response = await requestTez(deps.fetch, search.url, AbortSignal.timeout(12000))
             if (!response.ok) throw new Error('Ошибка поиска TEZ')
             const checkedAt = deps.now().toISOString()
             const offers = readTezResults(await response.json(), search, checkedAt)

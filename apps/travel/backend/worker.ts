@@ -19,42 +19,26 @@ export interface TravelWorkerEnv {
 }
 export interface TravelExecutionContext {waitUntil: (work: Promise<unknown>) => void}
 
-function createWorkerJobs() {
-    const owners = new Map<TravelExecutionContext, number>()
-    const pending = new Set<Promise<unknown>>()
+function createWorkerJobs(waitUntil?: TravelExecutionContext['waitUntil']) {
+    let pending = 0
     function register(job: Promise<unknown>) {
-        const bounded = job.catch(() => {})
-        pending.add(bounded)
-        for (const owner of owners.keys()) owner.waitUntil(bounded)
-        void bounded.finally(() => pending.delete(bounded))
+        pending++
+        const bounded = job.catch(() => {}).finally(() => {pending--})
+        // The host resolves the execution context at the call site of the new job.
+        waitUntil?.(bounded)
     }
-    function own(context?: TravelExecutionContext) {
-        if (context) {
-            owners.set(context, (owners.get(context) ?? 0) + 1)
-            for (const job of pending) context.waitUntil(job)
-        }
-        let closed = false
-        return function release() {
-            if (closed) return
-            closed = true
-            if (context) {
-                const remaining = (owners.get(context) ?? 1) - 1
-                if (remaining) owners.set(context, remaining)
-                else owners.delete(context)
-            }
-        }
-    }
-    return {register, own, pending: () => pending.size}
+    return {register, pending: () => pending}
 }
 
 export function createTravelWorker(deps: {
     assets?: Record<string, WorkerAsset>
     packages?: ReturnType<typeof createPackages>
     requireSharedStorage?: boolean
+    waitUntil?: TravelExecutionContext['waitUntil']
 } = {}) {
     const destinations = placeDestinations.filter(place => packageDestinations.some(id => id == place.id))
     function createServices(env: TravelWorkerEnv) {
-        const jobs = createWorkerJobs()
+        const jobs = createWorkerJobs(deps.waitUntil)
         const bufferConfig = resolveProviderBufferConfig(env.TRAVEL_UPDATE_PROFILE)
         const inventory = deps.packages ? null : createDefaultInventory({bucket: env.BUCKET, config: bufferConfig, waitUntil: jobs.register})
         const packages = deps.packages ?? createPackages(inventory!)
@@ -105,48 +89,41 @@ export function createTravelWorker(deps: {
         }
         return {body, type: entry.type}
     }
-    async function fetch(request: Request, env: TravelWorkerEnv = {}, context?: TravelExecutionContext) {
+    async function fetch(request: Request, env: TravelWorkerEnv = {}, _context?: TravelExecutionContext) {
         const url = new URL(request.url)
         if (deps.requireSharedStorage && !env.BUCKET && url.pathname.startsWith('/api/travel/')) {
-            return packageJson(503, {status: 'degraded', persistence: 'unavailable', expected: 'r2-shared',
+            const geography = url.pathname == '/api/travel/package-map-hotels' || url.pathname == '/api/travel/destinations'
+            const publicCatalog = geography && !url.searchParams.has('agency') && !agencyIdentity(request)
+            if (!publicCatalog) return packageJson(503, {status: 'degraded', persistence: 'unavailable', expected: 'r2-shared',
                 error: 'Общий буфер цен временно недоступен. Повторная проверка отложена.'}, {'retry-after': '10'})
         }
         const service = servicesFor(env)
-        const release = service.jobs.own(context)
-        let streaming = false
-        try {
-            const agencyResponse = await service.agency.handle(request)
-            if (agencyResponse) return agencyResponse
-            const reviewResponse = await service.reviews.handle(request)
-            if (reviewResponse) return reviewResponse
-            if (url.pathname == '/api/travel/health') return packageJson(200, {
-                status: 'ok', runtime: 'worker-esm', source: 'TEZ TOUR Eesti',
-                destinations: destinations.map(place => place.id), operations: packageHttpPaths,
-                refresh: 'refresh=1', persistence: env.BUCKET ? 'r2-shared-request-observations' : 'process-memory',
-                agencyStorage: env.BUCKET ? 'r2-json' : 'unavailable',
-                buffer: service.buffer?.snapshot() ?? {mode: 'injected-provider'},
-                updates: service.packages.health.snapshot(), boundedJobs: service.jobs.pending(),
-                indexes: service.indexes(),
-            })
-            const response = await service.packages.handle(request, release)
-            if (response) {
-                streaming = response.headers.get('content-type')?.startsWith('text/event-stream') ?? false
-                return response
-            }
-            if (url.pathname.startsWith('/api/')) return packageJson(501, {
-                error: 'Эта серверная операция пока не подключена на данном сайте. Доступны поиск туров, карта, отели и матрица цен.',
-                operations: packageHttpPaths,
-            })
-            if (request.method != 'GET' && request.method != 'HEAD') return packageJson(405, {error: 'Используйте GET.'}, {Allow: 'GET, HEAD'})
-            const path = url.pathname == '/' ? '/index.html' : url.pathname
-            const entry = asset(path) ?? (!path.includes('.') ? asset('/index.html') : null)
-            if (!entry) return packageJson(404, {error: 'Страница не найдена.'})
-            return new Response(request.method == 'HEAD' ? null : entry.body, {headers: {
-                'content-type': entry.type, 'cache-control': path.startsWith('/assets/') ? 'public, max-age=31536000, immutable' : 'no-cache',
-            }})
-        } finally {
-            if (!streaming) release()
-        }
+        const agencyResponse = await service.agency.handle(request)
+        if (agencyResponse) return agencyResponse
+        const reviewResponse = await service.reviews.handle(request)
+        if (reviewResponse) return reviewResponse
+        if (url.pathname == '/api/travel/health') return packageJson(200, {
+            status: 'ok', runtime: 'worker-esm', source: 'TEZ TOUR Eesti',
+            destinations: destinations.map(place => place.id), operations: packageHttpPaths,
+            refresh: 'refresh=1', persistence: env.BUCKET ? 'r2-shared-request-observations' : 'process-memory',
+            agencyStorage: env.BUCKET ? 'r2-json' : 'unavailable',
+            buffer: service.buffer?.snapshot() ?? {mode: 'injected-provider'},
+            updates: service.packages.health.snapshot(), boundedJobs: service.jobs.pending(),
+            indexes: service.indexes(),
+        })
+        const response = await service.packages.handle(request)
+        if (response) return response
+        if (url.pathname.startsWith('/api/')) return packageJson(501, {
+            error: 'Эта серверная операция пока не подключена на данном сайте. Доступны поиск туров, карта, отели и матрица цен.',
+            operations: packageHttpPaths,
+        })
+        if (request.method != 'GET' && request.method != 'HEAD') return packageJson(405, {error: 'Используйте GET.'}, {Allow: 'GET, HEAD'})
+        const path = url.pathname == '/' ? '/index.html' : url.pathname
+        const entry = asset(path) ?? (!path.includes('.') ? asset('/index.html') : null)
+        if (!entry) return packageJson(404, {error: 'Страница не найдена.'})
+        return new Response(request.method == 'HEAD' ? null : entry.body, {headers: {
+            'content-type': entry.type, 'cache-control': path.startsWith('/assets/') ? 'public, max-age=31536000, immutable' : 'no-cache',
+        }})
     }
     return {fetch}
 }

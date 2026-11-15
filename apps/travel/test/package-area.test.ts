@@ -1,8 +1,12 @@
 import assert from 'node:assert/strict'
+import {AsyncLocalStorage} from 'node:async_hooks'
 import test from 'node:test'
+import {createPackageAreas} from '../backend/package-area.ts'
 import {createTezInventory} from '../backend/partners/tez-inventory.ts'
 import {createPackages} from '../backend/packages.ts'
+import {packageQuery} from '../backend/travel-query.ts'
 import {createTravelWorker} from '../backend/worker.ts'
+import type {PackageMapHotels} from '../src/package-area-contract.ts'
 
 const base = 'destination=hurghada&areaMode=map&firstDeparture=2030-01-24&lastDeparture=2030-01-25&nights=7&adults=2&minTotal=0&maxTotal=500000'
 const boxes = {
@@ -55,6 +59,28 @@ test('viewport selects Sharm independently from the old Hurghada destination and
     assert.deepEqual(app.calls, [5734, 5735])
 })
 
+test('concurrent map requests start regional reads in their own request context', async () => {
+    const owner = new AsyncLocalStorage<string>()
+    const started: (string | undefined)[] = []
+    let release!: () => void
+    const pending = new Promise<void>(resolve => {release = resolve})
+    const areas = createPackageAreas({
+        async window() {
+            started.push(owner.getStore())
+            await pending
+            return {hotels: new Map(), data: {generation: 'empty', complete: true, quotes: [], byFareId: new Map(),
+                source: {id: 'tez', name: 'TEZ', status: 'live', updatedAt: '2030-01-01', description: ''}}}
+        },
+        async trends() {throw new Error('Unexpected trend request')},
+    })
+    const {trip, filter} = packageQuery(new URLSearchParams(base + boxes.sharm), 'hurghada', '2030-01-01')
+    const clients = ['SSE A', 'REST B', 'REST C']
+    const requests = clients.map(client => owner.run(client, () => areas.search(trip, filter, 'map')))
+    release()
+    await Promise.all(requests)
+    assert.deepEqual(started, clients)
+})
+
 test('unsupported viewport avoids source calls and does not claim that hotels do not exist', async () => {
     const app = fixture()
     const result = await app.read('packages', '&west=139&south=35&east=140&north=36')
@@ -71,6 +97,42 @@ test('region envelopes include verified hotels outside the old city rectangle', 
     assert.equal(result.data.area.destinations[0].id, 'hurghada')
     assert.ok(result.data.knownHotels.some((hotel: {id: string}) => hotel.id == 'tez:210779'))
     assert.deepEqual(app.calls, [5734])
+})
+
+test('a cold SSH viewport gets hotel identities while the concurrent fare request is still pending', async () => {
+    let markStarted!: () => void
+    let reply!: (response: Response) => void
+    const started = new Promise<void>(resolve => {markStarted = resolve})
+    const pending = new Promise<Response>(resolve => {reply = resolve})
+    let calls = 0
+    const provider = createTezInventory({now: () => new Date('2030-01-01'), fetch: async () => {
+        calls++
+        markStarted()
+        return pending
+    }})
+    const worker = createTravelWorker({packages: createPackages(provider)})
+    const box = '&west=34.238033294677734&south=27.8920391744911&east=34.472007751464844&north=28.033955451405696'
+    const read = (path: string) => worker.fetch(new Request('https://travel.example/api/travel/' + path))
+    const fare = read('packages?' + base + box)
+    await started
+    try {
+        const result = await read('package-map-hotels?destination=hurghada&minStars=5' + box)
+        assert.equal(result.status, 200)
+        const mapped: PackageMapHotels = await result.json()
+        assert.deepEqual(mapped.area.destinations.map(place => place.id), ['sharm'])
+        assert.ok(mapped.knownHotels.some(hotel => hotel.name.includes('BARON PALMS')))
+        assert.ok(mapped.knownHotels.every(hotel => hotel.stars == 5 && Boolean(hotel.photo?.url) && !('minTotal' in hotel)))
+        const focused: PackageMapHotels = await (await read('package-map-hotels?destination=sharm')).json()
+        assert.deepEqual(focused.area.destinations.map(place => place.id), ['sharm'])
+        assert.ok(focused.knownHotels.length > mapped.knownHotels.length)
+        assert.equal(calls, 1)
+    } finally {
+        reply(new Response(null, {status: 429, headers: {'retry-after': '90'}}))
+    }
+    const partial = await (await fare).json()
+    assert.equal(partial.area.coverage, 'partial')
+    assert.ok(partial.source.retryAt)
+    assert.ok(partial.knownHotels.some((hotel: {name: string}) => hotel.name.includes('BARON PALMS')))
 })
 
 test('merged area keeps failed-refresh fares stale and hotel search remains scoped to the map', async () => {

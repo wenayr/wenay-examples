@@ -35,8 +35,8 @@ export function createProviderCoordinator(deps: {
         // Only resolved adapters survive a request. An unfinished crypto Promise must retain its request owner.
         const scope = await withProviderSignal(() => providerBufferHash(namespace), signal)
         signal?.throwIfAborted()
-        if (!resolvedStorage) resolvedStorage = createProviderStorage({bucket: deps.bucket,
-            prefix: 'travel-source-buffer/v1/' + scope, maxBytes: config.maxSnapshotBytes, maxSharedReads: config.maxSharedReads})
+        if (!resolvedStorage) resolvedStorage = createProviderStorage({bucket: deps.bucket, prefix: 'travel-source-buffer/v1/' + scope,
+            maxBytes: config.maxSnapshotBytes, maxSharedReads: config.maxSharedReads, deadlineMs: config.deadlineMs})
         return resolvedStorage
     }
     let scopes = memoryScopes.get(deps.memoryScope)
@@ -51,7 +51,6 @@ export function createProviderCoordinator(deps: {
     }
     const local = memory
     let wantedCooldown = 0
-    let cooldownWork: Promise<void> | null = null
 
     function reservation(gate: Gate, key: string, now: number, shared: boolean): Admission & {gate?: Gate} {
         const limits = config.limits
@@ -139,10 +138,8 @@ export function createProviderCoordinator(deps: {
     async function cooldown(retryAt: number, signal?: AbortSignal) {
         wantedCooldown = Math.max(wantedCooldown, retryAt)
         local.retryAt = Math.max(local.retryAt, retryAt)
-        if (!cooldownWork) {
-            cooldownWork = persistCooldown(signal).finally(() => {cooldownWork = null})
-        }
-        await cooldownWork
+        // Conditional updates preserve the maximum retry time without awaiting another request's I/O.
+        await persistCooldown(signal)
     }
     function complete(key: string, sequence: number) {
         if (deps.bucket) return

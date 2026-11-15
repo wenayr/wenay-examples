@@ -51,7 +51,8 @@ export function usePackageMatrix(prefs: PackagePreferences, departures: readonly
                         for (const night of chunk.nightsValues.split(',').map(Number)) {
                             const cellKey = matrixCellKey(departure, night)
                             failedCellKeys.add(cellKey)
-                            if (retained.has(cellKey)) staleCellKeys.add(cellKey)
+                            const cell = retained.get(cellKey)
+                            if (cell?.inBudget || cell?.lowest) staleCellKeys.add(cellKey)
                         }
                     }
                 }
@@ -59,17 +60,20 @@ export function usePackageMatrix(prefs: PackagePreferences, departures: readonly
                 const retryAt = matrixRetryAt(data)
                 if (retryAt && Date.parse(retryAt) > Date.now()) {
                     waits.push(retryAt)
-                    loading = true
                 }
                 for (const cell of data.cells) {
                     const cellKey = matrixCellKey(cell.departure, cell.nights)
                     const uncertain = cell.source.stale || cell.status == 'unknown' || cell.status == 'failed'
                     const paused = Boolean(cell.retryAt ?? cell.source.retryAt)
-                    const retainPrevious = uncertain || paused || snapshot.loading || snapshot.error
-                    if (retainPrevious) {
-                        staleCellKeys.add(cellKey)
-                        if (!retained.has(cellKey)) retained.set(cellKey, cell)
-                    } else retained.set(cellKey, cell)
+                    const uncertainPrice = uncertain || paused || snapshot.loading || snapshot.error
+                    const previous = retained.get(cellKey)
+                    const hasPriorFare = previous?.inBudget || previous?.lowest
+                    const incomingFare = cell.inBudget ?? cell.lowest
+                    const older = Date.parse(previous?.checkedAt ?? '') > Date.parse(cell.checkedAt ?? '')
+                    const keep = hasPriorFare && uncertainPrice && (!incomingFare || older)
+                    const display = keep ? previous : cell
+                    retained.set(cellKey, display)
+                    if (uncertainPrice && (display.inBudget || display.lowest)) staleCellKeys.add(cellKey)
                     if (cell.status == 'failed') failedCellKeys.add(cellKey)
                 }
             }

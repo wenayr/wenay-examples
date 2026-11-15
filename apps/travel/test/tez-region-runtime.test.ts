@@ -14,7 +14,8 @@ const trip = 'destination=antalya&areaMode=map&west=30.53&south=36.80&east=30.99
 test('lazy country references use exact Tallinn tour IDs and preserve unknown metadata after a tariff cooldown', async () => {
     const paths: string[] = []
     let clock = Date.parse('2030-01-01T10:00:00Z')
-    const sourceFetch: typeof fetch = async function sourceFetch(input) {
+    const sourceFetch: typeof fetch = async function sourceFetch(input, options) {
+        assert.equal(options?.redirect, 'manual')
         const url = new URL(String(input))
         paths.push(url.pathname)
         if (url.pathname.endsWith('/regions')) return Response.json({success: true, tours: [
@@ -124,4 +125,8 @@ test('additional metadata batches rebuild the area index even while the price ge
     const second = await (await worker.fetch(new Request('https://travel.example/api/travel/packages?' + trip))).json()
     assert.equal(second.knownHotels.filter((hotel: PackageHotel) => hotel.latitude != null).length, 2)
     assert.equal(second.knownHotels.length, 2)
+    const projection = await (await worker.fetch(new Request('https://travel.example/api/travel/package-map-hotels?'
+        + 'destination=antalya&west=30.89&south=36.85&east=30.90&north=36.86'))).json()
+    assert.deepEqual(projection.knownHotels.map((hotel: PackageHotel) => hotel.id).sort(), known.map(hotel => hotel.id).sort())
+    assert.equal(batches, 2)
 })

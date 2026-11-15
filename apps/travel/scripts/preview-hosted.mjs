@@ -1,8 +1,8 @@
 import http from 'node:http'
 import {Readable} from 'node:stream'
 import {fileURLToPath} from 'node:url'
-import worker from '../dist/server/index.js'
 import {createPreviewAgencyStorage} from './preview-agency-storage.mjs'
+import {loadPreviewWorker, runPreviewRequest} from './preview-worker-context.mjs'
 
 function option(name, fallback) {
     const index = process.argv.indexOf('--' + name)
@@ -14,6 +14,7 @@ if (!Number.isInteger(port) || port < 1 || port > 65535) throw new RangeError('Ð
 if (process.env.HTTPS_PROXY || process.env.HTTP_PROXY) http.setGlobalProxyFromEnv?.()
 const bucket = createPreviewAgencyStorage(fileURLToPath(new URL('../.cache/agency-preview/', import.meta.url)))
 const background = new Set()
+const worker = await loadPreviewWorker()
 function waitUntil(work) {
     const bounded = Promise.resolve(work).catch(() => {})
     background.add(bounded)
@@ -34,9 +35,10 @@ const server = http.createServer(async function serve(request, response) {
             init.body = Readable.toWeb(request)
             init.duplex = 'half'
         }
-        const result = await worker.fetch(new Request(url, init), {
+        const context = {waitUntil}
+        const result = await runPreviewRequest(context, () => worker.fetch(new Request(url, init), {
             BUCKET: bucket, TRAVEL_UPDATE_PROFILE: process.env.TRAVEL_UPDATE_PROFILE,
-        }, {waitUntil})
+        }, context))
         if (response.destroyed) return
         response.writeHead(result.status, Object.fromEntries(result.headers))
         if (result.body) Readable.fromWeb(result.body).pipe(response)

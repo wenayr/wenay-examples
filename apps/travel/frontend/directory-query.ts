@@ -107,7 +107,7 @@ export function useDirectoryEvents(destination: string, revision: string | undef
     }, [destination, ready, scopeKey])
 }
 
-type DirectoryEndpoint = 'destinations' | 'catalog' | 'hotel' | 'options' | 'events' | 'packages'
+type DirectoryEndpoint = 'destinations' | 'catalog' | 'hotel' | 'options' | 'events' | 'packages' | 'package-map-hotels'
     | 'package-calendar' | 'package-trends' | 'package-matrix' | 'package-gallery' | 'package-hotel-search' | 'package-compare' | 'package-recheck'
     | 'flights' | 'airports' | 'providers' | 'provider-search' | 'deals' | 'markets'
     | 'hotel-reviews'

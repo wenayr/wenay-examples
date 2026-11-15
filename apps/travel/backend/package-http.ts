@@ -1,14 +1,14 @@
 import type {SupplyDestination} from '../src/supply-contract.ts'
 import type {createPackages} from './packages.ts'
 import {packageDestinations} from '../src/package-contract.ts'
-import {dateValue, numberParam, packageQuery} from './travel-query.ts'
+import {dateValue, mapBox, numberParam, packageQuery} from './travel-query.ts'
 import {tezHotelGallery} from './partners/tez-media.ts'
 import type {AgencySettings} from '../src/agency-contract.ts'
 import {AgencyError, agencyIdentity} from './agency.ts'
 import {createPackageLive} from './package-live.ts'
 import {resolveProviderBufferConfig, type ProviderBufferConfig} from './provider-buffer-config.ts'
 
-const paths = ['destinations', 'packages', 'package-hotel-search', 'package-calendar', 'package-trends',
+const paths = ['destinations', 'packages', 'package-map-hotels', 'package-hotel-search', 'package-calendar', 'package-trends',
     'package-matrix', 'package-gallery', 'package-compare', 'package-recheck'] as const
 const readPaths = paths.map(path => '/api/travel/' + path)
 export const packageHttpPaths = [...readPaths, '/api/travel/package-events']
@@ -63,14 +63,21 @@ export function createPackageHttp(deps: {
             }
             if (settings && !destinations.length) return packageJson(403, {error: 'Выберите направления в настройках агентства, чтобы открыть поиск.'})
             if (!deps.packages) return packageJson(503, {error: 'Пакетный поиск недоступен.'})
+            const destinationId = params.get('destination') ?? destinations[0]?.id
+            const requested = destinations.find(place => place.id == destinationId)
+            const mapFocus = requested && packageDestinations.includes(requested.id) ? requested :
+                destinations.find(place => packageDestinations.includes(place.id))
+            if (url.pathname == '/api/travel/package-map-hotels') {
+                if (!mapFocus) return packageJson(404, {error: 'Направление не найдено.'})
+                const filter = {box: mapBox(params), minStars: numberParam(params.get('minStars'), 0, 5, 0)}
+                return packageJson(200, deps.packages.area.catalog(filter, mapFocus.id, settings?.destinations))
+            }
             const areaValue = params.get('areaMode')
             if (areaValue != null && areaValue != 'map' && areaValue != 'destination') throw new RangeError('Выберите область карты или направление.')
             const mapPath = ['packages', 'package-hotel-search', 'package-trends'].some(path => url.pathname.endsWith('/' + path))
             const areaMode = areaValue == 'map' || areaValue == null && params.has('west') ? 'map' : 'destination'
             const areaRequest = mapPath && areaMode == 'map'
-            const destinationId = params.get('destination') ?? destinations[0]?.id
-            const fallback = destinations.find(place => packageDestinations.some(id => id == place.id))
-            const destination = areaRequest ? fallback : destinations.find(place => place.id == destinationId)
+            const destination = areaRequest ? mapFocus : requested
             if (!destination) return packageJson(404, {error: 'Направление не найдено.'})
             const {trip, filter} = packageQuery(params, destination.id, deps.today?.() ?? new Date().toISOString().slice(0, 10))
             const refresh = refreshValue(params.get('refresh'))

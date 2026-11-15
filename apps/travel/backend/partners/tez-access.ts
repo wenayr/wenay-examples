@@ -1,5 +1,11 @@
 // Both the public package search and the price calendar use the same supplier quota per process.
 const limiters = new WeakMap<typeof fetch, number[]>()
+
+// Workers requires the global fetch receiver and supports manual redirects. Each adapter rejects non-2xx replies.
+export function requestTez(fetchImpl: typeof fetch, url: string, signal: AbortSignal) {
+    return fetchImpl.call(globalThis, url, {signal, redirect: 'manual'})
+}
+
 function recentStarts(request: typeof fetch, now: number) {
     let starts = limiters.get(request)
     if (!starts) {

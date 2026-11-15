@@ -1,12 +1,13 @@
 import {useCallback, useEffect, useEffectEvent, useMemo, useRef, useState} from 'react'
 import type {PackageCalendar, PackageHotel, PackagePage, PackageSummary} from '../src/package-contract.ts'
+import type {PackageMapHotels} from '../src/package-area-contract.ts'
 import type {PackageMatrixCell} from '../src/package-matrix-contract.ts'
 import type {PackageTrends} from '../src/package-trends-contract.ts'
 import type {SupplyDestination} from '../src/supply-contract.ts'
 import {DirectoryMap, type MapProperty, type tMapBounds, type tMapCamera} from './DirectoryMap.tsx'
 import {directoryUrl, useDirectoryQuery, useDirectoryTransport} from './directory-query.ts'
 import {dateLabel, hotelCount} from './presentation.ts'
-import {loadPackages, packageQuery, savePackages, supportsPackage, type PackagePreferences} from './package-preferences.ts'
+import {loadPackages, packageQuery, savePackages, supportsPackage, usualBudget, type PackagePreferences} from './package-preferences.ts'
 import {PackageFilters} from './PackageFilters.tsx'
 import {PackageHotelPage} from './PackageHotelPage.tsx'
 import {hotelCalendarRequired, hotelSectionForRoute, type tHotelPageSection} from './hotel-page-entry.ts'
@@ -20,7 +21,7 @@ import {matrixCellKey, matrixMinimum, matrixOverview, matrixSnapshotCells, matri
 import {usePackageMatrix} from './package-matrix-query.ts'
 import {useAgency} from './agency/AgencyProvider.tsx'
 import {usePageVisible} from './visible-refresh.ts'
-import {packageHotelId, type tPackageHotel} from './package-hotel.ts'
+import {hotelsInMapArea, insideMapBounds, mapPriceStatus, packageHotelId, type tPackageHotel} from './package-hotel.ts'
 import {useMapDisplayPreferences} from './map-display-preferences.ts'
 import {MapCardIcon} from './map-card-icons.tsx'
 import {loadSelectedMapHotel, saveSelectedMapHotel, selectedMapHotelReference, type tSelectedMapHotel} from './package-map-selection.ts'
@@ -41,15 +42,10 @@ function markerProperty(marker: tPackageHotel): MapProperty | null {
     return {
         id, name: marker.name, latitude: marker.latitude, longitude: marker.longitude,
         priceTotal: total, priceLabel: label, photo: marker.photo ?? null,
+        photos: 'photos' in marker ? marker.photos : undefined,
+        propertyUrl: 'url' in marker ? marker.url : undefined,
         tooltip: marker.name + ' · ' + (label ?? 'Цена ещё не подтверждена'),
     }
-}
-
-function insideMapBounds(point: MapProperty, bounds: tMapBounds | null) {
-    if (!bounds) return true
-    const longitude = point.longitude >= bounds[0] && point.longitude <= bounds[2]
-    const latitude = point.latitude >= bounds[1] && point.latitude <= bounds[3]
-    return longitude && latitude
 }
 
 function BrowsePackages({initial, destinations, initialHotelName, openHotel, route}: {
@@ -107,15 +103,10 @@ function BrowsePackages({initial, destinations, initialHotelName, openHotel, rou
         return () => { active = false }
     }, [])
     const opener = useRef<HTMLElement | null>(null)
-    const [snapshot, setSnapshot] = useState<{context: string, data: PackagePage} | null>(null)
-    const tripContext = JSON.stringify({...packageQuery(prefs), minStars: prefs.minStars, areaMode})
+    const tripContext = JSON.stringify([agency?.slug, agency?.revision, packageQuery(prefs), prefs.minStars, areaMode])
     const visible = usePageVisible()
     const transport = useDirectoryTransport()
     const liveMode = transport.mode == 'sse' ? 'live' : transport.mode.replace('http-', '')
-    const transportLabels: Record<string, string> = {
-        connecting: 'Подключаем обновления', live: 'Цены обновляются', fallback: 'Периодическое обновление', offline: 'Нет связи',
-    }
-    const transportLabel = transport.profile == 'request-only' ? 'Обновление по запросу' : transportLabels[liveMode]
     const openedOrigin = openedIdentity && packageHotelId(openedIdentity) == prefs.hotelId ? openedIdentity.destinationId : undefined
     const rememberedOrigin = rememberedHotel?.id == prefs.hotelId ? rememberedHotel.destinationId : undefined
     const originToResolve = openedOrigin ?? rememberedOrigin ?? route.query.get('hotelDestination') ?? prefs.destination
@@ -124,6 +115,14 @@ function BrowsePackages({initial, destinations, initialHotelName, openHotel, rou
         ? directoryUrl('destinations', {id: originToResolve}) : null)
     const mapActive = visible && !open
     const range = bounds && {west: bounds[0], south: bounds[1], east: bounds[2], north: bounds[3]}
+    const catalogParams = {destination: prefs.destination, minStars: prefs.minStars || undefined}
+    const catalogScope = directoryUrl('package-map-hotels', catalogParams)
+    const catalogUrl = directoryUrl('package-map-hotels', {...catalogParams, ...range})
+    const catalog = useDirectoryQuery<PackageMapHotels>(mapActive && bounds ? catalogUrl : null)
+    const [lastCatalog, setLastCatalog] = useState<{scope: string, page: PackageMapHotels} | null>(null)
+    useEffect(() => {
+        if (catalog.data) setLastCatalog({scope: catalogScope, page: catalog.data})
+    }, [catalogScope, catalog.data])
     const url = directoryUrl('packages', {...packageQuery(prefs), minStars: prefs.minStars || undefined, areaMode,
         limit: 100, ...range})
     const [settledUrl, setSettledUrl] = useState(url)
@@ -132,13 +131,15 @@ function BrowsePackages({initial, destinations, initialHotelName, openHotel, rou
         const timer = setTimeout(() => setSettledUrl(url), 250)
         return () => clearTimeout(timer)
     }, [url, settledUrl])
-    const query = useDirectoryQuery<PackagePage>(mapActive ? settledUrl : null)
-    const latest = url == settledUrl ? query.data : undefined
-    const previous = snapshot?.context == tripContext ? snapshot.data : undefined
-    const sourceRetryAt = latest?.source.retryAt
-    const data = sourceRetryAt ? previous ?? latest : latest ?? previous
+    const query = useDirectoryQuery<PackagePage>(mapActive && bounds && url == settledUrl ? url : null)
+    const data = query.data
+    const area = catalog.data?.area ?? data?.area
+    // During a pan only coordinates still inside the new bounds can bridge the next catalog read.
+    const previousHotels = lastCatalog?.scope == catalogScope ? lastCatalog.page.knownHotels : undefined
+    const catalogHotels = catalog.data?.knownHotels ?? previousHotels
+    const mapHotels = useMemo(() => hotelsInMapArea(catalogHotels ?? [], data, bounds), [catalogHotels, data, bounds])
     useEffect(() => {
-        const discovered = [...(latest?.area?.destinations ?? []), ...(originQuery.data?.destinations ?? [])]
+        const discovered = [...(area?.destinations ?? []), ...(originQuery.data?.destinations ?? [])]
         if (!discovered.length) return
         setKnownPlaces(current => {
             const places = new Map(current.map(place => [place.id, place]))
@@ -146,17 +147,12 @@ function BrowsePackages({initial, destinations, initialHotelName, openHotel, rou
             if (places.size == current.length && discovered.every(place => current.includes(place))) return current
             return [...places.values()]
         })
-    }, [latest?.area?.destinations, originQuery.data?.destinations])
-    const updating = url != settledUrl || query.loading
-    const error = url == settledUrl ? query.error : undefined
-    const sourceUnavailable = latest?.source.status == 'unavailable'
-    useEffect(() => {
-        if (latest && !latest.source.retryAt) setSnapshot({context: tripContext, data: latest})
-    }, [latest, tripContext])
+    }, [area?.destinations, originQuery.data?.destinations])
+    const updating = mapActive && (!bounds || url != settledUrl || query.loading)
+    const loadingHotels = mapActive && (!bounds || catalog.loading) && !catalog.data && !data && !mapHotels.size
     const searchedIdentity = searchedHotel && packageHotelId(searchedHotel.hotel) == prefs.hotelId ? searchedHotel.hotel : undefined
     const openedSelection = openedIdentity && packageHotelId(openedIdentity) == prefs.hotelId ? openedIdentity : undefined
-    const selectedCandidate = data?.items.find(item => item.hotelId == prefs.hotelId) ?? data?.markers.find(item => item.hotelId == prefs.hotelId)
-        ?? data?.knownHotels?.find(item => item.id == prefs.hotelId) ?? searchedIdentity ?? openedSelection
+    const selectedCandidate = data?.items.find(item => item.hotelId == prefs.hotelId) ?? mapHotels.get(prefs.hotelId) ?? searchedIdentity ?? openedSelection
     const selectedReference = selectedMapHotelReference(rememberedHotel, prefs.hotelId, selectedCandidate)
     const selectedHotel = selectedReference ? {...selectedCandidate, ...selectedReference} : selectedCandidate
     useEffect(() => {
@@ -212,7 +208,7 @@ function BrowsePackages({initial, destinations, initialHotelName, openHotel, rou
             return found ? current : null
         })
     }, [calendar, priceView, prefs.fareId])
-    const trendsUrl = mapActive && latest?.markers.length ? directoryUrl('package-trends', {
+    const trendsUrl = mapActive && data?.markers.length ? directoryUrl('package-trends', {
         ...packageQuery(prefs), minStars: prefs.minStars || undefined, areaMode, ...range,
     }) : null
     const trendsQuery = useDirectoryQuery<PackageTrends>(trendsUrl)
@@ -224,8 +220,7 @@ function BrowsePackages({initial, destinations, initialHotelName, openHotel, rou
     const searchedSelection = searchedHotel?.context == tripContext ? searchedIdentity : undefined
     const selectedName = calendar?.hotel.name ?? selectedHotel?.name ?? initialHotelName ?? 'Выбранный отель'
     const points = useMemo(() => {
-        const byId = new Map([...(data?.knownHotels ?? []), ...(data?.markers ?? [])].map(hotel => [packageHotelId(hotel), hotel] as const))
-        const located = [...byId.values()].flatMap(hotel => {
+        const located = [...mapHotels.values()].flatMap(hotel => {
             const point = markerProperty(hotel)
             return point ? [point] : []
         })
@@ -269,7 +264,7 @@ function BrowsePackages({initial, destinations, initialHotelName, openHotel, rou
         if (favouriteFilter == 'all') return markers
         if (favouriteFilter == 'marked') return markers.filter(marker => marker.favouriteLevel > 0)
         return markers.filter(marker => marker.favouriteLevel == Number(favouriteFilter))
-    }, [data, prefs.hotelId, prefs.nights, prefs.fareId, selectedFare, missingSelection, trends, favourites.levels, favouriteFilter,
+    }, [data, mapHotels, prefs.hotelId, prefs.nights, prefs.fareId, selectedFare, missingSelection, trends, favourites.levels, favouriteFilter,
         searchedSelection, bounds, compactPriceMode, miniSnapshot, miniContext, miniQuery.staleCellKeys, miniQuery.loading,
         miniDepartures.join(','), miniNights.join(',')])
     useEffect(() => { void savePackages(prefs) }, [prefs])
@@ -321,8 +316,7 @@ function BrowsePackages({initial, destinations, initialHotelName, openHotel, rou
         setBounds(area)
     }
     function findHotel(id: string) {
-        return data?.items.find(item => item.hotelId == id) ?? data?.markers.find(item => item.hotelId == id)
-            ?? data?.knownHotels?.find(item => item.id == id)
+        return data?.items.find(item => item.hotelId == id) ?? mapHotels.get(id)
             ?? (searchedHotel && packageHotelId(searchedHotel.hotel) == id ? searchedHotel.hotel : undefined)
     }
     function focusOpener() {
@@ -423,14 +417,16 @@ function BrowsePackages({initial, destinations, initialHotelName, openHotel, rou
         id: open?.hotelId ?? prefs.hotelId, name: open?.name ?? selectedName, stars: null,
         latitude: null, longitude: null, url: '',
     }
-    const mapDestination = data?.area?.destinations.find(place => {
-        if (!camera) return place.id == destination.id
-        return data.area?.destinations.every(other => {
-            const current = Math.hypot(place.latitude - camera.latitude, place.longitude - camera.longitude)
-            const alternative = Math.hypot(other.latitude - camera.latitude, other.longitude - camera.longitude)
-            return current <= alternative
-        })
-    }) ?? destination
+    const mapDestination = camera ? knownPlaces.reduce((nearest, place) => {
+        const distance = (point: SupplyDestination) => Math.hypot(point.latitude - camera.latitude, point.longitude - camera.longitude)
+        return distance(place) < distance(nearest) ? place : nearest
+    }, destination) : destination
+    const hasCatalogResult = Boolean(catalog.data || data || mapHotels.size)
+    const hasHotels = points.length > 0
+    const narrowedBudget = prefs.minTotal > 0 || prefs.maxTotal < usualBudget
+    const inBudget = points.filter(({priceTotal}) => priceTotal != null && priceTotal >= prefs.minTotal && priceTotal <= prefs.maxTotal).length
+    const unsupported = area?.coverage == 'unsupported'
+    const prices = mapPriceStatus(points, data, updating, query.error)
     return <main className="package-map-page" id="packages" data-live-transport={liveMode}
         data-live-epoch={transport.epoch} data-live-resets={transport.resets} data-live-profile={transport.profile}>
         <div className="package-map-stage">
@@ -457,7 +453,7 @@ function BrowsePackages({initial, destinations, initialHotelName, openHotel, rou
                 onFavourite={favourites.setLevel} camera={camera} onCamera={setCamera}
                 onRefresh={query.refresh} showLabels={display.showLabels} focusKey={focusRevision}
                 onSearchArea={searchArea} bounds={bounds}
-                detailedByDefault loading={updating && !data} immersive/>
+                detailedByDefault loading={loadingHotels} immersive/>
         </div>
         <HotelQuickSearch prefs={prefs} destination={destination} value={hotelSearch} onValue={setHotelSearch}
             bounds={bounds} areaMode={areaMode}
@@ -469,22 +465,16 @@ function BrowsePackages({initial, destinations, initialHotelName, openHotel, rou
             }}/>
         <PackageFilters prefs={prefs} destinations={knownPlaces} onChange={change} onNavigate={navigateRegion} immersive/>
         <div className="package-map-toolbar">
-            <div className="package-map-status" aria-live="polite" aria-busy={updating}>
+            <div className="package-map-status" aria-live="polite" aria-busy={loadingHotels}>
                 <strong>В области карты</strong>
-                {transportLabel && <small role="status">{transportLabel}</small>}
-                {data && <span>{favouriteFilter == 'all' ? hotelCount(data.direction.total + (data.knownHotels?.length ?? 0)) :
-                    'С отметками · ' + points.length}</span>}
-                {updating && <span>Обновляем цены…</span>}
-                {error && <button type="button" onClick={query.retry}>Повторить поиск</button>}
-                {!updating && data?.total == 0 && !sourceUnavailable && !sourceRetryAt && <span>Цены по этим параметрам пока не получены</span>}
-                {sourceRetryAt && <>
-                    <span>Ожидаем обновления до {new Date(sourceRetryAt).toLocaleTimeString('ru-RU')}</span>
-                    {data?.source.updatedAt && <span>Цены от {new Date(data.source.updatedAt).toLocaleTimeString('ru-RU')}</span>}
-                </>}
-                {!updating && sourceUnavailable && !sourceRetryAt && <>
-                    <span>Поставщик пока не подтвердил цены</span>
-                    <button type="button" onClick={query.retry}>Повторить</button>
-                </>}
+                {hasCatalogResult && <span>{favouriteFilter == 'all' ? hotelCount(points.length) : 'С отметками · ' + points.length}</span>}
+                {hasHotels && narrowedBudget && <span>С ценой в бюджете · {inBudget}</span>}
+                {loadingHotels && <span>Загружаем отели…</span>}
+                {liveMode == 'offline' && <span>Нет связи</span>}
+                {prices && !(narrowedBudget && inBudget) && <span>{prices.label}</span>}
+                {prices?.savedAt && <span>Сохранённый снимок от{' '}
+                    <time dateTime={prices.savedAt}>{new Date(prices.savedAt).toLocaleString('ru-RU')}</time></span>}
+                {!hasCatalogResult && catalog.error && <button type="button" onClick={catalog.retry}>Загрузить отели повторно</button>}
             </div>
             <button type="button" disabled={updating} onClick={query.refresh} title="Заново запросить цены видимых отелей"
                 aria-label="Обновить цены в области карты"><MapCardIcon name="refresh"/>{display.showLabels && 'Цены'}</button>
@@ -502,10 +492,8 @@ function BrowsePackages({initial, destinations, initialHotelName, openHotel, rou
                     Подписи кнопок</label>
                 <p>Короткие подсказки доступны при наведении и с клавиатуры.</p>
             </section>}
-            {data?.area?.description && <span className="package-map-coverage" title={data.area.description}>
-                {data.area.coverage == 'unsupported' ? 'Для этой области пока нет подключённого источника' : data.area.description}</span>}
+            {unsupported && !hasHotels && <span className="package-map-coverage">В этом районе пока нет отелей в каталоге</span>}
         </div>
-        {error && !data && <p className="package-map-error" role="status">{error}</p>}
         {favourites.temporary && <p className="package-map-storage-notice" role="status">Отметки сохраняются до закрытия вкладки.</p>}
         {open && !resolvedDetailDestination && <section className="package-map-origin-loading" role="status">
             <span>{originQuery.error ?? (originQuery.data?.destinations.length == 0

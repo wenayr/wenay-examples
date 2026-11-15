@@ -30,12 +30,13 @@ async function collect(directory) {
 await collect(client)
 await mkdir(cache, {recursive: true})
 const entry = path.join(cache, 'hosted-worker.mjs')
-await writeFile(entry, "import {createTravelWorker} from '../backend/worker.ts'\nexport default createTravelWorker({requireSharedStorage:true,assets:"
+await writeFile(entry, "import {waitUntil} from 'cloudflare:workers'\nimport {createTravelWorker} from '../backend/worker.ts'\n"
+    + 'export default createTravelWorker({requireSharedStorage:true,waitUntil,assets:'
     + JSON.stringify(assets) + '})\n')
 await build({root, configFile: false, publicDir: false, build: {
     outDir: server, emptyOutDir: true, target: 'es2022', minify: false,
     lib: {entry, formats: ['es'], fileName: () => 'index.js'},
-    rolldownOptions: {output: {codeSplitting: false}},
+    rolldownOptions: {external: ['cloudflare:workers'], output: {codeSplitting: false}},
 }})
 const worker = await readFile(path.join(server, 'index.js'))
 const metadata = {

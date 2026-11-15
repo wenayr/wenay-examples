@@ -84,7 +84,10 @@ export function PackagePriceMatrix({prefs, selectedFareId, onSelect, onSnapshot,
     const observed = query.cells.flatMap(cell => cell.inBudget ? [cell.inBudget.total] : [])
     const low = Math.min(...observed)
     const high = Math.max(...observed)
-    const checked = query.cells.length
+    const checked = query.cells.filter(cell => {
+        const known = cell.status == 'in-budget' || cell.status == 'outside-budget' || cell.status == 'empty'
+        return cell.checkedAt && known && !query.staleCellKeys.includes(matrixCellKey(cell.departure, cell.nights))
+    }).length
     const total = departures.length * nights.length
     const hasRetryable = stalePrices || query.failed.length > 0 || query.cells.some(cell => cell.status == 'failed' || cell.status == 'unknown')
     function changeNights(first: number, last: number) {
@@ -150,7 +153,7 @@ export function PackagePriceMatrix({prefs, selectedFareId, onSelect, onSnapshot,
                         if (stale) status = query.loading ? 'waiting' : 'stale'
                         if (failed) status = 'failed'
                         const heat = cell?.inBudget ? (cell.inBudget.total - low) / Math.max(1, high - low) : undefined
-                        const label = stale ? 'Последняя полученная цена. Ожидаем обновления' : description(cell, query.loading, failed)
+                        const label = stale ? 'Последняя полученная цена. Новая цена пока не подтверждена' : description(cell, query.loading, failed)
                         return <td key={departure}>
                             <button type="button" className="package-matrix__cell" data-status={status} data-cell={row + '/' + column}
                                 style={{'--heat': heat == null ? undefined : String(heat * 100) + '%'} as CSSProperties}
@@ -177,14 +180,11 @@ export function PackagePriceMatrix({prefs, selectedFareId, onSelect, onSnapshot,
         </div>
         <p className="package-matrix__progress" role="status">{query.loading ? 'Проверяем цены · ' : 'Проверено ячеек · '}{checked} / {total}
             {!query.loading && hasRetryable && <button type="button" onClick={query.retry}>Повторить неподтверждённые</button>}
-            {!query.loading && <button type="button" onClick={query.refresh}>Обновить цены</button>}</p>
-        {query.waitingUntil && <p className="package-matrix__waiting" role="status">
-            Ожидаем обновления до {new Date(query.waitingUntil).toLocaleTimeString('ru-RU')}. Проверка продолжится автоматически.
-            {observed.length > 0 && ' Показаны последние полученные цены.'}
-        </p>}
+            {!query.loading && <button type="button" onClick={query.refresh} title={query.waitingUntil
+                ? 'Следующая проверка у поставщика доступна с ' + new Date(query.waitingUntil).toLocaleTimeString('ru-RU') : undefined}>
+                Обновить цены</button>}</p>
         {!query.loading && stalePrices && <p className="package-matrix__waiting" role="status">
             Новую цену подтвердить не удалось. Сохранены последние полученные цены с прежним временем проверки.
-            Для выбора предложения повторите проверку.
         </p>}
         {inspectedCell && <div className="package-matrix__inspected" aria-live="polite">
             <strong>{dateLabel(inspectedCell.departure)} · {inspectedCell.days} дней / {inspectedCell.nights} ночей</strong>

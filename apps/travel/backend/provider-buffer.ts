@@ -71,6 +71,7 @@ export function createProviderBuffer<T>(deps: {
     const queue = createAsyncQueue(config.limits.maxConcurrent)
     const inflight = new Map<string, {
         work: Promise<T>, users: Set<symbol>, controller: AbortController, signal: AbortSignal,
+        owner?: AbortSignal, expiresAt: number,
     }>()
     const reads = new Map<string, NonNullable<ReturnType<typeof inflight.get>>>()
     const counters = {loads: 0, hits: 0, joins: 0, denied: 0, errors: 0, storageErrors: 0, callbackErrors: 0}
@@ -221,14 +222,16 @@ export function createProviderBuffer<T>(deps: {
             return deps.traits.deferred(freshValue, manualRetryAt)
         }
         const waiting = inflight.get(key)
-        if (waiting && !waiting.signal.aborted) {
+        if (waiting && !waiting.signal.aborted && waiting.expiresAt > deps.now()) {
             counters.joins++
+            if (hosted) return joinedSnapshot(key)
             return observe(waiting, input.signal)
         }
         const controller = new AbortController()
         const signal = AbortSignal.any([controller.signal, operationSignal])
         const pending: NonNullable<ReturnType<typeof inflight.get>> = {
-            controller, signal, users: new Set<symbol>(), work: Promise.resolve(deps.traits.missing(0, 'Проверяем цены.')),
+            controller, signal, users: new Set<symbol>(), expiresAt: deps.now() + config.deadlineMs,
+            work: Promise.resolve(deps.traits.missing(0, 'Проверяем цены.')),
         }
         async function load() {
             let sequence = 0
@@ -280,17 +283,32 @@ export function createProviderBuffer<T>(deps: {
             }
         }
         inflight.set(key, pending)
-        pending.work = queue.add(load)
-        if (hosted) deps.waitUntil?.(pending.work.catch(() => {}))
+        // Hosted concurrency is admitted by the R2 gate. An isolate queue could run another request's I/O.
+        pending.work = hosted ? load() : queue.add(load)
         return observe(pending, input.signal)
+    }
+    function joinedSnapshot(key: string) {
+        const entry = cache.get(key)
+        const now = deps.now()
+        if (entry?.value != null && entry.stored.freshUntil > now) return deps.traits.cached(entry.value)
+        const retryAt = Math.max(now + config.sharedCheckMs, entry?.stored.nextAttemptAt ?? 0)
+        return usable(entry, retryAt, 'Цены обновляются автоматически.')
     }
     async function read(input: Parameters<typeof readSource>[0]) {
         input.signal?.throwIfAborted()
         const active = reads.get(input.key)
-        if (active && !active.signal.aborted) {
+        if (active && !active.signal.aborted && active.expiresAt > deps.now()) {
             counters.joins++
-            if (hosted) deps.waitUntil?.(active.work.catch(() => {}))
+            if (hosted && (!input.signal || active.owner != input.signal)) {
+                // Other Workers invocations can share completed data and the R2 lease, never in-flight I/O.
+                const key = await withProviderSignal(() => providerBufferHash(input.key), input.signal)
+                return joinedSnapshot(key)
+            }
             return observe(active, input.signal)
+        }
+        if (hosted && Math.max(reads.size, inflight.size) >= config.maxPendingKeys) {
+            for (const [key, pending] of reads) if (pending.expiresAt <= deps.now()) reads.delete(key)
+            for (const [key, pending] of inflight) if (pending.expiresAt <= deps.now()) inflight.delete(key)
         }
         if (reads.size >= config.maxPendingKeys) {
             counters.denied++
@@ -299,7 +317,8 @@ export function createProviderBuffer<T>(deps: {
         const controller = new AbortController()
         const signal = AbortSignal.any([controller.signal, AbortSignal.timeout(config.deadlineMs)])
         const pending: NonNullable<ReturnType<typeof inflight.get>> = {
-            controller, signal, users: new Set(), work: Promise.resolve(deps.traits.missing(0, 'Проверяем цены.')),
+            controller, signal, owner: input.signal, expiresAt: deps.now() + config.deadlineMs,
+            users: new Set(), work: Promise.resolve(deps.traits.missing(0, 'Проверяем цены.')),
         }
         reads.set(input.key, pending)
         // Register the whole operation before its first crypto/R2 call, including queue cleanup.

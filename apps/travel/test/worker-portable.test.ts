@@ -31,9 +31,11 @@ test('portable SHA-256 keeps existing fare identity and explicit window/range re
     let total = 1384
     let failed = false
     let clock = Date.parse(checkedAt)
-    const provider = createTezInventory({now: () => new Date(clock), fetch: async () => {
+    const provider = createTezInventory({now: () => new Date(clock), fetch: async function workerFetch(this: unknown, _input, options) {
         calls++
-        if (failed) throw new Error('Controlled supplier failure')
+        assert.equal(this, globalThis)
+        assert.equal(options?.redirect, 'manual')
+        if (failed) return Response.redirect('https://unrelated.example/', 302)
         return response(total)
     }})
     const first = await provider.window(trip)
