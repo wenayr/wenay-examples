@@ -37,6 +37,9 @@ await build({root, configFile: false, publicDir: false, build: {
     rolldownOptions: {output: {codeSplitting: false}},
 }})
 const worker = await readFile(path.join(server, 'index.js'))
-const metadata = {workerBytes: worker.length, staticAssets: Object.keys(assets).length, staticBytes: assetBytes, runtime: 'worker-esm'}
+const metadata = {
+    workerBytes: worker.length, staticAssets: Object.keys(assets).length, staticBytes: assetBytes, runtime: 'worker-esm',
+    agencyStorage: 'R2 JSON via BUCKET', identity: 'Sites authenticated user header', quoteStorage: 'bounded memory TTL',
+}
 await writeFile(path.join(root, 'dist/hosted-build.json'), JSON.stringify(metadata, null, 2) + '\n')
 console.log(JSON.stringify(metadata))

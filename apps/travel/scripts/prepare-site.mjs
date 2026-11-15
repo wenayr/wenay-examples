@@ -8,6 +8,9 @@ const target = at >= 0 ? process.argv[at + 1] : null
 if (!target || !path.isAbsolute(target) || path.resolve(target) == path.resolve(root)) throw new Error('Укажите отдельный абсолютный --destination.')
 const manifest = JSON.parse(await readFile(path.join(target, '.openai/hosting.json'), 'utf8'))
 if (!manifest.project_id) throw new Error('В Site checkout должен уже существовать project_id.')
+manifest.r2 = 'BUCKET'
+manifest.d1 = null
+await writeFile(path.join(target, '.openai/hosting.json'), JSON.stringify(manifest, null, 2) + '\n')
 const entries = ['backend', 'frontend', 'src', 'scripts', 'demo', 'test', 'docs', 'public',
     'GUIDE.md', 'AGENTS.md', 'index.html', 'package.json', 'package-lock.json', 'tsconfig.json', 'vite.config.mjs', 'server.mjs']
 function sourceOnly(filename) {

@@ -3,6 +3,8 @@ import type {createPackages} from './packages.ts'
 import {packageDestinations} from '../src/package-contract.ts'
 import {dateValue, numberParam, packageQuery} from './travel-query.ts'
 import {tezHotelGallery} from './partners/tez-media.ts'
+import type {AgencySettings} from '../src/agency-contract.ts'
+import {AgencyError} from './agency.ts'
 
 const paths = ['destinations', 'packages', 'package-hotel-search', 'package-calendar', 'package-trends',
     'package-matrix', 'package-gallery', 'package-compare', 'package-recheck'] as const
@@ -28,6 +30,7 @@ export function createPackageHttp(deps: {
     packages?: ReturnType<typeof createPackages>
     destinations: readonly SupplyDestination[]
     today?: () => string
+    resolveSettings?: (request: Request) => Promise<AgencySettings | null>
 }) {
     async function handle(request: Request): Promise<Response | null> {
         const url = new URL(request.url)
@@ -36,29 +39,33 @@ export function createPackageHttp(deps: {
         const params = url.searchParams
         try {
             request.signal.throwIfAborted()
+            const settings = await deps.resolveSettings?.(request)
+            const destinations = settings ? deps.destinations.filter(place => settings.destinations.includes(place.id)) : deps.destinations
             if (url.pathname == '/api/travel/destinations') {
                 const id = params.get('id')
-                const destinations = id ? deps.destinations.filter(place => place.id == id) : deps.destinations
-                return destinations.length ? packageJson(200, {destinations}) : packageJson(404, {error: 'Область не найдена.'})
+                const selected = id ? destinations.filter(place => place.id == id) : destinations
+                return selected.length || !id ? packageJson(200, {destinations: selected}) : packageJson(404, {error: 'Область не найдена.'})
             }
+            if (settings && !settings.sources.includes('tez')) return packageJson(403, {error: 'Источник туров выключен в настройках агентства.'})
             if (url.pathname == '/api/travel/package-gallery') {
                 const id = hotelId(params.get('hotelId'))
                 const gallery = tezHotelGallery(id) ?? await deps.packages?.gallery(id, request.signal)
                 return gallery ? packageJson(200, gallery) : packageJson(404, {error: 'Фотографии этого отеля пока не найдены у поставщика.'})
             }
+            if (settings && !destinations.length) return packageJson(403, {error: 'Выберите направления в настройках агентства, чтобы открыть поиск.'})
             if (!deps.packages) return packageJson(503, {error: 'Пакетный поиск недоступен.'})
             const areaValue = params.get('areaMode')
             if (areaValue != null && areaValue != 'map' && areaValue != 'destination') throw new RangeError('Выберите область карты или направление.')
             const mapPath = ['packages', 'package-hotel-search', 'package-trends'].some(path => url.pathname.endsWith('/' + path))
             const areaMode = areaValue == 'map' || areaValue == null && params.has('west') ? 'map' : 'destination'
             const areaRequest = mapPath && areaMode == 'map'
-            const destinationId = params.get('destination') ?? deps.destinations[0]?.id
-            const fallback = deps.destinations.find(place => packageDestinations.some(id => id == place.id))
-            const destination = areaRequest ? fallback : deps.destinations.find(place => place.id == destinationId)
+            const destinationId = params.get('destination') ?? destinations[0]?.id
+            const fallback = destinations.find(place => packageDestinations.some(id => id == place.id))
+            const destination = areaRequest ? fallback : destinations.find(place => place.id == destinationId)
             if (!destination) return packageJson(404, {error: 'Направление не найдено.'})
             const {trip, filter} = packageQuery(params, destination.id, deps.today?.() ?? new Date().toISOString().slice(0, 10))
             const refresh = refreshValue(params.get('refresh'))
-            const options = {signal: request.signal, refresh}
+            const options = {signal: request.signal, refresh, allowedDestinations: settings?.destinations}
             if (url.pathname == '/api/travel/package-hotel-search') {
                 const paging = {...filter, limit: numberParam(params.get('limit'), 8, 20, 1)}
                 if (areaRequest) return packageJson(200, await deps.packages.area.hotels(trip, paging, params.get('q') ?? '', 'map', options))
@@ -77,7 +84,7 @@ export function createPackageHttp(deps: {
             if (url.pathname == '/api/travel/package-trends') {
                 const requested = params.get('hotelIds')
                 const ids = requested ? requested.split(',').map(hotelId) : undefined
-                if (areaRequest) return packageJson(200, await deps.packages.area.trends(trip, filter, 'map', ids, request.signal))
+                if (areaRequest) return packageJson(200, await deps.packages.area.trends(trip, filter, 'map', ids, request.signal, settings?.destinations))
                 return packageJson(200, await deps.packages.trends(trip, filter, ids, request.signal))
             }
             if (url.pathname == '/api/travel/package-calendar') {
@@ -95,6 +102,7 @@ export function createPackageHttp(deps: {
             return packageJson(200, await deps.packages.recheck(trip, filter, hotelId(params.get('hotelId')), departure, fareId))
         } catch (error) {
             if (request.signal.aborted) return packageJson(499, {error: 'Запрос отменён.'})
+            if (error instanceof AgencyError) return packageJson(error.status, {error: error.message, code: error.code})
             if (error instanceof RangeError) return packageJson(400, {error: error.message})
             return packageJson(503, {error: 'Не удалось получить данные поставщика. Попробуйте ещё раз.'})
         }

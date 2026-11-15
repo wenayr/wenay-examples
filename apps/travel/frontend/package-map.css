@@ -1092,7 +1092,7 @@
 }
 .map-hotel-card__preview {
     display: block;
-    height: 18px;
+    height: 20px;
     padding: 0;
     overflow: hidden;
     border: 0;
@@ -1100,6 +1100,30 @@
     color: #477d66;
     cursor: pointer;
 }
+.compact-price-preview {
+    display: block;
+    width: 100%;
+    height: 20px;
+    overflow: visible;
+    color: #287b5d;
+}
+.compact-price-preview__line {stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; fill: none;}
+.compact-price-preview circle {fill: currentColor; stroke: #fff; stroke-width: .6;}
+.compact-price-preview circle[data-status=stale] {opacity: .45; stroke: #8b7454; stroke-dasharray: 1 1;}
+.compact-price-preview__baseline {stroke: #e0e9e0; stroke-width: .7;}
+.compact-price-preview__pending {stroke: #a5bbad; stroke-width: 1.5; stroke-dasharray: 3 3; fill: none;}
+.compact-price-preview__caption, .compact-price-preview__gap {fill: #718b7a; font: 10px system-ui, sans-serif;}
+.compact-price-preview__row {fill: #5a7463; font: 6px system-ui, sans-serif;}
+.compact-price-preview__date {fill: #718373; font: 5px system-ui, sans-serif;}
+.compact-price-preview rect[data-status=unknown],
+.compact-price-preview rect[data-status=failed],
+.compact-price-preview rect[data-status=empty] {fill: #edf1ec; stroke: #bdccbf; stroke-width: .6;}
+.compact-price-preview rect[data-status=unknown] {stroke-dasharray: 1 1;}
+.compact-price-preview rect[data-status=failed] {fill: #f2e9e2; stroke: #bfa589;}
+.compact-price-preview rect[data-status=outside-budget] {opacity: .4;}
+.compact-price-preview rect[data-status=stale] {opacity: .5; stroke: #8b7454; stroke-width: 1; stroke-dasharray: 2 1;}
+.directory-map--immersive .directory-map-number .compact-price-preview {width: 96px; height: 18px; margin: 1px auto;}
+.map-hotel-card__body {padding: 3px 9px; grid-template-rows: minmax(15px, 24px) 20px 21px;}
 .map-hotel-card__preview .directory-pin-trend {
     display: block;
     width: 100%;

@@ -12,6 +12,7 @@ import {packageFavouriteLevels, type tPackageFavouriteLevel} from './package-fav
 import {MapPhoto} from './MapPhoto.tsx'
 import {createMapCardIcon, type tMapCardIconName} from './map-card-icons.tsx'
 import {createMapCardLayout} from './map-card-layout.ts'
+import {createCompactPricePreview, type CompactPriceMatrix} from './compact-price-preview.ts'
 
 export type tMapBounds = readonly [west: number, south: number, east: number, north: number]
 
@@ -20,6 +21,9 @@ export type MapProperty = Pick<SupplyHotel, 'id' | 'name' | 'latitude' | 'longit
     priceTotal?: number
     tooltip?: string
     trend?: readonly PackageTrendPoint[]
+    priceNights?: number
+    compactPriceMode?: 'graph' | 'matrix'
+    compactMatrix?: CompactPriceMatrix
     photo?: SupplyPhoto | null
     photos?: readonly SupplyPhoto[]
     propertyUrl?: string
@@ -99,51 +103,6 @@ function accessibleMarker(marker: L.Marker, label: string, count: number, ids: r
 }
 
 const trendMoney = new Intl.NumberFormat('ru-RU', {style: 'currency', currency: 'EUR', maximumFractionDigits: 2})
-const svgNamespace = 'http://www.w3.org/2000/svg'
-
-function priceTrend(days: readonly PackageTrendPoint[]) {
-    const graph = document.createElementNS(svgNamespace, 'svg')
-    graph.setAttribute('viewBox', '0 0 112 18')
-    graph.setAttribute('class', 'directory-pin-trend')
-    graph.setAttribute('aria-hidden', 'true')
-    const quoted = days.filter(day => day.status == 'quoted').map(day => day.total)
-    const amounts = quoted.filter((value): value is number => value != null)
-    const low = amounts.length ? Math.min(...amounts) : 0
-    const high = amounts.length ? Math.max(...amounts) : 0
-    const path = document.createElementNS(svgNamespace, 'path')
-    let connected = false
-    let shape = ''
-    days.forEach((day, index) => {
-        const x = 3 + index / Math.max(1, days.length - 1) * 106
-        const title = document.createElementNS(svgNamespace, 'title')
-        title.textContent = day.departure + ' · '
-        if (day.total == null || day.status != 'quoted') {
-            connected = false
-            title.textContent += day.status == 'unknown' ? 'не проверено' : 'цена не получена'
-            const gap = document.createElementNS(svgNamespace, 'text')
-            gap.setAttribute('x', String(x))
-            gap.setAttribute('y', '14')
-            gap.textContent = day.status == 'unknown' ? '?' : '–'
-            gap.append(title)
-            graph.append(gap)
-            return
-        }
-        const y = high == low ? 8 : 14 - 11 * (day.total - low) / (high - low)
-        shape += (connected ? ' L ' : ' M ') + x.toFixed(2) + ' ' + y.toFixed(2)
-        connected = true
-        title.textContent += trendMoney.format(day.total / 100)
-        const dot = document.createElementNS(svgNamespace, 'circle')
-        dot.setAttribute('cx', String(x))
-        dot.setAttribute('cy', String(y))
-        dot.setAttribute('r', '2.4')
-        dot.append(title)
-        graph.append(dot)
-    })
-    path.setAttribute('d', shape)
-    graph.prepend(path)
-    return graph
-}
-
 function bindCardAction(button: HTMLButtonElement, activate: () => void) {
     let touch: {id: number, x: number, y: number, moved: boolean} | null = null
     let handledTouchAt = -Infinity
@@ -268,11 +227,11 @@ function photoCard(hotel: MapProperty, photoHost: HTMLElement, sourcesHost: HTML
     preview.className = 'map-hotel-card__preview'
     preview.title = 'Цены по датам · открыть матрицу'
     preview.setAttribute('aria-label', 'График цен и матрица · ' + hotel.name)
-    if (hotel.trend?.length) preview.append(priceTrend(hotel.trend))
-    else {
-        preview.classList.add('is-pending')
-        preview.append(createMapCardIcon('matrix'))
-    }
+    const mini = createCompactPricePreview({trend: hotel.trend, nights: hotel.priceNights,
+        mode: hotel.compactPriceMode, matrix: hotel.compactMatrix})
+    preview.append(mini.graph)
+    preview.title = mini.label + ' · открыть полную матрицу'
+    preview.setAttribute('aria-label', mini.label + ' · ' + hotel.name + ' · открыть полную матрицу')
     if (actions.matrix) bindCardAction(preview, actions.matrix)
     else preview.disabled = true
     body.append(preview)
@@ -325,7 +284,7 @@ function addProperty(group: L.LayerGroup, hotel: MapProperty, index: number, sel
     label.dataset.favouriteLevel = String(hotel.favouriteLevel ?? 0)
     label.style.setProperty('--hotel-favourite-color', packageFavouriteLevels[hotel.favouriteLevel ?? 0].color)
     const trend = hotel.trend ?? []
-    const multipleDays = Boolean(hotel.priceLabel && trend.length > 1)
+    const multipleDays = Boolean(hotel.priceLabel && (trend.length > 1 || (hotel.compactMatrix?.nights.length ?? 0) > 1))
     let width = hotel.priceLabel ? 128 : 40
     let height = hotel.priceLabel ? 52 : 40
     if (compact && hotel.priceLabel) {
@@ -343,7 +302,9 @@ function addProperty(group: L.LayerGroup, hotel: MapProperty, index: number, sel
             const totals = trend.filter(day => day.status == 'quoted').map(day => day.total)
             const quoted = totals.filter((value): value is number => value != null)
             label.classList.add('has-trend')
-            label.append(priceTrend(trend))
+            const mini = createCompactPricePreview({trend, nights: hotel.priceNights,
+                mode: hotel.compactPriceMode, matrix: hotel.compactMatrix})
+            label.append(mini.graph)
             if (quoted.length) {
                 const low = Math.min(...quoted)
                 const high = Math.max(...quoted)

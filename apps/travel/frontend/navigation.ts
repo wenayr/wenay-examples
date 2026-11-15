@@ -4,7 +4,7 @@ import {restorePackagePreferences, type PackagePreferences} from './package-pref
 export const travelPages = {
     discover: 'Направления', catalog: 'Отели', packages: 'Туры', flights: 'Авиабилеты',
     deals: 'Горящие предложения', prices: 'Сравнить цены', markets: 'Страны', providers: 'Источники', guides: 'Гиды агентства',
-    assistant: 'Помощник', trip: 'Моя поездка', demo: 'Демо туров',
+    assistant: 'Помощник', trip: 'Моя поездка', demo: 'Демо туров', agency: 'Моё агентство',
 } as const
 type TravelPage = keyof typeof travelPages
 type Fields = Record<string, string | number | undefined>

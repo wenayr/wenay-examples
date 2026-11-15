@@ -20,12 +20,15 @@ import {AgencyGuides} from './AgencyGuides.tsx'
 import {SavedSupply} from './SavedSupply.tsx'
 import {Markets} from './Markets.tsx'
 import {marketContext} from './market-links.ts'
+import {AgencyProvider, useAgency} from './agency/AgencyProvider.tsx'
+import {AgencyWorkspace} from './agency/AgencyWorkspace.tsx'
+import {AgencyStorefrontPage} from './agency/Storefront.tsx'
 import './directory.css'
 import './journey.css'
 
 const mainPages = ['catalog', 'packages', 'flights', 'deals'] as const satisfies (keyof typeof travelPages)[]
 const morePages = ['discover', 'markets', 'prices', 'assistant'] as const satisfies (keyof typeof travelPages)[]
-const agencyPages = ['providers', 'guides'] as const satisfies (keyof typeof travelPages)[]
+const agencyPages = ['agency', 'providers', 'guides'] as const satisfies (keyof typeof travelPages)[]
 
 function refreshMarketsLink(event: MouseEvent<HTMLAnchorElement>) {
     const current = travelRoute(window.location.hash)
@@ -37,6 +40,7 @@ function refreshMarketsLink(event: MouseEvent<HTMLAnchorElement>) {
 
 function TopBar({page}: {page: TravelRoute['page']}) {
     const count = useTripCount()
+    const {agency, slug} = useAgency()
     const more = useRef<HTMLDetailsElement>(null)
     function closeMore() {
         if (more.current) more.current.open = false
@@ -46,9 +50,16 @@ function TopBar({page}: {page: TravelRoute['page']}) {
         closeMore()
     }
     useEffect(closeMore, [page])
+    if (slug) return <header className="site-mast"><div className="mast-inner">
+        <a className="wordmark" href={'/a/' + slug} aria-label={(agency?.name ?? 'Агентство') + ', главная'}>
+            <span className="brand-icon"><Icon name="compass" size={23}/></span><span className="agency-wordmark-name">
+                {agency?.name ?? 'Агентство'}</span></a><nav className="aw-storefront-nav" aria-label="Витрина агентства">
+            <a href="#packages"><Icon name="map" size={16}/>Подобрать тур</a>
+            <a href={'/a/' + slug + '#inquiry'}><Icon name="chat" size={16}/>Связаться</a></nav></div></header>
     return <header className="site-mast"><div className="mast-inner">
-        <a className="wordmark" href="#discover" aria-label="Wenay Travel, главная">
-            <span className="brand-icon"><Icon name="compass" size={23}/></span>Wenay <em>Travel</em>
+        <a className="wordmark" href="#discover" aria-label={(agency?.name ?? 'Wenay Travel') + ', главная'}>
+            <span className="brand-icon"><Icon name="compass" size={23}/></span>
+            {agency ? <span className="agency-wordmark-name">{agency.name}</span> : <>Wenay <em>Travel</em></>}
         </a>
         <nav aria-label="Разделы Wenay Travel" className="travel-pages">
             {mainPages.map(key => <a key={key} href={travelHash(key)} aria-current={page === key ? 'page' : undefined}>
@@ -75,10 +86,13 @@ function TopBar({page}: {page: TravelRoute['page']}) {
 }
 
 function Footer() {
-    return <footer className="travel-footer"><strong>Wenay Travel</strong><span>Таллин, Эстония · EUR</span>
+    const {agency, slug} = useAgency()
+    if (slug) return <footer className="travel-footer"><strong>{agency?.name ?? 'Агентство'}</strong>
+        <span>Работает на Wenay Travel</span><a href={'/a/' + slug}>Вернуться к агентству</a></footer>
+    return <footer className="travel-footer"><strong>{agency?.name ?? 'Wenay Travel'}</strong><span>Таллин, Эстония · EUR</span>
         <div className="footer-links"><a href="#demo">Демо туров</a>
             <a href="#markets" onClick={refreshMarketsLink} onAuxClick={refreshMarketsLink}>Страны и поставщики</a>
-            <a href="#providers">Источники и подключение</a><a href="#guides">Гиды агентства</a>
+            <a href="#agency">Моё агентство</a><a href="#providers">Источники и подключение</a><a href="#guides">Гиды агентства</a>
             <a href={import.meta.env.BASE_URL + 'hotel-photos/credits.html'}>Фотографии отелей</a>
             <a href={import.meta.env.BASE_URL + 'images/credits.html'}>Фотографии направлений</a></div></footer>
 }
@@ -136,7 +150,8 @@ function resume(item: TripItem) {
         {...item.prefs, hotelId:item.hotelId, hotelName:item.name})
 }
 
-export function App({store}: {store: ReturnType<typeof createTravelSearch>}) {
+function TravelApp({store}: {store: ReturnType<typeof createTravelSearch>}) {
+    const {agency, slug} = useAgency()
     const [location, setLocation] = useState(() => ({hash: window.location.hash, visit: 0}))
     const content = useRef<HTMLDivElement>(null)
     useEffect(() => {
@@ -216,8 +231,15 @@ export function App({store}: {store: ReturnType<typeof createTravelSearch>}) {
         }
     }, [])
     const route = travelRoute(location.hash)
-    useEffect(() => { document.title = travelPages[route.page] + ' · Wenay Travel' }, [route.page])
-    return <TripProvider><div className={'travel-app' + (route.page == 'packages' ? ' travel-app--map' : '')}>
+    const inquiryPage = location.hash == '#inquiry' || location.hash.startsWith('#inquiry?')
+    const storefront = Boolean(slug) && (!location.hash || inquiryPage)
+    const mapPage = route.page == 'packages' && !storefront
+    useEffect(() => {
+        const name = agency?.name ?? 'Wenay Travel'
+        document.title = storefront ? name : travelPages[route.page] + ' · ' + name
+    }, [route.page, agency?.name, storefront])
+    const brandStyle = agency ? {'--green': agency.brandColor, '--agency-brand': agency.brandColor} as React.CSSProperties : undefined
+    return <TripProvider><div style={brandStyle} className={'travel-app' + (mapPage ? ' travel-app--map' : '')}>
         <a className="travel-skip" href="#travel-content" onClick={event => {
             event.preventDefault()
             content.current?.focus()
@@ -225,6 +247,7 @@ export function App({store}: {store: ReturnType<typeof createTravelSearch>}) {
         }}>Перейти к содержимому</a>
         <TopBar page={route.page}/>
         <div id="travel-content" ref={content} tabIndex={-1}>
+        {storefront ? <AgencyStorefrontPage/> : <>
         {route.page === 'discover' && <Discover/>}
         {route.page === 'packages' && <PackageSearch key={location.visit} route={route}/>}
         {route.page === 'catalog' && <Directory key={location.visit} route={route}/>}
@@ -235,10 +258,16 @@ export function App({store}: {store: ReturnType<typeof createTravelSearch>}) {
         {route.page === 'markets' && <Markets key={location.visit} route={route}/>}
         {route.page === 'providers' && <ProviderDashboard route={route}/>}
         {route.page === 'guides' && <AgencyGuides route={route}/>}
+        {route.page === 'agency' && <AgencyWorkspace/>}
         {route.page === 'assistant' && <TravelAssistant key={location.visit} initialMessage={route.query.get('message') ?? ''}
             initialContext={assistantContext(route)} onApply={applySearch}/>}
         {route.page === 'trip' && <TripPlan onResume={resume} flightSection={<><FlightResume/><SavedSupply/></>}/>}
+        </>}
         </div>
-        {route.page !== 'demo' && route.page !== 'packages' && <Footer/>}
+        {route.page !== 'demo' && !mapPage && <Footer/>}
     </div></TripProvider>
+}
+
+export function App({store}: {store: ReturnType<typeof createTravelSearch>}) {
+    return <AgencyProvider><TravelApp store={store}/></AgencyProvider>
 }

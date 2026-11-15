@@ -1,9 +1,38 @@
-import {useEffect, useEffectEvent, useRef, useState} from 'react'
+import {useEffect, useEffectEvent, useRef, useState, useSyncExternalStore} from 'react'
 
 interface ResponseState<T> {key: string, data?: T, error?: string, loading?: boolean}
 const responses = new Map<string, unknown>()
+let agencyScope: {slug?: string, revision?: number} = {}
+let agencyScopeKey = ''
+const scopeListeners = new Set<() => void>()
 
-export function useDirectoryQuery<T>(url: string | null, refreshRevision = 0) {
+export function setDirectoryAgencyScope(scope: {slug?: string, revision?: number}) {
+    const key = (scope.slug ?? '') + ':' + (scope.revision ?? '')
+    if (key == agencyScopeKey) return
+    agencyScope = scope
+    agencyScopeKey = key
+    for (const listener of scopeListeners) listener()
+}
+
+function subscribeScope(listener: () => void) {
+    scopeListeners.add(listener)
+    return () => {scopeListeners.delete(listener)}
+}
+
+function scopedDirectoryUrl(url: string) {
+    const [path, query] = url.split('?')
+    const params = new URLSearchParams(query)
+    params.delete('agency')
+    params.delete('agencyRevision')
+    if (agencyScope.slug) params.set('agency', agencyScope.slug)
+    if (agencyScope.revision != null) params.set('agencyRevision', String(agencyScope.revision))
+    const suffix = params.toString()
+    return path + (suffix ? '?' + suffix : '')
+}
+
+export function useDirectoryQuery<T>(inputUrl: string | null, refreshRevision = 0) {
+    useSyncExternalStore(subscribeScope, () => agencyScopeKey)
+    const url = inputUrl ? scopedDirectoryUrl(inputUrl) : null
     const [result, setResult] = useState<ResponseState<T> | null>(() => url ? {key: url, data: responses.get(url) as T | undefined, loading: true} : null)
     const [attempt, setAttempt] = useState(0)
     const fresh = useRef(false)
@@ -60,6 +89,7 @@ export function useDirectoryQuery<T>(url: string | null, refreshRevision = 0) {
 // The same-origin REST API supplies snapshots. EventSource only signals invalidation;
 // the browser reconnects with Last-Event-ID and the server replays or resets this region.
 export function useDirectoryEvents(destination: string, revision: string | undefined, invalidate: () => void) {
+    const scopeKey = useSyncExternalStore(subscribeScope, () => agencyScopeKey)
     const readCursor = useEffectEvent(() => revision)
     const refresh = useEffectEvent(invalidate)
     const ready = Boolean(revision)
@@ -90,12 +120,13 @@ export function useDirectoryEvents(destination: string, revision: string | undef
             window.removeEventListener('online', schedule)
             events.close()
         }
-    }, [destination, ready])
+    }, [destination, ready, scopeKey])
 }
 
 type DirectoryEndpoint = 'destinations' | 'catalog' | 'hotel' | 'options' | 'events' | 'packages'
     | 'package-calendar' | 'package-trends' | 'package-matrix' | 'package-gallery' | 'package-hotel-search' | 'package-compare' | 'package-recheck'
     | 'flights' | 'airports' | 'providers' | 'provider-search' | 'deals' | 'markets'
+    | 'hotel-reviews'
 
 export function directoryUrl(path: DirectoryEndpoint, query: Record<string, string | number | undefined> = {}) {
     const params = new URLSearchParams()
@@ -103,7 +134,7 @@ export function directoryUrl(path: DirectoryEndpoint, query: Record<string, stri
         if (value != null && value !== '') params.set(key, String(value))
     }
     const suffix = params.toString()
-    return import.meta.env.BASE_URL + 'api/travel/' + path + (suffix ? '?' + suffix : '')
+    return scopedDirectoryUrl(import.meta.env.BASE_URL + 'api/travel/' + path + (suffix ? '?' + suffix : ''))
 }
 
 export function directoryRefreshUrl(url: string) {

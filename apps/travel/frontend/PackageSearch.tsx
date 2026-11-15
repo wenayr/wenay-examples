@@ -16,7 +16,9 @@ import {selectedPackageFare} from './package-selection.ts'
 import {browseFields, browseForRoute, dismissTravelDetail, openTravelDetail, packagesForRoute, replaceTravelHash, travelHash, travelRoute, type TravelRoute} from './navigation.ts'
 import './package-map.css'
 import {cameraForRoute} from './map-camera.ts'
-import {matrixViewForRoute, refreshedMatrixSelection} from './package-matrix.ts'
+import {matrixCellKey, matrixDates, matrixFirstNights, matrixNights, matrixViewForRoute, refreshedMatrixSelection} from './package-matrix.ts'
+import {usePackageMatrix} from './package-matrix-query.ts'
+import {useAgency} from './agency/AgencyProvider.tsx'
 import {usePageVisible, useVisibleRefresh} from './visible-refresh.ts'
 import {packageHotelId, type tPackageHotel} from './package-hotel.ts'
 import {useMapDisplayPreferences} from './map-display-preferences.ts'
@@ -61,6 +63,8 @@ function BrowsePackages({initial, destinations, initialHotelName, openHotel, rou
     const [camera, setCamera] = useState<tMapCamera | null>(() => cameraForRoute(route))
     const areaMode = 'map'
     const display = useMapDisplayPreferences()
+    const {agency} = useAgency()
+    const compactPriceMode = agency?.compactPriceMode ?? 'graph'
     const [settingsOpen, setSettingsOpen] = useState(false)
     const [focusRevision, setFocusRevision] = useState(0)
     const favourites = usePackageFavourites()
@@ -72,6 +76,7 @@ function BrowsePackages({initial, destinations, initialHotelName, openHotel, rou
         openHotel && initial.hotelId ? {hotelId: initial.hotelId, name: initialHotelName || 'Выбранный отель'} : null)
     const [priceView, setPriceView] = useState<'graph' | 'matrix'>(route.query.get('priceView') == 'matrix' ? 'matrix' : 'graph')
     const [matrixSelection, setMatrixSelection] = useState<PackageMatrixCell | null>(null)
+    const [miniSnapshot, setMiniSnapshot] = useState<{context: string, cells: PackageMatrixCell[]}>({context: '', cells: []})
     const [unconfirmedFareId, setUnconfirmedFareId] = useState('')
     const [matrixView, setMatrixView] = useState(() => matrixViewForRoute(initial.nights, route.query))
     const [hotelSearch, setHotelSearch] = useState((route.query.get('hotelSearch') ?? '').slice(0, 120))
@@ -153,6 +158,30 @@ function BrowsePackages({initial, destinations, initialHotelName, openHotel, rou
     const resolvedDetailDestination = knownPlaces.find(place => place.id == requestedOrigin)
     const detailDestination = resolvedDetailDestination ?? destination
     const detailPrefs = {...prefs, destination: detailDestination.id}
+    const miniContext = JSON.stringify({agencySlug: agency?.slug, agencyRevision: agency?.revision,
+        hotelId: prefs.hotelId, destination: detailDestination.id, first: prefs.firstDeparture,
+        last: prefs.lastDeparture, adults: prefs.adults, min: prefs.minTotal, max: prefs.maxTotal})
+    const miniDates = matrixDates(prefs.firstDeparture, prefs.lastDeparture)
+    const miniOffset = Math.min(matrixView.dateOffset, Math.max(0, miniDates.length - 3))
+    const miniDepartures = miniDates.slice(miniOffset, miniOffset + 3)
+    const miniNights = matrixNights(matrixFirstNights(prefs.nights))
+    const selectedMapPoint = selectedCandidate && markerProperty(selectedCandidate)
+    const selectedInView = selectedMapPoint && insideMapBounds(selectedMapPoint, bounds)
+    const miniEnabled = Boolean(mapActive && compactPriceMode == 'matrix' && selectedInView && resolvedDetailDestination && !updating)
+    const miniQuery = usePackageMatrix(detailPrefs, miniDepartures, miniNights, miniEnabled)
+    useVisibleRefresh({enabled: miniEnabled, busy: miniQuery.loading, onRefresh: miniQuery.retry})
+    function rememberMini(cells: PackageMatrixCell[]) {
+        if (!cells.length) return
+        setMiniSnapshot(current => {
+            const previous = current.context == miniContext ? current.cells : []
+            const merged = new Map(previous.map(cell => [matrixCellKey(cell.departure, cell.nights), cell]))
+            if (cells.every(cell => merged.get(matrixCellKey(cell.departure, cell.nights)) == cell)) return current
+            cells.forEach(cell => merged.set(matrixCellKey(cell.departure, cell.nights), cell))
+            return {context: miniContext, cells: [...merged.values()].slice(-96)}
+        })
+    }
+    const rememberMiniSnapshot = useEffectEvent(rememberMini)
+    useEffect(() => { rememberMiniSnapshot(miniQuery.cells) }, [miniQuery.cells])
     const needsCalendar = priceView == 'graph' || !open && !matrixSelection
     const calendarUrl = visible && resolvedDetailDestination && prefs.hotelId && (open || prefs.fareId) && url == settledUrl && needsCalendar
         ? directoryUrl('package-calendar', {...packageQuery(detailPrefs), hotelId: prefs.hotelId}) : null
@@ -188,12 +217,20 @@ function BrowsePackages({initial, destinations, initialHotelName, openHotel, rou
             const point = markerProperty(hotel)
             return point ? [point] : []
         })
-        const markers = located.map(point => ({...point, trend: trends.get(point.id), favouriteLevel: favourites.levels[point.id] ?? 0}))
+        function decorate(point: MapProperty) {
+            const selected = point.id == prefs.hotelId && compactPriceMode == 'matrix'
+            return {...point, trend: trends.get(point.id), favouriteLevel: favourites.levels[point.id] ?? 0,
+                priceNights: prefs.nights, compactPriceMode,
+                compactMatrix: selected ? {departures: miniDepartures, nights: miniNights,
+                    cells: miniSnapshot.context == miniContext ? miniSnapshot.cells : [],
+                    staleCellKeys: miniQuery.staleCellKeys, pending: miniQuery.loading} : undefined}
+        }
+        const markers = located.map(decorate)
         const selected = data?.items.find(item => item.hotelId === prefs.hotelId) ?? searchedSelection
         const selectedPoint = selected && markerProperty(selected)
         const selectedVisible = selectedPoint && insideMapBounds(selectedPoint, bounds)
         if (selectedPoint && selectedVisible && !markers.some(marker => marker.id == selectedPoint.id)) {
-            markers.push({...selectedPoint, trend: trends.get(selectedPoint.id), favouriteLevel: favourites.levels[selectedPoint.id] ?? 0})
+            markers.push(decorate(selectedPoint))
         }
         const point = markers.find(marker => marker.id == prefs.hotelId)
         if (point && selectedFare) {
@@ -209,7 +246,9 @@ function BrowsePackages({initial, destinations, initialHotelName, openHotel, rou
         if (favouriteFilter == 'all') return markers
         if (favouriteFilter == 'marked') return markers.filter(marker => marker.favouriteLevel > 0)
         return markers.filter(marker => marker.favouriteLevel == Number(favouriteFilter))
-    }, [data, prefs.hotelId, selectedFare, missingSelection, trends, favourites.levels, favouriteFilter, searchedSelection, bounds])
+    }, [data, prefs.hotelId, prefs.nights, selectedFare, missingSelection, trends, favourites.levels, favouriteFilter,
+        searchedSelection, bounds, compactPriceMode, miniSnapshot, miniContext, miniQuery.staleCellKeys, miniQuery.loading,
+        miniDepartures.join(','), miniNights.join(',')])
     useEffect(() => { void savePackages(prefs) }, [prefs])
     function searchLink(detail = open, selected = prefs.hotelId, view = priceView) {
         const {destination, ...filters} = prefs
@@ -323,6 +362,7 @@ function BrowsePackages({initial, destinations, initialHotelName, openHotel, rou
         setFocusRevision(value => value + 1)
     }
     function matrixSnapshot(cells: PackageMatrixCell[], failedCellKeys: string[]) {
+        rememberMini(cells)
         let selected = matrixSelection
         if (!selected && !unconfirmedFareId && prefs.fareId) {
             selected = cells.find(cell => cell.inBudget?.id == prefs.fareId && cell.nights == prefs.nights) ?? null

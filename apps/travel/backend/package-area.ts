@@ -64,7 +64,7 @@ export function createPackageAreas(deps: {
     const queue = createAsyncQueue(2)
     const snapshots = new Map<string, ReturnType<typeof createOfferIndex>>()
 
-    function select(mode: tAreaMode, box: tPackageBounds | null, fallback: string): Selection {
+    function select(mode: tAreaMode, box: tPackageBounds | null, fallback: string, allowedDestinations?: readonly string[]): Selection {
         let candidates = regions.filter(region => region.id == fallback)
         if (mode == 'map' && box) {
             const slices = regionIndex(box[1] - maxLatitude, box[3] + maxLatitude, box[0] - maxLongitude, box[2] + maxLongitude)
@@ -74,6 +74,7 @@ export function createPackageAreas(deps: {
             const distance = (region: tRegion) => (region.latitude - latitude) ** 2 + (region.longitude - longitude) ** 2
             candidates.sort((a, b) => distance(a) - distance(b))
         }
+        if (allowedDestinations) candidates = candidates.filter(region => allowedDestinations.includes(region.id))
         const selected = candidates.slice(0, regionRequestLimit)
         let coverage: PackageArea['coverage'] = 'connected-regions'
         let description = 'Подключённые источники в области карты: ' + selected.map(region => region.name).join(', ') + '.'
@@ -87,8 +88,9 @@ export function createPackageAreas(deps: {
         return {regions: selected, area: {mode, bounds: box, destinations: selected, coverage, description}}
     }
 
-    async function observe(trip: TezWindow, filter: PackageQuery, mode: tAreaMode, signal?: AbortSignal, refresh = false) {
-        const selection = select(mode, filter.box, trip.destinationId)
+    async function observe(trip: TezWindow, filter: PackageQuery, mode: tAreaMode, signal?: AbortSignal, refresh = false,
+        allowedDestinations?: readonly string[]) {
+        const selection = select(mode, filter.box, trip.destinationId, allowedDestinations)
         const batches = await Promise.all(selection.regions.map(region => queue.add(async function observeRegion() {
             signal?.throwIfAborted()
             return deps.window({...trip, destinationId: region.id}, signal, refresh)
@@ -117,8 +119,9 @@ export function createPackageAreas(deps: {
         return {index, batches, area, source: sourceFor(batches.map(batch => batch.data), area)}
     }
 
-    async function search(trip: TezWindow, filter: PackageQuery, mode: tAreaMode, options: {signal?: AbortSignal, refresh?: boolean} = {}) {
-        const observed = await observe(trip, filter, mode, options.signal, options.refresh)
+    async function search(trip: TezWindow, filter: PackageQuery, mode: tAreaMode,
+        options: {signal?: AbortSignal, refresh?: boolean, allowedDestinations?: readonly string[]} = {}) {
+        const observed = await observe(trip, filter, mode, options.signal, options.refresh, options.allowedDestinations)
         const result = observed.index.search(filter, true)
         const unmapped = observed.index.findHotels({...filter, box: null}).filter(hotel => hotel.latitude == null || hotel.longitude == null)
         const known = [...new Map([...(result.knownHotels ?? []), ...unmapped].map(hotel => [hotel.id, hotel])).values()]
@@ -129,9 +132,9 @@ export function createPackageAreas(deps: {
     }
 
     async function hotels(trip: TezWindow, filter: PackageQuery, term: string, mode: tAreaMode,
-        options: {signal?: AbortSignal, refresh?: boolean} = {}) {
+        options: {signal?: AbortSignal, refresh?: boolean, allowedDestinations?: readonly string[]} = {}) {
         if (term.length > 120) throw new RangeError('Название отеля должно быть не длиннее 120 символов.')
-        const observed = await observe(trip, filter, mode, options.signal, options.refresh)
+        const observed = await observe(trip, filter, mode, options.signal, options.refresh, options.allowedDestinations)
         const normalized = searchPhrase(term)
         const context = {...filter, term: normalized}
         const visible = observed.index.search({...context, offset: 0, limit: Infinity}).items
@@ -152,8 +155,9 @@ export function createPackageAreas(deps: {
             coverage: 'supplier-minima', source: observed.source} satisfies PackageHotelSearch
     }
 
-    async function trends(trip: TezWindow, filter: PackageQuery, mode: tAreaMode, ids: readonly string[] | undefined, signal?: AbortSignal) {
-        const observed = await observe(trip, filter, mode, signal)
+    async function trends(trip: TezWindow, filter: PackageQuery, mode: tAreaMode, ids: readonly string[] | undefined,
+        signal?: AbortSignal, allowedDestinations?: readonly string[]) {
+        const observed = await observe(trip, filter, mode, signal, false, allowedDestinations)
         const visible = observed.index.search(filter).markers
         const wanted = ids ? new Set(ids) : null
         const groups = new Map<string, string[]>()

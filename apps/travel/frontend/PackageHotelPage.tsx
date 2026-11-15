@@ -16,6 +16,7 @@ import type {MatrixViewContext} from './package-matrix.ts'
 import {Icon} from './Icons.tsx'
 import {SaveTripButton} from './trip/TripPlan.tsx'
 import {packageTrip} from './trip/model.ts'
+import {HotelReviewsPanel} from './HotelReviewsPanel.tsx'
 
 const euros = new Intl.NumberFormat('ru-RU', {style: 'currency', currency: 'EUR', maximumFractionDigits: 2})
 
@@ -154,6 +155,7 @@ export function PackageHotelPage({hotel, prefs, destination, calendar, selectedF
                         Открыть у оператора ↗</a>
                 </div>}
             </section>
+            <HotelReviewsPanel hotelId={hotelId}/>
         </div>
     </section>
 }
