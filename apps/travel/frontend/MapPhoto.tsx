@@ -1,4 +1,5 @@
 import {useRef, useState, type MouseEvent, type PointerEvent} from 'react'
+import {createPortal} from 'react-dom'
 import type {SupplyPhoto} from '../src/supply-contract.ts'
 import type {PackageHotelGallery} from '../src/package-media-contract.ts'
 import {safeHref} from './DirectoryCard.tsx'
@@ -14,11 +15,12 @@ interface MapPhotoProps {
     propertyUrl?: string
     showLabels?: boolean
     selectedUrl?: string
+    sourcesHost?: HTMLElement
     onPhoto: (url: string) => void
     onOpen: () => void
 }
 
-export function MapPhoto({hotelId, name, photo, photos, propertyUrl, selectedUrl, showLabels = false, onPhoto, onOpen}: MapPhotoProps) {
+export function MapPhoto({hotelId, name, photo, photos, propertyUrl, selectedUrl, sourcesHost, showLabels = false, onPhoto, onOpen}: MapPhotoProps) {
     const url = hotelId.startsWith('tez:') ? directoryUrl('package-gallery', {hotelId}) : null
     const gallery = useDirectoryQuery<PackageHotelGallery>(url)
     const [activeUrl, setActiveUrl] = useState(selectedUrl)
@@ -31,6 +33,18 @@ export function MapPhoto({hotelId, name, photo, photos, propertyUrl, selectedUrl
     const image = available[index]
     const original = image && safeHref('sourceImageUrl' in image ? String(image.sourceImageUrl) : image.url)
     const source = safeHref(gallery.data?.hotelUrl ?? propertyUrl ?? image?.sourceUrl)
+    const sourceLinks = <>
+        {original && <a href={original} target="_blank" rel="noopener noreferrer"
+            className={sourcesHost ? 'map-card-action map-card-action--image' : undefined}
+            title={'Открыть файл фотографии · ' + name} aria-label={'Файл фото · ' + name}>
+            <MapCardIcon name="image" size={sourcesHost ? 18 : 14}/>{showLabels && <span>Файл фото</span>}
+        </a>}
+        {source && <a href={source} target="_blank" rel="noopener noreferrer"
+            className={sourcesHost ? 'map-card-action map-card-action--source' : undefined}
+            title={'Страница отеля у поставщика · ' + name} aria-label={'Страница источника · ' + name}>
+            <MapCardIcon name="source" size={sourcesHost ? 18 : 14}/>{showLabels && <span>Источник</span>}
+        </a>}
+    </>
 
     function step(direction: number) {
         if (available.length < 2) return
@@ -96,15 +110,7 @@ export function MapPhoto({hotelId, name, photo, photos, propertyUrl, selectedUrl
                 <MapCardIcon name="refresh" size={14}/>{showLabels && <span>Повторить фото</span>}
             </button>}
         </div>
-        <div className="map-hotel-card__sources" data-show-labels={showLabels}>
-            {original && <a href={original} target="_blank" rel="noopener noreferrer"
-                title={'Открыть файл фотографии · ' + name} aria-label={'Файл фото · ' + name}>
-                <MapCardIcon name="image" size={14}/>{showLabels && <span>Файл фото</span>}
-            </a>}
-            {source && <a href={source} target="_blank" rel="noopener noreferrer"
-                title={'Страница отеля у поставщика · ' + name} aria-label={'Страница источника · ' + name}>
-                <MapCardIcon name="source" size={14}/>{showLabels && <span>Источник</span>}
-            </a>}
-        </div>
+        {sourcesHost ? createPortal(sourceLinks, sourcesHost) :
+            <div className="map-hotel-card__sources" data-show-labels={showLabels}>{sourceLinks}</div>}
     </div>
 }

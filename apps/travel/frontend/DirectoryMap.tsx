@@ -30,7 +30,7 @@ export interface tMapCamera {
     longitude: number
     zoom: number
 }
-interface MapPhotoMount {hotel: MapProperty, host: HTMLElement}
+interface MapPhotoMount {hotel: MapProperty, host: HTMLElement, sourcesHost: HTMLElement}
 interface DirectoryMapProps {
     destination: SupplyDestination
     hotels: readonly MapProperty[]
@@ -240,20 +240,20 @@ interface PhotoCardActions {
     showLabels: boolean
 }
 
-function photoCard(hotel: MapProperty, photoHost: HTMLElement, actions: PhotoCardActions) {
+function photoCard(hotel: MapProperty, photoHost: HTMLElement, sourcesHost: HTMLElement, actions: PhotoCardActions) {
     const card = document.createElement('article')
     card.className = 'map-hotel-card'
     card.dataset.labels = String(actions.showLabels)
     card.dataset.hotelCardId = hotel.id
     card.dataset.favouriteLevel = String(hotel.favouriteLevel ?? 0)
     card.style.setProperty('--hotel-favourite-color', packageFavouriteLevels[hotel.favouriteLevel ?? 0].color)
-    const header = document.createElement('div')
-    header.className = 'map-hotel-card__handle'
-    const handle = cardAction('drag', 'Переместить карточку · ' + hotel.name, actions.showLabels)
+    const media = document.createElement('div')
+    media.className = 'map-hotel-card__photo-frame'
+    const handle = cardAction('drag', 'Переместить карточку · ' + hotel.name, false)
     handle.classList.add('map-hotel-card__drag')
     handle.setAttribute('aria-keyshortcuts', 'ArrowUp ArrowDown ArrowLeft ArrowRight Home Escape')
-    header.append(handle)
-    if (actions.close) header.append(cardAction('close', 'Свернуть карточку · ' + hotel.name, false, actions.close))
+    media.append(photoHost, handle)
+    if (actions.close) media.append(cardAction('close', 'Свернуть карточку · ' + hotel.name, false, actions.close))
     const body = document.createElement('div')
     body.className = 'map-hotel-card__body'
     const name = document.createElement('button')
@@ -283,6 +283,8 @@ function photoCard(hotel: MapProperty, photoHost: HTMLElement, actions: PhotoCar
     body.append(amount)
     const controls = document.createElement('div')
     controls.className = 'map-hotel-card__actions'
+    controls.setAttribute('role', 'group')
+    controls.setAttribute('aria-label', 'Действия отеля · ' + hotel.name)
     if (actions.favourite) controls.append(favouriteControls(hotel, actions.favourite, actions.showLabels))
     if (actions.matrix) {
         const matrix = cardAction('matrix', 'Матрица цен · ' + hotel.name, actions.showLabels, actions.matrix)
@@ -294,7 +296,8 @@ function photoCard(hotel: MapProperty, photoHost: HTMLElement, actions: PhotoCar
         refresh.classList.add('map-hotel-card__refresh')
         controls.append(refresh)
     }
-    card.append(header, photoHost, body, controls)
+    controls.append(sourcesHost)
+    card.append(media, body, controls)
     L.DomEvent.disableClickPropagation(card)
     card.addEventListener('pointerdown', event => event.stopPropagation())
     card.addEventListener('keydown', event => event.stopPropagation())
@@ -302,9 +305,10 @@ function photoCard(hotel: MapProperty, photoHost: HTMLElement, actions: PhotoCar
 }
 
 function addProperty(group: L.LayerGroup, hotel: MapProperty, index: number, select: () => void, compact: boolean,
-    photo?: {host: HTMLElement, actions: PhotoCardActions, position: (marker: L.Marker, card: HTMLElement, handle: HTMLButtonElement) => void}) {
+    photo?: {host: HTMLElement, sourcesHost: HTMLElement, actions: PhotoCardActions,
+        position: (marker: L.Marker, card: HTMLElement, handle: HTMLButtonElement) => void}) {
     if (photo) {
-        const {card, handle} = photoCard(hotel, photo.host, photo.actions)
+        const {card, handle} = photoCard(hotel, photo.host, photo.sourcesHost, photo.actions)
         const icon = L.divIcon({className: 'directory-map-pin is-rich-card', html: card,
             iconSize: [190, 244], iconAnchor: [95, 122]})
         const marker = L.marker([hotel.latitude, hotel.longitude], {
@@ -465,7 +469,7 @@ export function DirectoryMap({destination, hotels, selectedId, onSelect, onSearc
     const propertyLayer = useRef<L.LayerGroup | null>(null)
     const actions = useRef({select: onSelect, open: onOpen, matrix: onMatrix, favourite: onFavourite,
         camera: onCamera, refresh: onRefresh, clear: onClearSelection})
-    const photoHosts = useRef(new Map<string, HTMLElement>())
+    const photoHosts = useRef(new Map<string, Pick<MapPhotoMount, 'host' | 'sourcesHost'>>())
     const selectedPhotos = useRef(new Map<string, string>())
     const [photoCards, setPhotoCards] = useState<MapPhotoMount[]>([])
     const cancelViewport = useRef<() => void>(() => {})
@@ -556,11 +560,15 @@ export function DirectoryMap({destination, hotels, selectedId, onSelect, onSearc
                 const hotel = members[0]
                 const active = hotel.id == selectedId
                 const rich = immersive && !collapsedCards.current.has(hotel.id) && (photoZoom || expandedCard.current == hotel.id)
-                let photoHost: HTMLElement | undefined
+                let photoMount: MapPhotoMount | undefined
                 if (rich) {
-                    photoHost = photoHosts.current.get(hotel.id) ?? document.createElement('div')
-                    photoHost.className = 'map-hotel-card__photo-host'
-                    nextPhotoCards.push({hotel, host: photoHost})
+                    const hosts = photoHosts.current.get(hotel.id) ?? {
+                        host: document.createElement('div'), sourcesHost: document.createElement('div'),
+                    }
+                    hosts.host.className = 'map-hotel-card__photo-host'
+                    hosts.sourcesHost.className = 'map-hotel-card__source-actions'
+                    photoMount = {hotel, ...hosts}
+                    nextPhotoCards.push(photoMount)
                 }
                 const favourite = actions.current.favourite
                 const change = favourite ? (level: tPackageFavouriteLevel) => favourite(hotel.id, level) : undefined
@@ -576,7 +584,7 @@ export function DirectoryMap({destination, hotels, selectedId, onSelect, onSearc
                         }})
                     cardLayouts.current.set(hotel.id, layout)
                 }
-                const photo = photoHost ? {host: photoHost, position, actions: {
+                const photo = photoMount ? {host: photoMount.host, sourcesHost: photoMount.sourcesHost, position, actions: {
                     open: () => activateHotel(hotel.id), favourite: change, matrix,
                     refresh: actions.current.refresh ? () => actions.current.refresh?.(hotel.id) : undefined,
                     close: () => collapseCard(hotel.id), showLabels,
@@ -595,7 +603,7 @@ export function DirectoryMap({destination, hotels, selectedId, onSelect, onSearc
                 marker.getElement()?.classList.toggle('has-selected-hotel', members.some(hotel => hotel.id == selectedId))
             }
         })
-        photoHosts.current = new Map(nextPhotoCards.map(entry => [entry.hotel.id, entry.host]))
+        photoHosts.current = new Map(nextPhotoCards.map(({hotel, host, sourcesHost}) => [hotel.id, {host, sourcesHost}]))
         setPhotoCards(nextPhotoCards)
         if (focusedHotel && !document.querySelector('dialog[open]')) {
             const element = markers.current.get(focusedHotel)?.getElement()
@@ -812,8 +820,9 @@ export function DirectoryMap({destination, hotels, selectedId, onSelect, onSearc
         aria-label={'Карта объектов · ' + name} aria-busy={loading}>
         <div className="hotel-map__canvas" ref={host} aria-label="Карта, стрелки для перемещения"
             data-map-total={hotels.length} data-map-visible={visible}/>
-        {photoCards.map(({hotel, host}) => createPortal(<MapPhoto hotelId={hotel.id} name={hotel.name}
+        {photoCards.map(({hotel, host, sourcesHost}) => createPortal(<MapPhoto hotelId={hotel.id} name={hotel.name}
             photo={hotel.photo} photos={hotel.photos} propertyUrl={hotel.propertyUrl} selectedUrl={selectedPhotos.current.get(hotel.id)}
+            sourcesHost={sourcesHost}
             showLabels={showLabels} onPhoto={url => selectedPhotos.current.set(hotel.id, url)} onOpen={() => activateHotel(hotel.id)}/>, host, hotel.id))}
         {!immersive && <output className="directory-map__count" aria-live="polite">В области <strong>{visible}</strong> из {hotels.length}</output>}
         {!immersive && <div className="hotel-map__tools">
