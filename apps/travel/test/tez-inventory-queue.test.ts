@@ -50,6 +50,7 @@ test('six active supplier requests queue another, deduplicate its readers and sk
     await assert.rejects(abandonedRead, {name: 'AbortError'})
     assert.equal(requests.length, 6)
     requests[0].release()
+    await first[0]
     await setImmediate()
     assert.equal(requests.length, 7)
     assert.equal(requests[6].signal?.aborted, false)

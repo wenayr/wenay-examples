@@ -6,7 +6,7 @@ import {directoryUrl, useDirectoryQuery} from './directory-query.ts'
 import {safeHref} from './DirectoryCard.tsx'
 import {packageQuery, type PackagePreferences} from './package-preferences.ts'
 import {dateLabel, hotelCount} from './presentation.ts'
-import {usePageVisible, useVisibleRefresh} from './visible-refresh.ts'
+import {usePageVisible} from './visible-refresh.ts'
 import {Icon} from './Icons.tsx'
 import {packageHotelId} from './package-hotel.ts'
 import type {tMapBounds} from './DirectoryMap.tsx'
@@ -60,7 +60,6 @@ export function HotelQuickSearch({prefs, destination, value, onValue, suspended,
     const data = settled ? query.data ?? previous : undefined
     const busy = !settled || query.loading
     const retryAt = query.error ? undefined : data?.source.retryAt
-    useVisibleRefresh({enabled: active && settled, busy, retryAt, onRefresh: query.retry})
     useEffect(() => {
         if (!expanded || suspended) return
         function clickedOutside(event: PointerEvent) {

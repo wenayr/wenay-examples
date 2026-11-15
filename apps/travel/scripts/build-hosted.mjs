@@ -30,7 +30,8 @@ async function collect(directory) {
 await collect(client)
 await mkdir(cache, {recursive: true})
 const entry = path.join(cache, 'hosted-worker.mjs')
-await writeFile(entry, "import {createTravelWorker} from '../backend/worker.ts'\nexport default createTravelWorker({assets:" + JSON.stringify(assets) + '})\n')
+await writeFile(entry, "import {createTravelWorker} from '../backend/worker.ts'\nexport default createTravelWorker({requireSharedStorage:true,assets:"
+    + JSON.stringify(assets) + '})\n')
 await build({root, configFile: false, publicDir: false, build: {
     outDir: server, emptyOutDir: true, target: 'es2022', minify: false,
     lib: {entry, formats: ['es'], fileName: () => 'index.js'},
@@ -39,7 +40,9 @@ await build({root, configFile: false, publicDir: false, build: {
 const worker = await readFile(path.join(server, 'index.js'))
 const metadata = {
     workerBytes: worker.length, staticAssets: Object.keys(assets).length, staticBytes: assetBytes, runtime: 'worker-esm',
-    agencyStorage: 'R2 JSON via BUCKET', identity: 'Sites authenticated user header', quoteStorage: 'bounded memory TTL',
+    agencyStorage: 'R2 JSON via BUCKET', identity: 'Sites authenticated user header',
+    quoteStorage: 'R2 JSON request observations with bounded process memory',
+    updates: 'demand SSE invalidations with shared snapshot polling', jobs: 'ExecutionContext.waitUntil with bounded source jobs',
 }
 await writeFile(path.join(root, 'dist/hosted-build.json'), JSON.stringify(metadata, null, 2) + '\n')
 console.log(JSON.stringify(metadata))

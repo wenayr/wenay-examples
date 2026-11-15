@@ -1,22 +1,40 @@
-import {useEffect, useEffectEvent, useRef, useState, useSyncExternalStore} from 'react'
+import {useEffect, useEffectEvent, useMemo} from 'react'
+import {listenStore} from 'wenay-common2/listen'
+import {useListenValue} from 'wenay-react2/react'
+import {createDirectoryResources, type DirectoryResourceState} from './directory-resources.ts'
 
-interface ResponseState<T> {key: string, data?: T, error?: string, loading?: boolean}
-const responses = new Map<string, unknown>()
 let agencyScope: {slug?: string, revision?: number} = {}
 let agencyScopeKey = ''
-const scopeListeners = new Set<() => void>()
+const [emitScope, scopeChanges] = listenStore<[string]>({current: () => [agencyScopeKey]})
+export const directoryResources = createDirectoryResources({
+    fetch: (input, init) => fetch(input, init),
+    connect: url => typeof EventSource == 'undefined' ? null : new EventSource(url),
+})
+const transportEvents = {on: directoryResources.events.transport}
+if (typeof document != 'undefined') {
+    function visible() { directoryResources.control.visible(document.visibilityState != 'hidden') }
+    visible()
+    document.addEventListener('visibilitychange', visible)
+    window.addEventListener('online', () => directoryResources.control.online(true))
+    window.addEventListener('offline', () => directoryResources.control.online(false))
+    directoryResources.control.online(navigator.onLine)
+}
+
+export function useDirectoryScope() {
+    return useListenValue(scopeChanges, {initial: agencyScopeKey, current: true}) ?? agencyScopeKey
+}
+
+export function useDirectoryTransport() {
+    return useListenValue(transportEvents, {initial: directoryResources.health.transport(), current: true})
+        ?? directoryResources.health.transport()
+}
 
 export function setDirectoryAgencyScope(scope: {slug?: string, revision?: number}) {
     const key = (scope.slug ?? '') + ':' + (scope.revision ?? '')
     if (key == agencyScopeKey) return
     agencyScope = scope
     agencyScopeKey = key
-    for (const listener of scopeListeners) listener()
-}
-
-function subscribeScope(listener: () => void) {
-    scopeListeners.add(listener)
-    return () => {scopeListeners.delete(listener)}
+    emitScope(key)
 }
 
 function scopedDirectoryUrl(url: string) {
@@ -26,70 +44,36 @@ function scopedDirectoryUrl(url: string) {
     params.delete('agencyRevision')
     if (agencyScope.slug) params.set('agency', agencyScope.slug)
     if (agencyScope.revision != null) params.set('agencyRevision', String(agencyScope.revision))
+    params.sort()
     const suffix = params.toString()
     return path + (suffix ? '?' + suffix : '')
 }
 
 export function useDirectoryQuery<T>(inputUrl: string | null, refreshRevision = 0) {
-    useSyncExternalStore(subscribeScope, () => agencyScopeKey)
+    useDirectoryScope()
     const url = inputUrl ? scopedDirectoryUrl(inputUrl) : null
-    const [result, setResult] = useState<ResponseState<T> | null>(() => url ? {key: url, data: responses.get(url) as T | undefined, loading: true} : null)
-    const [attempt, setAttempt] = useState(0)
-    const fresh = useRef(false)
+    const resource = useMemo(() => url ? directoryResources.source.resource(url) : null, [url])
+    const state = useListenValue<DirectoryResourceState>(resource?.events, {
+        initial: resource?.view.snapshot(), current: true,
+    })
+    const current = resource?.view.snapshot()
+    const visible = state?.key == current?.key ? state : current
     useEffect(() => {
-        if (!url) return
-        const current = url
-        const requestUrl = fresh.current ? directoryRefreshUrl(current) : current
-        fresh.current = false
-        const controller = new AbortController()
-        setResult(previous => ({key: current, data: previous?.key == current ? previous.data : responses.get(current) as T | undefined, loading: true}))
-        async function load() {
-            try {
-                const response = await fetch(requestUrl, {signal: controller.signal})
-                if (!response.ok) {
-                    const body: unknown = await response.json().catch(() => null)
-                    const message = body && typeof body === 'object' && 'error' in body ? body.error : ''
-                    if (typeof message === 'string' && message) {
-                        if (!controller.signal.aborted) setResult({key: current, data: responses.get(current) as T | undefined, error: message})
-                        return
-                    }
-                    throw new Error('HTTP ' + response.status)
-                }
-                const data: T = await response.json()
-                if (!controller.signal.aborted) {
-                    if (responses.size >= 32) responses.delete(responses.keys().next().value!)
-                    responses.set(current, data)
-                    setResult({key: current, data})
-                }
-            } catch {
-                if (!controller.signal.aborted) setResult(previous => ({
-                    key: current, data: previous?.key == current ? previous.data : undefined,
-                    error: 'Не удалось получить данные каталога.',
-                }))
-            }
-        }
-        void load()
-        return () => controller.abort()
-    }, [url, attempt, refreshRevision])
-    function retry() {
-        setAttempt(n => n + 1)
-    }
-    function refresh() {
-        fresh.current = true
-        setAttempt(n => n + 1)
-    }
-    const visible = result?.key == url ? result : null
+        if (refreshRevision) resource?.control.retry()
+    }, [resource, refreshRevision])
     return {
-        data: visible?.data, error: visible?.error,
-        loading: Boolean(url) && (visible?.loading ?? !visible),
-        retry, refresh,
+        data: visible?.data as T | undefined,
+        error: visible?.error,
+        loading: Boolean(url) && (visible?.loading ?? true),
+        retry: () => resource?.control.retry(),
+        refresh: () => resource?.control.refresh(),
     }
 }
 
 // The same-origin REST API supplies snapshots. EventSource only signals invalidation;
 // the browser reconnects with Last-Event-ID and the server replays or resets this region.
 export function useDirectoryEvents(destination: string, revision: string | undefined, invalidate: () => void) {
-    const scopeKey = useSyncExternalStore(subscribeScope, () => agencyScopeKey)
+    const scopeKey = useDirectoryScope()
     const readCursor = useEffectEvent(() => revision)
     const refresh = useEffectEvent(invalidate)
     const ready = Boolean(revision)

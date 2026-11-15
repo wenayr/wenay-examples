@@ -4,11 +4,14 @@ import {packageDestinations} from '../src/package-contract.ts'
 import {dateValue, numberParam, packageQuery} from './travel-query.ts'
 import {tezHotelGallery} from './partners/tez-media.ts'
 import type {AgencySettings} from '../src/agency-contract.ts'
-import {AgencyError} from './agency.ts'
+import {AgencyError, agencyIdentity} from './agency.ts'
+import {createPackageLive} from './package-live.ts'
+import {resolveProviderBufferConfig, type ProviderBufferConfig} from './provider-buffer-config.ts'
 
 const paths = ['destinations', 'packages', 'package-hotel-search', 'package-calendar', 'package-trends',
     'package-matrix', 'package-gallery', 'package-compare', 'package-recheck'] as const
-export const packageHttpPaths = paths.map(path => '/api/travel/' + path)
+const readPaths = paths.map(path => '/api/travel/' + path)
+export const packageHttpPaths = [...readPaths, '/api/travel/package-events']
 
 export function packageJson(status: number, body: unknown, headers: Record<string, string> = {}) {
     return new Response(JSON.stringify(body), {status, headers: {
@@ -31,10 +34,12 @@ export function createPackageHttp(deps: {
     destinations: readonly SupplyDestination[]
     today?: () => string
     resolveSettings?: (request: Request) => Promise<AgencySettings | null>
+    bufferConfig?: ProviderBufferConfig
 }) {
-    async function handle(request: Request): Promise<Response | null> {
+    const bufferConfig = deps.bufferConfig ?? resolveProviderBufferConfig()
+    async function read(request: Request): Promise<Response | null> {
         const url = new URL(request.url)
-        if (!packageHttpPaths.includes(url.pathname)) return null
+        if (!readPaths.includes(url.pathname)) return null
         if (request.method != 'GET') return packageJson(405, {error: 'Используйте GET.'}, {Allow: 'GET'})
         const params = url.searchParams
         try {
@@ -111,5 +116,27 @@ export function createPackageHttp(deps: {
             return packageJson(503, {error: 'Не удалось получить данные поставщика. Попробуйте ещё раз.'})
         }
     }
-    return {handle}
+    const live = createPackageLive({
+        read,
+        config: bufferConfig,
+        async scope(request) {
+            // The identity is supplied by the trusted hosting boundary. A digest keeps it
+            // out of public resource keys, stream frames and health diagnostics.
+            const value = agencyIdentity(request) ?? 'public'
+            const bytes = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value))
+            return Array.from(new Uint8Array(bytes), byte => byte.toString(16).padStart(2, '0')).join('')
+        },
+    })
+    async function handle(request: Request, onStreamClose?: () => void): Promise<Response | null> {
+        const stream = await live.handle(request, onStreamClose)
+        if (stream) return stream
+        const response = await read(request)
+        if (response) {
+            response.headers.set('x-travel-update-profile', bufferConfig.profile)
+            response.headers.set('x-travel-shared-check-ms', String(bufferConfig.sharedCheckMs))
+            await live.source.observed(request, response)
+        }
+        return response
+    }
+    return {handle, health: live.health, resource: live.resource}
 }

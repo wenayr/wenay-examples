@@ -13,6 +13,12 @@ const host = option('host', process.env.HOST ?? '127.0.0.1')
 if (!Number.isInteger(port) || port < 1 || port > 65535) throw new RangeError('Некорректный порт preview')
 if (process.env.HTTPS_PROXY || process.env.HTTP_PROXY) http.setGlobalProxyFromEnv?.()
 const bucket = createPreviewAgencyStorage(fileURLToPath(new URL('../.cache/agency-preview/', import.meta.url)))
+const background = new Set()
+function waitUntil(work) {
+    const bounded = Promise.resolve(work).catch(() => {})
+    background.add(bounded)
+    void bounded.finally(() => background.delete(bounded))
+}
 const server = http.createServer(async function serve(request, response) {
     const controller = new AbortController()
     response.once('close', () => controller.abort())
@@ -28,7 +34,9 @@ const server = http.createServer(async function serve(request, response) {
             init.body = Readable.toWeb(request)
             init.duplex = 'half'
         }
-        const result = await worker.fetch(new Request(url, init), {BUCKET: bucket})
+        const result = await worker.fetch(new Request(url, init), {
+            BUCKET: bucket, TRAVEL_UPDATE_PROFILE: process.env.TRAVEL_UPDATE_PROFILE,
+        }, {waitUntil})
         if (response.destroyed) return
         response.writeHead(result.status, Object.fromEntries(result.headers))
         if (result.body) Readable.fromWeb(result.body).pipe(response)

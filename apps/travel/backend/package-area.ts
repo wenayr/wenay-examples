@@ -11,6 +11,7 @@ import {packageDestinations} from '../src/package-contract.ts'
 import {placeDestinations} from './places/registry.mjs'
 import {searchPhrase} from './catalog-text.ts'
 import {tezKnownHotels} from './partners/tez-catalog.ts'
+import {createBoundedCache, estimatedCacheBytes} from './bounded-cache.ts'
 
 type tAreaMode = PackageArea['mode']
 type tRegion = SupplyDestination & {bbox: tPackageBounds}
@@ -62,7 +63,7 @@ export function createPackageAreas(deps: {
     const maxLatitude = Math.max(0, ...regions.map(region => Math.max(region.latitude - region.bbox[1], region.bbox[3] - region.latitude)))
     const maxLongitude = Math.max(0, ...regions.map(region => Math.max(region.longitude - region.bbox[0], region.bbox[2] - region.longitude)))
     const queue = createAsyncQueue(2)
-    const snapshots = new Map<string, ReturnType<typeof createOfferIndex>>()
+    const snapshots = createBoundedCache<ReturnType<typeof createOfferIndex>>({maxEntries: 32, maxBytes: 8 * 1024 * 1024})
 
     function select(mode: tAreaMode, box: tPackageBounds | null, fallback: string, allowedDestinations?: readonly string[]): Selection {
         let candidates = regions.filter(region => region.id == fallback)
@@ -108,13 +109,13 @@ export function createPackageAreas(deps: {
             area.description += ' Часть цен пока не подтверждена; время проверки и статус сохранены.'
         }
         const key = JSON.stringify([selection.regions.map(region => region.id), batches.map(batch => batch.revision ?? batch.data.generation)])
-        let index = snapshots.get(key)
+        let index = snapshots.view.get(key)
         if (!index) {
             const hotels = new Map<string, PackageHotel>()
             for (const batch of batches) for (const [id, hotel] of batch.hotels) hotels.set(id, hotel)
-            index = createOfferIndex({hotels: [...hotels.values()], offers: batches.flatMap(batch => batch.data.quotes)})
-            if (snapshots.size >= 32) snapshots.delete(snapshots.keys().next().value!)
-            snapshots.set(key, index)
+            const input = {hotels: [...hotels.values()], offers: batches.flatMap(batch => batch.data.quotes)}
+            index = createOfferIndex(input)
+            snapshots.control.set({key, value: index, bytes: estimatedCacheBytes(input)})
         }
         return {index, batches, area, source: sourceFor(batches.map(batch => batch.data), area)}
     }
@@ -176,5 +177,5 @@ export function createPackageAreas(deps: {
             source: entries.length ? sourceFor(entries, observed.area) : observed.source,
             items: entries.flatMap(entry => entry.items)} satisfies PackageTrends
     }
-    return {search, hotels, trends, select}
+    return {search, hotels, trends, select, health: snapshots.health}
 }

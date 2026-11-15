@@ -2,7 +2,7 @@ import {matchesPackageHotel, type PackageQuery} from './package-index.ts'
 import type {createTezInventory, TezWindow} from './partners/tez-inventory.ts'
 import type {FareRecheck} from '../src/recheck-contract.ts'
 
-export async function recheckFare(provider: ReturnType<typeof createTezInventory>, trip: TezWindow, filter: PackageQuery,
+export async function recheckFare(provider: Pick<ReturnType<typeof createTezInventory>, 'day'>, trip: TezWindow, filter: PackageQuery,
     hotelId: string, departure: string, fareId: string): Promise<FareRecheck> {
     const {byFareId, complete, source} = await provider.day(trip, hotelId, departure, true)
     const hotelUrl = 'https://www.tez-tour.com/hotel.html?id=' + hotelId.slice(4)

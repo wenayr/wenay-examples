@@ -4,7 +4,7 @@ import type {PackageMatrixCell} from '../src/package-matrix-contract.ts'
 import type {PackageTrends} from '../src/package-trends-contract.ts'
 import type {SupplyDestination} from '../src/supply-contract.ts'
 import {DirectoryMap, type MapProperty, type tMapBounds, type tMapCamera} from './DirectoryMap.tsx'
-import {directoryUrl, useDirectoryQuery} from './directory-query.ts'
+import {directoryUrl, useDirectoryQuery, useDirectoryTransport} from './directory-query.ts'
 import {dateLabel, hotelCount} from './presentation.ts'
 import {loadPackages, packageQuery, savePackages, supportsPackage, type PackagePreferences} from './package-preferences.ts'
 import {PackageFilters} from './PackageFilters.tsx'
@@ -19,7 +19,7 @@ import {cameraForRoute} from './map-camera.ts'
 import {matrixCellKey, matrixMinimum, matrixOverview, matrixSnapshotCells, matrixViewForRoute, refreshedMatrixSelection} from './package-matrix.ts'
 import {usePackageMatrix} from './package-matrix-query.ts'
 import {useAgency} from './agency/AgencyProvider.tsx'
-import {usePageVisible, useVisibleRefresh} from './visible-refresh.ts'
+import {usePageVisible} from './visible-refresh.ts'
 import {packageHotelId, type tPackageHotel} from './package-hotel.ts'
 import {useMapDisplayPreferences} from './map-display-preferences.ts'
 import {MapCardIcon} from './map-card-icons.tsx'
@@ -110,6 +110,12 @@ function BrowsePackages({initial, destinations, initialHotelName, openHotel, rou
     const [snapshot, setSnapshot] = useState<{context: string, data: PackagePage} | null>(null)
     const tripContext = JSON.stringify({...packageQuery(prefs), minStars: prefs.minStars, areaMode})
     const visible = usePageVisible()
+    const transport = useDirectoryTransport()
+    const liveMode = transport.mode == 'sse' ? 'live' : transport.mode.replace('http-', '')
+    const transportLabels: Record<string, string> = {
+        connecting: 'Подключаем обновления', live: 'Цены обновляются', fallback: 'Периодическое обновление', offline: 'Нет связи',
+    }
+    const transportLabel = transport.profile == 'request-only' ? 'Обновление по запросу' : transportLabels[liveMode]
     const openedOrigin = openedIdentity && packageHotelId(openedIdentity) == prefs.hotelId ? openedIdentity.destinationId : undefined
     const rememberedOrigin = rememberedHotel?.id == prefs.hotelId ? rememberedHotel.destinationId : undefined
     const originToResolve = openedOrigin ?? rememberedOrigin ?? route.query.get('hotelDestination') ?? prefs.destination
@@ -144,7 +150,6 @@ function BrowsePackages({initial, destinations, initialHotelName, openHotel, rou
     const updating = url != settledUrl || query.loading
     const error = url == settledUrl ? query.error : undefined
     const sourceUnavailable = latest?.source.status == 'unavailable'
-    useVisibleRefresh({enabled: mapActive, busy: updating, retryAt: query.error ? undefined : sourceRetryAt, onRefresh: query.retry})
     useEffect(() => {
         if (latest && !latest.source.retryAt) setSnapshot({context: tripContext, data: latest})
     }, [latest, tripContext])
@@ -175,9 +180,8 @@ function BrowsePackages({initial, destinations, initialHotelName, openHotel, rou
     const selectedMapPoint = selectedCandidate && markerProperty(selectedCandidate)
     const selectedInView = selectedMapPoint && insideMapBounds(selectedMapPoint, bounds)
     const selectedCardVisible = selectedInView && visiblePhotoIds.includes(prefs.hotelId)
-    const miniEnabled = Boolean(mapActive && compactPriceMode == 'matrix' && selectedCardVisible && resolvedDetailDestination && !updating)
+    const miniEnabled = Boolean(mapActive && compactPriceMode == 'matrix' && selectedCardVisible && resolvedDetailDestination && url == settledUrl)
     const miniQuery = usePackageMatrix(detailPrefs, miniDepartures, miniNights, miniEnabled)
-    useVisibleRefresh({enabled: miniEnabled, busy: miniQuery.loading, onRefresh: miniQuery.retry})
     function rememberMini(cells: PackageMatrixCell[]) {
         if (!cells.length) return
         setMiniSnapshot(current => {
@@ -208,7 +212,7 @@ function BrowsePackages({initial, destinations, initialHotelName, openHotel, rou
             return found ? current : null
         })
     }, [calendar, priceView, prefs.fareId])
-    const trendsUrl = mapActive && latest?.markers.length && !updating ? directoryUrl('package-trends', {
+    const trendsUrl = mapActive && latest?.markers.length ? directoryUrl('package-trends', {
         ...packageQuery(prefs), minStars: prefs.minStars || undefined, areaMode, ...range,
     }) : null
     const trendsQuery = useDirectoryQuery<PackageTrends>(trendsUrl)
@@ -427,7 +431,8 @@ function BrowsePackages({initial, destinations, initialHotelName, openHotel, rou
             return current <= alternative
         })
     }) ?? destination
-    return <main className="package-map-page" id="packages">
+    return <main className="package-map-page" id="packages" data-live-transport={liveMode}
+        data-live-epoch={transport.epoch} data-live-resets={transport.resets} data-live-profile={transport.profile}>
         <div className="package-map-stage">
             <DirectoryMap destination={mapDestination} hotels={points} selectedId={prefs.hotelId || null} onPhotoCards={visiblePhotos}
                 onSelect={id => {
@@ -452,7 +457,7 @@ function BrowsePackages({initial, destinations, initialHotelName, openHotel, rou
                 onFavourite={favourites.setLevel} camera={camera} onCamera={setCamera}
                 onRefresh={query.refresh} showLabels={display.showLabels} focusKey={focusRevision}
                 onSearchArea={searchArea} bounds={bounds}
-                detailedByDefault loading={updating} immersive/>
+                detailedByDefault loading={updating && !data} immersive/>
         </div>
         <HotelQuickSearch prefs={prefs} destination={destination} value={hotelSearch} onValue={setHotelSearch}
             bounds={bounds} areaMode={areaMode}
@@ -466,6 +471,7 @@ function BrowsePackages({initial, destinations, initialHotelName, openHotel, rou
         <div className="package-map-toolbar">
             <div className="package-map-status" aria-live="polite" aria-busy={updating}>
                 <strong>В области карты</strong>
+                {transportLabel && <small role="status">{transportLabel}</small>}
                 {data && <span>{favouriteFilter == 'all' ? hotelCount(data.direction.total + (data.knownHotels?.length ?? 0)) :
                     'С отметками · ' + points.length}</span>}
                 {updating && <span>Обновляем цены…</span>}

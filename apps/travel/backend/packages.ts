@@ -17,8 +17,12 @@ import {createTezRegions} from './partners/tez-regions.ts'
 import {createTezProperties} from './partners/tez-properties.ts'
 import {packageRegionDefinitions} from '../src/package-regions.ts'
 import {tezHotelGallery} from './partners/tez-media.ts'
+import type {ProviderBucket} from './provider-buffer-storage.ts'
+import type {ProviderBufferConfig} from './provider-buffer-config.ts'
+import {createBoundedCache, estimatedCacheBytes} from './bounded-cache.ts'
 
-type Provider = ReturnType<typeof createTezInventory>
+type Inventory = ReturnType<typeof createTezInventory>
+type Provider = Omit<Inventory, 'events' | 'health'> & Partial<Pick<Inventory, 'events' | 'health'>>
 type Trip = Parameters<Provider['window']>[0]
 type Observation = Awaited<ReturnType<Provider['window']>>
 type Filter = Parameters<ReturnType<typeof createOfferIndex>['search']>[0]
@@ -56,8 +60,11 @@ function calendarSource(days: PackageDay[], original: SupplySource, anyLive: boo
     return {...original, status: anyLive ? 'live' : 'cached', updatedAt: checked.sort()[0], description}
 }
 
-function createDefaultInventory() {
-    const deps = {fetch, now: () => new Date()}
+export function createDefaultInventory(input: {
+    bucket?: ProviderBucket, config?: ProviderBufferConfig, waitUntil?: (work: Promise<unknown>) => void,
+    fetch?: typeof fetch, now?: () => Date,
+} = {}) {
+    const deps = {...input, fetch: input.fetch ?? fetch, now: input.now ?? (() => new Date())}
     const regions = createTezRegions(deps)
     const properties = createTezProperties(deps)
     return createTezInventory({...deps, resolveRegion: regions.resolve, catalog: {...properties, known: regions.hotels}})
@@ -67,7 +74,7 @@ export function createPackages(provider: Provider = createDefaultInventory()) {
     const dailyTrends = createPackageTrends({provider})
     // Price data is short-lived. Reuse the prepared geography and price buckets while a
     // supplier observation is current. Page and viewport changes reuse the same result.
-    const prepared = new Map<string, ReturnType<typeof prepare>>()
+    const prepared = createBoundedCache<ReturnType<typeof prepare>>({maxEntries: 96, maxBytes: 8 * 1024 * 1024})
     // A successful supplier observation establishes a property identity for later empty-day responses.
     // Prices and availability always come from the distinct observation for the selected trip and day.
     const knownHotels = new Map<string, PackageHotel>()
@@ -83,12 +90,12 @@ export function createPackages(provider: Provider = createDefaultInventory()) {
     function observed(destination: string, key: string, data: Observation, metadata?: readonly PackageHotel[]) {
         const positions = metadata?.map(hotel => [hotel.id, hotel.name, hotel.stars, hotel.latitude, hotel.longitude, hotel.photo?.url])
         const generation = key + '/' + data.generation + '/' + JSON.stringify(positions)
-        const cached = prepared.get(generation)
+        const cached = prepared.view.get(generation)
         if (cached) return {...cached, revision: generation}
         const entry = prepare(data, destination, metadata)
         remember(destination, entry.hotels)
-        if (prepared.size >= 96) prepared.delete(prepared.keys().next().value!)
-        prepared.set(generation, entry)
+        prepared.control.set({key: generation, value: entry,
+            bytes: estimatedCacheBytes({hotels: [...entry.hotels.values()], quotes: data.quotes})})
         return {...entry, revision: generation}
     }
     async function window(trip: Trip, signal?: AbortSignal, refresh = false) {
@@ -130,7 +137,7 @@ export function createPackages(provider: Provider = createDefaultInventory()) {
     }
     async function trends(trip: Trip, filter: Filter, hotelIds?: readonly string[], signal?: AbortSignal) {
         signal?.throwIfAborted()
-        const batch = await window(trip)
+        const batch = await window(trip, signal)
         signal?.throwIfAborted()
         const ids = hotelIds ?? batch.index.search(filter).markers.map(marker => marker.hotelId)
         return dailyTrends.read(trip, ids, signal)
@@ -212,5 +219,7 @@ export function createPackages(provider: Provider = createDefaultInventory()) {
             checkedOn: information.checkedOn, photos: [], information}
     }
     const area = createPackageAreas({window, trends: dailyTrends.read})
-    return {search, hotels, calendar, compare, recheck, trends, matrix: priceMatrix.read, area, gallery}
+    return {search, hotels, calendar, compare, recheck, trends, matrix: priceMatrix.read, area, gallery,
+        source: {events: provider.events, health: provider.health,
+            indexes: () => ({prepared: prepared.health.snapshot(), area: area.health.snapshot()})}}
 }

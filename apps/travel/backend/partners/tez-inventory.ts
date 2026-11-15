@@ -1,9 +1,12 @@
-import {createAsyncQueue} from 'wenay-common2/client'
 import locationManifest from './tez-locations.json' with {type: 'json'}
 import locationOverrides from './tez-location-overrides.json' with {type: 'json'}
 import type {PackageCoordinateSource, PackageHotel} from '../../src/package-contract.ts'
 import type {SupplySource} from '../../src/supply-contract.ts'
+import {createProviderBuffer, ProviderRateLimitError, providerRetryAt} from '../provider-buffer.ts'
+import type {ProviderBucket} from '../provider-buffer-storage.ts'
+import type {ProviderBufferConfig} from '../provider-buffer-config.ts'
 import {allowTezSearch, tezSearchRetryAt} from './tez-access.ts'
+import {readBoundedProviderText} from '../provider-buffer-body.ts'
 import {buildTezSearch} from './tez.ts'
 import type {TezRegion} from '../../src/package-regions.ts'
 import type {createTezProperties} from './tez-properties.ts'
@@ -109,6 +112,7 @@ function buildRequest(input: TezWindow, today: string, hotelId?: string, date?: 
         url.searchParams.set('hotelId', hotelId.slice(4))
         url.searchParams.delete('groupByHotel') // Return each available fare for the selected property and day.
     }
+    url.searchParams.sort()
     return {url: url.href, region: base.region, country: Number(url.searchParams.get('countryId')),
         hotelId, first, last, min, max, minNights, maxNights, input}
 }
@@ -178,49 +182,49 @@ function missing(message: string, handoff = false): TezObservation {
 
 export function createTezInventory(deps: {
     fetch: typeof fetch, now: () => Date, resolveRegion?: (id: string, signal?: AbortSignal) => Promise<TezRegion | null>,
+    bucket?: ProviderBucket, config?: ProviderBufferConfig, waitUntil?: (work: Promise<unknown>) => void,
     catalog?: Omit<ReturnType<typeof createTezProperties>, 'information'> & {
         information?: ReturnType<typeof createTezProperties>['information']
         known?: (id: string, signal?: AbortSignal) => Promise<PackageHotel[]>
     },
 }) {
-    const cache = new Map<string, {result: TezObservation, until: number}>()
-    let supplierRetryAt = 0
-    const queue = createAsyncQueue(6)
-    const inflight = new Map<string, {
-        work: Promise<TezObservation>
-        users: Set<symbol>
-        controller: AbortController
-        signal: AbortSignal
-    }>()
-    type Pending = NonNullable<ReturnType<typeof inflight.get>>
-    function remember(key: string, result: TezObservation, ttl: number) {
-        if (!cache.has(key) && cache.size >= 360) cache.delete(cache.keys().next().value!)
-        cache.set(key, {result, until: deps.now().getTime() + ttl})
-        return result
-    }
     function cached(result: TezObservation, message = result.source.description): TezObservation {
         if (!result.source.updatedAt) return result
         return {...result, source: {...result.source, status: 'cached', description: message}}
     }
-    async function observe(pending: Pending, signal?: AbortSignal) {
-        signal?.throwIfAborted()
-        const token = Symbol('supplier-reader')
-        pending.users.add(token)
-        let rejectAbort: (reason: unknown) => void = () => {}
-        const cancelled = new Promise<never>((_, reject) => { rejectAbort = reject })
-        function aborted() {
-            pending.users.delete(token)
-            if (!pending.users.size) pending.controller.abort(signal?.reason)
-            rejectAbort(signal?.reason ?? new DOMException('Aborted', 'AbortError'))
-        }
-        signal?.addEventListener('abort', aborted, {once: true})
-        try {
-            return await (signal ? Promise.race([pending.work, cancelled]) : pending.work)
-        } finally {
-            pending.users.delete(token)
-            signal?.removeEventListener('abort', aborted)
-        }
-    }
+    const buffer = createProviderBuffer<TezObservation>({
+        providerId: 'tez', accountScope: 'public-ee-tallinn-3746-eur-v1', memoryScope: deps.fetch,
+        bucket: deps.bucket, config: deps.config, waitUntil: deps.waitUntil, now: () => deps.now().getTime(),
+        codec: {
+            encode: value => ({...value, byFareId: undefined}),
+            decode(value) {
+                if (!value || typeof value != 'object') throw new Error('Некорректный снимок TEZ.')
+                const observation = value as Omit<TezObservation, 'byFareId'>
+                if (!Array.isArray(observation.quotes) || !observation.source || typeof observation.generation != 'string') {
+                    throw new Error('Некорректный снимок TEZ.')
+                }
+                return {...observation, byFareId: new Map(observation.quotes.map(quote => [quote.id, quote]))}
+            },
+        },
+        traits: {
+            checkedAt: value => value.source.updatedAt ? Date.parse(value.source.updatedAt) : null,
+            negative: value => value.complete && !value.quotes.length,
+            cached,
+            deferred(value, retryAt) {
+                const result = cached(value)
+                return {...result, source: {...result.source, retryAt: new Date(retryAt).toISOString()}}
+            },
+            stale(value, retryAt, message) {
+                const result = cached(value, message + ' Показаны ранее проверенные цены.')
+                return {...result, source: {...result.source, stale: true, retryAt: new Date(retryAt).toISOString()}}
+            },
+            missing(retryAt, message, failed = false) {
+                const result = missing(message)
+                const retry = retryAt ? {retryAt: new Date(retryAt).toISOString()} : {}
+                return {...result, source: {...result.source, ...retry, ...(failed ? {failed: true} : {})}}
+            },
+        },
+    })
     async function read(input: TezWindow, hotelId?: string, date?: string, forceFresh = false, signal?: AbortSignal,
         requestedNights?: readonly number[]): Promise<TezObservation> {
         signal?.throwIfAborted()
@@ -230,57 +234,21 @@ export function createTezInventory(deps: {
         const request = buildRequest(input, now.toISOString().slice(0, 10), hotelId, date, requestedNights, region)
         if (!request) return missing('Публичный поиск TEZ не настроен для этого маршрута, состава или периода.', true)
         const search = request
-        const prior = cache.get(request.url)
-        if (!forceFresh && prior && prior.until > now.getTime()) return cached(prior.result)
-        const waiting = inflight.get(request.url)
-        if (waiting && !waiting.signal.aborted) return observe(waiting, signal)
-        function failed(message: string) {
-            const lastTime = Date.parse(prior?.result.source.updatedAt ?? '')
-            if (prior && now.getTime() - lastTime <= 15 * 60_000) {
-                const result = cached(prior.result, message + ' Показаны ранее проверенные цены.')
-                return {...result, source: {...result.source, stale: true}}
+        async function fetchQuotes(sharedSignal: AbortSignal) {
+            if (!deps.bucket && !allowTezSearch(deps.fetch, deps.now().getTime())) {
+                throw new ProviderRateLimitError(tezSearchRetryAt(deps.fetch, deps.now().getTime())!)
             }
-            return missing(message)
+            const timeout = AbortSignal.any([sharedSignal, AbortSignal.timeout(10_000)])
+            const response = await deps.fetch(search.url, {signal: timeout, redirect: 'error'})
+            if (response.status == 429) throw new ProviderRateLimitError(providerRetryAt(response.headers.get('retry-after'), deps.now().getTime()))
+            if (!response.ok) throw new Error('Поставщик не вернул цены')
+            const size = Number(response.headers.get('content-length')) || undefined
+            const text = await readBoundedProviderText({size, body: response.body, text: () => response.text()},
+                deps.config?.maxSnapshotBytes ?? 2_000_000, timeout)
+            return decode(JSON.parse(text), search, deps.now().toISOString())
         }
-        const controller = new AbortController()
-        const deadline = AbortSignal.any([controller.signal, AbortSignal.timeout(20_000)])
-        const pending: Pending = {controller, signal: deadline, users: new Set(), work: Promise.resolve(missing('Проверяем тарифы TEZ.'))}
-        async function fetchQuotes() {
-            try {
-                deadline.throwIfAborted()
-                const attemptAt = deps.now().getTime()
-                if (supplierRetryAt > attemptAt) {
-                    const result = failed('Источник временно ограничил частоту запросов. Проверка продолжится автоматически.')
-                    return {...result, source: {...result.source, retryAt: new Date(supplierRetryAt).toISOString()}}
-                }
-                if (!allowTezSearch(deps.fetch, attemptAt)) {
-                    const retryTime = tezSearchRetryAt(deps.fetch, attemptAt)!
-                    const result = failed('Проверка цен автоматически продолжится после паузы между запросами.')
-                    // A local scheduling pause is not a supplier failure and must not replace a known observation in the cache.
-                    return {...result, source: {...result.source, retryAt: new Date(retryTime).toISOString()}}
-                }
-                const timeout = AbortSignal.any([deadline, AbortSignal.timeout(10_000)])
-                const response = await deps.fetch(search.url, {signal: timeout, redirect: 'error'})
-                if (response.status == 429) {
-                    const retry = response.headers.get('retry-after')
-                    const seconds = retry && /^\d+$/.test(retry) ? Number(retry) : null
-                    const requested = seconds == null ? Date.parse(retry ?? '') : attemptAt + seconds * 1000
-                    supplierRetryAt = Number.isFinite(requested) && requested > attemptAt ? requested : attemptAt + 60_000
-                    const result = failed('Источник временно ограничил частоту запросов. Проверка продолжится автоматически.')
-                    return {...result, source: {...result.source, retryAt: new Date(supplierRetryAt).toISOString()}}
-                }
-                if (!response.ok) throw new Error('Поставщик не вернул цены')
-                return remember(search.url, await decode(await response.json(), search, deps.now().toISOString()), 120_000)
-            } catch {
-                if (controller.signal.aborted) throw controller.signal.reason
-                return remember(search.url, failed('Нет свежего ответа TEZ.'), 10_000)
-            } finally {
-                if (inflight.get(search.url) == pending) inflight.delete(search.url)
-            }
-        }
-        inflight.set(request.url, pending)
-        pending.work = queue.add(fetchQuotes)
-        return observe(pending, signal)
+        // This is a normalized request observation, not a claim that regional minima cover every fare or budget.
+        return buffer.source.read({key: request.url, load: fetchQuotes, signal, refresh: forceFresh})
     }
     function range(input: TezWindow, hotelId: string, date: string, nights: readonly number[], signal?: AbortSignal, forceFresh = false) {
         return read(input, hotelId, date, forceFresh, signal, nights)
@@ -288,7 +256,11 @@ export function createTezInventory(deps: {
     // The ranged operation is an optional capability for injected providers that implement day/window only.
     const ranged: {range?: typeof range} = {range}
     const catalog: {catalog?: NonNullable<typeof deps.catalog>} = deps.catalog ? {catalog: deps.catalog} : {}
-    return {...catalog, window: (input: TezWindow, signal?: AbortSignal, forceFresh = false) => read(input, undefined, undefined, forceFresh, signal),
+    return {...catalog, events: buffer.events, health: buffer.health,
+        window: (input: TezWindow, signal?: AbortSignal, forceFresh = false) => read(input, undefined, undefined, forceFresh, signal),
         day: (input: TezWindow, hotelId: string, date: string, forceFresh = false, signal?: AbortSignal) =>
             read(input, hotelId, date, forceFresh, signal), ...ranged}
 }
+
+type TezInventory = ReturnType<typeof createTezInventory>
+export type TezProvider = Omit<TezInventory, 'events' | 'health'> & Partial<Pick<TezInventory, 'events' | 'health'>>

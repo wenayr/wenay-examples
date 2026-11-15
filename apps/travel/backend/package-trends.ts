@@ -4,7 +4,8 @@ import {packageTrendHotelLimit, type PackageHotelTrend, type PackageTrends} from
 import type {SupplySource} from '../src/supply-contract.ts'
 import type {createTezInventory} from './partners/tez-inventory.ts'
 
-type Provider = ReturnType<typeof createTezInventory>
+type Inventory = ReturnType<typeof createTezInventory>
+type Provider = Omit<Inventory, 'events' | 'health'> & Partial<Pick<Inventory, 'events' | 'health'>>
 type Trip = Parameters<Provider['window']>[0]
 type Observation = Awaited<ReturnType<Provider['window']>>
 interface DayMinima {
@@ -83,6 +84,9 @@ export function createPackageTrends(deps: {provider: Provider, now?: () => Date}
     const now = deps.now ?? (() => new Date())
     const queue = createAsyncQueue(3)
     const trips = new Map<string, TripEntry>()
+    deps.provider.events?.on(() => {
+        for (const entry of trips.values()) if (Number.isFinite(entry.until)) entry.until = 0
+    })
 
     function begin(trip: Trip, dates: string[], token: symbol) {
         const entry: TripEntry = {users: new Set([token]), until: Number.POSITIVE_INFINITY, skipped: false, work: Promise.resolve([])}

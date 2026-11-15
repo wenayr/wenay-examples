@@ -5,7 +5,7 @@ import {dateLabel} from './presentation.ts'
 import {type PackagePreferences} from './package-preferences.ts'
 import {matrixCellKey, matrixDates, matrixPageDates, matrixRangeNights, matrixVisibleRows, type MatrixViewContext} from './package-matrix.ts'
 import {usePackageMatrix} from './package-matrix-query.ts'
-import {usePageVisible, useVisibleRefresh} from './visible-refresh.ts'
+import {usePageVisible} from './visible-refresh.ts'
 import './package-matrix.css'
 
 const money = new Intl.NumberFormat('ru-RU', {style: 'currency', currency: 'EUR', maximumFractionDigits: 2})
@@ -72,7 +72,6 @@ export function PackagePriceMatrix({prefs, selectedFareId, onSelect, onSnapshot,
     useEffect(() => {
         if (refreshRevision) forceRefresh()
     }, [refreshRevision])
-    useVisibleRefresh({enabled: visible, busy: query.loading, onRefresh: query.retry})
     const stalePrices = query.staleCellKeys.length > 0
     const failedPrices = query.failedCellKeys.length > 0
     const publishState = useEffectEvent(() => onStateChange?.({busy: query.loading, stale: stalePrices, failed: failedPrices}))

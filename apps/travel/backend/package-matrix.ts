@@ -39,7 +39,8 @@ function publicFare(quote: TezQuote, trip: TezWindow, checkedAt: string): Packag
 
 function unknownCell(trip: TezWindow, departure: string, observedSource: SupplySource): PackageMatrixCell {
     let status: PackageMatrixCell['status'] = 'unknown'
-    if (observedSource.status == 'unavailable' && !observedSource.retryAt) status = 'failed'
+    const failed = observedSource.failed || !observedSource.retryAt
+    if (observedSource.status == 'unavailable' && failed) status = 'failed'
     return {departure, nights: trip.nights, days: trip.nights + 1, lowest: null, inBudget: null, highest: null,
         complete: false, checkedAt: null, retryAt: observedSource.retryAt, source: observedSource, status}
 }

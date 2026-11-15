@@ -11,6 +11,16 @@ function row(params: URLSearchParams, id: number, name: string, total: number) {
 }
 function request(path: string) { return new Request('https://travel.example/api/travel/' + path) }
 
+test('hosted Worker fails closed before creating a memory provider when its R2 binding is absent', async () => {
+    const worker = createTravelWorker({requireSharedStorage: true})
+    const response = await worker.fetch(request('packages?' + query))
+    assert.equal(response.status, 503)
+    assert.equal(response.headers.get('retry-after'), '10')
+    const health = await (await worker.fetch(request('health'))).json()
+    assert.equal(health.persistence, 'unavailable')
+    assert.equal(health.expected, 'r2-shared')
+})
+
 test('Worker search uses the shared name index, ignores viewport, refreshes real observations and preserves unknown catalog hotels', async () => {
     let calls = 0
     let total = 1384
