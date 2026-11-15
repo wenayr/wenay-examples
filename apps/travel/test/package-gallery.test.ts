@@ -48,3 +48,59 @@ test('галерея отдаёт точные ссылки своего оте�
     assert.equal((await fetch(base + '?hotelId=https://s.tez-tour.com/hotel/1491/image.jpg')).status, 400)
     assert.equal(priceRequests, 0)
 })
+
+test('details are opt-in, retain static photos when information is unavailable, and never request trip prices', async () => {
+    const {createPackageHttp} = await import('../backend/package-http.ts')
+    let informationRequests = 0
+    const catalog = {
+        read: () => null,
+        enrich: async (_destination: string, hotels: readonly import('../src/package-contract.ts').PackageHotel[]) => [...hotels],
+        gallery: async () => null,
+        information: async () => {
+            informationRequests++
+            return null
+        },
+    }
+    async function prices(): Promise<never> { throw new Error('Unexpected price request') }
+    const packages = createPackages({window: prices, day: prices, catalog})
+    const http = createPackageHttp({packages, destinations: []})
+    const base = 'https://travel.example/api/travel/package-gallery?hotelId=tez:511'
+    const ordinary = await http.handle(new Request(base))
+    assert.equal(ordinary?.status, 200)
+    assert.equal(informationRequests, 0)
+    const detailed = await http.handle(new Request(base + '&details=1'))
+    const body: PackageHotelGallery = await detailed!.json()
+    assert.equal(detailed?.status, 200)
+    assert.equal(body.photos.length, 5)
+    assert.equal(body.information, undefined)
+    assert.equal(informationRequests, 1)
+    catalog.information = async () => { throw new Error('Metadata deadline') }
+    const fallback = await packages.gallery('tez:511', undefined, true)
+    assert.equal(fallback?.photos.length, 5)
+    assert.equal((await http.handle(new Request(base + '&details=invalid')))?.status, 400)
+    const controller = new AbortController()
+    controller.abort()
+    await assert.rejects(packages.gallery('tez:511', controller.signal, true), {name: 'AbortError'})
+})
+
+test('detail facts merge only for the same hotel identity while existing verified photos remain unchanged', async () => {
+    const hotel = {id: 'tez:511', name: 'DESERT ROSE 5 *', stars: 5, latitude: null, longitude: null,
+        url: 'https://www.tez-tour.com/hotel.html?id=511'}
+    let informationId = hotel.id
+    const catalog = {
+        read: () => hotel,
+        enrich: async (_destination: string, hotels: readonly import('../src/package-contract.ts').PackageHotel[]) => [...hotels],
+        gallery: async () => null,
+        information: async () => ({hotelId: informationId, sourceUrl: hotel.url, checkedOn: '2026-11-15',
+            facts: [{label: 'Расположение', value: 'На берегу моря'}]}),
+    }
+    async function prices(): Promise<never> { throw new Error('Unexpected price request') }
+    const packages = createPackages({window: prices, day: prices, catalog})
+    const ordinary = await packages.gallery(hotel.id)
+    assert.equal(ordinary?.information, undefined)
+    const detailed = await packages.gallery(hotel.id, undefined, true)
+    assert.deepEqual(detailed?.photos, ordinary?.photos)
+    assert.equal(detailed?.information?.hotelId, hotel.id)
+    informationId = 'tez:512'
+    assert.equal((await packages.gallery(hotel.id, undefined, true))?.information, undefined)
+})

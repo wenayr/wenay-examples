@@ -194,8 +194,22 @@ export function createPackages(provider: Provider = createDefaultInventory()) {
     function recheck(trip: Trip, filter: Filter, hotelId: string, departure: string, fareId: string) {
         return recheckFare(provider, trip, filter, hotelId, departure, fareId)
     }
-    async function gallery(hotelId: string, signal?: AbortSignal) {
-        return tezHotelGallery(hotelId) ?? await provider.catalog?.gallery(hotelId, signal) ?? null
+    async function gallery(hotelId: string, signal?: AbortSignal, includeInformation = false) {
+        signal?.throwIfAborted()
+        const base = tezHotelGallery(hotelId) ?? await provider.catalog?.gallery(hotelId, signal) ?? null
+        if (!includeInformation) return base
+        let information
+        try { information = await provider.catalog?.information?.(hotelId, signal) } catch {
+            signal?.throwIfAborted()
+            return base
+        }
+        signal?.throwIfAborted()
+        if (!information || information.hotelId != hotelId) return base
+        if (base) return {...base, information}
+        const hotel = provider.catalog?.read(hotelId)
+        if (!hotel || hotel.id != hotelId) return null
+        return {hotelId, name: hotel.name, hotelUrl: information.sourceUrl,
+            checkedOn: information.checkedOn, photos: [], information}
     }
     const area = createPackageAreas({window, trends: dailyTrends.read})
     return {search, hotels, calendar, compare, recheck, trends, matrix: priceMatrix.read, area, gallery}

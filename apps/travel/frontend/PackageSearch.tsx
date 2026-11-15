@@ -9,7 +9,7 @@ import {dateLabel, hotelCount} from './presentation.ts'
 import {loadPackages, packageQuery, savePackages, supportsPackage, type PackagePreferences} from './package-preferences.ts'
 import {PackageFilters} from './PackageFilters.tsx'
 import {PackageHotelPage} from './PackageHotelPage.tsx'
-import {PackageMatrixPopup} from './PackageMatrixPopup.tsx'
+import {hotelCalendarRequired, hotelSectionForRoute, type tHotelPageSection} from './hotel-page-entry.ts'
 import {HotelQuickSearch} from './HotelQuickSearch.tsx'
 import {usePackageFavourites} from './package-favourites.ts'
 import {selectedPackageFare} from './package-selection.ts'
@@ -81,7 +81,8 @@ function BrowsePackages({initial, destinations, initialHotelName, openHotel, rou
     })
     const [open, setOpen] = useState<{hotelId: string, name: string} | null>(
         openHotel && initial.hotelId ? {hotelId: initial.hotelId, name: initialHotelName || 'Выбранный отель'} : null)
-    const [priceView, setPriceView] = useState<'graph' | 'matrix'>(route.query.get('priceView') == 'matrix' ? 'matrix' : 'graph')
+    const [priceView, setPriceView] = useState<'graph' | 'matrix'>(route.query.get('priceView') == 'graph' ? 'graph' : 'matrix')
+    const [hotelSection, setHotelSection] = useState(() => hotelSectionForRoute(route.query))
     const [matrixSelection, setMatrixSelection] = useState<PackageMatrixCell | null>(null)
     const [miniSnapshot, setMiniSnapshot] = useState<{context: string, cells: PackageMatrixCell[]}>({context: '', cells: []})
     const [unconfirmedFareId, setUnconfirmedFareId] = useState('')
@@ -189,13 +190,13 @@ function BrowsePackages({initial, destinations, initialHotelName, openHotel, rou
     }
     const rememberMiniSnapshot = useEffectEvent(rememberMini)
     useEffect(() => { rememberMiniSnapshot(miniQuery.cells) }, [miniQuery.cells])
-    const needsCalendar = priceView == 'graph' || !open && !matrixSelection
+    const needsCalendar = hotelCalendarRequired(priceView, prefs.fareId, matrixSelection?.inBudget?.id)
     const calendarUrl = visible && resolvedDetailDestination && prefs.hotelId && (open || prefs.fareId) && url == settledUrl && needsCalendar
         ? directoryUrl('package-calendar', {...packageQuery(detailPrefs), hotelId: prefs.hotelId}) : null
     const calendarQuery = useDirectoryQuery<PackageCalendar>(calendarUrl)
     const calendar = calendarQuery.data
     useEffect(() => {
-        if (!calendar || priceView != 'graph') return
+        if (!calendar) return
         if (prefs.fareId) {
             const confirmed = calendar.days.some(day => day.inBudget?.id == prefs.fareId)
             setUnconfirmedFareId(confirmed ? '' : prefs.fareId)
@@ -268,7 +269,7 @@ function BrowsePackages({initial, destinations, initialHotelName, openHotel, rou
         searchedSelection, bounds, compactPriceMode, miniSnapshot, miniContext, miniQuery.staleCellKeys, miniQuery.loading,
         miniDepartures.join(','), miniNights.join(',')])
     useEffect(() => { void savePackages(prefs) }, [prefs])
-    function searchLink(detail = open, selected = prefs.hotelId, view = priceView) {
+    function searchLink(detail = open, selected = prefs.hotelId, view = priceView, section = hotelSection) {
         const {destination, ...filters} = prefs
         const browse = browseFields({bounds, offset: 0, selection: selected, view: 'map'})
         return travelHash('packages', destination, {...filters, ...browse,
@@ -276,7 +277,8 @@ function BrowsePackages({initial, destinations, initialHotelName, openHotel, rou
             mapLat: camera?.latitude, mapLon: camera?.longitude, mapZoom: camera?.zoom,
             fareId: selected == prefs.hotelId ? prefs.fareId : undefined,
             hotelId: detail?.hotelId, hotelName: detail?.name, hotelView: detail ? '1' : undefined,
-            priceView: detail && view == 'matrix' ? 'matrix' : undefined,
+            priceView: detail && view == 'graph' ? 'graph' : undefined,
+            hotelSection: detail ? section : undefined,
             matrixFrom: matrixView.firstNights, matrixTo: matrixView.lastNights,
             matrixRow: matrixView.durationOffset, matrixDate: matrixView.dateOffset,
             hotelSearch: hotelSearch || undefined, hotelSearchOpen: searchExpanded ? '1' : undefined,
@@ -285,7 +287,7 @@ function BrowsePackages({initial, destinations, initialHotelName, openHotel, rou
     }
     useEffect(() => {
         replaceTravelHash(searchLink())
-    }, [prefs, bounds, camera, open, favouriteFilter, priceView, matrixView, hotelSearch, searchExpanded, searchOffset])
+    }, [prefs, bounds, camera, open, favouriteFilter, priceView, hotelSection, matrixView, hotelSearch, searchExpanded, searchOffset])
     const preserveMapOnBack = useEffectEvent(() => {
         const returned = travelRoute(window.location.hash)
         const returnsToMap = returned.page == 'packages' && returned.destination == prefs.destination && !returned.query.has('hotelId')
@@ -351,13 +353,15 @@ function BrowsePackages({initial, destinations, initialHotelName, openHotel, rou
         const detail = {hotelId, name: hotel.name}
         setOpenedIdentity(hotel)
         opener.current = trigger ?? (document.activeElement instanceof HTMLElement ? document.activeElement : null)
-        setPriceView(view)
+        const section: tHotelPageSection = view == 'matrix' ? 'matrix' : 'gallery'
+        setPriceView('matrix')
+        setHotelSection(section)
         if (hotelId != prefs.hotelId) {
             setMatrixSelection(null)
             setUnconfirmedFareId('')
         }
         replaceTravelHash(searchLink(null, hotelId))
-        openTravelDetail(searchLink(detail, hotelId, view))
+        openTravelDetail(searchLink(detail, hotelId, 'matrix', section))
         setOpen(detail)
         setPrefs(current => ({...current, hotelId, fareId: current.hotelId == hotelId ? current.fareId : ''}))
     }
@@ -379,6 +383,12 @@ function BrowsePackages({initial, destinations, initialHotelName, openHotel, rou
         setCamera({latitude: hotel.latitude, longitude: hotel.longitude, zoom: 15.5})
         setFocusRevision(value => value + 1)
     }
+    function locateMapHotel(hotel: tPackageHotel) {
+        if (hotel.latitude == null || hotel.longitude == null) return
+        selectHotel(hotel)
+        setCamera({latitude: hotel.latitude, longitude: hotel.longitude, zoom: 15.5})
+        setFocusRevision(value => value + 1)
+    }
     function matrixSnapshot(cells: PackageMatrixCell[], failedCellKeys: string[]) {
         rememberMini(cells)
         let selected = matrixSelection
@@ -393,7 +403,7 @@ function BrowsePackages({initial, destinations, initialHotelName, openHotel, rou
         if (selectedHotel?.latitude == null || selectedHotel.longitude == null) return
         setCamera({latitude: selectedHotel.latitude, longitude: selectedHotel.longitude, zoom: 15})
         setFocusRevision(value => value + 1)
-        setOpen(null)
+        dismissTravelDetail(() => setOpen(null))
     }
     function navigateRegion(id: string) {
         const place = knownPlaces.find(item => item.id == id)
@@ -434,6 +444,10 @@ function BrowsePackages({initial, destinations, initialHotelName, openHotel, rou
                         .find(element => element.dataset.hotelIds?.includes('"' + id + '"'))
                     const trigger = marker?.querySelector<HTMLButtonElement>('.map-hotel-card__matrix')
                     if (hotel) show(hotel, 'matrix', trigger ?? undefined)
+                }}
+                onLocate={id => {
+                    const hotel = findHotel(id)
+                    if (hotel) locateMapHotel(hotel)
                 }}
                 onFavourite={favourites.setLevel} camera={camera} onCamera={setCamera}
                 onRefresh={query.refresh} showLabels={display.showLabels} focusKey={focusRevision}
@@ -492,15 +506,7 @@ function BrowsePackages({initial, destinations, initialHotelName, openHotel, rou
                 ? 'Регион выбранного отеля пока не подключён.' : 'Подключаем регион выбранного отеля…')}</span>
             <button type="button" onClick={() => dismissTravelDetail(() => setOpen(null))}>Вернуться к карте</button>
         </section>}
-        {open && resolvedDetailDestination && priceView == 'matrix' && <PackageMatrixPopup
-            hotel={detailHotel} prefs={detailPrefs} destination={detailDestination}
-            selectedFare={selectedFare} selectionSource={matrixFare ? matrixSelection?.source : calendar?.source}
-            selectionCheckedAt={matrixFare ? matrixSelection?.checkedAt : undefined} view={matrixView}
-            onView={patch => setMatrixView(current => ({...current, ...patch}))} onSelect={selectMatrixFare} onSnapshot={matrixSnapshot}
-            onChange={changeMatrixTrip} onClose={() => dismissTravelDetail(() => setOpen(null))} onRestoreFocus={focusOpener}
-            onHotel={() => setPriceView('graph')} onLocate={locateHotel} favouriteLevel={favourites.levels[open.hotelId] ?? 0}
-            onFavourite={level => favourites.setLevel(open.hotelId, level)}/>}
-        {open && resolvedDetailDestination && priceView == 'graph' && <PackageHotelPage
+        {open && resolvedDetailDestination && <PackageHotelPage
             hotel={detailHotel} prefs={detailPrefs} destination={detailDestination} calendar={calendar}
             selectedFare={selectedFare} error={calendarQuery.error} loading={calendarQuery.loading}
             onRetry={calendarQuery.retry} onFare={fareId => {
@@ -508,7 +514,8 @@ function BrowsePackages({initial, destinations, initialHotelName, openHotel, rou
                 setUnconfirmedFareId('')
                 setPrefs(current => ({...current, fareId}))
             }}
-            onClose={() => dismissTravelDetail(() => setOpen(null))} onLocate={locateHotel}
+            onClose={() => dismissTravelDetail(() => setOpen(null))} onLocate={locateHotel} onRestoreFocus={focusOpener}
+            onChange={changeMatrixTrip} entrySection={hotelSection} onSection={setHotelSection}
             favouriteLevel={favourites.levels[open.hotelId] ?? 0}
             onFavourite={level => favourites.setLevel(open.hotelId, level)} priceView={priceView} onPriceView={setPriceView}
             onMatrixFare={selectMatrixFare} selectionSource={matrixFare ? matrixSelection?.source : undefined}

@@ -49,7 +49,11 @@ export function createPackageHttp(deps: {
             if (settings && !settings.sources.includes('tez')) return packageJson(403, {error: 'Источник туров выключен в настройках агентства.'})
             if (url.pathname == '/api/travel/package-gallery') {
                 const id = hotelId(params.get('hotelId'))
-                const gallery = tezHotelGallery(id) ?? await deps.packages?.gallery(id, request.signal)
+                const details = params.get('details')
+                if (details != null && details != '0' && details != '1') throw new RangeError('Используйте details=1 для сведений об отеле.')
+                const base = tezHotelGallery(id)
+                const gallery = details == '1' ? await deps.packages?.gallery(id, request.signal, true) ?? base
+                    : base ?? await deps.packages?.gallery(id, request.signal)
                 return gallery ? packageJson(200, gallery) : packageJson(404, {error: 'Фотографии этого отеля пока не найдены у поставщика.'})
             }
             if (settings && !destinations.length) return packageJson(403, {error: 'Выберите направления в настройках агентства, чтобы открыть поиск.'})

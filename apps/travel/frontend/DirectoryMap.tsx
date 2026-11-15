@@ -49,6 +49,7 @@ interface DirectoryMapProps {
     loading?: boolean
     immersive?: boolean
     onOpen?: (id: string) => void
+    onLocate?: (id: string) => void
     onMatrix?: (id: string) => void
     onFavourite?: (id: string, level: tPackageFavouriteLevel) => void
     camera?: tMapCamera | null
@@ -193,6 +194,7 @@ function mapPropertyLabel(hotel: MapProperty) {
 
 interface PhotoCardActions {
     open: () => void
+    locate?: () => void
     favourite?: (level: tPackageFavouriteLevel) => void
     matrix?: () => void
     refresh?: () => void
@@ -214,6 +216,11 @@ function photoCard(hotel: MapProperty, photoHost: HTMLElement, sourcesHost: HTML
     handle.setAttribute('aria-keyshortcuts', 'ArrowUp ArrowDown ArrowLeft ArrowRight Home Escape')
     media.append(photoHost, handle)
     if (actions.close) media.append(cardAction('close', 'Свернуть карточку · ' + hotel.name, false, actions.close))
+    if (actions.locate) {
+        const locate = cardAction('locate', 'Показать на карте · ' + hotel.name, false, actions.locate)
+        locate.classList.add('map-hotel-card__locate')
+        media.append(locate)
+    }
     const body = document.createElement('div')
     body.className = 'map-hotel-card__body'
     const name = document.createElement('button')
@@ -424,12 +431,12 @@ function mapSearchBounds(area: L.LatLngBounds): tMapBounds | null {
 
 export function DirectoryMap({destination, hotels, selectedId, onSelect, onSearchArea, world = false, bounds,
     onShowAll, fitAllKey, detailedByDefault = false, loading = false, immersive = false,
-    onOpen, onMatrix, onFavourite, camera, onCamera, onRefresh, onClearSelection, onPhotoCards, showLabels = false, focusKey}: DirectoryMapProps) {
+    onOpen, onLocate, onMatrix, onFavourite, camera, onCamera, onRefresh, onClearSelection, onPhotoCards, showLabels = false, focusKey}: DirectoryMapProps) {
     const host = useRef<HTMLDivElement>(null)
     const mapRef = useRef<L.Map | null>(null)
     const markers = useRef(new Map<string, L.Marker>())
     const propertyLayer = useRef<L.LayerGroup | null>(null)
-    const actions = useRef({select: onSelect, open: onOpen, matrix: onMatrix, favourite: onFavourite,
+    const actions = useRef({select: onSelect, open: onOpen, locate: onLocate, matrix: onMatrix, favourite: onFavourite,
         camera: onCamera, refresh: onRefresh, clear: onClearSelection, photoCards: onPhotoCards})
     const photoHosts = useRef(new Map<string, Pick<MapPhotoMount, 'host' | 'sourcesHost'>>())
     const selectedPhotos = useRef(new Map<string, string>())
@@ -548,6 +555,7 @@ export function DirectoryMap({destination, hotels, selectedId, onSelect, onSearc
                 }
                 const photo = photoMount ? {host: photoMount.host, sourcesHost: photoMount.sourcesHost, position, actions: {
                     open: () => activateHotel(hotel.id), favourite: change, matrix,
+                    locate: actions.current.locate ? () => actions.current.locate?.(hotel.id) : undefined,
                     refresh: actions.current.refresh ? () => actions.current.refresh?.(hotel.id) : undefined,
                     close: () => collapseCard(hotel.id), showLabels,
                 }} : undefined
@@ -584,9 +592,9 @@ export function DirectoryMap({destination, hotels, selectedId, onSelect, onSearc
         host.current?.setAttribute('data-map-groups', String(clusters.length))
     })
     useEffect(() => {
-        actions.current = {select: onSelect, open: onOpen, matrix: onMatrix, favourite: onFavourite,
+        actions.current = {select: onSelect, open: onOpen, locate: onLocate, matrix: onMatrix, favourite: onFavourite,
             camera: onCamera, refresh: onRefresh, clear: onClearSelection, photoCards: onPhotoCards}
-    }, [onSelect, onOpen, onMatrix, onFavourite, onCamera, onRefresh, onClearSelection, onPhotoCards])
+    }, [onSelect, onOpen, onLocate, onMatrix, onFavourite, onCamera, onRefresh, onClearSelection, onPhotoCards])
 
     useEffect(() => {
         if (!host.current) return
@@ -785,7 +793,7 @@ export function DirectoryMap({destination, hotels, selectedId, onSelect, onSearc
             data-map-total={hotels.length} data-map-visible={visible}/>
         {photoCards.map(({hotel, host, sourcesHost}) => createPortal(<MapPhoto hotelId={hotel.id} name={hotel.name}
             photo={hotel.photo} photos={hotel.photos} propertyUrl={hotel.propertyUrl} selectedUrl={selectedPhotos.current.get(hotel.id)}
-            sourcesHost={sourcesHost}
+            sourcesHost={sourcesHost} photoInteraction={immersive ? 'drag' : 'open'}
             showLabels={showLabels} onPhoto={url => selectedPhotos.current.set(hotel.id, url)} onOpen={() => activateHotel(hotel.id)}/>, host, hotel.id))}
         {!immersive && <output className="directory-map__count" aria-live="polite">В области <strong>{visible}</strong> из {hotels.length}</output>}
         {!immersive && <div className="hotel-map__tools">

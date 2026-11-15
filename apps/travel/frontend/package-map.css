@@ -336,8 +336,11 @@
     border: 0;
     background: #e9eee8;
     cursor: pointer;
-    touch-action: none;
+    touch-action: pan-y;
 }
+.map-hotel-card__gallery[data-photo-interaction=drag] .map-hotel-card__photo-open {cursor: grab;}
+.map-hotel-card.is-dragging .map-hotel-card__photo-open {cursor: grabbing;}
+.map-hotel-card__gallery[data-photo-interaction=gallery] .map-hotel-card__photo-open {cursor: default;}
 .map-hotel-card__photo-arrow {
     position: absolute;
     top: 25px;
@@ -1054,11 +1057,11 @@
     right: 5px;
 }
 .map-hotel-card__drag {
-    left: 50%;
-    transform: translateX(-50%);
+    left: 5px;
     cursor: grab;
     touch-action: none;
 }
+.map-hotel-card__photo-frame > .map-hotel-card__locate {top: auto; bottom: 5px; left: 5px;}
 .map-hotel-card__drag:active {
     cursor: grabbing;
 }
@@ -1073,6 +1076,7 @@
     top: 50%;
     transform: translateY(-50%);
 }
+.map-hotel-card__photo-frame .map-hotel-card__photo-retry {left: 34px;}
 .map-hotel-card__body {
     height: 74px;
     padding: 4px 9px;

@@ -5,6 +5,7 @@ import type {PackageHotelGallery} from '../src/package-media-contract.ts'
 import {safeHref} from './DirectoryCard.tsx'
 import {directoryUrl, useDirectoryQuery} from './directory-query.ts'
 import {MapCardIcon} from './map-card-icons.tsx'
+import {acceptsMapPhotoSwipe, photoSwipeDirection} from './map-card-gestures.ts'
 import './map-photo-icons.css'
 
 interface MapPhotoProps {
@@ -16,11 +17,13 @@ interface MapPhotoProps {
     showLabels?: boolean
     selectedUrl?: string
     sourcesHost?: HTMLElement
+    photoInteraction?: 'open' | 'drag' | 'gallery'
     onPhoto: (url: string) => void
-    onOpen: () => void
+    onOpen?: () => void
 }
 
-export function MapPhoto({hotelId, name, photo, photos, propertyUrl, selectedUrl, sourcesHost, showLabels = false, onPhoto, onOpen}: MapPhotoProps) {
+export function MapPhoto({hotelId, name, photo, photos, propertyUrl, selectedUrl, sourcesHost, showLabels = false,
+    photoInteraction = 'open', onPhoto, onOpen}: MapPhotoProps) {
     const url = hotelId.startsWith('tez:') ? directoryUrl('package-gallery', {hotelId}) : null
     const gallery = useDirectoryQuery<PackageHotelGallery>(url)
     const [activeUrl, setActiveUrl] = useState(selectedUrl)
@@ -53,22 +56,31 @@ export function MapPhoto({hotelId, name, photo, photos, propertyUrl, selectedUrl
         onPhoto(next.url)
     }
 
-    function startSwipe(event: PointerEvent<HTMLButtonElement>) {
+    function startSwipe(event: PointerEvent<HTMLElement>) {
         if (!event.isPrimary || event.button != 0) return
+        if (photoInteraction != 'open' && !acceptsMapPhotoSwipe(event)) return
         gesture.current = {id: event.pointerId, x: event.clientX, y: event.clientY}
         swiped.current = false
         event.currentTarget.setPointerCapture(event.pointerId)
     }
 
-    function finishSwipe(event: PointerEvent<HTMLButtonElement>) {
+    function finishSwipe(event: PointerEvent<HTMLElement>) {
         const start = gesture.current
         gesture.current = null
         if (!start || start.id != event.pointerId) return
-        const horizontal = event.clientX - start.x
-        const vertical = event.clientY - start.y
-        if (Math.abs(horizontal) < 32 || Math.abs(horizontal) <= Math.abs(vertical) * 1.2) return
+        const direction = photoSwipeDirection(start, {x: event.clientX, y: event.clientY})
+        if (direction == null) return
         swiped.current = true
-        step(horizontal < 0 ? 1 : -1)
+        step(direction)
+    }
+
+    function cancelSwipe() {
+        gesture.current = null
+        swiped.current = true
+    }
+
+    function lostSwipe(event: PointerEvent<HTMLElement>) {
+        if (gesture.current?.id == event.pointerId) cancelSwipe()
     }
 
     function openHotel(event: MouseEvent<HTMLButtonElement>) {
@@ -77,10 +89,15 @@ export function MapPhoto({hotelId, name, photo, photos, propertyUrl, selectedUrl
             return
         }
         swiped.current = false
-        onOpen()
+        onOpen?.()
     }
 
-    return <div className="map-hotel-card__gallery" onKeyDown={event => {
+    const photoSurface = image ? <img className="map-hotel-card__photo" src={image.url} alt={name} loading="lazy" decoding="async" draggable={false}
+        onError={() => setUnavailable(current => [...current, image.url])}/> :
+        <span className="map-hotel-card__photo is-missing">Фото пока недоступно</span>
+    const swipe = {onPointerDown: startSwipe, onPointerUp: finishSwipe, onPointerCancel: cancelSwipe, onLostPointerCapture: lostSwipe}
+
+    return <div className="map-hotel-card__gallery" data-photo-interaction={photoInteraction} onKeyDown={event => {
         if (event.key == 'Enter' || event.key == ' ') event.stopPropagation()
     }}>
         <div className="map-hotel-card__media" onKeyDown={event => {
@@ -91,13 +108,9 @@ export function MapPhoto({hotelId, name, photo, photos, propertyUrl, selectedUrl
                 step(event.key == 'ArrowLeft' ? -1 : 1)
             }
         }}>
-            <button type="button" className="map-hotel-card__photo-open" aria-label={'Открыть отель ' + name}
-                onClick={openHotel} onPointerDown={startSwipe} onPointerUp={finishSwipe}
-                onPointerCancel={() => { gesture.current = null }}>
-                {image ? <img className="map-hotel-card__photo" src={image.url} alt={name} loading="lazy" decoding="async" draggable={false}
-                    onError={() => setUnavailable(current => [...current, image.url])}/> :
-                    <span className="map-hotel-card__photo is-missing">Фото пока недоступно</span>}
-            </button>
+            {photoInteraction == 'open' ? <button type="button" className="map-hotel-card__photo-open" aria-label={'Открыть отель ' + name}
+                onClick={openHotel} {...swipe}>{photoSurface}</button> :
+                <div className="map-hotel-card__photo-open" role="group" aria-label={'Фотографии отеля ' + name} {...swipe}>{photoSurface}</div>}
             {available.length > 1 && <>
                 <button type="button" className="map-hotel-card__photo-arrow is-previous" aria-label={'Предыдущее фото · ' + name}
                     onClick={() => step(-1)}>‹</button>

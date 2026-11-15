@@ -1,5 +1,6 @@
 import * as L from 'leaflet'
 import {clampMapCardOffset, mapCardEdgePoint, type MapCardOffset} from './map-card-geometry.ts'
+import {acceptsMapCardDrag, acceptsMapPhotoSwipe, movedMapCard, type tMapCardDragSurface} from './map-card-gestures.ts'
 
 export {clampMapCardOffset, mapCardEdgePoint} from './map-card-geometry.ts'
 export type {MapCardBox, MapCardOffset} from './map-card-geometry.ts'
@@ -20,7 +21,8 @@ export function createMapCardLayout(deps: {
     let offset: MapCardOffset = {x: 0, y: 0}
     let destroyed = false
     let gesture: {
-        id: number, x: number, y: number, initial: MapCardOffset, moved: boolean, restoreDragging: boolean
+        id: number, x: number, y: number, initial: MapCardOffset, moved: boolean, restoreDragging: boolean,
+        capture: HTMLElement, active: boolean, movable: boolean,
     } | null = null
     const leader = L.polyline([], {
         color: '#446958', weight: 1.5, opacity: 0.85, interactive: false, className: 'map-hotel-card__leader',
@@ -55,39 +57,64 @@ export function createMapCardLayout(deps: {
         const active = gesture
         if (!active) return
         gesture = null
-        if (cancelled && !destroyed) apply(active.initial)
-        if (handle.hasPointerCapture(active.id)) handle.releasePointerCapture(active.id)
+        if (cancelled && !destroyed && active.movable) apply(active.initial)
+        if (active.capture.hasPointerCapture(active.id)) active.capture.releasePointerCapture(active.id)
         if (active.restoreDragging) map.dragging.enable()
         handle.classList.remove('is-dragging')
-        if (!destroyed) deps.onOffset({...offset})
+        card.classList.remove('is-dragging')
+        if (!destroyed && active.movable) deps.onOffset({...offset})
         deps.onDragging(false)
     }
 
-    function startDrag(event: PointerEvent) {
+    function activateDrag() {
+        if (!gesture || gesture.active) return
+        gesture.active = true
+        gesture.restoreDragging = map.dragging.enabled()
+        map.dragging.disable()
+        handle.classList.add('is-dragging')
+        card.classList.add('is-dragging')
+    }
+
+    function startGesture(event: PointerEvent) {
         const blocked = destroyed || gesture != null
-        const accepted = event.isPrimary && event.button == 0
-        if (blocked || !accepted) return
-        event.preventDefault()
-        event.stopPropagation()
+        const target = event.target instanceof Element ? event.target : null
+        const fromHandle = target != null && handle.contains(target)
+        const photo = target?.closest<HTMLElement>('[data-photo-interaction="drag"] .map-hotel-card__photo-open')
+        const capture = fromHandle ? handle : photo
+        const surface: tMapCardDragSurface = fromHandle ? 'handle' : 'photo'
+        const movable = acceptsMapCardDrag(event, surface)
+        const swipingPhoto = surface == 'photo' && acceptsMapPhotoSwipe(event)
+        const accepted = movable || swipingPhoto
+        if (blocked || !capture || !accepted) return
+        if (movable) {
+            event.preventDefault()
+            event.stopPropagation()
+        }
         gesture = {
             id: event.pointerId, x: event.clientX, y: event.clientY, initial: {...offset},
-            moved: false, restoreDragging: map.dragging.enabled(),
+            moved: false, restoreDragging: false, capture, active: false, movable,
         }
-        map.dragging.disable()
-        handle.focus({preventScroll: true})
-        handle.setPointerCapture(event.pointerId)
-        handle.classList.add('is-dragging')
+        capture.setPointerCapture(event.pointerId)
+        // Price updates must not detach a photo during a mouse candidate or a captured touch swipe.
         deps.onDragging(true)
+        if (fromHandle) {
+            handle.focus({preventScroll: true})
+            activateDrag()
+        }
     }
 
     function moveDrag(event: PointerEvent) {
         if (!gesture || gesture.id != event.pointerId) return
+        if (!gesture.movable) return
         event.preventDefault()
         event.stopPropagation()
         const dx = event.clientX - gesture.x
         const dy = event.clientY - gesture.y
-        if (Math.hypot(dx, dy) >= 4) gesture.moved = true
-        if (gesture.moved) apply({x: gesture.initial.x + dx, y: gesture.initial.y + dy})
+        if (movedMapCard(gesture, {x: event.clientX, y: event.clientY})) gesture.moved = true
+        if (gesture.moved) {
+            activateDrag()
+            apply({x: gesture.initial.x + dx, y: gesture.initial.y + dy})
+        }
     }
 
     function endDrag(event: PointerEvent) {
@@ -98,6 +125,10 @@ export function createMapCardLayout(deps: {
 
     function cancelDrag() {
         finish(true)
+    }
+
+    function cancelPointer(event: PointerEvent) {
+        if (gesture?.id == event.pointerId) cancelDrag()
     }
 
     function hidden() {
@@ -136,11 +167,11 @@ export function createMapCardLayout(deps: {
     function destroy() {
         if (destroyed) return
         destroyed = true
-        handle.removeEventListener('pointerdown', startDrag)
-        handle.removeEventListener('pointermove', moveDrag)
-        handle.removeEventListener('pointerup', endDrag)
-        handle.removeEventListener('pointercancel', cancelDrag)
-        handle.removeEventListener('lostpointercapture', cancelDrag)
+        card.removeEventListener('pointerdown', startGesture)
+        card.removeEventListener('pointermove', moveDrag)
+        card.removeEventListener('pointerup', endDrag)
+        card.removeEventListener('pointercancel', cancelPointer)
+        card.removeEventListener('lostpointercapture', cancelPointer)
         handle.removeEventListener('keydown', moveWithKeyboard)
         window.removeEventListener('blur', cancelDrag)
         document.removeEventListener('visibilitychange', hidden)
@@ -152,11 +183,11 @@ export function createMapCardLayout(deps: {
     }
 
     handle.style.touchAction = 'none'
-    handle.addEventListener('pointerdown', startDrag)
-    handle.addEventListener('pointermove', moveDrag)
-    handle.addEventListener('pointerup', endDrag)
-    handle.addEventListener('pointercancel', cancelDrag)
-    handle.addEventListener('lostpointercapture', cancelDrag)
+    card.addEventListener('pointerdown', startGesture)
+    card.addEventListener('pointermove', moveDrag)
+    card.addEventListener('pointerup', endDrag)
+    card.addEventListener('pointercancel', cancelPointer)
+    card.addEventListener('lostpointercapture', cancelPointer)
     handle.addEventListener('keydown', moveWithKeyboard)
     window.addEventListener('blur', cancelDrag)
     document.addEventListener('visibilitychange', hidden)

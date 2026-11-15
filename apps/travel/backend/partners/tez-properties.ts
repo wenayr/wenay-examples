@@ -1,10 +1,11 @@
 import {createAsyncQueue} from 'wenay-common2/client'
 import type {PackageHotel} from '../../src/package-contract.ts'
-import type {PackageHotelGallery, PackageHotelPhoto} from '../../src/package-media-contract.ts'
+import type {PackageHotelGallery, PackageHotelInformation, PackageHotelPhoto} from '../../src/package-media-contract.ts'
 
 interface PropertyMetadata {
     hotel: PackageHotel
     gallery: PackageHotelGallery | null
+    information: PackageHotelInformation
 }
 
 interface CachedProperty {
@@ -21,6 +22,57 @@ function propertyId(value: string) {
 function plainText(value: string) {
     return value.replace(/<[^>]*>/g, ' ').replace(/&amp;/g, '&').replace(/&nbsp;/g, ' ')
         .replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/\s+/g, ' ').trim()
+}
+
+function hotelWebsite(page: string) {
+    const spans = [...page.matchAll(/<span\b[^>]*class=["']([^"']+)["'][^>]*>([\s\S]*?)<\/span>/gi)]
+    const contact = spans.find(entry => {
+        const classes = entry[1].split(/\s+/)
+        return classes.includes('contacts') && classes.includes('site')
+    })
+    const website = /<a\b[^>]*href=["']([^"']+)["']/i.exec(contact?.[2] ?? '')?.[1]
+    if (!website) return undefined
+    try {
+        const url = new URL(website.replace(/&amp;/g, '&'))
+        const protocol = url.protocol == 'http:' || url.protocol == 'https:'
+        const publicName = /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/i.test(url.hostname)
+        const privateName = /\.(?:local|localhost|internal|test|invalid|example|lan|home)$/i.test(url.hostname)
+        const plain = !url.username && !url.password && !url.port
+        const safe = protocol && publicName && !privateName && plain
+        if (!safe) return undefined
+        return url.href
+    } catch {
+        return undefined
+    }
+}
+
+function singleDistance(text: string, match: RegExpExecArray | null) {
+    if (!match) return undefined
+    const prefix = text.slice(Math.max(0, match.index - 24), match.index)
+    if (/\d\s*[-–—]\s*$/.test(prefix)) return undefined
+    return match[1]
+}
+
+function hotelInformation(page: string, id: number, checkedOn: string): PackageHotelInformation {
+    const details = /<div\b[^>]*id=["']t001["'][^>]*>([\s\S]*?)(?:<div\b|$)/i.exec(page)?.[1] ?? ''
+    const text = plainText(details)
+    const facts: {label: string, value: string}[] = []
+    const airport = singleDistance(text, /(?<![\d.,\-–—])\b(\d+(?:[.,]\d+)?)\s*км\s*от\s*аэропорта/i.exec(text))
+    const centre = singleDistance(text, /(?<![\d.,\-–—])\b(\d+(?:[.,]\d+)?)\s*км\s*от\s*центра\s*города/i.exec(text))
+    const opening = /Открыт\s+в\s+((?:19|20)\d{2})\s+году/i.exec(text)?.[1]
+    const renovation = /Последняя\s+(частичная\s+)?реновация[^.]{0,60}?((?:19|20)\d{2})\s+году/i.exec(text)
+    const rooms = /Всего\s+(\d[\d\s]{0,6})\s+номер/i.exec(text)?.[1]?.replace(/\s/g, '')
+    if (airport) facts.push({label: 'До аэропорта', value: airport + ' км'})
+    if (centre) facts.push({label: 'До центра города', value: centre + ' км'})
+    const coastal = /(?:^|\s)на\s+(?:самом\s+)?берегу\s+моря/i.test(text)
+    const negativeCoast = /(?:^|\s)не\s+(?:находится\s+|расположен\s+)?на\s+(?:самом\s+)?берегу\s+моря/i.test(text)
+    if (coastal && !negativeCoast) facts.push({label: 'Расположение', value: 'На берегу моря'})
+    if (opening) facts.push({label: 'Год открытия', value: opening})
+    if (renovation) facts.push({label: 'Последняя реновация', value: renovation[2] + (renovation[1] ? ' (частичная)' : '')})
+    const validRooms = rooms && Number(rooms) > 0 && Number(rooms) <= 100_000
+    if (validRooms) facts.push({label: 'Количество номеров', value: rooms})
+    return {hotelId: 'tez:' + id, sourceUrl: 'https://www.tez-tour.com/hotel.html?id=' + id,
+        checkedOn, website: hotelWebsite(page), facts}
 }
 
 function propertyPage(page: string, id: number, checkedOn: string, fallbackName?: string) {
@@ -42,7 +94,8 @@ function propertyPage(page: string, id: number, checkedOn: string, fallbackName?
         longitude: mapped ? longitude : null,
         coordinateSource: mapped ? {url, checkedOn, precision: 'hotel-marker' as const} : undefined,
     } satisfies PackageHotel
-    return {hotel, siteHotelId: Number.isSafeInteger(siteHotelId) && siteHotelId > 0 ? siteHotelId : null}
+    return {hotel, information: hotelInformation(page, id, checkedOn),
+        siteHotelId: Number.isSafeInteger(siteHotelId) && siteHotelId > 0 ? siteHotelId : null}
 }
 
 function galleryPhotos(payload: unknown, hotel: PackageHotel, siteHotelId: number): PackageHotelPhoto[] {
@@ -146,14 +199,14 @@ export function createTezProperties(deps: {fetch: typeof fetch, now: () => Date}
             const page = await requestText('https://www.tez-tour.com/hotel.html?id=' + id, signal)
             property = propertyPage(page, id, checkedOn, fallbackName)
             if (!property) return null
-            if (!property.siteHotelId) return {hotel: property.hotel, gallery: null}
+            if (!property.siteHotelId) return {hotel: property.hotel, gallery: null, information: property.information}
             const url = 'https://www.tez-tour.com/data/siteGalleries.html?siteHotelId=' + property.siteHotelId + '&lang=ru'
             const photos = galleryPhotos(JSON.parse(await requestText(url, signal)), property.hotel, property.siteHotelId)
             const hotel = {...property.hotel, photo: photos[0] ?? null, photos}
             const gallery = photos.length ? {hotelId: hotel.id, name: hotel.name, hotelUrl: hotel.url, checkedOn, photos} : null
-            return {hotel, gallery} satisfies PropertyMetadata
+            return {hotel, gallery, information: property.information} satisfies PropertyMetadata
         } catch {
-            return property ? {hotel: property.hotel, gallery: null} : null
+            return property ? {hotel: property.hotel, gallery: null, information: property.information} : null
         }
     }
 
@@ -205,7 +258,16 @@ export function createTezProperties(deps: {fetch: typeof fetch, now: () => Date}
         return property?.gallery ?? null
     }
 
-    return {read, enrich, gallery}
+    async function information(hotelId: string, signal?: AbortSignal) {
+        signal?.throwIfAborted()
+        const deadline = AbortSignal.timeout(20_000)
+        const waiting = signal ? AbortSignal.any([signal, deadline]) : deadline
+        const property = await observe(load(hotelId), waiting)
+        signal?.throwIfAborted()
+        return property?.information ?? null
+    }
+
+    return {read, enrich, gallery, information}
 }
 
 export type TezProperties = ReturnType<typeof createTezProperties>

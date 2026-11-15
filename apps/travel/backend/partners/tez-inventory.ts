@@ -178,7 +178,10 @@ function missing(message: string, handoff = false): TezObservation {
 
 export function createTezInventory(deps: {
     fetch: typeof fetch, now: () => Date, resolveRegion?: (id: string, signal?: AbortSignal) => Promise<TezRegion | null>,
-    catalog?: ReturnType<typeof createTezProperties> & {known?: (id: string, signal?: AbortSignal) => Promise<PackageHotel[]>},
+    catalog?: Omit<ReturnType<typeof createTezProperties>, 'information'> & {
+        information?: ReturnType<typeof createTezProperties>['information']
+        known?: (id: string, signal?: AbortSignal) => Promise<PackageHotel[]>
+    },
 }) {
     const cache = new Map<string, {result: TezObservation, until: number}>()
     let supplierRetryAt = 0
