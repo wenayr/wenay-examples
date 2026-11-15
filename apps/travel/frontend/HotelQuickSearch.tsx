@@ -9,6 +9,7 @@ import {dateLabel, hotelCount} from './presentation.ts'
 import {usePageVisible, useVisibleRefresh} from './visible-refresh.ts'
 import {Icon} from './Icons.tsx'
 import {packageHotelId} from './package-hotel.ts'
+import type {tMapBounds} from './DirectoryMap.tsx'
 import './hotel-search.css'
 
 const pageSize = 8
@@ -21,12 +22,13 @@ function emptyText(busy: boolean, unconfirmed: boolean) {
 }
 
 export function HotelQuickSearch({prefs, destination, value, onValue, suspended, onLocate, onOpen,
-    expanded, onExpanded: setExpanded, offset, onOffset: setOffset}: {
+    expanded, onExpanded: setExpanded, offset, onOffset: setOffset, bounds, areaMode = 'destination'}: {
     prefs: PackagePreferences, destination: SupplyDestination, value: string, onValue: (value: string) => void,
     suspended: boolean, onLocate: (hotel: PackageSummary | PackageHotel) => void,
     onOpen: (hotel: PackageSummary | PackageHotel, view: 'graph' | 'matrix', trigger: HTMLElement) => void,
     expanded: boolean, onExpanded: (expanded: boolean) => void,
     offset: number, onOffset: (offset: number) => void,
+    bounds?: tMapBounds | null, areaMode?: 'map' | 'destination',
 }) {
     const root = useRef<HTMLFormElement>(null)
     const input = useRef<HTMLInputElement>(null)
@@ -35,7 +37,9 @@ export function HotelQuickSearch({prefs, destination, value, onValue, suspended,
     const [term, setTerm] = useState(value.trim())
     const [snapshot, setSnapshot] = useState<{key: string, data: PackageHotelSearch} | null>(null)
     const visible = usePageVisible()
-    const context = JSON.stringify({...packageQuery(prefs), minStars: prefs.minStars})
+    const area = bounds ? {west: bounds[0], south: bounds[1], east: bounds[2], north: bounds[3]} : {}
+    const scope = {areaMode, ...area}
+    const context = JSON.stringify({...packageQuery(prefs), minStars: prefs.minStars, ...scope})
     const previousContext = useRef(value + '/' + context)
     useEffect(() => {
         const nextContext = value + '/' + context
@@ -44,7 +48,8 @@ export function HotelQuickSearch({prefs, destination, value, onValue, suspended,
         const timer = setTimeout(() => setTerm(value.trim()), 250)
         return () => clearTimeout(timer)
     }, [value, context])
-    const key = directoryUrl('package-hotel-search', {...packageQuery(prefs), q: term, minStars: prefs.minStars || undefined, offset, limit: pageSize})
+    const key = directoryUrl('package-hotel-search', {...packageQuery(prefs), ...scope,
+        q: term, minStars: prefs.minStars || undefined, offset, limit: pageSize})
     const active = expanded && !suspended && visible
     const settled = term == value.trim()
     const query = useDirectoryQuery<PackageHotelSearch>(active && settled ? key : null)
@@ -105,7 +110,7 @@ export function HotelQuickSearch({prefs, destination, value, onValue, suspended,
         {expanded && !suspended && <section className="hotel-quick-search__results" id={resultId} aria-label="Найденные отели" aria-busy={busy}>
             <header>
                 <div><strong>{term ? 'Результаты поиска' : 'Отели по вашим датам'}</strong>
-                    <span>{destination.name} · {prefs.nights} ночей · {prefs.adults} взрослых</span></div>
+                    <span>{areaMode == 'map' ? 'В области карты' : destination.name} · {prefs.nights} ночей · {prefs.adults} взрослых</span></div>
                 <button type="button" aria-label="Закрыть результаты поиска" onClick={closeResults}><Icon name="close" size={16}/></button>
             </header>
             <div className="hotel-quick-search__state" role="status">
@@ -116,6 +121,7 @@ export function HotelQuickSearch({prefs, destination, value, onValue, suspended,
                 {data?.source.updatedAt && <span>{stale ? 'Последние полученные цены · ' : 'Проверено · '}
                     {new Date(data.source.updatedAt).toLocaleTimeString('ru-RU')}</span>}
             </div>
+            {data?.area?.coverage == 'unsupported' && <p className="hotel-quick-search__empty">{data.area.description}</p>}
             {hotels.length ? <ul className="hotel-quick-search__list">{hotels.map(hotel => <li key={packageHotelId(hotel)}
                 data-hotel-result-id={packageHotelId(hotel)}>
                 {hotel.photo && safeHref(hotel.photo.url) ? <img src={hotel.photo.url} alt="" loading="lazy" decoding="async"/> :
@@ -130,7 +136,9 @@ export function HotelQuickSearch({prefs, destination, value, onValue, suspended,
                         До {money.format(hotel.maxTotal / 100)} среди полученных предложений</span>}
                     <div className="hotel-quick-search__actions">
                         <button type="button" className="is-primary" onClick={event => onOpen(hotel, 'matrix', event.currentTarget)}>Матрица цен</button>
-                        <button type="button" disabled={hotel.latitude == null || hotel.longitude == null} onClick={() => onLocate(hotel)}>На карте</button>
+                        <button type="button" disabled={hotel.latitude == null || hotel.longitude == null}
+                            title={hotel.latitude == null || hotel.longitude == null ? 'Координаты пока не подтверждены' : 'Показать отель на карте'}
+                            onClick={() => onLocate(hotel)}>На карте</button>
                         <button type="button" onClick={event => onOpen(hotel, 'graph', event.currentTarget)}>Об отеле</button>
                     </div>
                 </div>

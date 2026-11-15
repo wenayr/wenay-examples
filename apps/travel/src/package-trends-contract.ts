@@ -1,3 +1,4 @@
+import type {PackageArea} from './package-area-contract.ts'
 import type {SupplySource} from './supply-contract.ts'
 
 export const packageTrendHotelLimit = 200
@@ -17,6 +18,7 @@ export interface PackageHotelTrend {
 }
 
 export interface PackageTrends {
+    area?: PackageArea
     coverage: 'regional-daily-minima'
     first: string
     last: string

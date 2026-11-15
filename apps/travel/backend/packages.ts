@@ -12,18 +12,28 @@ import {createPackageTrends} from './package-trends.ts'
 import {createPackageMatrix} from './package-matrix.ts'
 import {tezHotelMedia} from './partners/tez-media.ts'
 import {tezKnownHotels} from './partners/tez-catalog.ts'
+import {createPackageAreas} from './package-area.ts'
+import {createTezRegions} from './partners/tez-regions.ts'
+import {createTezProperties} from './partners/tez-properties.ts'
+import {packageRegionDefinitions} from '../src/package-regions.ts'
+import {tezHotelGallery} from './partners/tez-media.ts'
 
 type Provider = ReturnType<typeof createTezInventory>
 type Trip = Parameters<Provider['window']>[0]
 type Observation = Awaited<ReturnType<Provider['window']>>
 type Filter = Parameters<ReturnType<typeof createOfferIndex>['search']>[0]
 
-function prepare(observation: Observation, destination: string) {
+function identities(observation: Observation, destination: string) {
     const hotels = new Map<string, PackageHotel>(tezKnownHotels(destination).map(hotel => [hotel.id, hotel]))
     for (const quote of observation.quotes) {
         const {hotelId: id, name, latitude, longitude, stars, url, coordinateSource} = quote
-        hotels.set(id, {id, name, latitude, longitude, stars, url, coordinateSource, ...tezHotelMedia(id)})
+        hotels.set(id, {id, destinationId: destination, name, latitude, longitude, stars, url, coordinateSource, ...tezHotelMedia(id)})
     }
+    return hotels
+}
+
+function prepare(observation: Observation, destination: string, metadata?: readonly PackageHotel[]) {
+    const hotels = metadata ? new Map(metadata.map(hotel => [hotel.id, hotel])) : identities(observation, destination)
     const index = createOfferIndex({hotels: [...hotels.values()], offers: observation.quotes})
     return {hotels, index}
 }
@@ -46,7 +56,14 @@ function calendarSource(days: PackageDay[], original: SupplySource, anyLive: boo
     return {...original, status: anyLive ? 'live' : 'cached', updatedAt: checked.sort()[0], description}
 }
 
-export function createPackages(provider: Provider = createTezInventory({fetch, now: () => new Date()})) {
+function createDefaultInventory() {
+    const deps = {fetch, now: () => new Date()}
+    const regions = createTezRegions(deps)
+    const properties = createTezProperties(deps)
+    return createTezInventory({...deps, resolveRegion: regions.resolve, catalog: {...properties, known: regions.hotels}})
+}
+
+export function createPackages(provider: Provider = createDefaultInventory()) {
     const dailyTrends = createPackageTrends({provider})
     // Price data is short-lived. Reuse the prepared geography and price buckets while a
     // supplier observation is current. Page and viewport changes reuse the same result.
@@ -63,20 +80,30 @@ export function createPackages(provider: Provider = createTezInventory({fetch, n
             knownHotels.set(key, hotel)
         }
     }
-    function observed(destination: string, key: string, data: Observation) {
-        const generation = key + '/' + data.generation
+    function observed(destination: string, key: string, data: Observation, metadata?: readonly PackageHotel[]) {
+        const positions = metadata?.map(hotel => [hotel.id, hotel.name, hotel.stars, hotel.latitude, hotel.longitude, hotel.photo?.url])
+        const generation = key + '/' + data.generation + '/' + JSON.stringify(positions)
         const cached = prepared.get(generation)
-        if (cached) return cached
-        const entry = prepare(data, destination)
+        if (cached) return {...cached, revision: generation}
+        const entry = prepare(data, destination, metadata)
         remember(destination, entry.hotels)
         if (prepared.size >= 96) prepared.delete(prepared.keys().next().value!)
         prepared.set(generation, entry)
-        return entry
+        return {...entry, revision: generation}
     }
     async function window(trip: Trip, signal?: AbortSignal, refresh = false) {
         const data = await provider.window(trip, signal, refresh)
         const key = JSON.stringify([trip.destinationId, trip.first, trip.last, trip.nights, trip.adults, trip.minTotal, trip.maxTotal])
-        return {data, ...observed(trip.destinationId, key, data)}
+        const definition = packageRegionDefinitions[trip.destinationId as keyof typeof packageRegionDefinitions]
+        let metadata: PackageHotel[] | undefined
+        if (provider.catalog && definition && !('regionId' in definition)) {
+            const hotels = identities(data, trip.destinationId)
+            for (const hotel of await provider.catalog.known?.(trip.destinationId, signal) ?? []) {
+                if (!hotels.has(hotel.id)) hotels.set(hotel.id, hotel)
+            }
+            metadata = await provider.catalog.enrich(trip.destinationId, [...hotels.values()], signal)
+        }
+        return {data, ...observed(trip.destinationId, key, data, metadata)}
     }
     async function search(trip: Trip, filter: Filter, options: {signal?: AbortSignal, refresh?: boolean} = {}): Promise<PackagePage> {
         const batch = await window(trip, options.signal, options.refresh)
@@ -167,5 +194,9 @@ export function createPackages(provider: Provider = createTezInventory({fetch, n
     function recheck(trip: Trip, filter: Filter, hotelId: string, departure: string, fareId: string) {
         return recheckFare(provider, trip, filter, hotelId, departure, fareId)
     }
-    return {search, hotels, calendar, compare, recheck, trends, matrix: priceMatrix.read}
+    async function gallery(hotelId: string, signal?: AbortSignal) {
+        return tezHotelGallery(hotelId) ?? await provider.catalog?.gallery(hotelId, signal) ?? null
+    }
+    const area = createPackageAreas({window, trends: dailyTrends.read})
+    return {search, hotels, calendar, compare, recheck, trends, matrix: priceMatrix.read, area, gallery}
 }

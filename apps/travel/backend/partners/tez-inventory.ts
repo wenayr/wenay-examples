@@ -1,10 +1,12 @@
 import {createAsyncQueue} from 'wenay-common2/client'
 import locationManifest from './tez-locations.json' with {type: 'json'}
 import locationOverrides from './tez-location-overrides.json' with {type: 'json'}
-import type {PackageCoordinateSource} from '../../src/package-contract.ts'
+import type {PackageCoordinateSource, PackageHotel} from '../../src/package-contract.ts'
 import type {SupplySource} from '../../src/supply-contract.ts'
 import {allowTezSearch, tezSearchRetryAt} from './tez-access.ts'
 import {buildTezSearch} from './tez.ts'
+import type {TezRegion} from '../../src/package-regions.ts'
+import type {createTezProperties} from './tez-properties.ts'
 
 export interface TezWindow {
     destinationId: string
@@ -72,7 +74,7 @@ function conditionName(value: unknown, position: number) {
     return typeof name == 'string' && name.trim() ? name.trim() : null
 }
 
-function buildRequest(input: TezWindow, today: string, hotelId?: string, date?: string, requestedNights?: readonly number[]) {
+function buildRequest(input: TezWindow, today: string, hotelId?: string, date?: string, requestedNights?: readonly number[], region?: TezRegion | null) {
     const ordered = input.first <= input.last && input.first >= today
     if (!validDate(input.first) || !validDate(input.last) || !ordered) return null
     const span = (Date.parse(input.last) - Date.parse(input.first)) / dayMs
@@ -93,7 +95,7 @@ function buildRequest(input: TezWindow, today: string, hotelId?: string, date?: 
     const first = date ?? input.first
     const last = date ?? input.last
     const checkOut = new Date(Date.parse(first) + minNights * dayMs).toISOString().slice(0, 10)
-    const base = buildTezSearch({destinationId: input.destinationId, adults: input.adults, checkIn: first, checkOut}, today)
+    const base = buildTezSearch({destinationId: input.destinationId, adults: input.adults, checkIn: first, checkOut}, today, region)
     if (!base) return null
     const url = new URL(base.url)
     url.searchParams.set('before', last.split('-').reverse().join('.'))
@@ -174,8 +176,12 @@ function missing(message: string, handoff = false): TezObservation {
     return {quotes: [], byFareId: new Map(), generation: 'none', complete: false, source: {...source, status, updatedAt: null, description: message}}
 }
 
-export function createTezInventory(deps: {fetch: typeof fetch, now: () => Date}) {
+export function createTezInventory(deps: {
+    fetch: typeof fetch, now: () => Date, resolveRegion?: (id: string, signal?: AbortSignal) => Promise<TezRegion | null>,
+    catalog?: ReturnType<typeof createTezProperties> & {known?: (id: string, signal?: AbortSignal) => Promise<PackageHotel[]>},
+}) {
     const cache = new Map<string, {result: TezObservation, until: number}>()
+    let supplierRetryAt = 0
     const queue = createAsyncQueue(6)
     const inflight = new Map<string, {
         work: Promise<TezObservation>
@@ -216,7 +222,9 @@ export function createTezInventory(deps: {fetch: typeof fetch, now: () => Date})
         requestedNights?: readonly number[]): Promise<TezObservation> {
         signal?.throwIfAborted()
         const now = deps.now()
-        const request = buildRequest(input, now.toISOString().slice(0, 10), hotelId, date, requestedNights)
+        const region = await deps.resolveRegion?.(input.destinationId, signal)
+        signal?.throwIfAborted()
+        const request = buildRequest(input, now.toISOString().slice(0, 10), hotelId, date, requestedNights, region)
         if (!request) return missing('Публичный поиск TEZ не настроен для этого маршрута, состава или периода.', true)
         const search = request
         const prior = cache.get(request.url)
@@ -238,6 +246,10 @@ export function createTezInventory(deps: {fetch: typeof fetch, now: () => Date})
             try {
                 deadline.throwIfAborted()
                 const attemptAt = deps.now().getTime()
+                if (supplierRetryAt > attemptAt) {
+                    const result = failed('Источник временно ограничил частоту запросов. Проверка продолжится автоматически.')
+                    return {...result, source: {...result.source, retryAt: new Date(supplierRetryAt).toISOString()}}
+                }
                 if (!allowTezSearch(deps.fetch, attemptAt)) {
                     const retryTime = tezSearchRetryAt(deps.fetch, attemptAt)!
                     const result = failed('Проверка цен автоматически продолжится после паузы между запросами.')
@@ -246,6 +258,14 @@ export function createTezInventory(deps: {fetch: typeof fetch, now: () => Date})
                 }
                 const timeout = AbortSignal.any([deadline, AbortSignal.timeout(10_000)])
                 const response = await deps.fetch(search.url, {signal: timeout, redirect: 'error'})
+                if (response.status == 429) {
+                    const retry = response.headers.get('retry-after')
+                    const seconds = retry && /^\d+$/.test(retry) ? Number(retry) : null
+                    const requested = seconds == null ? Date.parse(retry ?? '') : attemptAt + seconds * 1000
+                    supplierRetryAt = Number.isFinite(requested) && requested > attemptAt ? requested : attemptAt + 60_000
+                    const result = failed('Источник временно ограничил частоту запросов. Проверка продолжится автоматически.')
+                    return {...result, source: {...result.source, retryAt: new Date(supplierRetryAt).toISOString()}}
+                }
                 if (!response.ok) throw new Error('Поставщик не вернул цены')
                 return remember(search.url, await decode(await response.json(), search, deps.now().toISOString()), 120_000)
             } catch {
@@ -264,7 +284,8 @@ export function createTezInventory(deps: {fetch: typeof fetch, now: () => Date})
     }
     // The ranged operation is an optional capability for injected providers that implement day/window only.
     const ranged: {range?: typeof range} = {range}
-    return {window: (input: TezWindow, signal?: AbortSignal, forceFresh = false) => read(input, undefined, undefined, forceFresh, signal),
+    const catalog: {catalog?: NonNullable<typeof deps.catalog>} = deps.catalog ? {catalog: deps.catalog} : {}
+    return {...catalog, window: (input: TezWindow, signal?: AbortSignal, forceFresh = false) => read(input, undefined, undefined, forceFresh, signal),
         day: (input: TezWindow, hotelId: string, date: string, forceFresh = false, signal?: AbortSignal) =>
             read(input, hotelId, date, forceFresh, signal), ...ranged}
 }

@@ -4,7 +4,7 @@ import {createTezInventory} from '../backend/partners/tez-inventory.ts'
 import {createPackages} from '../backend/packages.ts'
 import {createTravelWorker} from '../backend/worker.ts'
 
-const query = 'destination=hurghada&firstDeparture=2030-01-24&lastDeparture=2030-01-25&nights=7&adults=2&minTotal=0&maxTotal=500000'
+const query = 'areaMode=destination&destination=hurghada&firstDeparture=2030-01-24&lastDeparture=2030-01-25&nights=7&adults=2&minTotal=0&maxTotal=500000'
 function row(params: URLSearchParams, id: number, name: string, total: number) {
     return [params.get('after'), [], '', Number(params.get('nightsMin')), '', ['', '', 5734], ['', name, '', id],
         ['HB'], [2471, 'Standard'], [[2, 0, 0]], {currency: 'EUR', total}]

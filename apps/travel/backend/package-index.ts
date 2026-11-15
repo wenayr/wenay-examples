@@ -66,8 +66,8 @@ export function matchesPackageHotel(hotel: PackageHotel, filter: Pick<PackageQue
 
 function publicFare({id, departure, total}: PackageFare): PackageFare { return {id, departure, total} }
 function summary({hotel, best, maxTotal}: Match): PackageSummary {
-    const {id, name, stars, latitude, longitude, url, coordinateSource, photo} = hotel
-    return {hotelId: id, name, stars, latitude, longitude, url, coordinateSource, photo,
+    const {id, destinationId, name, stars, latitude, longitude, url, coordinateSource, photo} = hotel
+    return {hotelId: id, destinationId, name, stars, latitude, longitude, url, coordinateSource, photo,
         best: publicFare(best), minTotal: best.total, maxTotal}
 }
 
@@ -170,7 +170,7 @@ export function createOfferIndex(observations: Observations) {
                 markersTruncated = true
                 break
             }
-            markers.push({hotelId: hotel.id, name: hotel.name, latitude: hotel.latitude, longitude: hotel.longitude,
+            markers.push({hotelId: hotel.id, destinationId: hotel.destinationId, name: hotel.name, latitude: hotel.latitude, longitude: hotel.longitude,
                 stars: hotel.stars, minTotal: best.total, maxTotal, coordinateSource: hotel.coordinateSource, photo: hotel.photo})
         }
         const end = query.offset + query.limit
@@ -200,7 +200,11 @@ export function createOfferIndex(observations: Observations) {
     }
     function findHotels(query: Pick<PackageQuery, 'minStars' | 'box' | 'term'>) {
         const term = searchPhrase(query.term ?? '')
-        const candidates = term ? namedHotels(term) : [...hotels.values()]
+        const area = query.box ? geography(query.box[1], query.box[3], query.box[0], query.box[2]) : null
+        const start = boundary(byStars, hotel => (hotel.stars ?? 0) < query.minStars)
+        let candidates = area ? [...points(area)] : byStars.slice(start)
+        const named = term ? namedHotels(term) : null
+        if (named && named.length < candidates.length) candidates = named
         return candidates.filter(hotel => matchesPackageHotel(hotel, query)).sort((a, b) => a.name.localeCompare(b.name))
     }
     return {search, calendar, findHotels}

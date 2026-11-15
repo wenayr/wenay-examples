@@ -1,6 +1,8 @@
 import type {SupplyPhoto, SupplySource} from './supply-contract.ts'
+import type {PackageArea} from './package-area-contract.ts'
+import {packageRegionDefinitions} from './package-regions.ts'
 
-export const packageDestinations = ['hurghada', 'sharm', 'rhodes'] as const
+export const packageDestinations = Object.keys(packageRegionDefinitions)
 export const packageWindowDays = 20
 export const packageMaxTotal = 150_000_000
 
@@ -18,6 +20,7 @@ export interface PackageCoordinateSource {
 }
 
 export interface PackageHotel {
+    destinationId?: string
     id: string
     name: string
     stars: number | null
@@ -42,7 +45,8 @@ export interface PackageSummary extends Omit<PackageHotel, 'id'> {
     best: PackageFare
 }
 
-export interface PackageMarker extends Pick<PackageSummary, 'hotelId' | 'name' | 'stars' | 'minTotal' | 'maxTotal' | 'coordinateSource' | 'photo'> {
+export interface PackageMarker extends Pick<PackageSummary,
+    'hotelId' | 'destinationId' | 'name' | 'stars' | 'minTotal' | 'maxTotal' | 'coordinateSource' | 'photo'> {
     latitude: number
     longitude: number
 }
@@ -61,6 +65,7 @@ export interface PackageSearchResults {
 }
 
 export interface PackagePage extends PackageSearchResults {
+    area?: PackageArea
     knownHotels?: PackageHotel[]
     source: SupplySource
     coverage: 'supplier-minima'

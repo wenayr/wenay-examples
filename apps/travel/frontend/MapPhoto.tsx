@@ -3,6 +3,8 @@ import type {SupplyPhoto} from '../src/supply-contract.ts'
 import type {PackageHotelGallery} from '../src/package-media-contract.ts'
 import {safeHref} from './DirectoryCard.tsx'
 import {directoryUrl, useDirectoryQuery} from './directory-query.ts'
+import {MapCardIcon} from './map-card-icons.tsx'
+import './map-photo-icons.css'
 
 interface MapPhotoProps {
     hotelId: string
@@ -10,12 +12,13 @@ interface MapPhotoProps {
     photo?: SupplyPhoto | null
     photos?: readonly SupplyPhoto[]
     propertyUrl?: string
+    showLabels?: boolean
     selectedUrl?: string
     onPhoto: (url: string) => void
     onOpen: () => void
 }
 
-export function MapPhoto({hotelId, name, photo, photos, propertyUrl, selectedUrl, onPhoto, onOpen}: MapPhotoProps) {
+export function MapPhoto({hotelId, name, photo, photos, propertyUrl, selectedUrl, showLabels = false, onPhoto, onOpen}: MapPhotoProps) {
     const url = hotelId.startsWith('tez:') ? directoryUrl('package-gallery', {hotelId}) : null
     const gallery = useDirectoryQuery<PackageHotelGallery>(url)
     const [activeUrl, setActiveUrl] = useState(selectedUrl)
@@ -88,11 +91,20 @@ export function MapPhoto({hotelId, name, photo, photos, propertyUrl, selectedUrl
                     onClick={() => step(1)}>›</button>
                 <span className="map-hotel-card__photo-count" aria-live="polite" aria-atomic="true">{index + 1}/{available.length}</span>
             </>}
-            {gallery.error && <button type="button" className="map-hotel-card__photo-retry" onClick={gallery.retry}>Повторить фото</button>}
+            {gallery.error && <button type="button" className="map-hotel-card__photo-retry" onClick={gallery.retry}
+                title="Повторить загрузку фото" aria-label={'Повторить загрузку фото · ' + name}>
+                <MapCardIcon name="refresh" size={14}/>{showLabels && <span>Повторить фото</span>}
+            </button>}
         </div>
-        <div className="map-hotel-card__sources">
-            {original && <a href={original} target="_blank" rel="noopener noreferrer" aria-label={'Файл фото · ' + name}>Файл фото ↗</a>}
-            {source && <a href={source} target="_blank" rel="noopener noreferrer" aria-label={'Страница источника · ' + name}>Страница источника ↗</a>}
+        <div className="map-hotel-card__sources" data-show-labels={showLabels}>
+            {original && <a href={original} target="_blank" rel="noopener noreferrer"
+                title={'Открыть файл фотографии · ' + name} aria-label={'Файл фото · ' + name}>
+                <MapCardIcon name="image" size={14}/>{showLabels && <span>Файл фото</span>}
+            </a>}
+            {source && <a href={source} target="_blank" rel="noopener noreferrer"
+                title={'Страница отеля у поставщика · ' + name} aria-label={'Страница источника · ' + name}>
+                <MapCardIcon name="source" size={14}/>{showLabels && <span>Источник</span>}
+            </a>}
         </div>
     </div>
 }

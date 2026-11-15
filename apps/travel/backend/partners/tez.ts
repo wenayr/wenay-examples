@@ -1,14 +1,11 @@
 import type {SupplyOffer, SupplySource} from '../../src/supply-contract.ts'
 import {allowTezSearch} from './tez-access.ts'
+import {packageRegionDefinitions, type TezRegion} from '../../src/package-regions.ts'
 
 const oneDay = 86_400_000
 const searchEndpoint = 'https://search.tezapi.eu/tariffsearch/getResult'
 
-const resorts = {
-    hurghada: {countryId: '5732', regionId: '5734'},
-    sharm: {countryId: '5732', regionId: '5735'},
-    rhodes: {countryId: '7067498', regionId: '9003981'},
-} as const
+const resorts: Readonly<Record<string, {countryId: string, regionId?: string}>> = packageRegionDefinitions
 
 interface TourRequest {
     destinationId: string
@@ -25,9 +22,10 @@ function supplierDate(iso: string) {
     return iso.split('-').reverse().join('.')
 }
 
-export function buildTezSearch(query: TourRequest, today: string) {
-    if (!Object.hasOwn(resorts, query.destinationId) || query.adults != 2) return null
-    const resort = resorts[query.destinationId as keyof typeof resorts]
+export function buildTezSearch(query: TourRequest, today: string, resolved?: TezRegion | null) {
+    if (query.adults != 2) return null
+    const resort = resolved ?? resorts[query.destinationId]
+    if (!resort?.regionId) return null
     const first = query.checkIn || addDays(today, 1)
     const last = query.checkIn ? first : addDays(first, 19)
     const nights = query.checkIn && query.checkOut ? (Date.parse(query.checkOut) - Date.parse(query.checkIn)) / oneDay : 7

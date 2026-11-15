@@ -1,0 +1,45 @@
+.map-hotel-card__gallery .map-hotel-card__sources {
+    justify-content: flex-end;
+    gap: 4px;
+    height: 26px;
+    padding-inline: 5px;
+}
+
+.map-hotel-card__gallery .map-hotel-card__sources a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    min-width: 28px;
+    min-height: 24px;
+    padding: 2px 5px;
+    border-radius: 4px;
+    color: #365f50;
+    text-decoration: none;
+}
+
+.map-hotel-card__gallery .map-hotel-card__sources a:hover {
+    background: #e4eee4;
+}
+
+.map-hotel-card__gallery .map-hotel-card__sources svg {
+    flex-shrink: 0;
+}
+
+.map-hotel-card__gallery .map-hotel-card__sources[data-show-labels=true] {
+    justify-content: space-between;
+}
+
+.map-hotel-card__gallery .map-hotel-card__sources[data-show-labels=true] a {
+    padding-inline: 1px;
+    font-size: 9px;
+}
+
+.map-hotel-card__gallery .map-hotel-card__photo-retry {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    min-width: 26px;
+    min-height: 26px;
+}

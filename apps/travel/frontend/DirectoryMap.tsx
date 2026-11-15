@@ -5,11 +5,13 @@ import type {GeoJsonObject} from 'geojson'
 import {destinations} from '../demo/catalog.ts'
 import type {SupplyDestination, SupplyHotel, SupplyPhoto} from '../src/supply-contract.ts'
 import type {PackageTrendPoint} from '../src/package-trends-contract.ts'
-import {drawAtlas, fitHotelPoints, overlap, type CardBox} from './HotelMap.tsx'
+import {drawAtlas, fitHotelPoints} from './HotelMap.tsx'
 import {Icon} from './Icons.tsx'
 import {mapClusters} from './map-clusters.ts'
 import {packageFavouriteLevels, type tPackageFavouriteLevel} from './package-favourites.ts'
 import {MapPhoto} from './MapPhoto.tsx'
+import {createMapCardIcon, type tMapCardIconName} from './map-card-icons.tsx'
+import {createMapCardLayout} from './map-card-layout.ts'
 
 export type tMapBounds = readonly [west: number, south: number, east: number, north: number]
 
@@ -47,6 +49,10 @@ interface DirectoryMapProps {
     onFavourite?: (id: string, level: tPackageFavouriteLevel) => void
     camera?: tMapCamera | null
     onCamera?: (camera: tMapCamera) => void
+    onRefresh?: (id: string) => void
+    onClearSelection?: () => void
+    showLabels?: boolean
+    focusKey?: number
 }
 
 // Natural Earth 1:10m land (world-atlas 2.0.2), roads and urban areas. Each local GeoJSON
@@ -138,29 +144,71 @@ function priceTrend(days: readonly PackageTrendPoint[]) {
     return graph
 }
 
-function favouriteControls(hotel: MapProperty, change: (level: tPackageFavouriteLevel) => void) {
+function bindCardAction(button: HTMLButtonElement, activate: () => void) {
+    let touch: {id: number, x: number, y: number, moved: boolean} | null = null
+    let handledTouchAt = -Infinity
+    button.addEventListener('pointerdown', function startTouch(event) {
+        if (event.pointerType != 'touch' || !event.isPrimary || event.button != 0) return
+        touch = {id: event.pointerId, x: event.clientX, y: event.clientY, moved: false}
+        button.setPointerCapture(event.pointerId)
+    })
+    button.addEventListener('pointermove', function moveTouch(event) {
+        if (!touch || touch.id != event.pointerId) return
+        if (Math.hypot(event.clientX - touch.x, event.clientY - touch.y) > 10) touch.moved = true
+    })
+    button.addEventListener('pointerup', function finishTouch(event) {
+        if (!touch || touch.id != event.pointerId) return
+        const moved = touch.moved || Math.hypot(event.clientX - touch.x, event.clientY - touch.y) > 10
+        touch = null
+        handledTouchAt = performance.now()
+        event.preventDefault()
+        event.stopPropagation()
+        if (!moved) activate()
+    })
+    button.addEventListener('pointercancel', function cancelTouch() {
+        touch = null
+        handledTouchAt = performance.now()
+    })
+    button.addEventListener('click', function activateClick(event: MouseEvent) {
+        event.stopPropagation()
+        const touchClick = event instanceof PointerEvent ? event.pointerType == 'touch' : event.detail > 0
+        if (touchClick && performance.now() - handledTouchAt < 700) {
+            event.preventDefault()
+            return
+        }
+        activate()
+    })
+}
+
+function cardAction(icon: tMapCardIconName, label: string, showLabels: boolean, activate?: () => void) {
+    const button = document.createElement('button')
+    button.type = 'button'
+    button.className = 'map-card-action map-card-action--' + icon
+    button.setAttribute('aria-label', label)
+    button.title = label
+    button.append(createMapCardIcon(icon))
+    if (showLabels) {
+        const caption = document.createElement('span')
+        caption.textContent = label.split(' · ')[0]
+        button.append(caption)
+    }
+    if (activate) bindCardAction(button, activate)
+    return button
+}
+
+function favouriteControls(hotel: MapProperty, change: (level: tPackageFavouriteLevel) => void, showLabels: boolean) {
     const controls = document.createElement('div')
     controls.className = 'map-hotel-card__favorites'
     controls.setAttribute('aria-label', 'Уровень избранного')
-    controls.addEventListener('keydown', function keepFavouriteControl(event) {
-        if (event.key == 'Enter' || event.key == ' ') event.stopPropagation()
-    })
-    const symbols = {1: '●', 2: '♥', 3: '⚑'} as const
+    const icons = {1: 'interest', 2: 'like', 3: 'priority'} as const
     const levels = [1, 2, 3] as const
     levels.forEach(level => {
-        const button = document.createElement('button')
-        button.type = 'button'
-        button.className = 'map-hotel-card__favorite'
+        const label = packageFavouriteLevels[level].label + ' · ' + hotel.name
+        const button = cardAction(icons[level], label, showLabels, () => change(hotel.favouriteLevel == level ? 0 : level))
+        button.classList.add('map-hotel-card__favorite')
         button.dataset.level = String(level)
-        button.textContent = symbols[level]
         button.style.setProperty('--hotel-favourite-color', packageFavouriteLevels[level].color)
-        button.title = packageFavouriteLevels[level].label
-        button.setAttribute('aria-label', packageFavouriteLevels[level].label + ' · ' + hotel.name)
         button.setAttribute('aria-pressed', String(hotel.favouriteLevel == level))
-        button.addEventListener('click', function changeFavourite(event) {
-            event.stopPropagation()
-            change(hotel.favouriteLevel == level ? 0 : level)
-        })
         controls.append(button)
     })
     L.DomEvent.disableClickPropagation(controls)
@@ -183,100 +231,80 @@ function mapPropertyLabel(hotel: MapProperty) {
     return parts.join('. ')
 }
 
-function photoCard(hotel: MapProperty, photoHost: HTMLElement, open: () => void,
-    favourite?: (level: tPackageFavouriteLevel) => void, matrix?: () => void) {
-    const card = document.createElement('article')
-    card.className = 'map-hotel-card'
-    card.dataset.favouriteLevel = String(hotel.favouriteLevel ?? 0)
-    card.style.setProperty('--hotel-favourite-color', packageFavouriteLevels[hotel.favouriteLevel ?? 0].color)
-    const button = document.createElement('button')
-    button.type = 'button'
-    button.className = 'map-hotel-card__open'
-    button.setAttribute('aria-label', 'Открыть ' + mapPropertyLabel(hotel))
-    const body = document.createElement('div')
-    body.className = 'map-hotel-card__body'
-    const name = document.createElement('strong')
-    name.className = 'map-hotel-card__name'
-    name.textContent = hotel.name
-    body.append(name)
-    if (hotel.trend?.length) {
-        const graph = priceTrend(hotel.trend)
-        graph.classList.add('map-hotel-card__trend')
-        body.append(graph)
-    } else {
-        const pending = document.createElement('span')
-        pending.className = 'map-hotel-card__trend is-empty'
-        pending.textContent = 'Даты уточняются'
-        body.append(pending)
-    }
-    const amount = document.createElement('b')
-    amount.className = 'map-hotel-card__price'
-    amount.textContent = hotel.priceLabel ?? 'Открыть отель'
-    body.append(amount)
-    button.append(body)
-    button.addEventListener('click', function openHotel(event) {
-        event.stopPropagation()
-        open()
-    })
-    L.DomEvent.disableClickPropagation(button)
-    card.append(photoHost, button)
-    const controls = document.createElement('div')
-    controls.className = 'map-hotel-card__actions'
-    if (favourite) controls.append(favouriteControls(hotel, favourite))
-    if (matrix) {
-        const action = document.createElement('button')
-        action.type = 'button'
-        action.className = 'map-hotel-card__matrix'
-        action.textContent = 'Матрица'
-        action.setAttribute('aria-label', 'Матрица цен · ' + hotel.name)
-        let touch: {id: number, x: number, y: number, moved: boolean} | null = null
-        let handledTouchAt = -Infinity
-        action.addEventListener('pointerdown', function startMatrixTouch(event) {
-            if (event.pointerType != 'touch' || !event.isPrimary || event.button != 0) return
-            touch = {id: event.pointerId, x: event.clientX, y: event.clientY, moved: false}
-            action.setPointerCapture(event.pointerId)
-        })
-        action.addEventListener('pointermove', function moveMatrixTouch(event) {
-            if (!touch || touch.id != event.pointerId) return
-            if (Math.hypot(event.clientX - touch.x, event.clientY - touch.y) > 10) touch.moved = true
-        })
-        action.addEventListener('pointerup', function finishMatrixTouch(event) {
-            if (!touch || touch.id != event.pointerId) return
-            const moved = touch.moved || Math.hypot(event.clientX - touch.x, event.clientY - touch.y) > 10
-            touch = null
-            handledTouchAt = performance.now()
-            event.preventDefault()
-            event.stopPropagation()
-            if (!moved) matrix()
-        })
-        action.addEventListener('pointercancel', function cancelMatrixTouch() {
-            touch = null
-            handledTouchAt = performance.now()
-        })
-        action.addEventListener('click', function openMatrix(event: MouseEvent) {
-            event.stopPropagation()
-            const touchClick = event instanceof PointerEvent ? event.pointerType == 'touch' : event.detail > 0
-            if (touchClick && performance.now() - handledTouchAt < 700) {
-                event.preventDefault()
-                return
-            }
-            matrix()
-        })
-        controls.append(action)
-    }
-    card.append(controls)
-    L.DomEvent.disableClickPropagation(card)
-    card.addEventListener('pointerdown', event => event.stopPropagation())
-    card.addEventListener('keydown', function keepCardControl(event) {
-        event.stopPropagation()
-    })
-    return card
+interface PhotoCardActions {
+    open: () => void
+    favourite?: (level: tPackageFavouriteLevel) => void
+    matrix?: () => void
+    refresh?: () => void
+    close?: () => void
+    showLabels: boolean
 }
 
-function addProperty(group: L.LayerGroup, hotel: MapProperty, index: number, select: () => void,
-    photoHost?: HTMLElement, favourite?: (level: tPackageFavouriteLevel) => void, compact = false, matrix?: () => void) {
-    if (photoHost) {
-        const card = photoCard(hotel, photoHost, select, favourite, matrix)
+function photoCard(hotel: MapProperty, photoHost: HTMLElement, actions: PhotoCardActions) {
+    const card = document.createElement('article')
+    card.className = 'map-hotel-card'
+    card.dataset.labels = String(actions.showLabels)
+    card.dataset.hotelCardId = hotel.id
+    card.dataset.favouriteLevel = String(hotel.favouriteLevel ?? 0)
+    card.style.setProperty('--hotel-favourite-color', packageFavouriteLevels[hotel.favouriteLevel ?? 0].color)
+    const header = document.createElement('div')
+    header.className = 'map-hotel-card__handle'
+    const handle = cardAction('drag', 'Переместить карточку · ' + hotel.name, actions.showLabels)
+    handle.classList.add('map-hotel-card__drag')
+    handle.setAttribute('aria-keyshortcuts', 'ArrowUp ArrowDown ArrowLeft ArrowRight Home Escape')
+    header.append(handle)
+    if (actions.close) header.append(cardAction('close', 'Свернуть карточку · ' + hotel.name, false, actions.close))
+    const body = document.createElement('div')
+    body.className = 'map-hotel-card__body'
+    const name = document.createElement('button')
+    name.type = 'button'
+    name.className = 'map-hotel-card__open map-hotel-card__name'
+    name.textContent = hotel.name
+    name.setAttribute('aria-label', 'Открыть отель · ' + hotel.name)
+    bindCardAction(name, actions.open)
+    body.append(name)
+    const preview = document.createElement('button')
+    preview.type = 'button'
+    preview.className = 'map-hotel-card__preview'
+    preview.title = 'Цены по датам · открыть матрицу'
+    preview.setAttribute('aria-label', 'График цен и матрица · ' + hotel.name)
+    if (hotel.trend?.length) preview.append(priceTrend(hotel.trend))
+    else {
+        preview.classList.add('is-pending')
+        preview.append(createMapCardIcon('matrix'))
+    }
+    if (actions.matrix) bindCardAction(preview, actions.matrix)
+    else preview.disabled = true
+    body.append(preview)
+    const amount = document.createElement('b')
+    amount.className = 'map-hotel-card__price'
+    amount.textContent = hotel.priceTotal == null ? '—' : hotel.priceLabel ?? trendMoney.format(hotel.priceTotal / 100)
+    amount.title = hotel.priceTotal == null ? 'Цена ещё не подтверждена. Нажмите обновление или откройте матрицу.' : hotel.tooltip ?? 'Цена за группу'
+    body.append(amount)
+    const controls = document.createElement('div')
+    controls.className = 'map-hotel-card__actions'
+    if (actions.favourite) controls.append(favouriteControls(hotel, actions.favourite, actions.showLabels))
+    if (actions.matrix) {
+        const matrix = cardAction('matrix', 'Матрица цен · ' + hotel.name, actions.showLabels, actions.matrix)
+        matrix.classList.add('map-hotel-card__matrix')
+        controls.append(matrix)
+    }
+    if (actions.refresh) {
+        const refresh = cardAction('refresh', 'Проверить цену · ' + hotel.name, actions.showLabels, actions.refresh)
+        refresh.classList.add('map-hotel-card__refresh')
+        controls.append(refresh)
+    }
+    card.append(header, photoHost, body, controls)
+    L.DomEvent.disableClickPropagation(card)
+    card.addEventListener('pointerdown', event => event.stopPropagation())
+    card.addEventListener('keydown', event => event.stopPropagation())
+    return {card, handle}
+}
+
+function addProperty(group: L.LayerGroup, hotel: MapProperty, index: number, select: () => void, compact: boolean,
+    photo?: {host: HTMLElement, actions: PhotoCardActions, position: (marker: L.Marker, card: HTMLElement, handle: HTMLButtonElement) => void}) {
+    if (photo) {
+        const {card, handle} = photoCard(hotel, photo.host, photo.actions)
         const icon = L.divIcon({className: 'directory-map-pin is-rich-card', html: card,
             iconSize: [190, 244], iconAnchor: [95, 122]})
         const marker = L.marker([hotel.latitude, hotel.longitude], {
@@ -285,6 +313,7 @@ function addProperty(group: L.LayerGroup, hotel: MapProperty, index: number, sel
         accessibleMarker(marker, mapPropertyLabel(hotel), 1, [hotel.id], select)
         marker.getElement()?.setAttribute('role', 'group')
         marker.getElement()?.removeAttribute('tabindex')
+        photo.position(marker, card, handle)
         return marker
     }
     const label = document.createElement('span')
@@ -402,54 +431,6 @@ function addCluster(map: L.Map, group: L.LayerGroup, hotels: readonly MapPropert
     return marker
 }
 
-// Keep a selected hotel readable without moving its geographical marker.
-function protectSelectedLabel(map: L.Map, group: L.LayerGroup, markers: readonly L.Marker[]) {
-    const size = map.getSize()
-    if (size.x < 220 || size.y < 190) return
-    const visible = markers.filter(marker => map.getBounds().contains(marker.getLatLng()))
-    const labels = visible.flatMap(marker => {
-        const card = marker.getElement()?.firstElementChild
-        if (!(card instanceof HTMLElement)) return []
-        const anchor = map.latLngToContainerPoint(marker.getLatLng())
-        const width = card.offsetWidth
-        const height = card.offsetHeight
-        return [{marker, card, anchor, box: {x: anchor.x - width / 2, y: anchor.y - height / 2, width, height}}]
-    })
-    const selected = labels.find(layer => layer.marker.getElement()?.classList.contains('is-selected'))
-    if (!selected) return
-    function bounded(box: CardBox): CardBox {
-        return {...box, x: Math.min(size.x - box.width - 6, Math.max(6, box.x)),
-            y: Math.min(size.y - box.height - 24, Math.max(56, box.y))}
-    }
-    function position(layer: (typeof labels)[number], box: CardBox) {
-        const dx = box.x - layer.box.x
-        const dy = box.y - layer.box.y
-        if (dx == 0 && dy == 0) return
-        layer.card.style.transform = 'translate(' + dx + 'px,' + dy + 'px)'
-        const endpoint = L.point(Math.max(box.x, Math.min(layer.anchor.x, box.x + box.width)),
-            Math.max(box.y, Math.min(layer.anchor.y, box.y + box.height)))
-        L.polyline([layer.marker.getLatLng(), map.containerPointToLatLng(endpoint)], {
-            color: '#446958', weight: 1.4, interactive: false,
-        }).addTo(group)
-        L.circleMarker(layer.marker.getLatLng(), {radius: 3, color: '#fff', fillColor: '#245a4a',
-            weight: 1, fillOpacity: 1, interactive: false}).addTo(group)
-    }
-    const protectedBox = bounded(selected.box)
-    position(selected, protectedBox)
-    const others = labels.filter(layer => layer != selected)
-    const occupied = [protectedBox, ...others.filter(layer => overlap(layer.box, protectedBox) == 0).map(layer => layer.box)]
-    others.filter(layer => overlap(layer.box, protectedBox) > 0).forEach(layer => {
-        const {width, height} = layer.box
-        const xs = [protectedBox.x - width - 10, protectedBox.x + protectedBox.width + 10]
-        const sides = xs.flatMap(x => [0, -height * 0.55, height * 0.55].map(shift => bounded({...layer.box, x, y: layer.box.y + shift})))
-        const ys = [protectedBox.y - height - 10, protectedBox.y + protectedBox.height + 10]
-        const options = [...sides, ...ys.map(y => bounded({...layer.box, y}))]
-        const score = (box: CardBox) => occupied.reduce((total, other) => total + overlap(box, other), overlap(box, protectedBox) * 100)
-        const chosen = options.reduce((best, box) => score(box) < score(best) ? box : best)
-        position(layer, chosen)
-        occupied.push(chosen)
-    })
-}
 
 function fitDirectoryHotels(map: L.Map, destination: SupplyDestination, hotels: readonly MapProperty[], immersive: boolean) {
     if (!immersive || !hotels.length) {
@@ -477,12 +458,13 @@ function mapSearchBounds(area: L.LatLngBounds): tMapBounds | null {
 
 export function DirectoryMap({destination, hotels, selectedId, onSelect, onSearchArea, world = false, bounds,
     onShowAll, fitAllKey, detailedByDefault = false, loading = false, immersive = false,
-    onOpen, onMatrix, onFavourite, camera, onCamera}: DirectoryMapProps) {
+    onOpen, onMatrix, onFavourite, camera, onCamera, onRefresh, onClearSelection, showLabels = false, focusKey}: DirectoryMapProps) {
     const host = useRef<HTMLDivElement>(null)
     const mapRef = useRef<L.Map | null>(null)
     const markers = useRef(new Map<string, L.Marker>())
     const propertyLayer = useRef<L.LayerGroup | null>(null)
-    const actions = useRef({select: onSelect, open: onOpen, matrix: onMatrix, favourite: onFavourite, camera: onCamera})
+    const actions = useRef({select: onSelect, open: onOpen, matrix: onMatrix, favourite: onFavourite,
+        camera: onCamera, refresh: onRefresh, clear: onClearSelection})
     const photoHosts = useRef(new Map<string, HTMLElement>())
     const selectedPhotos = useRef(new Map<string, string>())
     const [photoCards, setPhotoCards] = useState<MapPhotoMount[]>([])
@@ -494,6 +476,12 @@ export function DirectoryMap({destination, hotels, selectedId, onSelect, onSearc
     const fitted = useRef(false)
     const fittedRequest = useRef(fitAllKey)
     const previousSelection = useRef<string | null>(null)
+    const expandedCard = useRef<string | null>(null)
+    const collapsedCards = useRef(new Set<string>())
+    const cardOffsets = useRef(new Map<string, {x: number, y: number}>())
+    const cardLayouts = useRef(new Map<string, ReturnType<typeof createMapCardLayout>>())
+    const draggingCard = useRef(false)
+    const pendingCardRender = useRef(false)
     const rememberCamera = useEffectEvent((map: L.Map) => {
         const center = map.wrapLatLng(map.getCenter())
         actions.current.camera?.({latitude: center.lat, longitude: center.lng, zoom: map.getZoom()})
@@ -514,9 +502,30 @@ export function DirectoryMap({destination, hotels, selectedId, onSelect, onSearc
         actions.current.select(id)
         if (immersive) actions.current.open?.(id)
     }
+    function selectPin(id: string) {
+        if (!immersive) {
+            activateHotel(id)
+            return
+        }
+        expandedCard.current = id
+        collapsedCards.current.delete(id)
+        actions.current.select(id)
+        if (mapRef.current) renderProperties(mapRef.current)
+    }
+    function collapseCard(id: string) {
+        collapsedCards.current.add(id)
+        if (expandedCard.current == id) expandedCard.current = null
+        if (id == selectedId) actions.current.clear?.()
+        if (mapRef.current) renderProperties(mapRef.current)
+    }
     const renderProperties = useEffectEvent((map: L.Map) => {
         const group = propertyLayer.current
         if (!group || !Number.isFinite(map.getZoom())) return
+        const layerGroup = group
+        if (draggingCard.current) {
+            pendingCardRender.current = true
+            return
+        }
         const active = document.activeElement instanceof HTMLElement ? document.activeElement : null
         const focusedPin = active?.closest('.directory-map-pin')
         const focusedHotel = [...markers.current].find(([, marker]) => marker.getElement() == focusedPin)?.[0]
@@ -524,9 +533,13 @@ export function DirectoryMap({destination, hotels, selectedId, onSelect, onSearc
         const focusedOpen = active?.classList.contains('map-hotel-card__open')
         const focusedMatrix = active?.classList.contains('map-hotel-card__matrix')
         const uniqueHotels = [...new Map(hotels.map(hotel => [hotel.id, hotel] as const)).values()]
+        cardLayouts.current.forEach(layout => layout.destroy())
+        cardLayouts.current.clear()
         group.clearLayers()
         markers.current.clear()
-        const projection = uniqueHotels.map((hotel, order) => {
+        const inViewport = uniqueHotels.filter(hotel => map.getBounds().contains([hotel.latitude, hotel.longitude]))
+        if (expandedCard.current && !inViewport.some(hotel => hotel.id == expandedCard.current)) expandedCard.current = null
+        const projection = inViewport.map((hotel, order) => {
             const point = map.project([hotel.latitude, hotel.longitude], map.getZoom())
             return {...hotel, order, x: point.x, y: point.y}
         })
@@ -534,16 +547,15 @@ export function DirectoryMap({destination, hotels, selectedId, onSelect, onSearc
         const photoZoom = immersive && map.getZoom() >= 13.25
         let cell = hasTrends ? {width: 150, height: 100} : {width: 138, height: 62}
         if (immersive) cell = photoZoom ? {width: 210, height: 259} : {width: 144, height: 76}
-        const clusters = mapClusters(projection, selectedId, cell.width, cell.height)
-        const displayed: L.Marker[] = []
+        const separatedId = expandedCard.current ?? (photoZoom ? selectedId : null)
+        const clusters = mapClusters(projection, separatedId, cell.width, cell.height)
         const nextPhotoCards: MapPhotoMount[] = []
         clusters.forEach(cluster => {
             const members = cluster.members
             if (members.length == 1) {
                 const hotel = members[0]
                 const active = hotel.id == selectedId
-                const inView = map.getBounds().contains([hotel.latitude, hotel.longitude])
-                const rich = immersive && (active || (photoZoom && inView))
+                const rich = immersive && !collapsedCards.current.has(hotel.id) && (photoZoom || expandedCard.current == hotel.id)
                 let photoHost: HTMLElement | undefined
                 if (rich) {
                     photoHost = photoHosts.current.get(hotel.id) ?? document.createElement('div')
@@ -553,24 +565,38 @@ export function DirectoryMap({destination, hotels, selectedId, onSelect, onSearc
                 const favourite = actions.current.favourite
                 const change = favourite ? (level: tPackageFavouriteLevel) => favourite(hotel.id, level) : undefined
                 const matrix = actions.current.matrix ? () => actions.current.matrix?.(hotel.id) : undefined
-                const marker = addProperty(group, hotel, hotel.order, () => activateHotel(hotel.id), photoHost, change, immersive, matrix)
+                function position(marker: L.Marker, card: HTMLElement, handle: HTMLButtonElement) {
+                    const layout = createMapCardLayout({map, group: layerGroup, marker, card, handle, offset: cardOffsets.current.get(hotel.id),
+                        onOffset: offset => cardOffsets.current.set(hotel.id, offset), onDragging: dragging => {
+                            draggingCard.current = dragging
+                            if (!dragging && pendingCardRender.current) {
+                                pendingCardRender.current = false
+                                renderProperties(map)
+                            }
+                        }})
+                    cardLayouts.current.set(hotel.id, layout)
+                }
+                const photo = photoHost ? {host: photoHost, position, actions: {
+                    open: () => activateHotel(hotel.id), favourite: change, matrix,
+                    refresh: actions.current.refresh ? () => actions.current.refresh?.(hotel.id) : undefined,
+                    close: () => collapseCard(hotel.id), showLabels,
+                }} : undefined
+                const marker = addProperty(group, hotel, hotel.order, () => selectPin(hotel.id), immersive, photo)
                 marker.getElement()?.classList.toggle('is-selected', active)
                 if (!rich) marker.getElement()?.setAttribute('aria-pressed', String(active))
                 marker.setZIndexOffset(active ? 2000 : 0)
                 markers.current.set(hotel.id, marker)
-                displayed.push(marker)
             } else {
                 const center = map.unproject(L.point(cluster.x, cluster.y), map.getZoom())
-                const marker = addCluster(map, group, members, center, activateHotel, function searchCluster() {
+                const marker = addCluster(map, group, members, center, selectPin, function searchCluster() {
                     cancelViewport.current()
                     searchVisibleArea(map)
                 })
-                displayed.push(marker)
+                marker.getElement()?.classList.toggle('has-selected-hotel', members.some(hotel => hotel.id == selectedId))
             }
         })
         photoHosts.current = new Map(nextPhotoCards.map(entry => [entry.hotel.id, entry.host]))
         setPhotoCards(nextPhotoCards)
-        protectSelectedLabel(map, group, displayed)
         if (focusedHotel && !document.querySelector('dialog[open]')) {
             const element = markers.current.get(focusedHotel)?.getElement()
             let control: HTMLElement | null | undefined = element
@@ -587,8 +613,9 @@ export function DirectoryMap({destination, hotels, selectedId, onSelect, onSearc
         host.current?.setAttribute('data-map-groups', String(clusters.length))
     })
     useEffect(() => {
-        actions.current = {select: onSelect, open: onOpen, matrix: onMatrix, favourite: onFavourite, camera: onCamera}
-    }, [onSelect, onOpen, onMatrix, onFavourite, onCamera])
+        actions.current = {select: onSelect, open: onOpen, matrix: onMatrix, favourite: onFavourite,
+            camera: onCamera, refresh: onRefresh, clear: onClearSelection}
+    }, [onSelect, onOpen, onMatrix, onFavourite, onCamera, onRefresh, onClearSelection])
 
     useEffect(() => {
         if (!host.current) return
@@ -629,12 +656,17 @@ export function DirectoryMap({destination, hotels, selectedId, onSelect, onSearc
             clearTimeout(pending)
             pending = setTimeout(() => searchVisibleArea(map), 400)
         }
-        function backgroundClick() { userMove = false }
+        function backgroundClick() {
+            userMove = false
+            const id = expandedCard.current
+            if (id) collapseCard(id)
+        }
+        function zoomStarted() { expandedCard.current = null }
         const canvas = host.current
         canvas.addEventListener('pointerdown', intent, true)
         canvas.addEventListener('wheel', intent, {capture: true, passive: true})
         canvas.addEventListener('keydown', intent, true)
-        map.on('moveend', moved).on('click', backgroundClick)
+        map.on('moveend', moved).on('zoomstart', zoomStarted).on('click', backgroundClick)
         const observer = new ResizeObserver(() => {
             map.invalidateSize({pan: false})
             fitVisibleHotels(map)
@@ -643,11 +675,15 @@ export function DirectoryMap({destination, hotels, selectedId, onSelect, onSearc
         observer.observe(host.current)
         return () => {
             clearTimeout(pending)
-            map.off('moveend', moved).off('click', backgroundClick)
+            map.off('moveend', moved).off('zoomstart', zoomStarted).off('click', backgroundClick)
             canvas.removeEventListener('pointerdown', intent, true)
             canvas.removeEventListener('wheel', intent, true)
             canvas.removeEventListener('keydown', intent, true)
             observer.disconnect()
+            pendingCardRender.current = false
+            draggingCard.current = false
+            cardLayouts.current.forEach(layout => layout.destroy())
+            cardLayouts.current.clear()
             map.remove()
             mapRef.current = null
             propertyLayer.current = null
@@ -673,6 +709,11 @@ export function DirectoryMap({destination, hotels, selectedId, onSelect, onSearc
         if (!camera && (!world || !matchesCenter)) {
             map.setView([latitude, longitude], world && latitude == 0 && longitude == 0 ? 2 : zoom, {animate: false})
         }
+        if (immersive) {
+            fitted.current = true
+            rememberCamera(map)
+            searchVisibleArea(map)
+        }
         const base = world ? L.layerGroup().addTo(map) : addBase(map, id, () => setLimited(true))
         return () => { base.remove() }
     }, [id, latitude, longitude])
@@ -684,6 +725,7 @@ export function DirectoryMap({destination, hotels, selectedId, onSelect, onSearc
         if (!closeCenter || Math.abs(map.getZoom() - camera.zoom) > 0.001) {
             cancelViewport.current()
             map.setView([camera.latitude, camera.longitude], camera.zoom, {animate: false})
+            searchVisibleArea(map)
         }
         fitted.current = true
     }, [camera?.latitude, camera?.longitude, camera?.zoom, id])
@@ -739,7 +781,15 @@ export function DirectoryMap({destination, hotels, selectedId, onSelect, onSearc
             if (!map.getBounds().pad(-0.08).contains(selected.getLatLng())) map.panTo(selected.getLatLng(), {animate: false})
         }
         previousSelection.current = selectedId
-    }, [hotels, id, latitude, longitude, selectedId, loading, bounds, fitAllKey])
+    }, [hotels, id, latitude, longitude, selectedId, loading, bounds, fitAllKey, showLabels])
+
+    useEffect(() => {
+        const map = mapRef.current
+        if (!map || !selectedId || focusKey == null) return
+        expandedCard.current = selectedId
+        collapsedCards.current.delete(selectedId)
+        renderProperties(map)
+    }, [focusKey])
 
     function searchArea() {
         cancelViewport.current()
@@ -764,7 +814,7 @@ export function DirectoryMap({destination, hotels, selectedId, onSelect, onSearc
             data-map-total={hotels.length} data-map-visible={visible}/>
         {photoCards.map(({hotel, host}) => createPortal(<MapPhoto hotelId={hotel.id} name={hotel.name}
             photo={hotel.photo} photos={hotel.photos} propertyUrl={hotel.propertyUrl} selectedUrl={selectedPhotos.current.get(hotel.id)}
-            onPhoto={url => selectedPhotos.current.set(hotel.id, url)} onOpen={() => activateHotel(hotel.id)}/>, host, hotel.id))}
+            showLabels={showLabels} onPhoto={url => selectedPhotos.current.set(hotel.id, url)} onOpen={() => activateHotel(hotel.id)}/>, host, hotel.id))}
         {!immersive && <output className="directory-map__count" aria-live="polite">В области <strong>{visible}</strong> из {hotels.length}</output>}
         {!immersive && <div className="hotel-map__tools">
             <button type="button" onClick={searchArea} aria-label="Обновить цены в этой области">Обновить</button>

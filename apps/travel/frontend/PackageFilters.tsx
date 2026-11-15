@@ -10,9 +10,10 @@ type FilterProps = {
     destinations: SupplyDestination[]
     onChange: (patch: Partial<PackagePreferences>) => void
     immersive?: boolean
+    onNavigate?: (id: string) => void
 }
 
-export function PackageFilters({prefs, destinations, onChange, immersive = false}: FilterProps) {
+export function PackageFilters({prefs, destinations, onChange, immersive = false, onNavigate}: FilterProps) {
     const [expanded, setExpanded] = useState(() => immersive && typeof window != 'undefined' && window.matchMedia('(min-width: 721px)').matches)
     const today = new Date().toISOString().slice(0, 10)
     const lastAllowed = shiftDate(prefs.firstDeparture, packageWindowDays - 1)
@@ -40,8 +41,9 @@ export function PackageFilters({prefs, destinations, onChange, immersive = false
             <button className="filter-toggle" type="button" aria-label={expanded ? 'Свернуть фильтры' : 'Открыть фильтры'} aria-expanded={expanded}
                 aria-controls="package-filters" onClick={() => setExpanded(!expanded)}><Icon name="down"/></button></div>
         <div className="filter-fields" id="package-filters" hidden={immersive ? !expanded : undefined}>
-            <label className="filter-field"><span>Направление тура</span><select value={prefs.destination}
-                onChange={e => onChange({destination: e.target.value})}>
+            <label className="filter-field"><span>{onNavigate ? 'Перейти к региону' : 'Направление тура'}</span><select value={onNavigate ? '' : prefs.destination}
+                onChange={e => onNavigate ? onNavigate(e.target.value) : onChange({destination: e.target.value})}>
+                {onNavigate && <option value="" disabled>Выбрать регион на карте</option>}
                 {destinations.map(place => <option key={place.id} value={place.id}>{place.name} · {place.country}</option>)}
             </select></label>
             <fieldset><legend>Даты вылета</legend>

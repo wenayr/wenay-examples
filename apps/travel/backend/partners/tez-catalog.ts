@@ -35,7 +35,7 @@ function knownHotel(geo: KnownLocation) {
     if (geo.coordinateEvidenceUrl) evidence.push(geo.coordinateEvidenceUrl)
     const coordinateSource = {url: geo.source, checkedOn: geo.checkedOn ?? manifest.checkedOn,
         precision: geo.precision ?? 'hotel-marker', evidence} satisfies PackageCoordinateSource
-    return {id, name, stars: rating ? Number(rating[1]) : null, latitude: geo.latitude, longitude: geo.longitude,
+    return {id, destinationId: geo.destination, name, stars: rating ? Number(rating[1]) : null, latitude: geo.latitude, longitude: geo.longitude,
         url: 'https://www.tez-tour.com/hotel.html?id=' + geo.id, coordinateSource, ...tezHotelMedia(id)} satisfies PackageHotel
 }
 

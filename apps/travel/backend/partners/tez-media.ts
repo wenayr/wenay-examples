@@ -4,6 +4,7 @@ import type {PackageHotelGallery} from '../../src/package-media-contract.ts'
 
 interface MediaImage {url: string, caption?: string, source?: string}
 interface MediaHotel {
+    checkedOn?: string
     id: number
     name: string
     siteHotelId: number
@@ -45,7 +46,7 @@ function hotelMedia(hotel: MediaHotel) {
     const thumbnail = hotel.thumbnail && publicPhoto(hotel, hotel.thumbnail)
     const gallery: PackageHotelGallery | null = photos.length ? {
         hotelId: 'tez:' + hotel.id, name: hotel.name, hotelUrl: photos[0].sourceUrl,
-        checkedOn: manifest.checkedOn ?? null,
+        checkedOn: hotel.checkedOn ?? manifest.checkedOn ?? null,
         photos: photos.map(photo => ({...photo, sourceImageUrl: photo.url})),
     } satisfies PackageHotelGallery : null
     return {photo: thumbnail ?? photos[0] ?? null, photos, gallery}

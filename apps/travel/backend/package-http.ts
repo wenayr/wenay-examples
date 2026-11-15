@@ -1,5 +1,6 @@
 import type {SupplyDestination} from '../src/supply-contract.ts'
 import type {createPackages} from './packages.ts'
+import {packageDestinations} from '../src/package-contract.ts'
 import {dateValue, numberParam, packageQuery} from './travel-query.ts'
 import {tezHotelGallery} from './partners/tez-media.ts'
 
@@ -35,23 +36,38 @@ export function createPackageHttp(deps: {
         const params = url.searchParams
         try {
             request.signal.throwIfAborted()
-            if (url.pathname == '/api/travel/destinations') return packageJson(200, {destinations: deps.destinations})
+            if (url.pathname == '/api/travel/destinations') {
+                const id = params.get('id')
+                const destinations = id ? deps.destinations.filter(place => place.id == id) : deps.destinations
+                return destinations.length ? packageJson(200, {destinations}) : packageJson(404, {error: 'Область не найдена.'})
+            }
             if (url.pathname == '/api/travel/package-gallery') {
-                const gallery = tezHotelGallery(hotelId(params.get('hotelId')))
+                const id = hotelId(params.get('hotelId'))
+                const gallery = tezHotelGallery(id) ?? await deps.packages?.gallery(id, request.signal)
                 return gallery ? packageJson(200, gallery) : packageJson(404, {error: 'Фотографии этого отеля пока не найдены у поставщика.'})
             }
             if (!deps.packages) return packageJson(503, {error: 'Пакетный поиск недоступен.'})
+            const areaValue = params.get('areaMode')
+            if (areaValue != null && areaValue != 'map' && areaValue != 'destination') throw new RangeError('Выберите область карты или направление.')
+            const mapPath = ['packages', 'package-hotel-search', 'package-trends'].some(path => url.pathname.endsWith('/' + path))
+            const areaMode = areaValue == 'map' || areaValue == null && params.has('west') ? 'map' : 'destination'
+            const areaRequest = mapPath && areaMode == 'map'
             const destinationId = params.get('destination') ?? deps.destinations[0]?.id
-            const destination = deps.destinations.find(place => place.id == destinationId)
+            const fallback = deps.destinations.find(place => packageDestinations.some(id => id == place.id))
+            const destination = areaRequest ? fallback : deps.destinations.find(place => place.id == destinationId)
             if (!destination) return packageJson(404, {error: 'Направление не найдено.'})
             const {trip, filter} = packageQuery(params, destination.id, deps.today?.() ?? new Date().toISOString().slice(0, 10))
             const refresh = refreshValue(params.get('refresh'))
             const options = {signal: request.signal, refresh}
             if (url.pathname == '/api/travel/package-hotel-search') {
-                const paging = {...filter, box: null, limit: numberParam(params.get('limit'), 8, 20, 1)}
-                return packageJson(200, await deps.packages.hotels(trip, paging, params.get('q') ?? '', options))
+                const paging = {...filter, limit: numberParam(params.get('limit'), 8, 20, 1)}
+                if (areaRequest) return packageJson(200, await deps.packages.area.hotels(trip, paging, params.get('q') ?? '', 'map', options))
+                return packageJson(200, await deps.packages.hotels(trip, {...paging, box: null}, params.get('q') ?? '', options))
             }
-            if (url.pathname == '/api/travel/packages') return packageJson(200, await deps.packages.search(trip, filter, options))
+            if (url.pathname == '/api/travel/packages') {
+                if (areaRequest) return packageJson(200, await deps.packages.area.search(trip, filter, 'map', options))
+                return packageJson(200, await deps.packages.search(trip, filter, options))
+            }
             if (url.pathname == '/api/travel/package-matrix') {
                 const values = params.get('nightsValues') ?? String(trip.nights)
                 if (!/^\d{1,2}(,\d{1,2}){0,5}$/.test(values)) throw new RangeError('Укажите длительность в ночах через запятую.')
@@ -61,6 +77,7 @@ export function createPackageHttp(deps: {
             if (url.pathname == '/api/travel/package-trends') {
                 const requested = params.get('hotelIds')
                 const ids = requested ? requested.split(',').map(hotelId) : undefined
+                if (areaRequest) return packageJson(200, await deps.packages.area.trends(trip, filter, 'map', ids, request.signal))
                 return packageJson(200, await deps.packages.trends(trip, filter, ids, request.signal))
             }
             if (url.pathname == '/api/travel/package-calendar') {
